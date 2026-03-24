@@ -7,9 +7,8 @@ class SubscribersController < ApplicationController
       # Отправляем письмо! .deliver_later делает это асинхронно
       UserMailer.welcome_email(@subscriber).deliver_later
 
-      redirect_to root_path, notice: "Вы успешно подписаны! Письмо уже в пути (проверьте Mailtrap)."
+      redirect_to root_path, notice: "You've successfully subscribed for updates! The email is on its way."
     else
-      # Если валидация не прошла, нам нужно передать ошибки обратно на главную
       render "pages/home", status: :unprocessable_entity
     end
   end
