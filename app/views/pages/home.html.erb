@@ -1,18 +1,39 @@
-<h1>The idea behind mine cool project</h1>
-<p>Leave your contact information to be the first to know about the launch!</p>
-
-<% if @subscriber && @subscriber.errors.any? %>
-  <div style="color: red;">
-    <h4>Oops! Something went wrong:</h4>
-    <ul>
-      <% @subscriber.errors.full_messages.each do |message| %>
-        <li><%= message %></li>
-      <% end %>
-    </ul>
+<% if flash[:notice] %>
+  <div style="padding: 15px; background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; border-radius: 5px; margin-bottom: 20px;">
+    <%= flash[:notice] %>
   </div>
 <% end %>
+<h1>The idea behind mine cool project</h1>
 
-<%= form_with model: Subscriber.new do |f| %>
+<% if flash[:notice] %>
+  <%# This block will appear ONLY after a successful subscription. %>
+  <div style="padding: 15px; background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; border-radius: 5px;">
+    <p><strong>Success!</strong> <%= flash[:notice] %></p>
+    <p>We've sent a confirmation email to your inbox. Stay tuned!</p>
+  </div>
+<% else %>
+  <%# This block (form) will appear if there was no subscription yet or there was an error %>
+  <p>Leave your contact information to be the first to know about the launch!</p>
 
-  <%= f.submit "Subsrbe" %>
+  <% if @subscriber && @subscriber.errors.any? %>
+    <div style="color: red; margin-bottom: 10px;">
+      <ul>
+        <% @subscriber.errors.full_messages.each do |msg| %>
+          <li><%= msg %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <%= form_with model: (@subscriber || Subscriber.new) do |f| %>
+    <div>
+      <%= f.label :name %><br>
+      <%= f.text_field :name %>
+    </div>
+    <div>
+      <%= f.label :email %><br>
+      <%= f.email_field :email %>
+    </div>
+    <%= f.submit "Subscribe" %>
+  <% end %>
 <% end %>
