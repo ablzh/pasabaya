@@ -1,39 +1,63 @@
-<% if flash[:notice] %>
-  <div style="padding: 15px; background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; border-radius: 5px; margin-bottom: 20px;">
-    <%= flash[:notice] %>
-  </div>
-<% end %>
-<h1>The idea behind mine cool project</h1>
+<div class="bg-gray-50 min-h-screen flex flex-col items-center justify-center px-4 sm:px-6 lg:px-8">
 
-<% if flash[:notice] %>
-  <%# This block will appear ONLY after a successful subscription. %>
-  <div style="padding: 15px; background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; border-radius: 5px;">
-    <p><strong>Success!</strong> <%= flash[:notice] %></p>
-    <p>We've sent a confirmation email to your inbox. Stay tuned!</p>
-  </div>
-<% else %>
-  <%# This block (form) will appear if there was no subscription yet or there was an error %>
-  <p>Leave your contact information to be the first to know about the launch!</p>
+  <%# Displaying notifications %>
+  <% if flash[:notice] %>
+    <div class="fixed top-5 right-5 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded shadow-lg animate-bounce">
+      <%= flash[:notice] %>
+    </div>
+  <% end %>
 
-  <% if @subscriber && @subscriber.errors.any? %>
-    <div style="color: red; margin-bottom: 10px;">
-      <ul>
-        <% @subscriber.errors.full_messages.each do |msg| %>
-          <li><%= msg %></li>
+  <div class="max-w-md w-full space-y-8 text-center">
+    <%# Hero %>
+    <div>
+      <span class="inline-block px-3 py-1 text-xs font-semibold tracking-wider text-indigo-600 uppercase bg-indigo-100 rounded-full">
+        Coming Soon 2026
+      </span>
+      <h1 class="mt-6 text-4xl font-extrabold text-gray-900 tracking-tight sm:text-5xl">
+        The idea behind <span class="text-indigo-600">mine cool project</span>
+      </h1>
+      <p class="mt-4 text-lg text-gray-600">
+        Inviting text
+      </p>
+    </div>
+
+    <%# Forms %>
+    <div class="mt-8 bg-white py-8 px-4 shadow-xl rounded-2xl sm:px-10 border border-gray-100">
+      <% if flash[:notice] %>
+        <div class="text-indigo-600 font-medium py-4">
+          ✨ You're on the list! Check your inbox.
+        </div>
+      <% else %>
+        <%= form_with model: (@subscriber || Subscriber.new), class: "space-y-4" do |f| %>
+
+          <% if @subscriber && @subscriber.errors.any? %>
+            <div class="text-red-500 text-sm text-left bg-red-50 p-3 rounded-lg">
+              <%= @subscriber.errors.full_messages.first %>
+            </div>
+          <% end %>
+
+          <div>
+            <%= f.text_field :name,
+                             placeholder: "Your Name",
+                             class: "appearance-none block w-full px-3 py-3 border border-gray-300 rounded-xl shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" %>
+          </div>
+
+          <div>
+            <%= f.email_field :email,
+                              placeholder: "Email address",
+                              class: "appearance-none block w-full px-3 py-3 border border-gray-300 rounded-xl shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" %>
+          </div>
+
+          <div>
+            <%= f.submit "Get Project Updates",
+                         class: "w-full flex justify-center py-3 px-4 border border-transparent rounded-xl shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all cursor-pointer" %>
+          </div>
         <% end %>
-      </ul>
+      <% end %>
     </div>
-  <% end %>
 
-  <%= form_with model: (@subscriber || Subscriber.new) do |f| %>
-    <div>
-      <%= f.label :name %><br>
-      <%= f.text_field :name %>
-    </div>
-    <div>
-      <%= f.label :email %><br>
-      <%= f.email_field :email %>
-    </div>
-    <%= f.submit "Subscribe" %>
-  <% end %>
-<% end %>
+    <p class="mt-4 text-xs text-gray-400">
+      No spam. Just important updates about the launch.
+    </p>
+  </div>
+</div>
