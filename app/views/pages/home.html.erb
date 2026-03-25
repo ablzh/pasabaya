@@ -48,6 +48,21 @@
                               class: "appearance-none block w-full px-3 py-3 border border-gray-300 rounded-xl shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" %>
           </div>
 
+          <div class="flex items-start mt-4 text-left">
+            <div class="flex items-center h-5">
+              <%= f.check_box :terms_accepted,
+                              required: true,
+                              class: "w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500 cursor-pointer" %>
+            </div>
+            <div class="ml-3 text-xs">
+              <label for="subscriber_terms_accepted" class="text-gray-500 leading-tight cursor-pointer">
+                I agree to the processing of my data according to the
+                <a href="/privacy" class="text-indigo-600 hover:underline font-medium">Privacy Policy</a>
+                and Philippine DPA of 2012.
+              </label>
+            </div>
+          </div>
+
           <div>
             <%= f.submit "Get Project Updates",
                          class: "w-full flex justify-center py-3 px-4 border border-transparent rounded-xl shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all cursor-pointer" %>
