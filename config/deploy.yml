@@ -21,9 +21,8 @@ servers:
 # Don't use this when deploying to multiple web servers (then you have to terminate SSL at your load balancer).
 #
 proxy:
-   # ssl: true
-   host: pasabaya.app
-   app_port: 3000
+  ssl: true
+  host: pasabaya.app
 
 # Where you keep your container images.
 registry:
@@ -93,7 +92,7 @@ builder:
 
 # Use a different ssh user than root
 ssh:
-   user: ubuntu
+  user: ubuntu
 
 # Use accessory services (secrets come from .kamal/secrets).
 # accessories:
