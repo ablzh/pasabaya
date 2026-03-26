@@ -112,6 +112,9 @@
         <% else %>
           <%= form_with model: (@subscriber || Subscriber.new), class: "space-y-6" do |f| %>
             <% if @subscriber && @subscriber.errors.any? %>
+
+              <%= f.invisible_captcha :nickname %>
+
               <div class="text-red-500 text-sm text-left bg-red-50 p-4 rounded-xl">
                 <%= @subscriber.errors.full_messages.first %>
               </div>
