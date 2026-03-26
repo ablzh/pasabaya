@@ -2,12 +2,12 @@
 service: my_landing
 
 # Name of the container image (use your-user/app-name on external registries).
-image: my_landing
+image: ghcr.io/ablzh/my_landing
 
 # Deploy to these servers.
 servers:
   web:
-    - 192.168.0.1
+    - 54.206.201.127
   # job:
   #   hosts:
   #     - 192.168.0.1
@@ -20,21 +20,21 @@ servers:
 #
 # Don't use this when deploying to multiple web servers (then you have to terminate SSL at your load balancer).
 #
-# proxy:
-#   ssl: true
-#   host: app.example.com
+proxy:
+   ssl: true
+   host: pasabaya.app
 
 # Where you keep your container images.
 registry:
   # Alternatives: hub.docker.com / registry.digitalocean.com / ghcr.io / ...
-  server: localhost:5555
+  server: ghcr.io
 
   # Needed for authenticated registries.
-  # username: your-user
+  username: ablzh
 
   # Always use an access token rather than real password when possible.
-  # password:
-  #   - KAMAL_REGISTRY_PASSWORD
+  password:
+    - KAMAL_REGISTRY_PASSWORD
 
 # Inject ENV variables into containers (secrets come from .kamal/secrets).
 env:
@@ -91,8 +91,8 @@ builder:
   #   - RAILS_MASTER_KEY
 
 # Use a different ssh user than root
-# ssh:
-#   user: app
+ssh:
+   user: ubuntu
 
 # Use accessory services (secrets come from .kamal/secrets).
 # accessories:
