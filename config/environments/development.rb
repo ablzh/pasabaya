@@ -4,8 +4,8 @@ Rails.application.configure do
   # Settings specified here will take precedence over those in config/application.rb.
   config.action_mailer.delivery_method = :smtp
   config.action_mailer.smtp_settings = {
-    user_name: Rails.application.credentials.dig(:mailtrap, :user_name),
-    password: Rails.application.credentials.dig(:mailtrap, :password),
+    user_name: Rails.application.credentials.dig(:mailtrap_sandbox, :user_name),
+    password: Rails.application.credentials.dig(:mailtrap_sandbox, :password),
     address: "sandbox.smtp.mailtrap.io",
     host: "sandbox.smtp.mailtrap.io",
     port: "2525",
