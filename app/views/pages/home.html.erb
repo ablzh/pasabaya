@@ -130,11 +130,13 @@
               <div class="space-y-2">
                 <%= f.text_field :name,
                                  placeholder: "Your Name",
+                                 aria: { label: "Your Name" },
                                  class: "appearance-none block w-full px-5 py-4 border border-gray-200 rounded-2xl shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all sm:text-base bg-gray-50 focus:bg-white" %>
               </div>
               <div class="space-y-2">
                 <%= f.email_field :email,
                                   placeholder: "Email address",
+                                  aria: { label: "Email address" },
                                   class: "appearance-none block w-full px-5 py-4 border border-gray-200 rounded-2xl shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all sm:text-base bg-gray-50 focus:bg-white" %>
               </div>
               <div class="flex items-start pt-2 text-left">
