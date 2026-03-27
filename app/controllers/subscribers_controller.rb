@@ -1,8 +1,7 @@
 # frozen_string_literal: true
 
 class SubscribersController < ApplicationController
-
-  invisible_captcha only: [:create],
+  invisible_captcha only: [ :create ],
                     honeypot: :nickname,
                     timestamp_enabled: true,
                     timestamp_threshold: 2
@@ -15,7 +14,7 @@ class SubscribersController < ApplicationController
 
       respond_to do |format|
         format.turbo_stream
-        format.html {redirect_to root_path, notice: flash[:notice]}
+        format.html { redirect_to root_path, notice: flash[:notice] }
       end
     else
       render "pages/home", status: :unprocessable_entity
