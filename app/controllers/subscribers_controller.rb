@@ -1,16 +1,25 @@
 # frozen_string_literal: true
 
 class SubscribersController < ApplicationController
-  invisible_captcha only: [ :create ],
+  invisible_captcha only: [:create],
                     honeypot: :nickname,
                     timestamp_enabled: true,
                     timestamp_threshold: 2
 
   def create
-    @subscriber = Subscriber.new(subscriber_params)
+    @subscriber = Subscriber.find_or_initialize_by(email: subscriber_params[:email])
+
+    @subscriber.assign_attributes(subscriber_params)
+    @subscriber.unsubscribed_at = nil
+
     if @subscriber.save
       UserMailer.welcome_email(@subscriber).deliver_later
-      flash.now[:notice] = "You've successfully subscribed for updates! The email is on its way."
+
+      message = @subscriber.previously_new_record? ?
+                  "You've successfully subscribed for updates! The email is on its way." :
+                  "Welcome back! Your subscription has been reactivated."
+
+      flash.now[:notice] = message
 
       respond_to do |format|
         format.turbo_stream
