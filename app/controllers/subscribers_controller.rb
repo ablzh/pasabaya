@@ -5,7 +5,7 @@ class SubscribersController < ApplicationController
   invisible_captcha only: [:create],
                     honeypot: :nickname,
                     timestamp_enabled: true,
-                    timestamp_threshold: 4
+                    timestamp_threshold: 2
 
   def create
     @subscriber = Subscriber.new(subscriber_params)
