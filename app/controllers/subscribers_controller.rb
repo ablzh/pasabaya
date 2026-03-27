@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class SubscribersController < ApplicationController
-  invisible_captcha only: [ :create ],
+  invisible_captcha only: [:create],
                     honeypot: :nickname,
                     timestamp_enabled: true,
                     timestamp_threshold: 2
@@ -18,6 +18,16 @@ class SubscribersController < ApplicationController
       end
     else
       render "pages/home", status: :unprocessable_entity
+    end
+  end
+
+  def unsubscribe
+    @subscriber = Subscriber.find_signed(params[:id], purpose: :unsubscribe)
+    if @subscriber
+      @subscriber.update(unsubscribed_at: Time.current)
+      render :unsubscribe_success # Создадим простую вьюху
+    else
+      render plain: "Invalid link or already unsubscribed", status: :not_found
     end
   end
 
