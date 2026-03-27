@@ -1,0 +1,12 @@
+<%= turbo_stream.update "waitlist_form" do %>
+  <div class="text-indigo-600 font-bold py-4 text-xl animate-pulse text-center">
+    ✨ You're on the list!
+  </div>
+  <p class="text-gray-500 mt-2 text-center">Check your inbox for a confirmation email.</p>
+<% end %>
+
+<%= turbo_stream.prepend "flash-notifications" do %>
+  <div class="fixed top-5 right-5 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded shadow-lg animate-bounce z-50">
+    <%= flash[:notice] %>
+  </div>
+<% end %>
