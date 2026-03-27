@@ -1,10 +1,12 @@
 <main class="bg-gray-50 min-h-screen flex flex-col items-center px-4 sm:px-6 lg:px-8 font-sans">
   <%# Displaying notifications %>
-  <% if flash[:notice] %>
-    <div class="fixed top-5 right-5 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded shadow-lg animate-bounce z-50">
-      <%= flash[:notice] %>
-    </div>
-  <% end %>
+  <div id="flash-notifications">
+    <% if flash[:notice] %>
+      <div class="fixed top-5 right-5 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded shadow-lg animate-bounce z-50">
+        <%= flash[:notice] %>
+      </div>
+    <% end %>
+  </div>
   <div class="max-w-5xl w-full py-16 px-4 sm:px-6 lg:px-8">
 
     <%# 1. Hero Section %>
@@ -109,49 +111,51 @@
         <p class="text-lg text-gray-500">Get notified when we launch. No spam, ever.</p>
       </div>
       <div class="bg-white py-10 px-6 sm:px-12 shadow-2xl rounded-3xl border border-gray-100">
-        <% if flash[:notice] %>
-          <div class="text-indigo-600 font-bold py-4 text-xl animate-pulse">
-            ✨ You're on the list!
-          </div>
-          <p class="text-gray-500 mt-2">Check your inbox for a confirmation email.</p>
-        <% else %>
-          <%= form_with model: (@subscriber || Subscriber.new), class: "space-y-6" do |f| %>
+        <%= turbo_frame_tag "waitlist_form" do %>
+          <% if flash[:notice] %>
+            <div class="text-indigo-600 font-bold py-4 text-xl animate-pulse">
+              ✨ You're on the list!
+            </div>
+            <p class="text-gray-500 mt-2">Check your inbox for a confirmation email.</p>
+          <% else %>
+            <%= form_with model: (@subscriber || Subscriber.new), class: "space-y-6" do |f| %>
 
-            <%= f.invisible_captcha :nickname %>
+              <%= f.invisible_captcha :nickname %>
 
-            <% if @subscriber && @subscriber.errors.any? %>
-              <div class="text-red-500 text-sm text-left bg-red-50 p-4 rounded-xl">
-                <%= @subscriber.errors.full_messages.first %>
+              <% if @subscriber && @subscriber.errors.any? %>
+                <div class="text-red-500 text-sm text-left bg-red-50 p-4 rounded-xl">
+                  <%= @subscriber.errors.full_messages.first %>
+                </div>
+              <% end %>
+              <div class="space-y-2">
+                <%= f.text_field :name,
+                                 placeholder: "Your Name",
+                                 class: "appearance-none block w-full px-5 py-4 border border-gray-200 rounded-2xl shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all sm:text-base bg-gray-50 focus:bg-white" %>
+              </div>
+              <div class="space-y-2">
+                <%= f.email_field :email,
+                                  placeholder: "Email address",
+                                  class: "appearance-none block w-full px-5 py-4 border border-gray-200 rounded-2xl shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all sm:text-base bg-gray-50 focus:bg-white" %>
+              </div>
+              <div class="flex items-start pt-2 text-left">
+                <div class="flex items-center h-6">
+                  <%= f.check_box :terms_accepted,
+                                  required: true,
+                                  class: "w-5 h-5 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500 cursor-pointer mt-0.5" %>
+                </div>
+                <div class="ml-3 text-sm">
+                  <label for="subscriber_terms_accepted" class="text-gray-500 leading-snug cursor-pointer block">
+                    I agree to the processing of my data according to the
+                    <a href="/privacy" class="text-indigo-600 hover:underline font-semibold">Privacy Policy</a>
+                    and Philippine DPA of 2012.
+                  </label>
+                </div>
+              </div>
+              <div class="pt-4">
+                <%= f.button "Join the Future of Commuting",
+                             class: "w-full flex justify-center py-4 px-6 border border-transparent rounded-2xl shadow-lg text-lg font-bold text-white bg-indigo-600 hover:bg-indigo-700 hover:scale-[1.02] active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all cursor-pointer" %>
               </div>
             <% end %>
-            <div class="space-y-2">
-              <%= f.text_field :name,
-                               placeholder: "Your Name",
-                               class: "appearance-none block w-full px-5 py-4 border border-gray-200 rounded-2xl shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all sm:text-base bg-gray-50 focus:bg-white" %>
-            </div>
-            <div class="space-y-2">
-              <%= f.email_field :email,
-                                placeholder: "Email address",
-                                class: "appearance-none block w-full px-5 py-4 border border-gray-200 rounded-2xl shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all sm:text-base bg-gray-50 focus:bg-white" %>
-            </div>
-            <div class="flex items-start pt-2 text-left">
-              <div class="flex items-center h-6">
-                <%= f.check_box :terms_accepted,
-                                required: true,
-                                class: "w-5 h-5 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500 cursor-pointer mt-0.5" %>
-              </div>
-              <div class="ml-3 text-sm">
-                <label for="subscriber_terms_accepted" class="text-gray-500 leading-snug cursor-pointer block">
-                  I agree to the processing of my data according to the
-                  <a href="/privacy" class="text-indigo-600 hover:underline font-semibold">Privacy Policy</a>
-                  and Philippine DPA of 2012.
-                </label>
-              </div>
-            </div>
-            <div class="pt-4">
-              <%= f.button "Join the Future of Commuting",
-                           class: "w-full flex justify-center py-4 px-6 border border-transparent rounded-2xl shadow-lg text-lg font-bold text-white bg-indigo-600 hover:bg-indigo-700 hover:scale-[1.02] active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all cursor-pointer" %>
-            </div>
           <% end %>
         <% end %>
       </div>
