@@ -10,11 +10,12 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_03_24_094435) do
+ActiveRecord::Schema[8.1].define(version: 2026_03_27_044311) do
   create_table "subscribers", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "email"
     t.string "name"
+    t.datetime "unsubscribed_at"
     t.datetime "updated_at", null: false
   end
 end
