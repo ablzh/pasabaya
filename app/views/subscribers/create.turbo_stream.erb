@@ -1,8 +1,10 @@
 <%= turbo_stream.update "waitlist_form" do %>
   <div class="text-indigo-600 font-bold py-4 text-xl animate-pulse text-center">
-    ✨ You're on the list!
+    <%= @already_subscribed ? "👋 Still with us! Thanks!" : "✨ You're on the list!" %>
   </div>
-  <p class="text-gray-500 mt-2 text-center">Check your inbox for a confirmation email.</p>
+  <p class="text-gray-500 mt-2 text-center">
+    <%= @already_subscribed ? "We've already got your email on file." : "Check your inbox for a confirmation email." %>
+  </p>
 <% end %>
 
 <%= turbo_stream.prepend "flash-notifications" do %>
