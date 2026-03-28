@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class SubscribersController < ApplicationController
-  invisible_captcha only: [:create],
+  invisible_captcha only: [ :create ],
                     honeypot: :nickname,
                     timestamp_enabled: true,
                     timestamp_threshold: 2
