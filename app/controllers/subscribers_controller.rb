@@ -7,7 +7,6 @@ class SubscribersController < ApplicationController
                     timestamp_threshold: 2
 
   def create
-
     raw_email = subscriber_params[:email].to_s.downcase.strip
 
     @subscriber = Subscriber.find_or_initialize_by(email: raw_email)
