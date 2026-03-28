@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class SubscribersController < ApplicationController
-  invisible_captcha only: [ :create ],
+  invisible_captcha only: [:create],
                     honeypot: :nickname,
                     timestamp_enabled: true,
                     timestamp_threshold: 2
@@ -11,16 +11,26 @@ class SubscribersController < ApplicationController
 
     @subscriber = Subscriber.find_or_initialize_by(email: raw_email)
 
+    if @subscriber.persisted? && @subscriber.unsubscribed_at.nil?
+      @already_subscribed = true
+      flash.now[:notice] = "You're already subscribed! Thank you! No further action needed."
+      return respond_to do |format|
+        format.turbo_stream { render :create } # This will use the same success view
+        format.html { redirect_to root_path, notice: flash[:notice] }
+      end
+    end
+
+    is_resubscribing = @subscriber.persisted? && @subscriber.unsubscribed_at.present?
+
     @subscriber.assign_attributes(subscriber_params)
-    @subscriber.email = raw_email
     @subscriber.unsubscribed_at = nil
 
     if @subscriber.save
       UserMailer.welcome_email(@subscriber).deliver_later
 
-      message = @subscriber.previously_new_record? ?
-                  "You've successfully subscribed for updates! The email is on its way." :
-                  "Welcome back! Your subscription has been reactivated."
+      message = is_resubscribing ?
+                  "Welcome back! Your subscription has been reactivated." :
+                  "You've successfully subscribed for updates! The email is on its way."
 
       flash.now[:notice] = message
 
