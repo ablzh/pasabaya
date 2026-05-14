@@ -58,10 +58,13 @@
   <!-- Photoswipe -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/photoswipe/dist/photoswipe.css">
 
-  <script defer src="https://cloud.umami.is/script.js" data-website-id="58f06de2-cb25-468e-af55-ab4838a7f4f1"></script>
+  <% if Rails.env.production? %>
+    <!-- Umami -->
+    <script defer src="https://cloud.umami.is/script.js" data-website-id="58f06de2-cb25-468e-af55-ab4838a7f4f1"></script>
+  <% end %>
 </head>
 
-<body class="dark:bg-neutral-950 text-neutral-100" >
+<body class="dark:bg-neutral-950 text-neutral-100">
 
 <%= render "shared/components/navbar/navbar", user: Current.user %>
 <main>
