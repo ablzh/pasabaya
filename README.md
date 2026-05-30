@@ -12,7 +12,7 @@
 ---
 
 Currently, the `main` branch only contains the landing page.  
-Core features are being developed in the branch: [feature/core-app-foundation](https://github.com/ablzh/pick-me-up/tree/feature/core-app-foundation)
+Core features are being developed in the branch: [feature/core-app-foundation](https://github.com/ablzh/pasabaya.app/tree/feature/core-app-foundation)
 
 ## The Philosophy
 
