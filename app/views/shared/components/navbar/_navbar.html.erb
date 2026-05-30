@@ -24,7 +24,7 @@
         <li class="ml-2 pl-2 border-l border-neutral-200 dark:border-neutral-700">
           <button type="button" data-navbar-target="trigger" data-content-id="profile-content" aria-controls="profile-content" aria-expanded="false" data-align="end" data-action="click->navbar#toggleMenu pointerenter->navbar#handlePointerEnter pointermove->navbar#handlePointerMove pointerleave->navbar#handlePointerLeave keydown->navbar#handleTriggerKeydown" data-state="closed" class="group flex items-center gap-2 rounded-md px-2 py-2 text-sm font-medium text-neutral-700 select-none hover:bg-neutral-100 dark:text-neutral-300 dark:hover:bg-neutral-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-600 dark:focus-visible:outline-neutral-200">
             <div class="flex items-center justify-center size-6 rounded-full bg-gradient-to-br from-red-400 to-red-600 text-white text-xs font-semibold">
-              <%= user.initials %>
+              <%= Current.user.initials %>
             </div>
           </button>
         </li>
