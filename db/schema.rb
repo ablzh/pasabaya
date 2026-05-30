@@ -10,7 +10,17 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_05_11_123941) do
+ActiveRecord::Schema[8.1].define(version: 2026_05_30_232734) do
+  create_table "locations", force: :cascade do |t|
+    t.string "country_code"
+    t.datetime "created_at", null: false
+    t.integer "location_type"
+    t.string "name"
+    t.integer "parent_id"
+    t.datetime "updated_at", null: false
+    t.index ["parent_id"], name: "index_locations_on_parent_id"
+  end
+
   create_table "sessions", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "ip_address"
@@ -39,5 +49,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_11_123941) do
     t.index ["email_address"], name: "index_users_on_email_address", unique: true
   end
 
+  add_foreign_key "locations", "locations", column: "parent_id"
   add_foreign_key "sessions", "users"
 end
