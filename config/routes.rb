@@ -1,5 +1,5 @@
 Rails.application.routes.draw do
-  resources :ride_posts
+  resources :ride_posts, path: "rides"
   resource :session
   resources :passwords, param: :token
   get "privacy", to: "pages#privacy"
