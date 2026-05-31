@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_05_30_232734) do
+ActiveRecord::Schema[8.1].define(version: 2026_05_31_000205) do
   create_table "locations", force: :cascade do |t|
     t.string "country_code"
     t.datetime "created_at", null: false
@@ -39,6 +39,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_30_232734) do
   end
 
   create_table "users", force: :cascade do |t|
+    t.boolean "admin", default: false, null: false
+    t.datetime "banned_at"
     t.datetime "created_at", null: false
     t.string "email_address", null: false
     t.string "facebook_profile_url"
