@@ -5,5 +5,9 @@
 
   <%= render "form", ride_post: @ride_post %>
 
-  <%= link_to "Back to ride posts", ride_posts_path, class: "w-full sm:w-auto text-center mt-2 sm:mt-0 sm:ml-2 rounded-md px-3.5 py-2.5 bg-gray-100 hover:bg-gray-50 inline-block font-medium" %>
+  <%= render "shared/components/buttons/button",
+             text: "Back to ride posts",
+             size: "sm",
+             variant: "secondary",
+             href: ride_posts_path %>
 </div>
