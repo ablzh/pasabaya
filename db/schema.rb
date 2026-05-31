@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_05_31_000205) do
+ActiveRecord::Schema[8.1].define(version: 2026_05_31_004122) do
   create_table "locations", force: :cascade do |t|
     t.string "country_code"
     t.datetime "created_at", null: false
@@ -19,6 +19,22 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_31_000205) do
     t.integer "parent_id"
     t.datetime "updated_at", null: false
     t.index ["parent_id"], name: "index_locations_on_parent_id"
+  end
+
+  create_table "ride_posts", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.datetime "departure_time"
+    t.integer "destination_id", null: false
+    t.text "notes"
+    t.integer "origin_id", null: false
+    t.integer "post_type"
+    t.integer "seats"
+    t.integer "status", default: 0, null: false
+    t.datetime "updated_at", null: false
+    t.integer "user_id", null: false
+    t.index ["destination_id"], name: "index_ride_posts_on_destination_id"
+    t.index ["origin_id"], name: "index_ride_posts_on_origin_id"
+    t.index ["user_id"], name: "index_ride_posts_on_user_id"
   end
 
   create_table "sessions", force: :cascade do |t|
@@ -52,5 +68,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_31_000205) do
   end
 
   add_foreign_key "locations", "locations", column: "parent_id"
+  add_foreign_key "ride_posts", "locations", column: "destination_id"
+  add_foreign_key "ride_posts", "locations", column: "origin_id"
+  add_foreign_key "ride_posts", "users"
   add_foreign_key "sessions", "users"
 end
