@@ -1,4 +1,7 @@
 class Location < ApplicationRecord
+  has_many :departing_rides, class_name: "RidePost", foreign_key: "origin_id"
+  has_many :arriving_rides, class_name: "RidePost", foreign_key: "destination_id"
+
   # Define the hierarchy levels.
   # Rails will map these to integers (0, 1, 2) in the database.
   enum :location_type, { country: 0, region: 1, city: 2 }
