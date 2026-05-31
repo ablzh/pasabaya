@@ -1,4 +1,5 @@
 Rails.application.routes.draw do
+  resources :ride_posts
   resource :session
   resources :passwords, param: :token
   get "privacy", to: "pages#privacy"
