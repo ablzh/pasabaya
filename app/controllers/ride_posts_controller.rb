@@ -1,9 +1,10 @@
 class RidePostsController < ApplicationController
+  before_action :require_authentication, except: %i[ index show ]
   before_action :set_ride_post, only: %i[ show edit update destroy ]
 
   # GET /ride_posts or /ride_posts.json
   def index
-    @ride_posts = RidePost.all
+    @ride_posts = RidePost.active.includes(:origin, :destination, :user).order(departure_time: :asc)
   end
 
   # GET /ride_posts/1 or /ride_posts/1.json
