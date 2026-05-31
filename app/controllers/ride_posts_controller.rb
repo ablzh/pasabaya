@@ -22,7 +22,7 @@ class RidePostsController < ApplicationController
 
   # POST /ride_posts or /ride_posts.json
   def create
-    @ride_post = RidePost.new(ride_post_params)
+    @ride_post = Current.user.ride_posts.build(ride_post_params)
 
     respond_to do |format|
       if @ride_post.save
@@ -66,6 +66,6 @@ class RidePostsController < ApplicationController
 
     # Only allow a list of trusted parameters through.
     def ride_post_params
-      params.fetch(:ride_post, {})
+      params.expect(ride_post: [ :post_type, :origin_id, :destination_id, :departure_time, :seats, :notes ])
     end
 end
