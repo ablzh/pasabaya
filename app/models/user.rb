@@ -4,6 +4,8 @@ class User < ApplicationRecord
 
   normalizes :email_address, with: ->(e) { e.strip.downcase }
 
+  attr_readonly :admin
+
   def initials
     "#{first_name&.first}#{last_name&.first}".upcase
   end
