@@ -4,6 +4,12 @@ class User < ApplicationRecord
 
   normalizes :email_address, with: ->(e) { e.strip.downcase }
 
+  # Ensure the Facebook link is always provided
+  validates :facebook_profile_url, presence: true
+
+  # A simple regex to ensure it looks vaguely like a URL
+  validates :facebook_profile_url, format: { with: URI::DEFAULT_PARSER.make_regexp }
+
   attr_readonly :admin
 
   def initials
