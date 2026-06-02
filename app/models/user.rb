@@ -3,6 +3,10 @@ class User < ApplicationRecord
   has_many :sessions, dependent: :destroy
   has_many :ride_posts, dependent: :destroy
 
+  has_one_attached :avatar do |attachable|
+    attachable.variant :thumb, resize_to_limit: [100, 100]
+  end
+
   normalizes :email_address, with: ->(e) { e.strip.downcase }
 
   # Ensure the Facebook link is always provided
