@@ -1,2 +1,95 @@
-<div id="<%= dom_id ride_post %>" class="w-full sm:w-auto my-5 space-y-5">
+<%# 1. Build the Footer (User Info + Actions) %>
+<% card_footer = capture do %>
+  <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+    <%# Left side: User Info %>
+    <div class="flex items-center">
+      <%= user_avatar(ride_post.user, classes: "h-9 w-9 text-xs") %>
+      <div class="ml-2">
+        <p class="text-sm font-semibold text-neutral-900 dark:text-white leading-none">
+          <%= ride_post.user.first_name %> <%= ride_post.user.last_name %>
+        </p>
+        <p class="text-[10px] text-neutral-500 mt-1">
+          Posted <%= time_ago_in_words(ride_post.created_at) %> ago
+        </p>
+      </div>
+    </div>
+
+    <%# Right side: Actions %>
+    <div class="flex flex-wrap items-center gap-2">
+      <%= render "shared/components/buttons/button",
+                 text: "Show",
+                 href: ride_post_path(ride_post),
+                 variant: "secondary",
+                 size: "xs",
+                 pill: true %>
+
+      <%= render "shared/components/buttons/button",
+                 text: "Edit",
+                 href: edit_ride_post_path(ride_post),
+                 variant: "secondary",
+                 size: "xs",
+                 pill: true %>
+
+      <%= form_with model: ride_post,
+                    method: :delete,
+                    class: "inline-block",
+                    data: { turbo_confirm: "Are you sure?" } do |form| %>
+
+        <%= render "shared/components/buttons/button",
+                   text: "Delete",
+                   variant: "destructive",
+                   type: "submit",
+                   size: "xs",
+                   pill: true %>
+      <% end %>
+    </div>
+  </div>
+<% end %>
+
+<%# 2. Render the Component %>
+<div id="<%= dom_id ride_post %>" class="w-full max-w-md mx-auto my-4 px-2 sm:px-0">
+  <%= render "shared/components/card/card", 
+             divide: true,
+             hoverable: true,
+             padding: "sm",
+             footer_content: card_footer do %>
+             
+    <%# Top Row: Badge + Seats %>
+    <div class="flex justify-between items-start mb-3">
+      <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider
+        <%= ride_post.offering? ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400' : 'bg-sky-100 text-sky-700 dark:bg-sky-500/10 dark:text-sky-400' %>">
+        <%= ride_post.post_type %>
+      </span>
+      
+      <div class="flex items-center text-neutral-500">
+        <span class="text-xs font-bold text-neutral-900 dark:text-white"><%= ride_post.seats %></span>
+        <span class="text-[10px] ml-1 uppercase">seats</span>
+      </div>
+    </div>
+
+    <%# The Trip: Clear Arrow Route %>
+    <div class="mb-4">
+      <h3 class="text-lg font-bold text-neutral-900 dark:text-white leading-tight">
+        <%= ride_post.origin.name %> → <%= ride_post.destination.name %>
+      </h3>
+      
+      <%# Departure Time %>
+      <div class="mt-2 flex items-center gap-1.5 text-blue-600 dark:text-blue-400">
+        <svg class="size-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+        <span class="text-xs font-bold tracking-tight">
+          <%= ride_post.departure_time.strftime("%a, %b %d • %H:%M") %>
+        </span>
+      </div>
+    </div>
+
+    <%# Notes: Controlled height with line-clamp %>
+    <% if ride_post.notes.present? %>
+      <div class="mt-3 pt-3 border-t border-neutral-100 dark:border-white/5">
+        <p class="text-sm text-neutral-600 dark:text-neutral-400 line-clamp-3 leading-relaxed">
+          <%= ride_post.notes %>
+        </p>
+      </div>
+    <% end %>
+    
+  <% end %>
 </div>

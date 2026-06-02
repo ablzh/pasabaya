@@ -7,42 +7,12 @@
 
   <div class="flex justify-between items-center">
     <h1 class="font-bold text-4xl">Ride posts</h1>
-    <%= link_to "New ride post", new_ride_post_path, class: "rounded-md px-3.5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white block font-medium" %>
   </div>
 
   <div id="ride_posts" class="min-w-full divide-y divide-gray-200 space-y-5">
     <% if @ride_posts.any? %>
       <% @ride_posts.each do |ride_post| %>
-        <div class="flex flex-col sm:flex-row justify-between items-center pb-5 sm:pb-0">
           <%= render ride_post %>
-          <div class="w-full sm:w-auto flex flex-col sm:flex-row space-x-2 space-y-2">
-
-            <%= render "shared/components/buttons/button",
-                       text: "Show",
-                       href: ride_post_path(ride_post),
-                       variant: "secondary",
-                       classes: "sm" %>
-
-            <%= render "shared/components/buttons/button",
-                       text: "Edit",
-                       href: edit_ride_post_path(ride_post),
-                       variant: "secondary",
-                       classes: "sm" %>
-
-            <%= form_with model: ride_post,
-                          method: :delete,
-                          class: "w-full sm:w-auto",
-                          data: { turbo_confirm: "Are you sure?" } do |form| %>
-
-              <%= render "shared/components/buttons/button",
-                         text: "Destroy",
-                         variant: "destructive",
-                         type: "submit",
-                         full_width: true,
-                         classes: "sm:w-auto"%>
-            <% end %>
-          </div>
-        </div>
       <% end %>
     <% else %>
       <p class="text-center my-10">No ride posts found.</p>
