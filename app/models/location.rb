@@ -13,6 +13,9 @@ class Location < ApplicationRecord
   # We specify the foreign_key so Rails knows how to find them.
   has_many :children, class_name: "Location", foreign_key: "parent_id", dependent: :destroy
 
+  # Sorting the city list
+  default_scope { order(name: :desc) }
+
   # Basic validations
   validates :name, presence: true
   validates :location_type, presence: true
