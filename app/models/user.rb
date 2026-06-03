@@ -4,7 +4,7 @@ class User < ApplicationRecord
   has_many :ride_posts, dependent: :destroy
 
   has_one_attached :avatar do |attachable|
-    attachable.variant :thumb, resize_to_limit: [100, 100]
+    attachable.variant :thumb, resize_to_limit: [ 100, 100 ]
   end
 
   normalizes :email_address, with: ->(e) { e.strip.downcase }
@@ -20,5 +20,4 @@ class User < ApplicationRecord
   def initials
     "#{first_name&.first}#{last_name&.first}".upcase
   end
-
 end
