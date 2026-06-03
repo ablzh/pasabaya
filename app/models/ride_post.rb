@@ -8,7 +8,14 @@ class RidePost < ApplicationRecord
   enum :status, { active: 0, fulfilled: 1, canceled: 2 }
 
   validates :departure_time, presence: true
+  validate :departure_time_cannot_be_in_the_past
   validates :seats, presence: true, numericality: { greater_than: 0 }
   validates :post_type, presence: true
 
+  private
+  def departure_time_cannot_be_in_the_past
+    if departure_time.present? && departure_time < Time.current
+      errors.add(:departure_time, "can't be in the past")
+    end
+  end
 end

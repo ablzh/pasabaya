@@ -31,7 +31,9 @@
   <!-- Departure Time -->
   <div class="mb-6 relative gap-y-1.5">
     <%= form.label :departure_time, "Departure Time", class: "block font-medium mb-1" %>
-    <%= form.datetime_field :departure_time, class: "form-control" %>
+    <%= form.datetime_field :departure_time,
+                            class: "form-control",
+                            min: Time.current.strftime("%Y-%m-%dT%H:%M")%>
   </div>
 
   <!-- Seats Available/Needed -->
