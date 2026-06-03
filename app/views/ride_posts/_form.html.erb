@@ -48,11 +48,13 @@
     <%= form.text_area :notes, rows: 4, class: "form-control", placeholder: "e.g., Willing to split gas, I have a small dog, etc." %>
   </div>
 
-  <!-- Submit Button -->
-  <div class="inline">
+  <!-- Form Action -->
+  <div class="flex items-center gap-4 pt-4">
     <%= render "shared/components/buttons/button",
                text: "Post Ride",
                type: "submit" %>
+
+    <%= yield %>
   </div>
 
 <% end %>
