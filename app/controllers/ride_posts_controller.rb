@@ -1,6 +1,7 @@
 class RidePostsController < ApplicationController
   before_action :require_authentication, except: %i[ index show ]
   before_action :set_ride_post, only: %i[ show edit update destroy ]
+  before_action :resume_session, only: [ :index, :show ]
 
   # GET /ride_posts or /ride_posts.json
   def index
