@@ -28,7 +28,7 @@ end
 
 # 3. Create Key Cities
 cities = [
-  # Metro Manila Cities
+# Metro Manila Cities
 { name: "Manila", location_type: :city, parent: Location.find_by(name: "Metro Manila") },
 { name: "Quezon City", location_type: :city, parent: Location.find_by(name: "Metro Manila") },
 { name: "Makati", location_type: :city, parent: Location.find_by(name: "Metro Manila") },
