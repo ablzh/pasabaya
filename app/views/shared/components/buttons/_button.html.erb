@@ -37,6 +37,7 @@
 <% type ||= "button" %>
 <% classes ||= nil %>
 <% data ||= {} %>
+<% target ||= nil %>
 
 <%
   # Set disabled if loading
@@ -112,7 +113,7 @@
 %>
 
 <% if href.present? %>
-  <a href="<%= href %>" role="button" class="<%= button_classes %>" <%= "aria-disabled=true" if disabled %> <% data.each do |key, value| %> data-<%= key %>="<%= value %>"<% end %>>
+  <a href="<%= href %>" <% if target.present? %>target="<%= target %>"<% end %> <% if target == "_blank" %>rel="noopener noreferrer"<% end %> role="button" class="<%= button_classes %>" <%= "aria-disabled=true" if disabled %> <% data.each do |key, value| %> data-<%= key %>="<%= value %>"<% end %>>
 <% else %>
   <button type="<%= type %>" class="<%= button_classes %>" <%= "disabled" if disabled %> <% data.each do |key, value| %> data-<%= key %>="<%= value %>"<% end %>>
 <% end %>
