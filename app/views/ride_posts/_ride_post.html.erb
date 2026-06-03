@@ -23,25 +23,28 @@
                  size: "xs",
                  pill: true %>
 
-      <%= render "shared/components/buttons/button",
-                 text: "Edit",
-                 href: edit_ride_post_path(ride_post),
-                 variant: "secondary",
-                 size: "xs",
-                 pill: true %>
-
-      <%= form_with model: ride_post,
-                    method: :delete,
-                    class: "inline-block",
-                    data: { turbo_confirm: "Are you sure?" } do |form| %>
-
+      <% if Current.user == ride_post.user %>
         <%= render "shared/components/buttons/button",
-                   text: "Delete",
-                   variant: "destructive",
-                   type: "submit",
+                   text: "Edit",
+                   href: edit_ride_post_path(ride_post),
+                   variant: "secondary",
                    size: "xs",
                    pill: true %>
+
+        <%= form_with model: ride_post,
+                      method: :delete,
+                      class: "inline-block",
+                      data: { turbo_confirm: "Are you sure?" } do |form| %>
+
+          <%= render "shared/components/buttons/button",
+                     text: "Delete",
+                     variant: "destructive",
+                     type: "submit",
+                     size: "xs",
+                     pill: true %>
+        <% end %>
       <% end %>
+
     </div>
   </div>
 <% end %>
