@@ -22,14 +22,24 @@
   <div id="ride_posts" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
     <% if @ride_posts.any? %>
       <%= render @ride_posts %>
-    <% else %>
+    <% elsif params.key?(:post_type) || params.key?(:origin_id) || params.key?(:destination_id) %>
+      <%# Searched, but found nothing %>
       <div class="col-span-full py-20 text-center bg-neutral-50 dark:bg-neutral-800/50 rounded-3xl border-2 border-dashed border-neutral-200 dark:border-neutral-700">
         <svg class="mx-auto size-12 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
-        <h3 class="mt-4 text-lg font-bold text-neutral-900 dark:text-white">No rides posted yet</h3>
-        <p class="mt-2 text-sm text-neutral-500">Be the first to share a ride with the community!</p>
+        <h3 class="mt-4 text-lg font-bold text-neutral-900 dark:text-white">No rides found</h3>
+        <p class="mt-2 text-sm text-neutral-500 max-w-sm mx-auto">Didn't find what you're looking for? Create your own post to let others know you're traveling!</p>
         <div class="mt-6">
-          <%= link_to "Create your first post", new_ride_post_path, class: "text-blue-600 font-bold hover:text-blue-500 underline underline-offset-4" %>
+          <%= link_to "Post a Ride", new_ride_post_path, class: "text-blue-600 font-bold hover:text-blue-500 underline underline-offset-4" %>
         </div>
+      </div>
+    <% else %>
+      <%# Initial visit, prompt to search %>
+      <div class="col-span-full py-20 text-center bg-white dark:bg-neutral-900 rounded-3xl border border-neutral-100 dark:border-white/5 shadow-sm">
+        <div class="inline-flex items-center justify-center size-16 rounded-full bg-blue-50 text-blue-600 mb-4">
+          <svg class="size-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+        </div>
+        <h3 class="mt-4 text-xl font-bold text-neutral-900 dark:text-white">Where are you heading?</h3>
+        <p class="mt-2 text-sm text-neutral-500 max-w-sm mx-auto">Enter an origin or destination in the search bar above to find available rides, or post your own.</p>
       </div>
     <% end %>
   </div>
