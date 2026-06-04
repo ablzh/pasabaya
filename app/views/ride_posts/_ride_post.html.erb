@@ -30,19 +30,6 @@
                    variant: "secondary",
                    size: "xs",
                    pill: true %>
-
-        <%= form_with model: ride_post,
-                      method: :delete,
-                      class: "inline-block",
-                      data: { turbo_confirm: "Are you sure?" } do |form| %>
-
-          <%= render "shared/components/buttons/button",
-                     text: "Delete",
-                     variant: "destructive",
-                     type: "submit",
-                     size: "xs",
-                     pill: true %>
-        <% end %>
       <% end %>
 
     </div>

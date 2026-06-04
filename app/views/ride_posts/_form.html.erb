@@ -1,8 +1,8 @@
-<%= form_with(model: ride_post, class: "w-full max-w-sm space-y-6") do |form| %>
+<%= form_with(model: ride_post, class: "w-full space-y-6") do |form| %>
   <% if ride_post.errors.any? %>
-    <div id="error_explanation" class="bg-red-50 text-red-500 px-3 py-2 font-medium rounded-md mt-3 mb-6">
-      <h2><%= pluralize(ride_post.errors.count, "error") %> prohibited this post from being saved:</h2>
-      <ul class="list-disc ml-6">
+    <div id="error_explanation" class="bg-red-50 dark:bg-red-900/10 text-red-600 px-4 py-3 font-medium rounded-xl mt-3 mb-6 border border-red-100 dark:border-red-900/20">
+      <h2 class="text-sm font-bold uppercase tracking-wider mb-2"><%= pluralize(ride_post.errors.count, "error") %> prohibited this post from being saved:</h2>
+      <ul class="list-disc ml-6 text-sm opacity-90">
         <% ride_post.errors.each do |error| %>
           <li><%= error.full_message %></li>
         <% end %>
@@ -10,49 +10,58 @@
     </div>
   <% end %>
 
-  <!-- Post Type (Enum) -->
-  <div class="mb-6 relative gap-y-1.5">
-    <%= form.label :post_type, "Are you offering or requesting a ride?", class: "block font-medium mb-1" %>
-    <%= form.select :post_type, RidePost.post_types.keys.map { |pt| [pt.titleize, pt] }, {}, class: "form-control" %>
-  </div>
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <!-- Post Type (Enum) -->
+    <div class="col-span-full">
+      <%= form.label :post_type, "Ride Intent", class: "block text-xs font-bold text-neutral-400 uppercase tracking-widest mb-2" %>
+      <%= form.select :post_type, RidePost.post_types.keys.map { |pt| [pt.titleize, pt] }, {}, 
+          class: "block w-full rounded-xl border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-neutral-900 dark:text-white focus:ring-blue-500 focus:border-blue-500 transition-all py-3" %>
+    </div>
 
-  <!-- Origin Location -->
-  <div class="mb-6 relative gap-y-1.5">
-    <%= form.label :origin_id, "Leaving from (City)", class: "block font-medium mb-1" %>
-    <%= form.collection_select :origin_id, Location.city, :id, :name, { prompt: "Select a city..." }, { class: "form-control" } %>
-  </div>
+    <!-- Origin Location -->
+    <div>
+      <%= form.label :origin_id, "Leaving from (City)", class: "block text-xs font-bold text-neutral-400 uppercase tracking-widest mb-2" %>
+      <%= form.collection_select :origin_id, Location.city, :id, :name, { prompt: "Select a city..." }, 
+          { class: "block w-full rounded-xl border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-neutral-900 dark:text-white focus:ring-blue-500 focus:border-blue-500 transition-all py-3" } %>
+    </div>
 
-  <!-- Destination Location -->
-  <div class="mb-6 relative gap-y-1.5">
-    <%= form.label :destination_id, "Going to (City)", class: "block font-medium mb-1" %>
-    <%= form.collection_select :destination_id, Location.city, :id, :name, { prompt: "Select a city..." }, { class: "form-control" } %>
-  </div>
+    <!-- Destination Location -->
+    <div>
+      <%= form.label :destination_id, "Going to (City)", class: "block text-xs font-bold text-neutral-400 uppercase tracking-widest mb-2" %>
+      <%= form.collection_select :destination_id, Location.city, :id, :name, { prompt: "Select a city..." }, 
+          { class: "block w-full rounded-xl border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-neutral-900 dark:text-white focus:ring-blue-500 focus:border-blue-500 transition-all py-3" } %>
+    </div>
 
-  <!-- Departure Time -->
-  <div class="mb-6 relative gap-y-1.5">
-    <%= form.label :departure_time, "Departure Time", class: "block font-medium mb-1" %>
-    <%= form.datetime_field :departure_time,
-                            class: "form-control",
-                            min: Time.current.strftime("%Y-%m-%dT%H:%M")%>
-  </div>
+    <!-- Departure Time -->
+    <div>
+      <%= form.label :departure_time, "Departure Time", class: "block text-xs font-bold text-neutral-400 uppercase tracking-widest mb-2" %>
+      <%= form.datetime_field :departure_time,
+                              class: "block w-full rounded-xl border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-neutral-900 dark:text-white focus:ring-blue-500 focus:border-blue-500 transition-all py-3",
+                              min: Time.current.strftime("%Y-%m-%dT%H:%M")%>
+    </div>
 
-  <!-- Seats Available/Needed -->
-  <div class="mb-6 relative gap-y-1.5">
-    <%= form.label :seats, "Seats", class: "block font-medium mb-1" %>
-    <%= form.number_field :seats, min: 1, class: "form-control" %>
-  </div>
+    <!-- Seats Available/Needed -->
+    <div>
+      <%= form.label :seats, "Seats", class: "block text-xs font-bold text-neutral-400 uppercase tracking-widest mb-2" %>
+      <%= form.number_field :seats, min: 1, 
+          class: "block w-full rounded-xl border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-neutral-900 dark:text-white focus:ring-blue-500 focus:border-blue-500 transition-all py-3" %>
+    </div>
 
-  <!-- Notes -->
-  <div class="mb-6 relative gap-y-1.5">
-    <%= form.label :notes, "Details (Optional)", class: "block font-medium mb-1" %>
-    <%= form.text_area :notes, rows: 4, class: "form-control", placeholder: "e.g., Willing to split gas, I have a small dog, etc." %>
+    <!-- Notes -->
+    <div class="col-span-full">
+      <%= form.label :notes, "Details & Preferences", class: "block text-xs font-bold text-neutral-400 uppercase tracking-widest mb-2" %>
+      <%= form.text_area :notes, rows: 4, 
+          class: "block w-full rounded-xl border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-neutral-900 dark:text-white focus:ring-blue-500 focus:border-blue-500 transition-all py-3 px-4", 
+          placeholder: "e.g., Willing to split gas, I have a small dog, specific pick-up points..." %>
+    </div>
   </div>
 
   <!-- Form Action -->
-  <div class="flex items-center gap-4 pt-4">
+  <div class="flex items-center gap-6 pt-6 border-t border-neutral-100 dark:border-white/5">
     <%= render "shared/components/buttons/button",
-               text: "Post Ride",
-               type: "submit" %>
+               text: ride_post.new_record? ? "Publish Post" : "Save Changes",
+               type: "submit",
+               size: "lg" %>
 
     <%= yield %>
   </div>

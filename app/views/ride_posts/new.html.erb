@@ -1,14 +1,24 @@
-<% content_for :title, "New ride post" %>
-
-<div class="max-w-md mx-auto w-full">
-  <h1 class="font-bold text-4xl">New ride post</h1>
-
-  <%= render "form", ride_post: @ride_post do %>
-
-    <%= render "shared/components/buttons/button",
-               text: "Cancel",
-               variant: "secondary",
-               href: ride_posts_path %>
+<div class="max-w-2xl mx-auto my-12 px-4 sm:px-0">
+  <%# Back Link %>
+  <%= link_to ride_posts_path, class: "text-sm text-neutral-500 hover:text-neutral-700 flex items-center gap-1 mb-6 transition" do %>
+    <svg class="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+    Back to the Board
   <% end %>
 
+  <%# Header %>
+  <div class="mb-10">
+    <h1 class="text-4xl font-extrabold text-neutral-900 dark:text-white tracking-tight mb-2">
+      Post a Ride
+    </h1>
+    <p class="text-neutral-500">
+      Fill in the details below to share your journey or request a ride from the community.
+    </p>
+  </div>
+
+  <%# Form Card %>
+  <div class="bg-white dark:bg-neutral-900 p-8 rounded-3xl border border-neutral-100 dark:border-white/5 shadow-xl">
+    <%= render "form", ride_post: @ride_post do %>
+      <%= link_to "Cancel", ride_posts_path, class: "text-sm font-semibold text-neutral-500 hover:text-neutral-700 transition" %>
+    <% end %>
+  </div>
 </div>

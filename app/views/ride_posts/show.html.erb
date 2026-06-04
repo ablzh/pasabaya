@@ -28,8 +28,11 @@
 
       <% if Current.user == @ride_post.user %>
         <div class="flex gap-2">
-          <%= link_to "Edit", edit_ride_post_path(@ride_post), class: "rounded-md px-3.5 py-2 bg-neutral-100 hover:bg-neutral-200 text-neutral-700 font-semibold text-sm transition" %>
-          <%= button_to "Delete", @ride_post, method: :delete, class: "rounded-md px-3.5 py-2 bg-red-50 hover:bg-red-100 text-red-600 font-semibold text-sm transition", data: { turbo_confirm: "Are you sure?" } %>
+          <%= render "shared/components/buttons/button", 
+                     text: "Edit", 
+                     href: edit_ride_post_path(@ride_post), 
+                     variant: "secondary", 
+                     size: "sm" %>
         </div>
       <% end %>
     </div>
