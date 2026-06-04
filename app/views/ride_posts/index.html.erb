@@ -1,21 +1,33 @@
-<% content_for :title, "Ride posts" %>
-
-<div class="w-full">
+<div class="max-w-7xl mx-auto mb-20 px-4 sm:px-6 lg:px-8">
   <% if notice.present? %>
     <p class="py-2 px-3 bg-green-50 mb-5 text-green-500 font-medium rounded-md inline-block" id="notice"><%= notice %></p>
   <% end %>
 
-  <div class="flex justify-between items-center">
-    <h1 class="font-bold text-4xl">Ride posts</h1>
+  <%# Header & CTA Section %>
+  <div class="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
+    <div>
+      <h1 class="text-4xl font-extrabold text-neutral-900 dark:text-white tracking-tight sm:text-5xl">
+        The Ride Board
+      </h1>
+      <p class="mt-4 text-lg text-neutral-500 max-w-2xl">
+        Find your next travel companion or share your empty seats. Community-driven carpooling for the Philippines.
+      </p>
+    </div>
   </div>
 
-  <div id="ride_posts" class="min-w-full divide-y divide-gray-200 space-y-5">
+  <%# Grid of Ride Posts %>
+  <div id="ride_posts" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
     <% if @ride_posts.any? %>
-      <% @ride_posts.each do |ride_post| %>
-          <%= render ride_post %>
-      <% end %>
+      <%= render @ride_posts %>
     <% else %>
-      <p class="text-center my-10">No ride posts found.</p>
+      <div class="col-span-full py-20 text-center bg-neutral-50 dark:bg-neutral-800/50 rounded-3xl border-2 border-dashed border-neutral-200 dark:border-neutral-700">
+        <svg class="mx-auto size-12 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+        <h3 class="mt-4 text-lg font-bold text-neutral-900 dark:text-white">No rides posted yet</h3>
+        <p class="mt-2 text-sm text-neutral-500">Be the first to share a ride with the community!</p>
+        <div class="mt-6">
+          <%= link_to "Create your first post", new_ride_post_path, class: "text-blue-600 font-bold hover:text-blue-500 underline underline-offset-4" %>
+        </div>
+      </div>
     <% end %>
   </div>
 </div>
