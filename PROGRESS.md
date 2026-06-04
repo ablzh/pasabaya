@@ -1,26 +1,25 @@
 # Project Progress: Pasabaya Carpooling Board
-Last Updated: Sunday, May 31, 2026
+Last Updated: Thursday, June 4, 2026
 
 ## 📝 Current Status
-The core database architecture and model layer are complete. We have successfully implemented the hierarchical location system and the base `RidePost` logic. The first functional UI component (the creation form) is wired up and ready for testing with real data.
+The core "Ride Board" is now a fully functional, professional-grade prototype. We have moved from basic scaffolded views to a custom-designed, search-first experience. Users can now search for specific routes, view beautifully detailed ride cards, and contact posters directly via Facebook.
 
 ## ✅ Completed in Last Session
-### 1. Architectural Foundation
-- Created `ARCHITECTURE.md` to document the project's "one-person framework" philosophy and trust strategy.
-- Chose **SQLite** for everything (DB, Queue, Cache) and **Facebook Profile Links** as the sole trust/communication mechanism.
+### 1. UI/UX Overhaul (Rails Blocks)
+- **Unified Design System:** Replaced all scaffold views with high-fidelity, centered card layouts and responsive grids.
+- **Component Integrity:** Audited all buttons and cards to ensure 100% adherence to the project's Rails Blocks design system.
+- **Form Refinement:** Redesigned the creation/edit form with better spacing, grouped inputs, and clear "Danger Zone" logic for deletions.
 
-### 2. Database & Models
-- **Location Infrastructure:** Implemented a self-referential `Location` model (`country`, `region`, `city`) to standardize inputs and support future global expansion.
-- **User Enhancement:** Added moderation fields (`banned_at`, `admin`) and enforced mandatory `facebook_profile_url` for trust.
-- **RidePost Model:** Created the central "bulletin board" entity connecting users to origin/destination locations with enums for post types and status.
+### 2. Search & Filtering Infrastructure
+- **Search-First UX:** Implemented a "Blank Slate" strategy where the board defaults to a search prompt rather than a list of all rides, reducing noise.
+- **Fat Model Scopes:** Extracted filtering logic into reusable ActiveRecord scopes in `RidePost`, keeping the controller clean and optimized (no N+1 queries).
+- **Reusable Partial:** Created `_search_form.html.erb` to be easily embedded on the Home/Landing page.
 
-### 3. Controller & View Logic
-- **RidePosts Controller:** Implemented standard RESTful CRUD using `scaffold_controller`.
-- **Logic:** Configured the `create` action to automatically associate posts with the current session's user (`Current.user`).
-- **Form UI:** Adapted a **Rails Blocks UI** component into a functional `form_with` partial in `app/views/ride_posts/_form.html.erb`.
+### 3. Trust & Communication
+- **Facebook Contact Integration:** Successfully implemented the "Contact on Facebook" deep-link on the ride detail page, fulfilling the core architectural trust strategy.
 
 ## 🚀 Immediate Next Steps
-1. **Populate Locations:** Create a `db/seeds.rb` script to import real Philippine regions and cities.
-2. **Display the Board:** Use Rails Blocks components to build out the `index.html.erb` (the main feed of rides).
-3. **Contact Integration:** Build the "Contact via Messenger" link on the `show.html.erb` page.
-4. **Safety & Moderation:** Implement the `Report` model and basic admin banning capabilities.
+1. **Landing Page:** Design the `pages#home` view as a proper landing page using the new search partial.
+2. **Real Data Seeding:** Populate `db/seeds.rb` with real Philippine regions and cities to make the search dropdowns useful.
+3. **Location UI:** Implement `TomSelect` or similar autocomplete for the city dropdowns to handle the large number of Philippine municipalities.
+4. **Safety & Moderation:** Build the `Report` model and the initial Admin dashboard for community moderation.
