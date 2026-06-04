@@ -143,11 +143,16 @@
               <p class="font-medium text-amber-800 dark:text-amber-200">
                 You are responsible for your own safety. Always verify who you are traveling with.
               </p>
-              <div class="pt-4">
+              <div class="pt-4 flex gap-3">
                 <%= render "shared/components/buttons/button", 
-                      text: "Read full Safety Guidelines", 
-                      href: privacy_path, 
+                      text: "Safety & Terms", 
+                      href: terms_path, 
                       variant: "outline", 
+                      size: "sm" %>
+                <%= render "shared/components/buttons/button", 
+                      text: "Privacy", 
+                      href: privacy_path, 
+                      variant: "ghost", 
                       size: "sm" %>
               </div>
             </div>
