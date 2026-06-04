@@ -5,7 +5,11 @@ class RidePostsController < ApplicationController
 
   # GET /ride_posts or /ride_posts.json
   def index
-    @ride_posts = RidePost.active.includes(:origin, :destination, :user).order(departure_time: :asc)
+    @ride_posts = RidePost.active
+                          .includes(:origin, :destination, :user).order(departure_time: :asc)
+                          .filter_by_post_type(params[:post_type])
+                          .filter_by_origin(params[:origin_id])
+                          .filter_by_destination(params[:destination_id])
   end
 
   # GET /ride_posts/1 or /ride_posts/1.json
