@@ -1,15 +1,91 @@
-<% content_for :title, "Showing ride post" %>
-
-<div class="md:w-2/3 w-full">
+<div class="max-w-2xl mx-auto my-8 px-4 sm:px-0">
   <% if notice.present? %>
     <p class="py-2 px-3 bg-green-50 mb-5 text-green-500 font-medium rounded-md inline-block" id="notice"><%= notice %></p>
   <% end %>
 
-  <h1 class="font-bold text-4xl">Showing ride post</h1>
+  <%# Header Section %>
+  <div class="mb-8">
+    <%= link_to ride_posts_path, class: "text-sm text-neutral-500 hover:text-neutral-700 flex items-center gap-1 mb-4" do %>
+      <svg class="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+      Back to Board
+    <% end %>
 
-  <%= render @ride_post %>
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div>
+        <h1 class="text-3xl font-extrabold text-neutral-900 dark:text-white tracking-tight">
+          <%= @ride_post.origin.name %> <span class="text-neutral-400">→</span> <%= @ride_post.destination.name %>
+        </h1>
+        <div class="mt-2 flex items-center gap-2">
+          <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-bold uppercase tracking-wider
+            <%= @ride_post.offering? ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400' : 'bg-sky-100 text-sky-700 dark:bg-sky-500/10 dark:text-sky-400' %>">
+            <%= @ride_post.post_type %>
+          </span>
+          <span class="text-sm text-neutral-500">
+            Posted <%= time_ago_in_words(@ride_post.created_at) %> ago
+          </span>
+        </div>
+      </div>
 
-  <%= link_to "Edit this ride post", edit_ride_post_path(@ride_post), class: "w-full sm:w-auto text-center rounded-md px-3.5 py-2.5 bg-gray-100 hover:bg-gray-50 inline-block font-medium" %>
-  <%= link_to "Back to ride posts", ride_posts_path, class: "w-full sm:w-auto text-center mt-2 sm:mt-0 sm:ml-2 rounded-md px-3.5 py-2.5 bg-gray-100 hover:bg-gray-50 inline-block font-medium" %>
-  <%= button_to "Destroy this ride post", @ride_post, method: :delete, form_class: "sm:inline-block mt-2 sm:mt-0 sm:ml-2", class: "w-full rounded-md px-3.5 py-2.5 text-white bg-red-600 hover:bg-red-500 font-medium cursor-pointer", data: { turbo_confirm: "Are you sure?" } %>
+      <% if Current.user == @ride_post.user %>
+        <div class="flex gap-2">
+          <%= link_to "Edit", edit_ride_post_path(@ride_post), class: "rounded-md px-3.5 py-2 bg-neutral-100 hover:bg-neutral-200 text-neutral-700 font-semibold text-sm transition" %>
+          <%= button_to "Delete", @ride_post, method: :delete, class: "rounded-md px-3.5 py-2 bg-red-50 hover:bg-red-100 text-red-600 font-semibold text-sm transition", data: { turbo_confirm: "Are you sure?" } %>
+        </div>
+      <% end %>
+    </div>
+  </div>
+
+  <%# Main Content Grid %>
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+    <div class="bg-white dark:bg-neutral-900 p-6 rounded-2xl border border-neutral-100 dark:border-white/5 shadow-sm">
+      <p class="text-[10px] font-bold text-neutral-400 uppercase tracking-widest mb-1">Departure</p>
+      <p class="text-lg font-bold text-neutral-900 dark:text-white">
+        <%= @ride_post.departure_time.strftime("%a, %b %d") %>
+      </p>
+      <p class="text-sm text-blue-600 font-medium"><%= @ride_post.departure_time.strftime("%I:%M %p") %></p>
+    </div>
+
+    <div class="bg-white dark:bg-neutral-900 p-6 rounded-2xl border border-neutral-100 dark:border-white/5 shadow-sm">
+      <p class="text-[10px] font-bold text-neutral-400 uppercase tracking-widest mb-1">Capacity</p>
+      <p class="text-lg font-bold text-neutral-900 dark:text-white">
+        <%= @ride_post.seats %>
+      </p>
+      <p class="text-sm text-neutral-500 font-medium">Seats available</p>
+    </div>
+
+    <div class="bg-white dark:bg-neutral-900 p-6 rounded-2xl border border-neutral-100 dark:border-white/5 shadow-sm">
+      <p class="text-[10px] font-bold text-neutral-400 uppercase tracking-widest mb-1">Status</p>
+      <p class="text-lg font-bold text-neutral-900 dark:text-white capitalize">
+        <%= @ride_post.status %>
+      </p>
+      <p class="text-sm text-neutral-500 font-medium">Currently active</p>
+    </div>
+  </div>
+
+  <%# Notes Section %>
+  <% if @ride_post.notes.present? %>
+    <div class="mb-8">
+      <h2 class="text-sm font-bold text-neutral-400 uppercase tracking-widest mb-4">Driver's Notes</h2>
+      <div class="prose prose-neutral dark:prose-invert max-w-none bg-neutral-50 dark:bg-neutral-800/50 p-6 rounded-2xl">
+        <%= @ride_post.notes %>
+      </div>
+    </div>
+  <% end %>
+
+  <%# Poster Section & Action %>
+  <div class="bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 p-8 rounded-3xl shadow-xl flex flex-col items-center text-center">
+    <div class="mb-4">
+      <%= user_avatar(@ride_post.user, classes: "h-16 w-16 text-xl border-4 border-white/10 dark:border-neutral-900/10") %>
+    </div>
+    
+    <h3 class="text-xl font-bold mb-1"><%= @ride_post.user.first_name %> <%= @ride_post.user.last_name %></h3>
+    <p class="text-neutral-400 dark:text-neutral-500 text-sm mb-6 max-w-sm">
+      Is looking for travel partners. Contact them directly on Facebook to coordinate details and confirm your ride.
+    </p>
+
+    <%= link_to @ride_post.user.facebook_profile_url, target: "_blank", class: "group relative inline-flex items-center justify-center px-8 py-4 font-bold text-white transition-all duration-200 bg-blue-600 font-pj rounded-xl focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-900 hover:bg-blue-700 shadow-lg shadow-blue-500/20" do %>
+      <svg class="w-6 h-6 mr-3" fill="currentColor" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12.073-12-12.073s-12 5.446-12 12.073c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.469h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.469h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+      Contact on Facebook
+    <% end %>
+  </div>
 </div>
