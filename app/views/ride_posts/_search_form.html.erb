@@ -1,0 +1,38 @@
+<%# app/views/ride_posts/_search_form.html.erb %>
+<div class="bg-white dark:bg-neutral-900 p-4 rounded-2xl border border-neutral-100 dark:border-white/5 shadow-sm mb-12">
+  <%= form_with url: ride_posts_path, method: :get, class: "flex flex-col sm:flex-row gap-4 items-end" do |form| %>
+    
+    <%# 1. Post Type Select %>
+    <div class="flex-1 w-full">
+      <%= form.label :post_type, "Looking for...", class: "block text-[10px] font-bold text-neutral-400 uppercase tracking-widest mb-1 ml-1" %>
+      <%= form.select :post_type, 
+          options_for_select([["All Rides", ""], ["Offerings", "offering"], ["Requests", "requesting"]], params[:post_type]),
+          {}, 
+          class: "w-full rounded-xl border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-sm focus:ring-blue-500 focus:border-blue-500" %>
+    </div>
+
+    <%# 2. Origin Select %>
+    <div class="flex-1 w-full">
+      <%= form.label :origin_id, "From", class: "block text-[10px] font-bold text-neutral-400 uppercase tracking-widest mb-1 ml-1" %>
+      <%= form.collection_select :origin_id, 
+          Location.city, :id, :name, 
+          { prompt: "Any Origin", selected: params[:origin_id] }, 
+          { class: "w-full rounded-xl border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-sm focus:ring-blue-500 focus:border-blue-500" } %>
+    </div>
+
+    <%# 3. Destination Select %>
+    <div class="flex-1 w-full">
+      <%= form.label :destination_id, "To", class: "block text-[10px] font-bold text-neutral-400 uppercase tracking-widest mb-1 ml-1" %>
+      <%= form.collection_select :destination_id, 
+          Location.city, :id, :name, 
+          { prompt: "Any Destination", selected: params[:destination_id] }, 
+          { class: "w-full rounded-xl border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-sm focus:ring-blue-500 focus:border-blue-500" } %>
+    </div>
+
+    <%# Submit Button %>
+    <div class="w-full sm:w-auto">
+       <%= render "shared/components/buttons/button", text: "Search", type: "submit", size: "md", full_width: true, classes: "py-2.5" %>
+    </div>
+    
+  <% end %>
+</div>
