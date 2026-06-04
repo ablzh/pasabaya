@@ -1,60 +1,79 @@
-<% content_for :title, "Privacy Policy | Pasabaya.app " %>
+<% content_for :title, "Privacy Policy | Pasabaya.app" %>
 
-<div class="bg-white min-h-screen py-16 px-4 sm:px-6 lg:px-8">
+<div class="min-h-screen py-16 px-4 sm:px-6 lg:px-8 bg-white dark:bg-neutral-900">
   <div class="max-w-3xl mx-auto">
-    <a href="/" class="text-indigo-600 hover:text-indigo-500 font-medium flex items-center mb-8">
+    <a href="/" class="text-indigo-600 dark:text-indigo-400 hover:underline font-medium flex items-center mb-8">
       <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
       </svg>
       Back to home
     </a>
 
-    <h1 class="text-3xl font-extrabold text-gray-900 mb-8">Privacy Policy</h1>
+    <h1 class="text-4xl font-extrabold text-neutral-900 dark:text-white mb-2">Privacy Policy</h1>
+    <p class="text-sm text-neutral-500 dark:text-neutral-400 mb-8 italic">Last Updated: June 4, 2026</p>
 
-    <div class="prose prose-indigo prose-lg text-gray-500 space-y-6">
-      <p class="text-sm italic">Last Updated: May 10, 2026</p>
-
+    <div class="prose prose-neutral dark:prose-invert prose-indigo max-w-none space-y-8">
       <section>
-        <h2 class="text-xl font-bold text-gray-900">1. Introduction</h2>
-        <p>At <strong>Pasabaya.app</strong>, we take your privacy seriously. This policy explains how we handle your
-          personal data in
-          compliance with the <strong>Philippine Data Privacy Act of 2012 (RA 10173)</strong>.</p>
+        <h2 class="text-xl font-bold text-neutral-900 dark:text-white">1. Introduction</h2>
+        <p>
+          At <strong>Pasabaya.app</strong>, we are committed to protecting your privacy while helping you find travel companions. This policy explains how we collect, use, and safeguard your data in compliance with the <strong>Philippine Data Privacy Act of 2012 (RA 10173)</strong>.
+        </p>
       </section>
 
       <section>
-        <h2 class="text-xl font-bold text-gray-900">2. Data We Collect</h2>
-        <p>We only collect information that you voluntarily provide to us when you sign up for our waitlist:</p>
+        <h2 class="text-xl font-bold text-neutral-900 dark:text-white">2. Information We Collect</h2>
+        <p>We collect information that you voluntarily provide to us to facilitate the carpooling board:</p>
         <ul class="list-disc pl-5 space-y-2">
-          <li>Name</li>
-          <li>Email Address</li>
+          <li><strong>Account Information:</strong> Name, email address, and password (encrypted).</li>
+          <li><strong>Profile Information:</strong> Your Facebook profile URL (mandatory for trust and verification).</li>
+          <li><strong>Trip Information:</strong> Origin and destination cities, preferred departure times, number of available seats, and trip notes.</li>
+          <li><strong>Communications:</strong> Information you provide when contacting us for support.</li>
         </ul>
       </section>
 
       <section>
-        <h2 class="text-xl font-bold text-gray-900">3. Purpose of Processing</h2>
-        <p>Your data is collected solely to notify you about the project launch and related updates. We do not sell your
-          data to third parties.</p>
+        <h2 class="text-xl font-bold text-neutral-900 dark:text-white">3. How We Use Your Information</h2>
+        <p>We use your data strictly for the following purposes:</p>
+        <ul class="list-disc pl-5 space-y-2">
+          <li><strong>Matching:</strong> To enable other users to find your ride posts based on origin and destination.</li>
+          <li><strong>Trust & Verification:</strong> Your Facebook profile URL is displayed to other logged-in users to allow them to verify your identity externally.</li>
+          <li><strong>Notifications:</strong> To send you updates about your account or the Service.</li>
+          <li><strong>Analytics:</strong> We use <strong>Umami</strong>, a privacy-focused, cookie-less analytics tool, to understand website traffic without collecting personally identifiable information (PII).</li>
+        </ul>
       </section>
 
       <section>
-        <h2 class="text-xl font-bold text-gray-900">4. Analytics</h2>
-        <p>We use <strong>Umami</strong>, a privacy-focused analytics tool, to understand how visitors interact with our
-          website. Umami does not use cookies, does not collect any personal data (PII), and does not track you across
-          other websites. All data collected is strictly anonymized and used only to help us improve the Pasabaya
-          experience.</p>
+        <h2 class="text-xl font-bold text-neutral-900 dark:text-white">4. Information Sharing and Disclosure</h2>
+        <p>
+          Pasabaya.app is a public bulletin board. <strong>Your trip details (Origin, Destination, Time, Notes) are visible to all visitors.</strong> 
+        </p>
+        <p>
+          However, specific contact details like your Facebook profile link are only shared with registered users who are logged into the platform. We never sell your personal information to third parties.
+        </p>
       </section>
 
       <section>
-        <h2 class="text-xl font-bold text-gray-900">5. Data Security</h2>
-        <p>We use industry-standard security measures (SSL/TLS encryption) to protect your data. Your information is
-          stored on secure servers managed via AWS.</p>
+        <h2 class="text-xl font-bold text-neutral-900 dark:text-white">5. Data Retention</h2>
+        <p>
+          We retain your personal information for as long as your account is active or as needed to provide you with the Service. You may delete your ride posts or your entire account at any time through your account settings.
+        </p>
       </section>
 
       <section>
-        <h2 class="text-xl font-bold text-gray-900">6. Your Rights</h2>
-        <p>Under the DPA of 2012, you have the right to access, correct, or request the deletion of your personal data
-          at any time. To exercise these rights, please contact us at
-          <a href="mailto:privacy@pasabaya.app" class="text-indigo-600 hover:text-indigo-500"><strong>privacy@pasabaya.app</strong></a>.
+        <h2 class="text-xl font-bold text-neutral-900 dark:text-white">6. Your Rights</h2>
+        <p>Under the Data Privacy Act of 2012, you have the right to:</p>
+        <ul class="list-disc pl-5 space-y-2">
+          <li>Access and rectify your personal data.</li>
+          <li>Object to the processing of your data.</li>
+          <li>Request the erasure or blocking of your data.</li>
+        </ul>
+        <p>To exercise these rights, please contact us at <a href="mailto:privacy@pasabaya.app" class="text-indigo-600 dark:text-indigo-400">privacy@pasabaya.app</a>.</p>
+      </section>
+
+      <section>
+        <h2 class="text-xl font-bold text-neutral-900 dark:text-white">7. Security</h2>
+        <p>
+          We use industry-standard security measures (SSL/TLS encryption) to protect your data during transmission. While we strive to protect your personal information, no method of transmission over the internet is 100% secure.
         </p>
       </section>
     </div>
