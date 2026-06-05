@@ -3,6 +3,10 @@ class SessionsController < ApplicationController
   rate_limit to: 10, within: 3.minutes, only: :create, with: -> { redirect_to new_session_path, alert: "Try again later." }
 
   def new
+    return_path = params[:return_to]
+    if return_path.present? && return_path.start_with?("/") && !return_path.start_with?("//")
+      session[:return_to_after_authenticating] = params[:return_to]
+    end
   end
 
   def create
