@@ -34,10 +34,6 @@
   <link rel="icon" href="/icon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="/icon.png">
 
-  <%# Includes all stylesheet files in app/assets/stylesheets %>
-  <%= stylesheet_link_tag :app, "data-turbo-track": "reload" %>
-  <%= javascript_importmap_tags %>
-
   <!-- Shoelace -->
   <script type="module" src="https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.20.1/cdn/components/color-picker/color-picker.js"></script>
   <link
@@ -57,6 +53,10 @@
 
   <!-- Photoswipe -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/photoswipe/dist/photoswipe.css">
+
+  <%# Includes all stylesheet files in app/assets/stylesheets %>
+  <%= stylesheet_link_tag :app, "data-turbo-track": "reload" %>
+  <%= javascript_importmap_tags %>
 
   <% if Rails.env.production? %>
     <!-- Umami -->
