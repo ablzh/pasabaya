@@ -1,6 +1,7 @@
 Rails.application.routes.draw do
   resources :users, only: [ :show ]
   resource :profile, only: [ :edit, :update ]
+  resource :dashboard, only: [ :show ]
   resources :ride_posts, path: "rides"
   resource :session
   resources :passwords, param: :token
