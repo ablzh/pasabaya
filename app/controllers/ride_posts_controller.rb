@@ -1,7 +1,8 @@
 class RidePostsController < ApplicationController
   before_action :require_authentication, except: %i[ index show ]
   before_action :set_ride_post, only: %i[ show edit update destroy ]
-  before_action :resume_session, only: [ :index, :show ]
+  before_action :resume_session, only: [:index, :show]
+  before_action :set_grouped_locations, only: %i[ index new edit create update ]
 
   # GET /ride_posts or /ride_posts.json
   def index
@@ -68,13 +69,18 @@ class RidePostsController < ApplicationController
   end
 
   private
-    # Use callbacks to share common setup or constraints between actions.
-    def set_ride_post
-      @ride_post = RidePost.find(params.expect(:id))
-    end
 
-    # Only allow a list of trusted parameters through.
-    def ride_post_params
-      params.expect(ride_post: [ :post_type, :origin_id, :destination_id, :departure_time, :seats, :notes ])
-    end
+  # Use callbacks to share common setup or constraints between actions.
+  def set_ride_post
+    @ride_post = RidePost.find(params.expect(:id))
+  end
+
+  # Only allow a list of trusted parameters through.
+  def ride_post_params
+    params.expect(ride_post: [:post_type, :origin_id, :destination_id, :departure_time, :seats, :notes])
+  end
+
+  def set_grouped_locations
+    @grouped_locations = Location.grouped_by_region
+  end
 end

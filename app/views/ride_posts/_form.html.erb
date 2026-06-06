@@ -21,15 +21,23 @@
     <!-- Origin Location -->
     <div>
       <%= form.label :origin_id, "Leaving from (City)", class: "block text-xs font-bold text-neutral-400 uppercase tracking-widest mb-2" %>
-      <%= form.collection_select :origin_id, Location.city, :id, :name, { prompt: "Select a city..." }, 
-          { class: "block w-full rounded-xl border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-neutral-900 dark:text-white focus:ring-blue-500 focus:border-blue-500 transition-all py-3" } %>
+      <%= render "shared/components/combobox/combobox",
+                 name: "ride_post[origin_id]",
+                 id: "ride_post_origin_id",
+                 grouped_options: @grouped_locations,
+                 selected: ride_post.origin_id,
+                 placeholder: "Select a city..." %>
     </div>
 
     <!-- Destination Location -->
     <div>
       <%= form.label :destination_id, "Going to (City)", class: "block text-xs font-bold text-neutral-400 uppercase tracking-widest mb-2" %>
-      <%= form.collection_select :destination_id, Location.city, :id, :name, { prompt: "Select a city..." }, 
-          { class: "block w-full rounded-xl border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-neutral-900 dark:text-white focus:ring-blue-500 focus:border-blue-500 transition-all py-3" } %>
+      <%= render "shared/components/combobox/combobox",
+                 name: "ride_post[destination_id]",
+                 id: "ride_post_destination_id",
+                 grouped_options: @grouped_locations,
+                 selected: ride_post.destination_id,
+                 placeholder: "Select a city..." %>
     </div>
 
     <!-- Departure Time -->
