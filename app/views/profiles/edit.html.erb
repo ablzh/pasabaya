@@ -16,29 +16,39 @@
 
       <div class="flex items-center gap-6">
         <%= user_avatar(@user, classes: "w-20 h-20 text-2xl") %>
-        <div>
-          <%= form.label :avatar, "Upload Avatar", class: "block text-xs font-bold text-neutral-400 uppercase tracking-widest mb-2" %>
-          <%= form.file_field :avatar, class: "block w-full text-sm text-neutral-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" %>
+        <div class="flex-1">
+          <%= render "shared/components/forms/form_group",
+            label: "Upload Avatar",
+            name: :avatar,
+            error: @user.errors[:avatar].first do %>
+            <%= form.file_field :avatar, class: "block w-full text-sm text-neutral-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border file:border-neutral-200 dark:file:border-neutral-700 file:text-sm file:font-semibold file:bg-neutral-50 dark:file:bg-neutral-800 file:text-neutral-700 dark:file:text-neutral-300 hover:file:bg-neutral-100 dark:hover:file:bg-neutral-700 cursor-pointer" %>
+          <% end %>
         </div>
       </div>
 
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
-        <div>
-          <%= form.label :first_name, "First Name", class: "block text-xs font-bold text-neutral-400 uppercase tracking-widest mb-2" %>
-          <%= form.text_field :first_name, class: "w-full rounded-xl border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-sm focus:ring-blue-500 focus:border-blue-500" %>
-        </div>
+        <%= render "shared/components/forms/form_group",
+          label: "First Name",
+          name: :first_name,
+          error: @user.errors[:first_name].first do %>
+          <%= form.text_field :first_name, class: "w-full rounded-xl border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-sm focus:ring-blue-500 focus:border-blue-500 py-3 px-4" %>
+        <% end %>
 
-        <div>
-          <%= form.label :last_name, "Last Name", class: "block text-xs font-bold text-neutral-400 uppercase tracking-widest mb-2" %>
-          <%= form.text_field :last_name, class: "w-full rounded-xl border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-sm focus:ring-blue-500 focus:border-blue-500" %>
-        </div>
+        <%= render "shared/components/forms/form_group",
+          label: "Last Name",
+          name: :last_name,
+          error: @user.errors[:last_name].first do %>
+          <%= form.text_field :last_name, class: "w-full rounded-xl border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-sm focus:ring-blue-500 focus:border-blue-500 py-3 px-4" %>
+        <% end %>
       </div>
 
-      <div>
-        <%= form.label :facebook_profile_url, "Facebook Profile URL", class: "block text-xs font-bold text-neutral-400 uppercase tracking-widest mb-2" %>
-        <%= form.url_field :facebook_profile_url, placeholder: "https://facebook.com/username", class: "w-full rounded-xl border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-sm focus:ring-blue-500 focus:border-blue-500" %>
-        <p class="text-xs text-neutral-400 mt-2">Required. Other members will use this to view your profile and contact you.</p>
-      </div>
+      <%= render "shared/components/forms/form_group",
+        label: "Facebook Profile URL",
+        name: :facebook_profile_url,
+        helper_text: "Required. Other members will use this to view your profile and contact you.",
+        error: @user.errors[:facebook_profile_url].first do %>
+        <%= form.url_field :facebook_profile_url, placeholder: "https://facebook.com/username", class: "w-full rounded-xl border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-sm focus:ring-blue-500 focus:border-blue-500 py-3 px-4" %>
+      <% end %>
 
       <div class="pt-6 border-t border-neutral-100 dark:border-white/5">
         <%= render "shared/components/buttons/button", text: "Save Profile Changes", type: "submit", size: "lg" %>
