@@ -10,17 +10,26 @@
           Member since <%= @user.created_at.strftime("%B %Y") %>
         </p>
 
-        <% if @user.facebook_profile_url.present? %>
-          <div class="mt-4">
+        <div class="mt-4 flex flex-wrap gap-3">
+          <% if @user.facebook_profile_url.present? %>
             <%= render "shared/components/buttons/button",
                        text: "View Facebook Profile",
                        href: @user.facebook_profile_url,
                        variant: "primary",
                        size: "sm",
                        target: "_blank" %>
-          </div>
-        <% end %>
+          <% end %>
+
+          <% if Current.user == @user %>
+            <%= render "shared/components/buttons/button",
+                       text: "Edit Profile",
+                       href: edit_profile_path,
+                       variant: "outline",
+                       size: "sm" %>
+          <% end %>
+        </div>
       </div>
+    </div>
     </div>
   <% end %>
 
@@ -36,4 +45,4 @@
       <% end %>
     </div>
   </div>
-</div>
+  </div>
