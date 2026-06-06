@@ -1,0 +1,39 @@
+<div class="max-w-4xl mx-auto px-4 py-8 space-y-12">
+  <%= render "shared/components/card/card", rounded: "3xl", padding: "lg" do %>
+    <div class="flex flex-col sm:flex-row items-center gap-6 text-center sm:text-left">
+      <%= user_avatar(@user, classes: "w-24 h-24 text-3xl") %>
+      <div class="flex-1">
+        <h1 class="text-3xl font-extrabold text-neutral-900 dark:text-white">
+          <%= @user.first_name %> <%= @user.last_name %>
+        </h1>
+        <p class="text-sm text-neutral-500 dark:text-neutral-400 mt-1">
+          Member since <%= @user.created_at.strftime("%B %Y") %>
+        </p>
+
+        <% if @user.facebook_profile_url.present? %>
+          <div class="mt-4">
+            <%= render "shared/components/buttons/button",
+                       text: "View Facebook Profile",
+                       href: @user.facebook_profile_url,
+                       variant: "primary",
+                       size: "sm",
+                       target: "_blank" %>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  <% end %>
+
+  <div>
+    <h2 class="text-2xl font-bold text-neutral-900 dark:text-white mb-6">Active Posts</h2>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+      <% if @ride_posts.any? %>
+        <%= render @ride_posts %>
+      <% else %>
+        <div class="col-span-full py-10 text-center text-neutral-500 bg-neutral-50 dark:bg-neutral-800/50 rounded-2xl border border-dashed border-neutral-200 dark:border-neutral-700">
+          No active ride offers or requests listed at the moment.
+        </div>
+      <% end %>
+    </div>
+  </div>
+</div>
