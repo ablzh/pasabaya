@@ -1,0 +1,48 @@
+<div class="max-w-2xl mx-auto px-4 py-8">
+  <h1 class="text-3xl font-extrabold text-neutral-900 dark:text-white mb-8">Edit Profile</h1>
+
+  <%= render "shared/components/card/card", rounded: "3xl", padding: "lg" do %>
+    <%= form_with model: @user, url: profile_path, method: :patch, class: "space-y-6" do |form| %>
+
+      <% if @user.errors.any? %>
+        <div class="bg-red-50 dark:bg-red-900/10 text-red-600 px-4 py-3 font-medium rounded-xl border border-red-100 dark:border-red-900/20">
+          <ul class="list-disc ml-6 text-sm">
+            <% @user.errors.full_messages.each do |message| %>
+              <li><%= message %></li>
+            <% end %>
+          </ul>
+        </div>
+      <% end %>
+
+      <div class="flex items-center gap-6">
+        <%= user_avatar(@user, classes: "w-20 h-20 text-2xl") %>
+        <div>
+          <%= form.label :avatar, "Upload Avatar", class: "block text-xs font-bold text-neutral-400 uppercase tracking-widest mb-2" %>
+          <%= form.file_field :avatar, class: "block w-full text-sm text-neutral-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" %>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+        <div>
+          <%= form.label :first_name, "First Name", class: "block text-xs font-bold text-neutral-400 uppercase tracking-widest mb-2" %>
+          <%= form.text_field :first_name, class: "w-full rounded-xl border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-sm focus:ring-blue-500 focus:border-blue-500" %>
+        </div>
+
+        <div>
+          <%= form.label :last_name, "Last Name", class: "block text-xs font-bold text-neutral-400 uppercase tracking-widest mb-2" %>
+          <%= form.text_field :last_name, class: "w-full rounded-xl border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-sm focus:ring-blue-500 focus:border-blue-500" %>
+        </div>
+      </div>
+
+      <div>
+        <%= form.label :facebook_profile_url, "Facebook Profile URL", class: "block text-xs font-bold text-neutral-400 uppercase tracking-widest mb-2" %>
+        <%= form.url_field :facebook_profile_url, placeholder: "https://facebook.com/username", class: "w-full rounded-xl border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-sm focus:ring-blue-500 focus:border-blue-500" %>
+        <p class="text-xs text-neutral-400 mt-2">Required. Other members will use this to view your profile and contact you.</p>
+      </div>
+
+      <div class="pt-6 border-t border-neutral-100 dark:border-white/5">
+        <%= render "shared/components/buttons/button", text: "Save Profile Changes", type: "submit", size: "lg" %>
+      </div>
+    <% end %>
+  <% end %>
+</div>
