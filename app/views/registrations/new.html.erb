@@ -15,37 +15,55 @@
       <% end %>
 
       <div class="grid grid-cols-2 gap-4">
-        <div>
-          <%= form.label :first_name, "First Name", class: "block text-xs font-bold text-neutral-400 uppercase tracking-widest mb-2" %>
-          <%= form.text_field :first_name, required: true, class: "w-full rounded-xl border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-sm focus:ring-blue-500 focus:border-blue-500" %>
-        </div>
+        <%= render "shared/components/forms/form_group",
+          label: "First Name",
+          name: :first_name,
+          required: true,
+          error: @user.errors[:first_name].first do %>
+          <%= form.text_field :first_name, required: true, class: "w-full rounded-xl border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-sm focus:ring-blue-500 focus:border-blue-500 py-3 px-4" %>
+        <% end %>
 
-        <div>
-          <%= form.label :last_name, "Last Name", class: "block text-xs font-bold text-neutral-400 uppercase tracking-widest mb-2" %>
-          <%= form.text_field :last_name, required: true, class: "w-full rounded-xl border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-sm focus:ring-blue-500 focus:border-blue-500" %>
-        </div>
+        <%= render "shared/components/forms/form_group",
+          label: "Last Name",
+          name: :last_name,
+          required: true,
+          error: @user.errors[:last_name].first do %>
+          <%= form.text_field :last_name, required: true, class: "w-full rounded-xl border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-sm focus:ring-blue-500 focus:border-blue-500 py-3 px-4" %>
+        <% end %>
       </div>
 
-      <div>
-        <%= form.label :facebook_profile_url, "Facebook Profile URL", class: "block text-xs font-bold text-neutral-400 uppercase tracking-widest mb-2" %>
-        <%= form.url_field :facebook_profile_url, required: true, placeholder: "https://facebook.com/username", class: "w-full rounded-xl border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-sm focus:ring-blue-500 focus:border-blue-500" %>
-        <p class="text-[10px] text-neutral-400 mt-1">Required for trust safety. Other users will view this link to verify you.</p>
-      </div>
+      <%= render "shared/components/forms/form_group",
+        label: "Facebook Profile URL",
+        name: :facebook_profile_url,
+        required: true,
+        helper_text: "Required for trust safety. Other users will view this link to verify you.",
+        error: @user.errors[:facebook_profile_url].first do %>
+        <%= form.url_field :facebook_profile_url, required: true, placeholder: "https://facebook.com/username", class: "w-full rounded-xl border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-sm focus:ring-blue-500 focus:border-blue-500 py-3 px-4" %>
+      <% end %>
 
-      <div>
-        <%= form.label :email_address, "Email Address", class: "block text-xs font-bold text-neutral-400 uppercase tracking-widest mb-2" %>
-        <%= form.email_field :email_address, required: true, class: "w-full rounded-xl border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-sm focus:ring-blue-500 focus:border-blue-500" %>
-      </div>
+      <%= render "shared/components/forms/form_group",
+        label: "Email Address",
+        name: :email_address,
+        required: true,
+        error: @user.errors[:email_address].first do %>
+        <%= form.email_field :email_address, required: true, class: "w-full rounded-xl border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-sm focus:ring-blue-500 focus:border-blue-500 py-3 px-4" %>
+      <% end %>
 
-      <div>
-        <%= form.label :password, "Password", class: "block text-xs font-bold text-neutral-400 uppercase tracking-widest mb-2" %>
-        <%= form.password_field :password, required: true, class: "w-full rounded-xl border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-sm focus:ring-blue-500 focus:border-blue-500" %>
-      </div>
+      <%= render "shared/components/forms/form_group",
+        label: "Password",
+        name: :password,
+        required: true,
+        error: @user.errors[:password].first do %>
+        <%= form.password_field :password, required: true, class: "w-full rounded-xl border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-sm focus:ring-blue-500 focus:border-blue-500 py-3 px-4" %>
+      <% end %>
 
-      <div>
-        <%= form.label :password_confirmation, "Confirm Password", class: "block text-xs font-bold text-neutral-400 uppercase tracking-widest mb-2" %>
-        <%= form.password_field :password_confirmation, required: true, class: "w-full rounded-xl border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-sm focus:ring-blue-500 focus:border-blue-500" %>
-      </div>
+      <%= render "shared/components/forms/form_group",
+        label: "Confirm Password",
+        name: :password_confirmation,
+        required: true,
+        error: @user.errors[:password_confirmation].first do %>
+        <%= form.password_field :password_confirmation, required: true, class: "w-full rounded-xl border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-sm focus:ring-blue-500 focus:border-blue-500 py-3 px-4" %>
+      <% end %>
 
       <div class="pt-4">
         <%= render "shared/components/buttons/button", text: "Create Account & Log In", type: "submit", size: "lg", full_width: true %>
