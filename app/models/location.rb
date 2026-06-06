@@ -14,7 +14,7 @@ class Location < ApplicationRecord
   has_many :children, class_name: "Location", foreign_key: "parent_id", dependent: :destroy
 
   # Sorting the city list
-  default_scope { order(name: :desc) }
+  default_scope { order(name: :asc) }
 
   # Basic validations
   validates :name, presence: true
