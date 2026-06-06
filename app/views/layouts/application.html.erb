@@ -79,7 +79,10 @@
         "bg-green-100 border-green-400 text-green-700 dark:bg-green-950/20 dark:border-green-900/30 dark:text-green-400"
       end
     %>
-    <div data-turbo-temporary class="<%= theme_classes %> border px-4 py-3 rounded-xl shadow-lg animate-bounce">
+    <div data-turbo-temporary
+         data-controller="flash"
+         data-action="click->flash#dismiss"
+         class="<%= theme_classes %> border px-4 py-3 rounded-xl shadow-lg animate-bounce">
       <%= message %>
     </div>
   <% end %>
