@@ -29,7 +29,14 @@ The core "Ride Board" is now a fully functional, professional-grade prototype. W
 - **Grouped Combobox Dropdowns:** Replaced standard HTML city dropdown selects with the reusable [app/views/shared/components/combobox/_combobox.html.erb](file:///Users/uzver/Repos/pasabaya/app/views/shared/components/combobox/_combobox.html.erb) component in both [_search_form.html.erb](file:///Users/uzver/Repos/pasabaya/app/views/ride_posts/_search_form.html.erb) and the ride creation [_form.html.erb](file:///Users/uzver/Repos/pasabaya/app/views/ride_posts/_form.html.erb).
 - **Clean MVC Architecture:** Encapsulated regional grouping database queries into a single `grouped_by_region` scope inside [Location](file:///Users/uzver/Repos/pasabaya/app/models/location.rb#L1), then loaded data cleanly via controllers ([PagesController](file:///Users/uzver/Repos/pasabaya/app/controllers/pages_controller.rb#L3) and [RidePostsController](file:///Users/uzver/Repos/pasabaya/app/controllers/ride_posts_controller.rb#L1)) to avoid hardcoding in reusable components.
 
+### 6. User Profiles, Dashboard & Global Notification System
+- **Public Profiles:** Built the authenticated public profile views (`/users/:id`) displaying user statistics (active posts count, member since, linked FB profile). Added owner verification to conditionally render an "Edit Profile" link directly on their page.
+- **Profile Customization:** Developed a singular `/profile/edit` settings form allowing users to update their credentials and upload an ActiveStorage avatar.
+- **User Dashboard:** Designed and implemented the `/dashboard` route and controller displaying active vs inactive (past/fulfilled) rides for the logged-in user.
+- **Consolidated Flash Messaging:** Restructured flash notifications globally in [app/views/layouts/application.html.erb](file:///Users/uzver/Repos/pasabaya/app/views/layouts/application.html.erb) with support for green (notices) and red (alerts) prompts. Used `data-turbo-temporary` to prevent Turbo from caching notifications and persisting them incorrectly during page navigation.
+
 ## 🚀 Immediate Next Steps
-1. **Safety & Moderation:** Build the `Report` model and the initial Admin dashboard for community moderation.
-2. **User Profiles:** Implement detailed profile views showcasing user registration dates and past ride postings to build additional trust proof.
+1. **User Sign Up (Registration):** Build the sign-up system (new controller, routes, and form views) to allow new users to register and link up the navbar "Signup" button.
+2. **Safety & Moderation:** Build the polymorphic `Report` model and the initial Admin dashboard for community moderation.
+
 
