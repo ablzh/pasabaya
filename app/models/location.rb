@@ -16,6 +16,15 @@ class Location < ApplicationRecord
   # Sorting the city list
   default_scope { order(name: :asc) }
 
+  # Returns cities grouped by region, sorted alphabetically by region and city name.
+  def self.grouped_by_region
+    city
+      .includes(:parent)
+      .reorder("parents_locations.name ASC, locations.name ASC")
+      .group_by { |city| city.parent&.name || "Other" }
+      .transform_values { |cities| cities.map { |city| [city.name, city.id] } }
+  end
+
   # Basic validations
   validates :name, presence: true
   validates :location_type, presence: true
