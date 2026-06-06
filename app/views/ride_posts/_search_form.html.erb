@@ -11,22 +11,26 @@
           class: "w-full rounded-xl border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-sm focus:ring-blue-500 focus:border-blue-500" %>
     </div>
 
-    <%# 2. Origin Select %>
+    <%# 2. Origin Select (Grouped Combobox) %>
     <div class="flex-1 w-full">
       <%= form.label :origin_id, "From", class: "block text-[10px] font-bold text-neutral-400 uppercase tracking-widest mb-1 ml-1" %>
-      <%= form.collection_select :origin_id, 
-          Location.city, :id, :name, 
-          { prompt: "Any Origin", selected: params[:origin_id] }, 
-          { class: "w-full rounded-xl border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-sm focus:ring-blue-500 focus:border-blue-500" } %>
+      <%= render "shared/components/combobox/combobox",
+                 name: :origin_id,
+                 id: "origin_id",
+                 grouped_options: @grouped_locations,
+                 selected: params[:origin_id],
+                 placeholder: "Any Origin" %>
     </div>
 
-    <%# 3. Destination Select %>
+    <%# 3. Destination Select (Grouped Combobox) %>
     <div class="flex-1 w-full">
       <%= form.label :destination_id, "To", class: "block text-[10px] font-bold text-neutral-400 uppercase tracking-widest mb-1 ml-1" %>
-      <%= form.collection_select :destination_id, 
-          Location.city, :id, :name, 
-          { prompt: "Any Destination", selected: params[:destination_id] }, 
-          { class: "w-full rounded-xl border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-sm focus:ring-blue-500 focus:border-blue-500" } %>
+      <%= render "shared/components/combobox/combobox",
+                 name: :destination_id,
+                 id: "destination_id",
+                 grouped_options: @grouped_locations,
+                 selected: params[:destination_id],
+                 placeholder: "Any Destination" %>
     </div>
 
     <%# Submit Button %>
