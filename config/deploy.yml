@@ -7,7 +7,7 @@ image: ghcr.io/ablzh/pasabaya
 # Deploy to these servers.
 servers:
   web:
-    - 54.206.201.127
+    - 140.245.98.120
   # job:
   #   hosts:
   #     - 192.168.0.1
