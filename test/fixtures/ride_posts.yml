@@ -2,20 +2,20 @@
 
 one:
   user: one
-  post_type: 1
+  post_type: offering
   origin: one
-  destination: one
-  departure_time: 2026-05-31 08:41:22
-  seats: 1
-  notes: MyText
-  status: 1
+  destination: two
+  departure_time: <%= 1.day.from_now.to_fs(:db) %>
+  seats: 3
+  notes: Heading to Manila early morning.
+  status: active
 
 two:
   user: two
-  post_type: 1
+  post_type: requesting
   origin: two
-  destination: two
-  departure_time: 2026-05-31 08:41:22
+  destination: one
+  departure_time: <%= 2.days.from_now.to_fs(:db) %>
   seats: 1
-  notes: MyText
-  status: 1
+  notes: Looking for a ride back home.
+  status: active
