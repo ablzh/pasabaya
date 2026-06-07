@@ -1,0 +1,17 @@
+<div class="mx-auto md:w-2/3 w-full">
+
+
+  <h1 class="font-bold text-4xl">Forgot your password?</h1>
+
+  <%= form_with url: passwords_path, class: "space-y-6" do |form| %>
+    <%= render "shared/components/forms/form_group",
+      label: "Email Address",
+      name: :email_address do %>
+      <%= form.email_field :email_address, required: true, autofocus: true, autocomplete: "username", placeholder: "Enter your email address", value: params[:email_address], class: "block w-full rounded-xl border-neutral-300 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-base sm:text-sm focus:ring-blue-500 focus:border-blue-500 shadow-sm px-4 py-3" %>
+    <% end %>
+
+    <div class="pt-2">
+      <%= form.submit "Email reset instructions", class: "w-full sm:w-auto text-center rounded-xl px-5 py-3 bg-blue-600 hover:bg-blue-500 text-white font-medium cursor-pointer shadow-sm transition-all text-sm" %>
+    </div>
+  <% end %>
+</div>

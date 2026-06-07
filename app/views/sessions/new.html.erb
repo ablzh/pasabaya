@@ -1,0 +1,28 @@
+<div class="mx-auto md:w-2/3 w-full">
+
+
+  <h1 class="font-bold text-4xl">Sign in</h1>
+
+  <%= form_with url: session_url, class: "space-y-6" do |form| %>
+    <%= render "shared/components/forms/form_group",
+      label: "Email Address",
+      name: :email_address do %>
+      <%= form.email_field :email_address, required: true, autofocus: true, autocomplete: "username", placeholder: "Enter your email address", value: params[:email_address], class: "block w-full rounded-xl border-neutral-300 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-base sm:text-sm focus:ring-blue-500 focus:border-blue-500 shadow-sm px-4 py-3" %>
+    <% end %>
+
+    <%= render "shared/components/forms/form_group",
+      label: "Password",
+      name: :password do %>
+      <%= form.password_field :password, required: true, autocomplete: "current-password", placeholder: "Enter your password", maxlength: 72, class: "block w-full rounded-xl border-neutral-300 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-base sm:text-sm focus:ring-blue-500 focus:border-blue-500 shadow-sm px-4 py-3" %>
+    <% end %>
+
+    <div class="flex items-center justify-between pt-2">
+      <%= form.submit "Sign in", class: "rounded-xl px-5 py-3 bg-blue-600 hover:bg-blue-500 text-white font-medium cursor-pointer shadow-sm transition-all text-sm" %>
+      <%= link_to "Forgot password?", new_password_path, class: "text-sm text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300 underline hover:no-underline" %>
+    </div>
+  <% end %>
+
+  <p class="text-center text-sm text-neutral-500 dark:text-neutral-400 mt-6">
+    Don't have an account? <%= link_to "Sign up", sign_up_path, class: "text-blue-600 dark:text-blue-400 hover:underline font-semibold" %>
+  </p>
+</div>

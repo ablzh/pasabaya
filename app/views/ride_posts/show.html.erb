@@ -1,0 +1,95 @@
+<div class="max-w-2xl mx-auto my-8 px-4 sm:px-0">
+
+
+  <%# Header Section %>
+  <div class="mb-8">
+    <%= link_to ride_posts_path, class: "text-sm text-neutral-500 hover:text-neutral-700 flex items-center gap-1 mb-4" do %>
+      <svg class="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+      Back to Board
+    <% end %>
+
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div>
+        <h1 class="text-3xl font-extrabold text-neutral-900 dark:text-white tracking-tight">
+          <%= @ride_post.origin.name %> <span class="text-neutral-400">→</span> <%= @ride_post.destination.name %>
+        </h1>
+        <div class="mt-2 flex items-center gap-2">
+          <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-bold uppercase tracking-wider
+            <%= @ride_post.offering? ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400' : 'bg-sky-100 text-sky-700 dark:bg-sky-500/10 dark:text-sky-400' %>">
+            <%= @ride_post.post_type %>
+          </span>
+          <span class="text-sm text-neutral-500">
+            Posted <%= time_ago_in_words(@ride_post.created_at) %> ago
+          </span>
+        </div>
+      </div>
+
+      <% if Current.user == @ride_post.user %>
+        <div class="flex gap-2">
+          <%= render "shared/components/buttons/button", 
+                     text: "Edit", 
+                     href: edit_ride_post_path(@ride_post), 
+                     variant: "secondary", 
+                     size: "sm" %>
+        </div>
+      <% end %>
+    </div>
+  </div>
+
+  <%# Main Content Grid %>
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+    <div class="bg-white dark:bg-neutral-900 p-6 rounded-2xl border border-neutral-100 dark:border-white/5 shadow-sm">
+      <p class="text-[10px] font-bold text-neutral-400 uppercase tracking-widest mb-1">Departure</p>
+      <p class="text-lg font-bold text-neutral-900 dark:text-white">
+        <%= @ride_post.departure_time.strftime("%a, %b %d") %>
+      </p>
+      <p class="text-sm text-blue-600 font-medium"><%= @ride_post.departure_time.strftime("%I:%M %p") %></p>
+    </div>
+
+    <div class="bg-white dark:bg-neutral-900 p-6 rounded-2xl border border-neutral-100 dark:border-white/5 shadow-sm">
+      <p class="text-[10px] font-bold text-neutral-400 uppercase tracking-widest mb-1">Capacity</p>
+      <p class="text-lg font-bold text-neutral-900 dark:text-white">
+        <%= @ride_post.seats %>
+      </p>
+      <p class="text-sm text-neutral-500 font-medium">Seats available</p>
+    </div>
+
+    <div class="bg-white dark:bg-neutral-900 p-6 rounded-2xl border border-neutral-100 dark:border-white/5 shadow-sm">
+      <p class="text-[10px] font-bold text-neutral-400 uppercase tracking-widest mb-1">Status</p>
+      <p class="text-lg font-bold text-neutral-900 dark:text-white capitalize">
+        <%= @ride_post.status %>
+      </p>
+      <p class="text-sm text-neutral-500 font-medium">Currently active</p>
+    </div>
+  </div>
+
+  <%# Notes Section %>
+  <% if @ride_post.notes.present? %>
+    <div class="mb-8">
+      <h2 class="text-sm font-bold text-neutral-400 uppercase tracking-widest mb-4">Driver's Notes</h2>
+      <div class="prose prose-neutral dark:prose-invert max-w-none bg-neutral-50 dark:bg-neutral-800/50 p-6 rounded-2xl">
+        <%= @ride_post.notes %>
+      </div>
+    </div>
+  <% end %>
+
+  <%# Poster Section & Action %>
+  <div class="bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 p-8 rounded-3xl shadow-xl flex flex-col items-center text-center">
+    <%= link_to user_path(@ride_post.user), class: "group flex flex-col items-center mb-1" do %>
+      <div class="mb-4">
+        <%= user_avatar(@ride_post.user, classes: "h-16 w-16 text-xl border-4 border-white/10 dark:border-neutral-900/10 transition-transform duration-200 group-hover:scale-105") %>
+      </div>
+      <h3 class="text-xl font-bold"><%= @ride_post.user.first_name %> <%= @ride_post.user.last_name %></h3>
+    <% end %>
+    <p class="text-neutral-400 dark:text-neutral-500 text-sm mb-6 max-w-sm">
+      Is looking for travel partners. Contact them directly on Facebook to coordinate details and confirm your ride.
+    </p>
+
+    <%= render "shared/components/buttons/button",
+        text: Current.user.present? ? "Contact on Facebook" : "Login to View Contact",
+        href: Current.user.present? ? @ride_post.user.facebook_profile_url : new_session_path(return_to: request.path),
+        style: "fancy",
+        size: "lg"
+    %>
+  </div>
+</div>

@@ -1,0 +1,22 @@
+Password Reset Request
+======================
+
+You are receiving this email because a request was made to reset the password for your Pasabaya account.
+
+You can reset your password by copying and pasting the link below into your browser:
+
+<%= edit_password_url(@user.password_reset_token) %>
+
+⏳ EXPIRATION NOTICE
+--------------------
+For security reasons, this password reset link will expire in <%= distance_of_time_in_words(0, @user.password_reset_token_expires_in) %>. After that, you will need to request a new link.
+
+🛡️ DIDN'T REQUEST THIS?
+-----------------------
+If you didn't request a password reset, you can safely ignore this email. Your password will remain unchanged and your account secure.
+
+--
+Pasabaya.app
+https://pasabaya.app
+
+If you have questions, message me on Facebook: https://www.facebook.com/people/Pasabayaapp-Carpooling-for-the-Community/61589209230043/

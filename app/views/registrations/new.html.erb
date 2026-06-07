@@ -1,0 +1,83 @@
+<div class="mx-auto md:w-2/3 w-full">
+  <h1 class="text-3xl font-extrabold text-neutral-900 dark:text-white mb-8 text-center">Create Your Account</h1>
+
+  <%= render "shared/components/card/card", rounded: "3xl", padding: "lg" do %>
+    <%= form_with model: @user, url: sign_up_path, class: "space-y-6" do |form| %>
+
+      <% if @user.errors.any? %>
+        <div class="bg-red-50 dark:bg-red-900/10 text-red-600 px-4 py-3 font-medium rounded-xl border border-red-100 dark:border-red-900/20">
+          <ul class="list-disc ml-6 text-sm">
+            <% @user.errors.full_messages.each do |message| %>
+              <li><%= message %></li>
+            <% end %>
+          </ul>
+        </div>
+      <% end %>
+
+      <div class="grid grid-cols-2 gap-4">
+        <%= render "shared/components/forms/form_group",
+          label: "First Name",
+          name: :first_name,
+          required: true,
+          error: @user.errors[:first_name].first do %>
+          <%= form.text_field :first_name, required: true, class: "w-full rounded-xl border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-base sm:text-sm focus:ring-blue-500 focus:border-blue-500 py-3 px-4" %>
+        <% end %>
+
+        <%= render "shared/components/forms/form_group",
+          label: "Last Name",
+          name: :last_name,
+          required: true,
+          error: @user.errors[:last_name].first do %>
+          <%= form.text_field :last_name, required: true, class: "w-full rounded-xl border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-base sm:text-sm focus:ring-blue-500 focus:border-blue-500 py-3 px-4" %>
+        <% end %>
+      </div>
+
+      <%= render "shared/components/forms/form_group",
+        label: "Facebook Profile URL",
+        name: :facebook_profile_url,
+        required: true,
+        helper_text: "Required for trust safety. Other users will view this link to verify you.",
+        error: @user.errors[:facebook_profile_url].first do %>
+        <%= form.url_field :facebook_profile_url, required: true, placeholder: "https://facebook.com/username", class: "w-full rounded-xl border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-base sm:text-sm focus:ring-blue-500 focus:border-blue-500 py-3 px-4" %>
+      <% end %>
+
+      <%= render "shared/components/forms/form_group",
+        label: "Email Address",
+        name: :email_address,
+        required: true,
+        error: @user.errors[:email_address].first do %>
+        <%= form.email_field :email_address, required: true, class: "w-full rounded-xl border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-base sm:text-sm focus:ring-blue-500 focus:border-blue-500 py-3 px-4" %>
+      <% end %>
+
+      <%= render "shared/components/forms/form_group",
+        label: "Password",
+        name: :password,
+        required: true,
+        error: @user.errors[:password].first do %>
+        <%= form.password_field :password, required: true, class: "w-full rounded-xl border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-base sm:text-sm focus:ring-blue-500 focus:border-blue-500 py-3 px-4" %>
+      <% end %>
+
+      <%= render "shared/components/forms/form_group",
+        label: "Confirm Password",
+        name: :password_confirmation,
+        required: true,
+        error: @user.errors[:password_confirmation].first do %>
+        <%= form.password_field :password_confirmation, required: true, class: "w-full rounded-xl border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-base sm:text-sm focus:ring-blue-500 focus:border-blue-500 py-3 px-4" %>
+      <% end %>
+
+
+      <%= render "shared/components/switch/switch",
+        label: "I accept the #{link_to 'Terms of Service', terms_path, class: 'text-blue-600 dark:text-blue-400 hover:underline font-semibold'} and #{link_to 'Privacy Policy', privacy_path, class: 'text-blue-600 dark:text-blue-400 hover:underline font-semibold'}".html_safe,
+        name: "accept_terms",
+        required: true %>
+
+      <div class="pt-4">
+        <%= render "shared/components/buttons/button", text: "Create Account & Log In", type: "submit", size: "lg", full_width: true %>
+      </div>
+    <% end %>
+  <% end %>
+
+  <p class="text-center text-sm text-neutral-500 dark:text-neutral-400 mt-6">
+    Already have an account? <%= link_to "Sign in", new_session_path, class: "text-blue-600 dark:text-blue-400 hover:underline font-semibold" %>
+  </p>
+</div>

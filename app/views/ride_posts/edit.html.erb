@@ -1,0 +1,44 @@
+<div class="max-w-2xl mx-auto my-12 px-4 sm:px-0">
+  <%# Back Link %>
+  <%= link_to @ride_post, class: "text-sm text-neutral-500 hover:text-neutral-700 flex items-center gap-1 mb-6 transition" do %>
+    <svg class="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+    Cancel and Go Back
+  <% end %>
+
+  <%# Header %>
+  <div class="mb-10">
+    <h1 class="text-4xl font-extrabold text-neutral-900 dark:text-white tracking-tight mb-2">
+      Edit Ride Post
+    </h1>
+    <p class="text-neutral-500">
+      Update your travel details. Changes will be reflected immediately on the board.
+    </p>
+  </div>
+
+  <%# Form Card %>
+  <div class="bg-white dark:bg-neutral-900 p-8 rounded-3xl border border-neutral-100 dark:border-white/5 shadow-xl">
+    <%= render "form", ride_post: @ride_post do %>
+      <%= link_to "Discard Changes", @ride_post, class: "text-sm font-semibold text-neutral-500 hover:text-neutral-700 transition" %>
+    <% end %>
+  </div>
+
+  <%# Danger Zone %>
+  <div class="mt-12 pt-8 border-t border-neutral-100 dark:border-white/5">
+    <h3 class="text-sm font-bold text-red-600 uppercase tracking-widest mb-4">Danger Zone</h3>
+    <div class="flex items-center justify-between p-6 bg-red-50/50 dark:bg-red-900/10 rounded-2xl border border-red-100 dark:border-red-900/20">
+      <div>
+        <p class="text-sm font-bold text-neutral-900 dark:text-white">Delete this post</p>
+        <p class="text-xs text-neutral-500 mt-1">Once deleted, this ride will be permanently removed from the board.</p>
+      </div>
+      
+      <%= form_with model: @ride_post, method: :delete, data: { turbo_confirm: "Are you sure?" } do %>
+        <%= render "shared/components/buttons/button", 
+                   text: "Delete Post", 
+                   variant: "destructive", 
+                   type: "submit", 
+                   size: "sm",
+                   style: "fancy" %>
+      <% end %>
+    </div>
+  </div>
+</div>
