@@ -15,6 +15,10 @@ class User < ApplicationRecord
 
   normalizes :email_address, with: ->(e) { e.strip.downcase }
 
+  # Ensure names are always provided and not blank
+  validates :first_name, presence: true
+  validates :last_name, presence: true
+
   # Ensure the Facebook link is always provided
   validates :facebook_profile_url, presence: true
 
