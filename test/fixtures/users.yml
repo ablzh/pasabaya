@@ -3,7 +3,13 @@
 one:
   email_address: one@example.com
   password_digest: <%= password_digest %>
+  first_name: Juan
+  last_name: Dela Cruz
+  facebook_profile_url: https://facebook.com/juan
 
 two:
   email_address: two@example.com
   password_digest: <%= password_digest %>
+  first_name: Maria
+  last_name: Clara
+  facebook_profile_url: https://facebook.com/maria
