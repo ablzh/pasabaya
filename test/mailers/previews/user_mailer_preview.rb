@@ -1,6 +1,5 @@
 # Preview all emails at http://localhost:3000/rails/mailers/user_mailer
 class UserMailerPreview < ActionMailer::Preview
-
   def welcome
     # Grab the first User from the database, or build a dummy one if your DB is empty
     user = User.first || User.new(

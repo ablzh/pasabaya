@@ -22,7 +22,7 @@ class Location < ApplicationRecord
       .includes(:parent)
       .reorder("parents_locations.name ASC, locations.name ASC")
       .group_by { |city| city.parent&.name || "Other" }
-      .transform_values { |cities| cities.map { |city| [city.name, city.id] } }
+      .transform_values { |cities| cities.map { |city| [ city.name, city.id ] } }
   end
 
   # Basic validations

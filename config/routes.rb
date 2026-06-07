@@ -13,7 +13,7 @@ Rails.application.routes.draw do
   post "sign_up", to: "registrations#create"
 
   get "up" => "rails/health#show", as: :rails_health_check
-  
+
   root "pages#home"
   resources :subscribers, only: [ :create ] do
     member do

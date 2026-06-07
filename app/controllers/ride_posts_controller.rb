@@ -1,7 +1,7 @@
 class RidePostsController < ApplicationController
   before_action :require_authentication, except: %i[ index show ]
   before_action :set_ride_post, only: %i[ show edit update destroy ]
-  before_action :resume_session, only: [:index, :show]
+  before_action :resume_session, only: [ :index, :show ]
   before_action :set_grouped_locations, only: %i[ index new edit create update ]
 
   # GET /ride_posts or /ride_posts.json
@@ -77,7 +77,7 @@ class RidePostsController < ApplicationController
 
   # Only allow a list of trusted parameters through.
   def ride_post_params
-    params.expect(ride_post: [:post_type, :origin_id, :destination_id, :departure_time, :seats, :notes])
+    params.expect(ride_post: [ :post_type, :origin_id, :destination_id, :departure_time, :seats, :notes ])
   end
 
   def set_grouped_locations
