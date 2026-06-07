@@ -1,0 +1,46 @@
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-12">
+
+  <%# Header %>
+  <div class="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-6 border-b border-neutral-100 dark:border-white/5">
+    <div>
+      <h1 class="text-4xl font-extrabold text-neutral-900 dark:text-white tracking-tight">Your Dashboard</h1>
+      <p class="mt-2 text-lg text-neutral-500">Manage your active posts and carpooling history.</p>
+    </div>
+  </div>
+
+  <%# Section: Active Rides %>
+  <div>
+    <h2 class="text-2xl font-bold text-neutral-900 dark:text-white mb-6 flex items-center gap-2">
+      <span class="text-emerald-500">🟢</span> Active Rides
+    </h2>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+      <% if @active_rides.any? %>
+        <%= render @active_rides %>
+      <% else %>
+        <div class="col-span-full py-12 text-center text-neutral-500 bg-neutral-50 dark:bg-neutral-800/50 rounded-2xl border border-dashed border-neutral-200 dark:border-neutral-700">
+          <p class="font-medium">You don't have any active ride offers or requests.</p>
+          <%= link_to "Post a ride to get started", new_ride_post_path, class: "text-blue-600 font-bold hover:underline mt-2 inline-block" %>
+        </div>
+      <% end %>
+    </div>
+  </div>
+
+  <%# Section: Past & Fulfilled Rides %>
+  <div>
+    <h2 class="text-2xl font-bold text-neutral-900 dark:text-white mb-6 flex items-center gap-2">
+      <span class="text-neutral-400">⚪</span> Past & Inactive Rides
+    </h2>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+      <% if @inactive_rides.any? %>
+        <%= render @inactive_rides %>
+      <% else %>
+        <div class="col-span-full py-12 text-center text-neutral-500 bg-neutral-50 dark:bg-neutral-800/50 rounded-2xl border border-dashed border-neutral-200 dark:border-neutral-700">
+          <p class="font-medium">No past history recorded.</p>
+        </div>
+      <% end %>
+    </div>
+  </div>
+
+</div>

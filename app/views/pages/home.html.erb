@@ -1,35 +1,32 @@
 <% set_meta_tags title: "Carpooling Philippines", reverse: false %>
-<main class="bg-gray-50 min-h-screen flex flex-col items-center px-4 sm:px-6 lg:px-8 font-sans">
-  <%# Displaying notifications %>
-  <div id="flash-notifications">
-    <% if flash[:notice] %>
-      <div class="fixed top-5 right-5 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded shadow-lg animate-bounce z-50">
-        <%= flash[:notice] %>
-      </div>
-    <% end %>
-  </div>
-  <div class="max-w-5xl w-full py-16 px-4 sm:px-6 lg:px-8">
+<div class="flex flex-col items-center lg:px-8 font-sans">
 
+
+  <div class="max-w-5xl w-full sm:px-6 lg:px-8">
     <%# 1. Hero Section %>
-    <header class="text-center space-y-8 mb-24 mt-8">
-      <span class="inline-block px-4 py-1.5 text-xs font-bold tracking-widest text-indigo-700 uppercase bg-indigo-100 rounded-full">
-        Coming Soon 2026
+    <header class="text-center space-y-8 mb-16 mt-8">
+      <span class="inline-block py-1.5 text-xs font-bold tracking-widest text-indigo-700 uppercase bg-indigo-100 dark:bg-indigo-900/30 dark:text-indigo-300 rounded-full">
+        Community Ride Board
       </span>
-      <h1 class="text-5xl font-extrabold text-gray-900 tracking-tight sm:text-6xl md:text-7xl leading-tight">
+      <h1 class="text-5xl font-extrabold text-neutral-900 dark:text-white tracking-tight sm:text-5xl md:text-7xl leading-tight">
         Carpooling for the Community, <br class="hidden lg:block">
-        <span class="text-indigo-600">Not for Profit.</span>
+        <span class="text-indigo-600 dark:text-indigo-400">Not for Profit.</span>
       </h1>
-      <p class="max-w-2xl mx-auto text-xl text-gray-600 leading-relaxed">
+      <p class="max-w-2xl mx-auto text-xl text-neutral-600 dark:text-neutral-400 leading-relaxed">
         A smarter, social way to find travel companions in the Philippines. No fees. No commissions. Just people helping
         people beat the traffic.
       </p>
+
+      <div class="max-w-4xl mx-auto pt-8">
+        <%= render "ride_posts/search_form" %>
+      </div>
     </header>
 
     <%# 2. The Problem %>
     <section class="max-w-3xl mx-auto mb-24">
-      <div class="bg-white rounded-3xl p-10 sm:p-14 shadow-sm border border-gray-100">
-        <h2 class="text-3xl font-bold text-gray-900 mb-6">Why Pasabaya.app?</h2>
-        <div class="space-y-6 text-lg text-gray-600 leading-relaxed">
+      <%= render "shared/components/card/card", rounded: "3xl", padding: "lg" do %>
+        <h2 class="text-3xl font-bold text-neutral-900 dark:text-white mb-6">Why Pasabaya.app?</h2>
+        <div class="space-y-6 text-lg text-neutral-600 dark:text-neutral-400 leading-relaxed">
           <p>
             Traffic in the Philippines is a shared struggle. Public transport can be inconvenient for daily commutes of
             tens of kilometers, and while Facebook groups or Reddit threads help people find rides, they aren't built
@@ -38,59 +35,61 @@
           <p>With the recent declaration of an <strong>energy emergency</strong>, there is a clear need for us to be
             more efficient and travel together. Pasabaya.app is just an organized tool to help you find someone
             heading your way.</p>
-          <p class="font-medium text-indigo-600 text-xl border-l-4 border-indigo-200 pl-6 mt-8">
+          <p class="font-medium text-indigo-600 dark:text-indigo-400 text-xl border-l-4 border-indigo-200 dark:border-indigo-900/50 pl-6 mt-8">
             We took the "pasabay" culture you already know and gave it a better interface.
           </p>
         </div>
-      </div>
+      <% end %>
     </section>
 
     <%# 3. How it Works %>
     <section class="mb-24">
-      <h2 class="text-3xl font-bold text-gray-900 mb-12 text-center max-w-2xl mx-auto">
+      <h2 class="text-3xl font-bold text-neutral-900 dark:text-white mb-12 text-center max-w-2xl mx-auto">
         It’s Social Networking, <br class="hidden sm:block">
         Not a Transport Company.
       </h2>
       <div class="grid gap-8 md:grid-cols-3">
-        <div class="bg-white p-8 rounded-3xl shadow-sm border border-gray-100 transition-all hover:shadow-md">
-          <div class="w-14 h-14 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center mb-6 text-3xl">
+        <%= render "shared/components/card/card", rounded: "3xl", padding: "lg", hoverable: true do %>
+          <div class="w-14 h-14 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 rounded-2xl flex items-center justify-center mb-6 text-3xl">
             💸
           </div>
-          <h3 class="text-xl font-bold text-gray-900 mb-4">Zero Payments</h3>
-          <p class="text-gray-600 leading-relaxed">
+          <h3 class="text-xl font-bold text-neutral-900 dark:text-white mb-4">Zero Payments</h3>
+          <p class="text-neutral-600 dark:text-neutral-400 leading-relaxed">
             We don't handle money. No booking fees, no commissions, no hidden costs.
           </p>
-        </div>
-        <div class="bg-white p-8 rounded-3xl shadow-sm border border-gray-100 transition-all hover:shadow-md">
-          <div class="w-14 h-14 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center mb-6 text-3xl">
+        <% end %>
+
+        <%= render "shared/components/card/card", rounded: "3xl", padding: "lg", hoverable: true do %>
+          <div class="w-14 h-14 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 rounded-2xl flex items-center justify-center mb-6 text-3xl">
             🛡️
           </div>
-          <h3 class="text-xl font-bold text-gray-900 mb-4">Facebook-Verified</h3>
-          <p class="text-gray-600 leading-relaxed">
+          <h3 class="text-xl font-bold text-neutral-900 dark:text-white mb-4">Facebook-Verified</h3>
+          <p class="text-neutral-600 dark:text-neutral-400 leading-relaxed">
             Connect with real people. Check profiles and mutual friends before you decide to ride together.
           </p>
-        </div>
-        <div class="bg-white p-8 rounded-3xl shadow-sm border border-gray-100 transition-all hover:shadow-md">
-          <div class="w-14 h-14 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center mb-6 text-3xl">
+        <% end %>
+
+        <%= render "shared/components/card/card", rounded: "3xl", padding: "lg", hoverable: true do %>
+          <div class="w-14 h-14 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 rounded-2xl flex items-center justify-center mb-6 text-3xl">
             🎯
           </div>
-          <h3 class="text-xl font-bold text-gray-900 mb-4">Simple Matching</h3>
-          <p class="text-gray-600 leading-relaxed">
+          <h3 class="text-xl font-bold text-neutral-900 dark:text-white mb-4">Simple Matching</h3>
+          <p class="text-neutral-600 dark:text-neutral-400 leading-relaxed">
             No complex dispatching. Just a digital bulletin board with smart filters to find someone heading your way.
           </p>
-        </div>
+        <% end %>
       </div>
     </section>
 
     <%# 4. About the Creator %>
     <section class="max-w-3xl mx-auto mb-24">
-      <div class="bg-gray-900 rounded-3xl p-10 sm:p-14 shadow-2xl text-white relative overflow-hidden">
+      <div class="bg-neutral-900 dark:bg-black rounded-3xl p-6 sm:p-14 shadow-2xl text-white relative overflow-hidden border border-white/5">
         <!-- Abstract shape decoration -->
         <div class="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 rounded-full bg-indigo-600 opacity-20 blur-3xl"></div>
         <div class="absolute bottom-0 left-0 -ml-16 -mb-16 w-48 h-48 rounded-full bg-blue-500 opacity-20 blur-3xl"></div>
         <div class="relative z-10">
           <h2 class="text-3xl font-bold mb-8 text-indigo-300">From a Student, For the People</h2>
-          <div class="space-y-6 text-lg text-gray-300 leading-relaxed">
+          <div class="space-y-6 text-lg text-neutral-300 leading-relaxed">
             <p>
               Hi, I’m <span class="text-white font-semibold">Artem Blazhievskii</span>, an MIS student at the University
               of the Philippines Open University.
@@ -105,68 +104,83 @@
       </div>
     </section>
 
-    <%# 5. Call to Action (Form) %>
-    <section id="waitlist" class="max-w-xl mx-auto text-center space-y-10 mb-16">
-      <div class="space-y-4">
-        <h3 class="text-3xl font-bold text-gray-900">Join the Waitlist</h3>
-        <p class="text-lg text-gray-500">Get notified when we launch. No spam, ever.</p>
-      </div>
-      <div class="bg-white py-10 px-6 sm:px-12 shadow-2xl rounded-3xl border border-gray-100">
-
-        <%= turbo_frame_tag "waitlist_form" do %>
-          <% if flash[:notice] %>
-            <div class="text-indigo-600 font-bold py-4 text-xl animate-pulse">
-              ✨ You're on the list!
+    <%# 5. Safety & Trust Section %>
+    <section id="safety" class="max-w-4xl mx-auto mb-24">
+      <div class="bg-amber-50 dark:bg-amber-950/20 rounded-3xl p-6 sm:p-14 border border-amber-100 dark:border-amber-900/30 shadow-sm">
+        <div class="flex flex-col md:flex-row gap-10">
+          <div class="flex-1">
+            <h2 class="text-3xl font-bold text-neutral-900 dark:text-white mb-6 flex items-center gap-3">
+              <span class="text-amber-600 dark:text-amber-400 text-4xl">🛡️</span> Safety First
+            </h2>
+            <div class="space-y-4 text-neutral-700 dark:text-neutral-300 leading-relaxed">
+              <p>
+                Pasabaya.app is a <strong>public bulletin board</strong>. We provide the tools to find matches, but the
+                actual coordination happens between you and the other person on Facebook.
+              </p>
+              <p class="font-medium text-amber-800 dark:text-amber-200">
+                You are responsible for your own safety. Always verify who you are traveling with.
+              </p>
+              <div class="pt-4 flex gap-3">
+                <%= render "shared/components/buttons/button", 
+                      text: "Safety & Terms", 
+                      href: terms_path, 
+                      variant: "outline", 
+                      size: "sm" %>
+                <%= render "shared/components/buttons/button", 
+                      text: "Privacy", 
+                      href: privacy_path, 
+                      variant: "ghost", 
+                      size: "sm" %>
+              </div>
             </div>
-            <p class="text-gray-500 mt-2">Check your inbox for a confirmation email.</p>
-          <% else %>
-            <%= form_with model: (@subscriber || Subscriber.new), class: "space-y-6" do |f| %>
-
-              <%= f.invisible_captcha :nickname %>
-
-              <% if @subscriber && @subscriber.errors.any? %>
-                <div class="text-red-500 text-sm text-left bg-red-50 p-4 rounded-xl">
-                  <%= @subscriber.errors.full_messages.first %>
-                </div>
-              <% end %>
-              <div class="space-y-2">
-                <%= f.text_field :name,
-                                 placeholder: "Your Name",
-                                 aria: { label: "Your Name" },
-                                 class: "appearance-none block w-full px-5 py-4 border border-gray-200 rounded-2xl shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all sm:text-base bg-gray-50 focus:bg-white" %>
-              </div>
-              <div class="space-y-2">
-                <%= f.email_field :email,
-                                  placeholder: "Email address",
-                                  aria: { label: "Email address" },
-                                  class: "appearance-none block w-full px-5 py-4 border border-gray-200 rounded-2xl shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all sm:text-base bg-gray-50 focus:bg-white" %>
-              </div>
-              <div class="flex items-start pt-2 text-left">
-                <div class="flex items-center h-6">
-                  <%= f.check_box :terms_accepted,
-                                  required: true,
-                                  class: "w-5 h-5 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500 cursor-pointer mt-0.5" %>
-                </div>
-                <div class="ml-3 text-sm">
-                  <label for="subscriber_terms_accepted" class="text-gray-500 leading-snug cursor-pointer block">
-                    I agree to the processing of my data according to the
-                    <a href="/privacy" class="text-indigo-600 hover:underline font-semibold" target="_top">Privacy
-                      Policy</a>
-                    and Philippine DPA of 2012.
-                  </label>
-                </div>
-              </div>
-              <div class="pt-4">
-                <%= f.button "Join the Future of Commuting",
-                             class: "w-full flex justify-center py-4 px-6 border border-transparent rounded-2xl shadow-lg text-lg font-bold text-white bg-indigo-600 hover:bg-indigo-700 hover:scale-[1.02] active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all cursor-pointer" %>
-              </div>
-            <% end %>
-          <% end %>
-        <% end %>
+          </div>
+          <div class="flex-1 bg-white/50 dark:bg-neutral-800/50 rounded-2xl p-8 border border-amber-200/50 dark:border-amber-900/30">
+            <h3 class="font-bold text-neutral-900 dark:text-white mb-4 uppercase tracking-wider text-sm">Trust Checklist</h3>
+            <ul class="space-y-3">
+              <li class="flex items-start gap-3">
+                <span class="text-green-600 dark:text-green-400 font-bold">✓</span>
+                <span class="text-sm text-neutral-700 dark:text-neutral-300">Check their Facebook profile age and activity.</span>
+              </li>
+              <li class="flex items-start gap-3">
+                <span class="text-green-600 dark:text-green-400 font-bold">✓</span>
+                <span class="text-sm text-neutral-700 dark:text-neutral-300">Look for mutual friends or common groups.</span>
+              </li>
+              <li class="flex items-start gap-3">
+                <span class="text-green-600 dark:text-green-400 font-bold">✓</span>
+                <span class="text-sm text-neutral-700 dark:text-neutral-300"><strong>Never pay in advance.</strong> Coordination is free.</span>
+              </li>
+              <li class="flex items-start gap-3">
+                <span class="text-green-600 dark:text-green-400 font-bold">✓</span>
+                <span class="text-sm text-neutral-700 dark:text-neutral-300">Share your location with family/friends during the ride.</span>
+              </li>
+              <li class="flex items-start gap-3">
+                <span class="text-green-600 dark:text-green-400 font-bold">✓</span>
+                <span class="text-sm text-neutral-700 dark:text-neutral-300">Meet in well-lit, public locations for pickup.</span>
+              </li>
+            </ul>
+          </div>
+        </div>
       </div>
-      <p class="text-sm text-gray-400 font-medium">
-        🚀 Launching soon in Metro Manila and beyond.
+    </section>
+
+    <%# 6. Final Call to Action %>
+    <section class="max-w-xl mx-auto text-center space-y-10 mb-16">
+      <div class="space-y-4">
+        <h3 class="text-3xl font-bold text-neutral-900 dark:text-white">Ready to find a ride?</h3>
+        <p class="text-lg text-neutral-500 dark:text-neutral-400">Join the community and start saving on your commute today.</p>
+      </div>
+      <div class="flex justify-center">
+        <%= render "shared/components/buttons/button", 
+              text: "Browse All Rides", 
+              href: ride_posts_path(post_type: "", origin_id: "", destination_id: ""),
+              variant: "primary", 
+              size: "lg", 
+              style: "fancy",
+              pill: true %>
+      </div>
+      <p class="text-sm text-neutral-400 dark:text-neutral-500 font-medium italic">
+        * By using this site, you agree that Pasabaya.app is not liable for any incidents arising from external coordination.
       </p>
     </section>
   </div>
-</main>
+</div>

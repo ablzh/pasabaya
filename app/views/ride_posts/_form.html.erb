@@ -1,0 +1,91 @@
+<%= form_with(model: ride_post, class: "w-full space-y-6") do |form| %>
+  <% if ride_post.errors.any? %>
+    <div id="error_explanation" class="bg-red-50 dark:bg-red-900/10 text-red-600 px-4 py-3 font-medium rounded-xl mt-3 mb-6 border border-red-100 dark:border-red-900/20">
+      <h2 class="text-sm font-bold uppercase tracking-wider mb-2"><%= pluralize(ride_post.errors.count, "error") %> prohibited this post from being saved:</h2>
+      <ul class="list-disc ml-6 text-sm opacity-90">
+        <% ride_post.errors.each do |error| %>
+          <li><%= error.full_message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <!-- Post Type (Enum) -->
+    <%= render "shared/components/forms/form_group",
+      label: "Ride Intent",
+      name: :post_type,
+      classes: "col-span-full",
+      error: ride_post.errors[:post_type].first do %>
+      <%= form.select :post_type, RidePost.post_types.keys.map { |pt| [pt.titleize, pt] }, {}, 
+          class: "block w-full rounded-xl border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-base sm:text-sm text-neutral-900 dark:text-white focus:ring-blue-500 focus:border-blue-500 transition-all py-3 px-4" %>
+    <% end %>
+
+    <!-- Origin Location -->
+    <%= render "shared/components/forms/form_group",
+      label: "Leaving from (City)",
+      name: "ride_post[origin_id]",
+      error: ride_post.errors[:origin].first || ride_post.errors[:origin_id].first do %>
+      <%= render "shared/components/combobox/combobox",
+                 name: "ride_post[origin_id]",
+                 id: "ride_post_origin_id",
+                 grouped_options: @grouped_locations,
+                 selected: ride_post.origin_id,
+                 placeholder: "Select a city..." %>
+    <% end %>
+
+    <!-- Destination Location -->
+    <%= render "shared/components/forms/form_group",
+      label: "Going to (City)",
+      name: "ride_post[destination_id]",
+      error: ride_post.errors[:destination].first || ride_post.errors[:destination_id].first do %>
+      <%= render "shared/components/combobox/combobox",
+                 name: "ride_post[destination_id]",
+                 id: "ride_post_destination_id",
+                 grouped_options: @grouped_locations,
+                 selected: ride_post.destination_id,
+                 placeholder: "Select a city..." %>
+    <% end %>
+
+    <!-- Departure Time -->
+    <%= render "shared/components/forms/form_group",
+      label: "Departure Time",
+      name: :departure_time,
+      error: ride_post.errors[:departure_time].first do %>
+      <%= form.datetime_field :departure_time,
+                              class: "block w-full rounded-xl border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-base sm:text-sm text-neutral-900 dark:text-white focus:ring-blue-500 focus:border-blue-500 transition-all py-3 px-4",
+                              min: Time.current.strftime("%Y-%m-%dT%H:%M")%>
+    <% end %>
+
+    <!-- Seats Available/Needed -->
+    <%= render "shared/components/forms/form_group",
+      label: "Seats",
+      name: :seats,
+      error: ride_post.errors[:seats].first do %>
+      <%= form.number_field :seats, min: 1, 
+          class: "block w-full rounded-xl border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-base sm:text-sm text-neutral-900 dark:text-white focus:ring-blue-500 focus:border-blue-500 transition-all py-3 px-4" %>
+    <% end %>
+
+    <!-- Notes -->
+    <%= render "shared/components/forms/form_group",
+      label: "Details & Preferences",
+      name: :notes,
+      classes: "col-span-full",
+      error: ride_post.errors[:notes].first do %>
+      <%= form.text_area :notes, rows: 4, 
+          class: "block w-full rounded-xl border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-base sm:text-sm text-neutral-900 dark:text-white focus:ring-blue-500 focus:border-blue-500 transition-all py-3 px-4", 
+          placeholder: "e.g., Willing to split gas, I have a small dog, specific pick-up points..." %>
+    <% end %>
+  </div>
+
+  <!-- Form Action -->
+  <div class="flex items-center gap-6 pt-6 border-t border-neutral-100 dark:border-white/5">
+    <%= render "shared/components/buttons/button",
+               text: ride_post.new_record? ? "Publish Post" : "Save Changes",
+               type: "submit",
+               size: "lg" %>
+
+    <%= yield %>
+  </div>
+
+<% end %>

@@ -1,0 +1,48 @@
+<%# app/views/ride_posts/_search_form.html.erb %>
+<div class="bg-white dark:bg-neutral-900 p-4 rounded-2xl border border-neutral-100 dark:border-white/5 shadow-sm mb-12">
+  <%= form_with url: ride_posts_path, method: :get, class: "flex flex-col sm:flex-row gap-4 items-end" do |form| %>
+    
+    <%# 1. Post Type Select %>
+    <%= render "shared/components/forms/form_group",
+      label: "Looking for...",
+      name: :post_type,
+      classes: "flex-1 w-full" do %>
+      <%= form.select :post_type, 
+          options_for_select([["All Rides", ""], ["Offerings", "offering"], ["Requests", "requesting"]], params[:post_type]),
+          {}, 
+          class: "w-full rounded-xl border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-base sm:text-sm focus:ring-blue-500 focus:border-blue-500 py-3" %>
+    <% end %>
+
+    <%# 2. Origin Select (Grouped Combobox) %>
+    <%= render "shared/components/forms/form_group",
+      label: "From",
+      name: :origin_id,
+      classes: "flex-1 w-full" do %>
+      <%= render "shared/components/combobox/combobox",
+                 name: :origin_id,
+                 id: "origin_id",
+                 grouped_options: @grouped_locations,
+                 selected: params[:origin_id],
+                 placeholder: "Any Origin" %>
+    <% end %>
+
+    <%# 3. Destination Select (Grouped Combobox) %>
+    <%= render "shared/components/forms/form_group",
+      label: "To",
+      name: :destination_id,
+      classes: "flex-1 w-full" do %>
+      <%= render "shared/components/combobox/combobox",
+                 name: :destination_id,
+                 id: "destination_id",
+                 grouped_options: @grouped_locations,
+                 selected: params[:destination_id],
+                 placeholder: "Any Destination" %>
+    <% end %>
+
+    <%# Submit Button %>
+    <div class="w-full sm:w-auto">
+       <%= render "shared/components/buttons/button", text: "Search", type: "submit", size: "md", full_width: true, classes: "py-2.5" %>
+    </div>
+    
+  <% end %>
+</div>
