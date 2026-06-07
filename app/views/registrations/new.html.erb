@@ -1,4 +1,4 @@
-<div class="max-w-md mx-auto px-4 py-8">
+<div class="mx-auto md:w-2/3 w-full">
   <h1 class="text-3xl font-extrabold text-neutral-900 dark:text-white mb-8 text-center">Create Your Account</h1>
 
   <%= render "shared/components/card/card", rounded: "3xl", padding: "lg" do %>
@@ -65,9 +65,19 @@
         <%= form.password_field :password_confirmation, required: true, class: "w-full rounded-xl border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-base sm:text-sm focus:ring-blue-500 focus:border-blue-500 py-3 px-4" %>
       <% end %>
 
+
+      <%= render "shared/components/switch/switch",
+        label: "I accept the #{link_to 'Terms of Service', terms_path, class: 'text-blue-600 dark:text-blue-400 hover:underline font-semibold'} and #{link_to 'Privacy Policy', privacy_path, class: 'text-blue-600 dark:text-blue-400 hover:underline font-semibold'}".html_safe,
+        name: "accept_terms",
+        required: true %>
+
       <div class="pt-4">
         <%= render "shared/components/buttons/button", text: "Create Account & Log In", type: "submit", size: "lg", full_width: true %>
       </div>
     <% end %>
   <% end %>
+
+  <p class="text-center text-sm text-neutral-500 dark:text-neutral-400 mt-6">
+    Already have an account? <%= link_to "Sign in", new_session_path, class: "text-blue-600 dark:text-blue-400 hover:underline font-semibold" %>
+  </p>
 </div>
