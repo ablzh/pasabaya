@@ -54,7 +54,7 @@
                    name: :first_name,
                    required: true,
                    error: @user.errors[:first_name].first do %>
-          <%= form.text_field :first_name, class: "w-full rounded-xl border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-sm focus:ring-blue-500 focus:border-blue-500 py-3 px-4" %>
+          <%= form.text_field :first_name, required: true, class: "w-full rounded-xl border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-base sm:text-sm focus:ring-blue-500 focus:border-blue-500 py-3 px-4" %>
         <% end %>
 
         <%= render "shared/components/forms/form_group",
@@ -62,7 +62,7 @@
                    name: :last_name,
                    required: true,
                    error: @user.errors[:last_name].first do %>
-          <%= form.text_field :last_name, class: "w-full rounded-xl border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-sm focus:ring-blue-500 focus:border-blue-500 py-3 px-4" %>
+          <%= form.text_field :last_name, required: true, class: "w-full rounded-xl border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-base sm:text-sm focus:ring-blue-500 focus:border-blue-500 py-3 px-4" %>
         <% end %>
       </div>
 
@@ -72,7 +72,7 @@
                  required: true,
                  helper_text: "Required. Other members will use this to view your profile and contact you.",
                  error: @user.errors[:facebook_profile_url].first do %>
-        <%= form.url_field :facebook_profile_url, placeholder: "https://facebook.com/username", class: "w-full rounded-xl border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-sm focus:ring-blue-500 focus:border-blue-500 py-3 px-4" %>
+        <%= form.url_field :facebook_profile_url, required: true, placeholder: "https://facebook.com/username", class: "w-full rounded-xl border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-base sm:text-sm focus:ring-blue-500 focus:border-blue-500 py-3 px-4" %>
       <% end %>
 
       <div class="pt-6 border-t border-neutral-100 dark:border-white/5">

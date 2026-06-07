@@ -20,7 +20,7 @@
           name: :first_name,
           required: true,
           error: @user.errors[:first_name].first do %>
-          <%= form.text_field :first_name, required: true, class: "w-full rounded-xl border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-sm focus:ring-blue-500 focus:border-blue-500 py-3 px-4" %>
+          <%= form.text_field :first_name, required: true, class: "w-full rounded-xl border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-base sm:text-sm focus:ring-blue-500 focus:border-blue-500 py-3 px-4" %>
         <% end %>
 
         <%= render "shared/components/forms/form_group",
@@ -28,7 +28,7 @@
           name: :last_name,
           required: true,
           error: @user.errors[:last_name].first do %>
-          <%= form.text_field :last_name, required: true, class: "w-full rounded-xl border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-sm focus:ring-blue-500 focus:border-blue-500 py-3 px-4" %>
+          <%= form.text_field :last_name, required: true, class: "w-full rounded-xl border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-base sm:text-sm focus:ring-blue-500 focus:border-blue-500 py-3 px-4" %>
         <% end %>
       </div>
 
@@ -38,7 +38,7 @@
         required: true,
         helper_text: "Required for trust safety. Other users will view this link to verify you.",
         error: @user.errors[:facebook_profile_url].first do %>
-        <%= form.url_field :facebook_profile_url, required: true, placeholder: "https://facebook.com/username", class: "w-full rounded-xl border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-sm focus:ring-blue-500 focus:border-blue-500 py-3 px-4" %>
+        <%= form.url_field :facebook_profile_url, required: true, placeholder: "https://facebook.com/username", class: "w-full rounded-xl border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-base sm:text-sm focus:ring-blue-500 focus:border-blue-500 py-3 px-4" %>
       <% end %>
 
       <%= render "shared/components/forms/form_group",
@@ -46,7 +46,7 @@
         name: :email_address,
         required: true,
         error: @user.errors[:email_address].first do %>
-        <%= form.email_field :email_address, required: true, class: "w-full rounded-xl border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-sm focus:ring-blue-500 focus:border-blue-500 py-3 px-4" %>
+        <%= form.email_field :email_address, required: true, class: "w-full rounded-xl border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-base sm:text-sm focus:ring-blue-500 focus:border-blue-500 py-3 px-4" %>
       <% end %>
 
       <%= render "shared/components/forms/form_group",
@@ -54,7 +54,7 @@
         name: :password,
         required: true,
         error: @user.errors[:password].first do %>
-        <%= form.password_field :password, required: true, class: "w-full rounded-xl border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-sm focus:ring-blue-500 focus:border-blue-500 py-3 px-4" %>
+        <%= form.password_field :password, required: true, class: "w-full rounded-xl border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-base sm:text-sm focus:ring-blue-500 focus:border-blue-500 py-3 px-4" %>
       <% end %>
 
       <%= render "shared/components/forms/form_group",
@@ -62,7 +62,7 @@
         name: :password_confirmation,
         required: true,
         error: @user.errors[:password_confirmation].first do %>
-        <%= form.password_field :password_confirmation, required: true, class: "w-full rounded-xl border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-sm focus:ring-blue-500 focus:border-blue-500 py-3 px-4" %>
+        <%= form.password_field :password_confirmation, required: true, class: "w-full rounded-xl border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-base sm:text-sm focus:ring-blue-500 focus:border-blue-500 py-3 px-4" %>
       <% end %>
 
       <div class="pt-4">
