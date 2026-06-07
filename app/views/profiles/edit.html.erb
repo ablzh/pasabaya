@@ -14,39 +14,61 @@
         </div>
       <% end %>
 
-      <div class="flex items-center gap-6">
-        <%= user_avatar(@user, classes: "w-20 h-20 text-2xl") %>
+      <div class="flex items-center gap-6" data-controller="avatar-preview">
+
+        <%# 1. Wrap or update user_avatar rendering to attach the target %>
+        <% if @user.avatar.attached? %>
+          <%= image_tag @user.avatar.variant(:thumb),
+                        class: "w-20 h-20 rounded-full object-cover text-2xl bg-neutral-200",
+                        data: { avatar_preview_target: "preview" } %>
+        <% else %>
+          <div class="w-20 h-20 rounded-full flex items-center justify-center font-medium bg-neutral-200 text-neutral-600 text-2xl"
+               data-avatar-preview-target="initials">
+            <%= @user.initials %>
+          </div>
+        <% end %>
+
         <div class="flex-1">
           <%= render "shared/components/forms/form_group",
-            label: "Upload Avatar",
-            name: :avatar,
-            error: @user.errors[:avatar].first do %>
-            <%= form.file_field :avatar, class: "block w-full text-sm text-neutral-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border file:border-neutral-200 dark:file:border-neutral-700 file:text-sm file:font-semibold file:bg-neutral-50 dark:file:bg-neutral-800 file:text-neutral-700 dark:file:text-neutral-300 hover:file:bg-neutral-100 dark:hover:file:bg-neutral-700 cursor-pointer" %>
+                     label: "Upload Avatar",
+                     name: :avatar,
+                     error: @user.errors[:avatar].first do %>
+
+            <%# 2. Connect input target & trigger change action %>
+            <%= form.file_field :avatar,
+                                direct_upload: true,
+                                accept: "image/png, image/jpeg, image/webp",
+                                data: {
+                                  avatar_preview_target: "input",
+                                  action: "change->avatar-preview#preview"
+                                },
+                                class: "block w-full text-sm text-neutral-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border file:border-neutral-200 dark:file:border-neutral-700 file:text-sm file:font-semibold file:bg-neutral-50 dark:file:bg-neutral-800 file:text-neutral-700 dark:file:text-neutral-300
+  hover:file:bg-neutral-100 dark:hover:file:bg-neutral-700 cursor-pointer" %>
           <% end %>
         </div>
       </div>
 
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
         <%= render "shared/components/forms/form_group",
-          label: "First Name",
-          name: :first_name,
-          error: @user.errors[:first_name].first do %>
+                   label: "First Name",
+                   name: :first_name,
+                   error: @user.errors[:first_name].first do %>
           <%= form.text_field :first_name, class: "w-full rounded-xl border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-sm focus:ring-blue-500 focus:border-blue-500 py-3 px-4" %>
         <% end %>
 
         <%= render "shared/components/forms/form_group",
-          label: "Last Name",
-          name: :last_name,
-          error: @user.errors[:last_name].first do %>
+                   label: "Last Name",
+                   name: :last_name,
+                   error: @user.errors[:last_name].first do %>
           <%= form.text_field :last_name, class: "w-full rounded-xl border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-sm focus:ring-blue-500 focus:border-blue-500 py-3 px-4" %>
         <% end %>
       </div>
 
       <%= render "shared/components/forms/form_group",
-        label: "Facebook Profile URL",
-        name: :facebook_profile_url,
-        helper_text: "Required. Other members will use this to view your profile and contact you.",
-        error: @user.errors[:facebook_profile_url].first do %>
+                 label: "Facebook Profile URL",
+                 name: :facebook_profile_url,
+                 helper_text: "Required. Other members will use this to view your profile and contact you.",
+                 error: @user.errors[:facebook_profile_url].first do %>
         <%= form.url_field :facebook_profile_url, placeholder: "https://facebook.com/username", class: "w-full rounded-xl border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-sm focus:ring-blue-500 focus:border-blue-500 py-3 px-4" %>
       <% end %>
 
