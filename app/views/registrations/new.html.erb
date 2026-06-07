@@ -36,7 +36,7 @@
         label: "Facebook Profile URL",
         name: :facebook_profile_url,
         required: true,
-        helper_text: "Required for trust safety. Other users will view this link to verify you.",
+        helper_text: "Required for trust safety. Other users will view this link to verify you and connect with you.",
         error: @user.errors[:facebook_profile_url].first do %>
         <%= form.url_field :facebook_profile_url, required: true, placeholder: "https://facebook.com/username", class: "w-full rounded-xl border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-base sm:text-sm focus:ring-blue-500 focus:border-blue-500 py-3 px-4" %>
       <% end %>
