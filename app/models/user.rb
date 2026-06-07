@@ -15,6 +15,9 @@ class User < ApplicationRecord
 
   normalizes :email_address, with: ->(e) { e.strip.downcase }
 
+  # Ensure email is present, unique, and validly formatted
+  validates :email_address, presence: true, uniqueness: true, format: { with: URI::MailTo::EMAIL_REGEXP }
+
   # Ensure names are always provided and not blank
   validates :first_name, presence: true
   validates :last_name, presence: true
