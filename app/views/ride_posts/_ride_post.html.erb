@@ -2,17 +2,17 @@
 <% card_footer = capture do %>
   <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
     <%# Left side: User Info %>
-    <div class="flex items-center">
-      <%= user_avatar(ride_post.user, classes: "h-9 w-9 text-xs") %>
+    <%= link_to user_path(ride_post.user), class: "flex items-center group" do %>
+      <%= user_avatar(ride_post.user, classes: "h-9 w-9 text-xs transition-opacity group-hover:opacity-80") %>
       <div class="ml-2">
-        <p class="text-sm font-semibold text-neutral-900 dark:text-white leading-none">
+        <p class="text-sm font-semibold text-neutral-900 dark:text-white leading-none group-hover:underline">
           <%= ride_post.user.first_name %> <%= ride_post.user.last_name %>
         </p>
         <p class="text-[10px] text-neutral-500 mt-1">
           Posted <%= time_ago_in_words(ride_post.created_at) %> ago
         </p>
       </div>
-    </div>
+    <% end %>
 
     <%# Right side: Actions %>
     <div class="flex flex-wrap items-center gap-2">
