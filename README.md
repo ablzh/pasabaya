@@ -1,4 +1,4 @@
-# Pasabaya.app
+# [Pasabaya.app](https://pasabaya.app/)
 
 ```text
   ____                                  _                           _                      
@@ -32,3 +32,24 @@ The project leverages **Rails 8.1** capabilities to their fullest, adhering to t
 | **Deployment** | Kubernetes / AWS ECS | Kamal (Simple SSH + Docker) |
 
 ---
+
+## 🚀 How to run locally
+**First time contributing?** Welcome! This guide will help you get the website running locally in just a few steps.
+
+### Prerequisites
+
+- **Ruby** (latest stable version recommended) - [Install Ruby](https://www.ruby-lang.org/en/documentation/installation/)
+-  **Git** - [Install Git](https://git-scm.com/downloads)
+
+### Get It Running
+1. **Clone and setup the project**:
+```bash
+    git clone https://github.com/ablzh/pasabaya.git
+    bundle install                                                                                                                                                                                                                                                                                                  
+    bin/rails db:prepare                                                                                                                                                                                                                                                                                               
+```
+2. **Start the server**:
+```bash
+    bin/rails server
+```
+3. **Access the app**: Open your browser and navigate to `http://localhost:3000` to see the app in action!
