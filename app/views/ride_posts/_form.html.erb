@@ -18,7 +18,7 @@
       classes: "col-span-full",
       error: ride_post.errors[:post_type].first do %>
       <%= form.select :post_type, RidePost.post_types.keys.map { |pt| [pt.titleize, pt] }, {}, 
-          class: "block w-full rounded-xl border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-neutral-900 dark:text-white focus:ring-blue-500 focus:border-blue-500 transition-all py-3 px-4" %>
+          class: "block w-full rounded-xl border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-base sm:text-sm text-neutral-900 dark:text-white focus:ring-blue-500 focus:border-blue-500 transition-all py-3 px-4" %>
     <% end %>
 
     <!-- Origin Location -->
@@ -53,7 +53,7 @@
       name: :departure_time,
       error: ride_post.errors[:departure_time].first do %>
       <%= form.datetime_field :departure_time,
-                              class: "block w-full rounded-xl border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-neutral-900 dark:text-white focus:ring-blue-500 focus:border-blue-500 transition-all py-3 px-4",
+                              class: "block w-full rounded-xl border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-base sm:text-sm text-neutral-900 dark:text-white focus:ring-blue-500 focus:border-blue-500 transition-all py-3 px-4",
                               min: Time.current.strftime("%Y-%m-%dT%H:%M")%>
     <% end %>
 
@@ -63,7 +63,7 @@
       name: :seats,
       error: ride_post.errors[:seats].first do %>
       <%= form.number_field :seats, min: 1, 
-          class: "block w-full rounded-xl border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-neutral-900 dark:text-white focus:ring-blue-500 focus:border-blue-500 transition-all py-3 px-4" %>
+          class: "block w-full rounded-xl border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-base sm:text-sm text-neutral-900 dark:text-white focus:ring-blue-500 focus:border-blue-500 transition-all py-3 px-4" %>
     <% end %>
 
     <!-- Notes -->
@@ -73,7 +73,7 @@
       classes: "col-span-full",
       error: ride_post.errors[:notes].first do %>
       <%= form.text_area :notes, rows: 4, 
-          class: "block w-full rounded-xl border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-neutral-900 dark:text-white focus:ring-blue-500 focus:border-blue-500 transition-all py-3 px-4", 
+          class: "block w-full rounded-xl border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-base sm:text-sm text-neutral-900 dark:text-white focus:ring-blue-500 focus:border-blue-500 transition-all py-3 px-4", 
           placeholder: "e.g., Willing to split gas, I have a small dog, specific pick-up points..." %>
     <% end %>
   </div>
