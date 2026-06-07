@@ -75,11 +75,12 @@
 
   <%# Poster Section & Action %>
   <div class="bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 p-8 rounded-3xl shadow-xl flex flex-col items-center text-center">
-    <div class="mb-4">
-      <%= user_avatar(@ride_post.user, classes: "h-16 w-16 text-xl border-4 border-white/10 dark:border-neutral-900/10") %>
-    </div>
-    
-    <h3 class="text-xl font-bold mb-1"><%= @ride_post.user.first_name %> <%= @ride_post.user.last_name %></h3>
+    <%= link_to user_path(@ride_post.user), class: "group flex flex-col items-center mb-1" do %>
+      <div class="mb-4">
+        <%= user_avatar(@ride_post.user, classes: "h-16 w-16 text-xl border-4 border-white/10 dark:border-neutral-900/10 transition-transform duration-200 group-hover:scale-105") %>
+      </div>
+      <h3 class="text-xl font-bold"><%= @ride_post.user.first_name %> <%= @ride_post.user.last_name %></h3>
+    <% end %>
     <p class="text-neutral-400 dark:text-neutral-500 text-sm mb-6 max-w-sm">
       Is looking for travel partners. Contact them directly on Facebook to coordinate details and confirm your ride.
     </p>
