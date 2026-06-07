@@ -11,6 +11,7 @@ class RegistrationsController < ApplicationController
     if @user.save
       # Log the user in immediately after creating their account
       start_new_session_for @user
+      UserMailer.welcome(@user).deliver_later
       redirect_to root_path, notice: "Welcome to Pasabaya! Your account was successfully created."
     else
       render :new, status: :unprocessable_content

@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta content='text/html; charset=UTF-8' http-equiv='Content-Type' />
+    <style>
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        color: #262626;
+        line-height: 1.6;
+        background-color: #fafafa;
+        margin: 0;
+        padding: 0;
+      }
+      .wrapper {
+        width: 100%;
+        background-color: #fafafa;
+        padding: 24px 0;
+      }
+      .container {
+        max-width: 600px;
+        margin: 0 auto;
+        background-color: #ffffff;
+        border: 1px solid #e5e5e5;
+        border-radius: 12px;
+        overflow: hidden;
+      }
+      .header {
+        background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+        padding: 32px 24px;
+        text-align: center;
+      }
+      .header h1 {
+        color: #ffffff;
+        margin: 0;
+        font-size: 28px;
+        font-weight: 700;
+        letter-spacing: -0.5px;
+      }
+      .content {
+        padding: 32px 24px;
+      }
+      .greeting {
+        font-size: 20px;
+        font-weight: 600;
+        margin-top: 0;
+        margin-bottom: 16px;
+      }
+      .intro {
+        font-size: 16px;
+        color: #4b5563;
+        margin-bottom: 24px;
+      }
+      .btn-link {
+        display: inline-block;
+        background-color: #4f46e5;
+        color: #ffffff !important;
+        padding: 12px 24px;
+        font-weight: 600;
+        text-decoration: none;
+        border-radius: 8px;
+        margin-bottom: 28px;
+      }
+      .card {
+        background-color: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 20px;
+      }
+      .card-title {
+        font-weight: 600;
+        margin-top: 0;
+        margin-bottom: 8px;
+        color: #1e293b;
+        font-size: 15px;
+      }
+      .card-text {
+        margin: 0 0 12px 0;
+        font-size: 14px;
+        color: #4b5563;
+      }
+      .card-action-link {
+        color: #4f46e5;
+        font-weight: 600;
+        text-decoration: none;
+        font-size: 14px;
+      }
+      .steps-list {
+        margin: 0;
+        padding-left: 20px;
+      }
+      .steps-list li {
+        margin-bottom: 10px;
+        color: #334155;
+        font-size: 14px;
+      }
+      .footer {
+        padding: 24px;
+        text-align: center;
+        font-size: 12px;
+        color: #9ca3af;
+        border-top: 1px solid #f3f4f6;
+      }
+      .footer a {
+        color: #6366f1;
+        text-decoration: none;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrapper">
+      <div class="container">
+        <!-- Brand Header -->
+        <div class="header">
+          <h1>Pasabaya.app 🚗</h1>
+        </div>
+
+        <!-- Main Body Content -->
+        <div class="content">
+          <p class="greeting">Kumusta, <%= @user.first_name %>!</p>
+          
+          <p class="intro">
+            Welcome to Pasabaya! You've joined a community-driven space built to make carpooling simple, direct, and completely free in the Philippines. Together, we can share the road, split the costs, and help beat the daily traffic.
+          </p>
+
+          <!-- Main Call to Action Website Link -->
+          <div style="text-align: left;">
+            <a href="https://pasabaya.app" class="btn-link">Go to Pasabaya.app ➔</a>
+          </div>
+
+          <!-- Getting Started -->
+          <div class="card">
+            <h3 class="card-title">📋 Getting Started Checklist:</h3>
+            <ul class="steps-list">
+              <li>
+                <strong>Verify your profile:</strong> Ensure your registered Facebook profile link is correct. Since Pasabaya is a public board, other members will search and connect with you on Facebook Messenger to coordinate rides.
+              </li>
+              <li>
+                <strong>Offer a Ride:</strong> Empty passenger seats on your commute? Post a ride offer specifying your departure time, route, and seat availability.
+              </li>
+              <li>
+                <strong>Request a Ride:</strong> Need a ride? Create a request so drivers traveling on your route can find you.
+              </li>
+            </ul>
+          </div>
+
+          <!-- Support / Questions -->
+          <div class="card">
+            <h3 class="card-title">💬 Support & Questions</h3>
+            <p class="card-text">
+              Have a question, feedback, or need support? Send me a message directly on the Facebook page—I am here to help!
+            </p>
+            <a href="https://www.facebook.com/people/Pasabayaapp-Carpooling-for-the-Community/61589209230043/" class="card-action-link" target="_blank" rel="noopener noreferrer">
+              👉 Message me on Facebook
+            </a>
+          </div>
+
+          <!-- Github Contribute -->
+          <div class="card">
+            <h3 class="card-title">💻 Contribute to the App</h3>
+            <p class="card-text">
+              Pasabaya is an open-source project. If you're a developer or want to report bugs and suggest new features, check out our repository.
+            </p>
+            <a href="https://github.com/ablzh/pasabaya" class="card-action-link" target="_blank" rel="noopener noreferrer">
+              👉 Contribute on GitHub
+            </a>
+          </div>
+
+          <!-- Trust & Safety Warning -->
+          <div class="card" style="border-left: 4px solid #ef4444; background-color: #fef2f2; margin-bottom: 0;">
+            <h3 class="card-title" style="color: #991b1b;">🛡️ Stay Safe on the Road</h3>
+            <p style="margin: 0; font-size: 14px; color: #7f1d1d;">
+              Pasabaya is a digital bulletin board, not a transportation company. Always check the other person's Facebook profile details (account age, friends list, activity) before finalizing a trip, and meet in well-lit public spaces.
+            </p>
+          </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+          <p>&copy; <%= Time.current.year %> Pasabaya.app. All rights reserved.</p>
+          <p>
+            You received this email because you signed up on <a href="https://pasabaya.app">pasabaya.app</a>.
+          </p>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

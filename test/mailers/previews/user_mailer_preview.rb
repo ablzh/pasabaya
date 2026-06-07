@@ -4,4 +4,15 @@ class UserMailerPreview < ActionMailer::Preview
     subscriber = Subscriber.first || Subscriber.new(name: "Test User", email: "example@example.com")
     UserMailer.welcome_email(subscriber)
   end
+
+  def welcome
+    # Grab the first User from the database, or build a dummy one if your DB is empty
+    user = User.first || User.new(
+      first_name: "Juan",
+      last_name: "Dela Cruz",
+      email_address: "juan@example.com"
+    )
+
+    UserMailer.welcome(user)
+  end
 end
