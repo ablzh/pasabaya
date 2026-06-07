@@ -1,5 +1,4 @@
 class DashboardsController < ApplicationController
-
   def show
     @active_rides = Current.user.ride_posts.active.order(departure_time: :asc)
 

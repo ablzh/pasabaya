@@ -43,7 +43,7 @@ class RegistrationsControllerTest < ActionDispatch::IntegrationTest
 
   test "should redirect already logged in user trying to signup" do
     sign_in_as(users(:one))
-    
+
     get sign_up_url
     assert_redirected_to root_url
     assert_equal "You are already signed in.", flash[:alert]

@@ -5,7 +5,7 @@ class User < ApplicationRecord
 
   has_one_attached :avatar do |attachable|
     attachable.variant :thumb,
-                       resize_to_limit: [160, 160],
+                       resize_to_limit: [ 160, 160 ],
                        format: :webp,
                        saver: { strip: true },
                        convert: "webp"
@@ -45,10 +45,9 @@ class User < ApplicationRecord
     end
 
     # 2. Enforce file types (images only)
-    acceptable_types = ["image/jpeg", "image/png", "image/webp"]
+    acceptable_types = [ "image/jpeg", "image/png", "image/webp" ]
     unless acceptable_types.include?(avatar.content_type)
       errors.add(:avatar, "must be a JPEG, PNG, or WEBP image")
     end
   end
-
 end
