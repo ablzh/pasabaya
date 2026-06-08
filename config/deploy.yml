@@ -23,6 +23,7 @@ servers:
 proxy:
   ssl: true
   host: pasabaya.app
+  forward_headers: true
 
 # Where you keep your container images.
 registry:
