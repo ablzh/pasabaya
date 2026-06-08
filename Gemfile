@@ -45,7 +45,7 @@ gem "image_processing", "~> 2.0"
 # Add a honeypot field and a "timestamp" check (detecting bots that submit forms faster than a human could).
 gem "invisible_captcha"
 
-gem 'cloudflare-rails'
+gem "cloudflare-rails"
 
 
 group :development, :test do
