@@ -22,6 +22,21 @@
       </div>
     </header>
 
+    <%# Video Section %>
+    <section class="max-w-4xl mx-auto mb-24">
+      <div class="aspect-video rounded-3xl overflow-hidden shadow-2xl border border-neutral-200 dark:border-neutral-800">
+        <iframe 
+          class="w-full h-full"
+          src="https://www.youtube.com/embed/zZxOvbtzMhE?si=tmHwyexQ-a-NNaq7" 
+          title="YouTube video player" 
+          frameborder="0" 
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
+          referrerpolicy="strict-origin-when-cross-origin" 
+          allowfullscreen>
+        </iframe>
+      </div>
+    </section>
+
     <%# 2. The Problem %>
     <section class="max-w-3xl mx-auto mb-24">
       <%= render "shared/components/card/card", rounded: "3xl", padding: "lg" do %>
