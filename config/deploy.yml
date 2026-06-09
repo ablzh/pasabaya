@@ -100,7 +100,37 @@ ssh:
   user: ubuntu
 
 # Use accessory services (secrets come from .kamal/secrets).
-# accessories:
+accessories:
+  netdata:
+    image: netdata/netdata:latest
+    host: 140.245.98.120
+    network: host
+    options:
+      pid: host
+      cap-add:
+        - "SYS_PTRACE"
+        - "SYS_ADMIN"
+      security-opt: "apparmor:unconfined"
+    volumes:
+      - "netdataconfig:/etc/netdata"
+      - "netdatalib:/var/lib/netdata"
+      - "netdatacache:/var/cache/netdata"
+      - "/:/host/root:ro,rslave"
+      - "/etc/passwd:/host/etc/passwd:ro"
+      - "/etc/group:/host/etc/group:ro"
+      - "/etc/localtime:/etc/localtime:ro"
+      - "/proc:/host/proc:ro"
+      - "/sys:/host/sys:ro"
+      - "/etc/os-release:/host/etc/os-release:ro"
+      - "/var/log:/host/var/log:ro"
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+    env:
+      clear:
+        NETDATA_CLAIM_URL: "https://app.netdata.cloud"
+      secret:
+        - NETDATA_CLAIM_TOKEN
+        - NETDATA_CLAIM_ROOMS
+
 #   db:
 #     image: mysql:8.0
 #     host: 192.168.0.2
