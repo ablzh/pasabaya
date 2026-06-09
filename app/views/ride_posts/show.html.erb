@@ -74,7 +74,7 @@
   <%# Notes Section %>
   <% if @ride_post.notes.present? %>
     <div class="mb-8">
-      <h2 class="text-sm font-bold text-neutral-400 uppercase tracking-widest mb-4">Driver's Notes</h2>
+      <h2 class="text-sm font-bold text-neutral-400 uppercase tracking-widest mb-4"> <%= possessive(@ride_post.user.first_name) %> Notes</h2>
       <div class="prose prose-neutral dark:prose-invert max-w-none bg-neutral-50 dark:bg-neutral-800/50 p-6 rounded-2xl">
         <%= @ride_post.notes %>
       </div>

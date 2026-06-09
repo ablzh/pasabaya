@@ -12,4 +12,15 @@ module ApplicationHelper
       tag.div user.initials, class: base_classes
     end
   end
+
+  def possessive(word)
+    return "" if word.blank?
+    str = word.to_s
+
+    if str.end_with?("s", "S")
+      "#{str}'"
+    else
+      "#{str}'s"
+    end
+  end
 end
