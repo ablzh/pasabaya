@@ -49,7 +49,7 @@
 
     <!-- Departure Time -->
     <%= render "shared/components/forms/form_group",
-      label: "Departure Time",
+      label: "Departure Time (leave blank for a regular/flexible ride)",
       name: :departure_time,
       error: ride_post.errors[:departure_time].first do %>
       <%= form.datetime_field :departure_time,

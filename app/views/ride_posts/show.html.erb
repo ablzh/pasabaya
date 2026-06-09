@@ -4,7 +4,9 @@
   <%# Header Section %>
   <div class="mb-8">
     <%= link_to ride_posts_path, class: "text-sm text-neutral-500 hover:text-neutral-700 flex items-center gap-1 mb-4" do %>
-      <svg class="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+      <svg class="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+      </svg>
       Back to Board
     <% end %>
 
@@ -26,10 +28,10 @@
 
       <% if Current.user == @ride_post.user %>
         <div class="flex gap-2">
-          <%= render "shared/components/buttons/button", 
-                     text: "Edit", 
-                     href: edit_ride_post_path(@ride_post), 
-                     variant: "secondary", 
+          <%= render "shared/components/buttons/button",
+                     text: "Edit",
+                     href: edit_ride_post_path(@ride_post),
+                     variant: "secondary",
                      size: "sm" %>
         </div>
       <% end %>
@@ -40,10 +42,16 @@
   <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
     <div class="bg-white dark:bg-neutral-900 p-6 rounded-2xl border border-neutral-100 dark:border-white/5 shadow-sm">
       <p class="text-[10px] font-bold text-neutral-400 uppercase tracking-widest mb-1">Departure</p>
-      <p class="text-lg font-bold text-neutral-900 dark:text-white">
-        <%= @ride_post.departure_time.strftime("%a, %b %d") %>
-      </p>
-      <p class="text-sm text-blue-600 font-medium"><%= @ride_post.departure_time.strftime("%I:%M %p") %></p>
+      <% if @ride_post.regular? %>
+        <p class="text-lg font-bold text-neutral-900 dark:text-white">
+          Regular/Flexible Ride
+        </p>
+      <% else %>
+        <p class="text-lg font-bold text-neutral-900 dark:text-white">
+          <%= @ride_post.departure_time.strftime("%a, %b %d") %>
+        </p>
+        <p class="text-sm text-blue-600 font-medium"><%= @ride_post.departure_time.strftime("%I:%M %p") %></p>
+      <% end %>
     </div>
 
     <div class="bg-white dark:bg-neutral-900 p-6 rounded-2xl border border-neutral-100 dark:border-white/5 shadow-sm">
@@ -66,7 +74,7 @@
   <%# Notes Section %>
   <% if @ride_post.notes.present? %>
     <div class="mb-8">
-      <h2 class="text-sm font-bold text-neutral-400 uppercase tracking-widest mb-4">Driver's Notes</h2>
+      <h2 class="text-sm font-bold text-neutral-400 uppercase tracking-widest mb-4"> <%= possessive(@ride_post.user.first_name) %> Notes</h2>
       <div class="prose prose-neutral dark:prose-invert max-w-none bg-neutral-50 dark:bg-neutral-800/50 p-6 rounded-2xl">
         <%= @ride_post.notes %>
       </div>
@@ -86,10 +94,10 @@
     </p>
 
     <%= render "shared/components/buttons/button",
-        text: Current.user.present? ? "Contact on Facebook" : "Login to View Contact",
-        href: Current.user.present? ? @ride_post.user.facebook_profile_url : new_session_path(return_to: request.path),
-        style: "fancy",
-        size: "lg"
+               text: Current.user.present? ? "Contact on Facebook" : "Login to View Contact",
+               href: Current.user.present? ? @ride_post.user.facebook_profile_url : new_session_path(return_to: request.path),
+               style: "fancy",
+               size: "lg"
     %>
   </div>
 </div>
