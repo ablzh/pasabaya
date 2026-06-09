@@ -7,7 +7,6 @@ class RidePost < ApplicationRecord
   enum :post_type, { offering: 0, requesting: 1 }
   enum :status, { active: 0, fulfilled: 1, canceled: 2 }
 
-  validates :departure_time, presence: true
   validate :departure_time_cannot_be_in_the_past
   validates :seats, presence: true, numericality: { greater_than: 0 }
   validates :post_type, presence: true
@@ -15,6 +14,13 @@ class RidePost < ApplicationRecord
   scope :filter_by_post_type, ->(type) { where(post_type: type) if type.present? }
   scope :filter_by_origin, ->(origin_id) { where(origin_id: origin_id) if origin_id.present? }
   scope :filter_by_destination, ->(destination_id) { where(destination_id: destination_id)  if destination_id.present? }
+
+  scope :regular, -> { where(departure_time: nil) }
+  scope :specific, -> { where.not(departure_time: nil) }
+
+  def regular?
+    departure_time.nil?
+  end
 
   private
   def departure_time_cannot_be_in_the_past

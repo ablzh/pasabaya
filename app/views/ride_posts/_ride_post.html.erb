@@ -67,7 +67,11 @@
       <div class="mt-2 flex items-center gap-1.5 text-blue-600 dark:text-blue-400">
         <svg class="size-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
         <span class="text-xs font-bold tracking-tight">
-          <%= ride_post.departure_time.strftime("%a, %b %d • %H:%M") %>
+          <% if ride_post.regular? %>
+            Regular/Flexible Ride
+          <% else %>
+            <%= ride_post.departure_time.strftime("%a, %b %d • %H:%M") %>
+          <% end %>
         </span>
       </div>
     </div>
