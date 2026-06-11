@@ -7,7 +7,10 @@ image: ghcr.io/ablzh/pasabaya
 # Deploy to these servers.
 servers:
   web:
-    - 140.245.98.120
+    hosts:
+      - 140.245.98.120
+    labels:
+      docker-volume-backup.stop-during-backup: pasabaya
   # job:
   #   hosts:
   #     - 192.168.0.1
@@ -100,7 +103,74 @@ ssh:
   user: ubuntu
 
 # Use accessory services (secrets come from .kamal/secrets).
-# accessories:
+accessories:
+  netdata:
+    image: netdata/netdata:latest
+    host: 140.245.98.120
+    network: host
+    options:
+      pid: host
+      cap-add:
+        - "SYS_PTRACE"
+        - "SYS_ADMIN"
+      security-opt: "apparmor:unconfined"
+    volumes:
+      - "netdataconfig:/etc/netdata"
+      - "netdatalib:/var/lib/netdata"
+      - "netdatacache:/var/cache/netdata"
+      - "/:/host/root:ro,rslave"
+      - "/etc/passwd:/host/etc/passwd:ro"
+      - "/etc/group:/host/etc/group:ro"
+      - "/etc/localtime:/etc/localtime:ro"
+      - "/proc:/host/proc:ro"
+      - "/sys:/host/sys:ro"
+      - "/etc/os-release:/host/etc/os-release:ro"
+      - "/var/log:/host/var/log:ro"
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+    env:
+      clear:
+        NETDATA_CLAIM_URL: "https://app.netdata.cloud"
+      secret:
+        - NETDATA_CLAIM_TOKEN
+        - NETDATA_CLAIM_ROOMS
+
+  litestream:
+    image: litestream/litestream:latest
+    host: 140.245.98.120
+    cmd: "replicate"
+    options:
+      user: "1000:1000"
+    volumes:
+      - "pasabaya_storage:/rails/storage"
+    env:
+      secret:
+        - AWS_ACCESS_KEY_ID
+        - AWS_SECRET_ACCESS_KEY
+        - AWS_ENDPOINT
+    files:
+      - "config/litestream.yml:/etc/litestream.yml:ro"
+
+  backup:
+    image: offen/docker-volume-backup:v2
+    host: 140.245.98.120
+    volumes:
+      - "pasabaya_storage:/backup/pasabaya_storage:ro"
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+      - "/etc/localtime:/etc/localtime:ro"
+    env:
+      clear:
+        BACKUP_FILENAME: pasabaya-storage-%Y-%m-%dT%H-%M-%S.tar.gz
+        BACKUP_STOP_DURING_BACKUP_LABEL: pasabaya
+        BACKUP_CRON_EXPRESSION: "@daily"
+        BACKUP_PRUNING_PREFIX: "pasabaya-storage-"
+        BACKUP_RETENTION_DAYS: 30
+        AWS_S3_BUCKET_NAME: pasabaya-backups
+        AWS_REGION: auto
+      secret:
+        - AWS_ACCESS_KEY_ID
+        - AWS_SECRET_ACCESS_KEY
+        - AWS_ENDPOINT
+
 #   db:
 #     image: mysql:8.0
 #     host: 192.168.0.2
