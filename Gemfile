@@ -47,6 +47,7 @@ gem "invisible_captcha"
 
 gem "cloudflare-rails"
 
+gem "skylight"
 
 group :development, :test do
   # See https://guides.rubyonrails.org/debugging_rails_applications.html#debugging-with-the-debug-gem
