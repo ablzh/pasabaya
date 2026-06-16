@@ -19,6 +19,10 @@ class RidePostsController < ApplicationController
 
   # GET /ride_posts/1 or /ride_posts/1.json
   def show
+    if params[:id] != @ride_post.to_param
+      redirect_to @ride_post, status: :moved_permanently
+      nil
+    end
   end
 
   # GET /ride_posts/new

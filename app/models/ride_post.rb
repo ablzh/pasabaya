@@ -22,6 +22,12 @@ class RidePost < ApplicationRecord
     departure_time.nil?
   end
 
+  def to_param
+    return id.to_s unless origin && destination
+
+    "#{id}-#{origin.name.parameterize}-to-#{destination.name.parameterize}"
+  end
+
   private
   def departure_time_cannot_be_in_the_past
     if departure_time.present? && departure_time < Time.current
