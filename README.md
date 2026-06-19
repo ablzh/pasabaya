@@ -53,3 +53,6 @@ The project leverages **Rails 8.1** capabilities to their fullest, adhering to t
     bin/rails server
 ```
 3. **Access the app**: Open your browser and navigate to `http://localhost:3000` to see the app in action!
+
+## Monitoring
+The public-facing performance dashboard for this application is available at [Skylight OSS](https://oss.skylight.io/app/applications/6Ku64X6eveQt/recent/6h/endpoints)
