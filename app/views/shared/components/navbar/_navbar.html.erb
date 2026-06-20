@@ -3,8 +3,10 @@
     <!-- Menu List -->
     <ul data-navbar-target="menu" class="m-0 flex list-none items-center gap-1 rounded-lg border border-neutral-200 bg-white p-1 shadow dark:border-neutral-700 dark:bg-neutral-800">
 
-      <li>
-        <%= link_to "Home", root_path, class: "block rounded-md px-3 py-2 text-sm font-medium text-neutral-700 no-underline select-none hover:bg-neutral-100 dark:text-neutral-300 dark:hover:bg-neutral-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-600 dark:focus-visible:outline-neutral-200" %>
+      <li class="flex items-center">
+        <%= link_to root_path, class: "flex items-center mr-2 ml-2 select-none no-underline" do %>
+          <%= image_tag "logo.svg", size: "32x32", class: "h-8 w-8 object-contain", alt: "Pasabaya Logo" %>
+        <% end %>
       </li>
 
       <li class="block">
