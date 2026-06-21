@@ -34,6 +34,24 @@ class User < ApplicationRecord
     "#{first_name&.first}#{last_name&.first}".upcase
   end
 
+
+  # UPDATE EMAIL
+
+  # 1. Validations for new email (optional/format check)
+  validates :unconfirmed_email, format: { with: URI::MailTo::EMAIL_REGEXP }, allow_blank: true
+  validate :unconfirmed_email_uniqueness
+
+  # 3. Token generator for email confirmation (expires in 7 days)
+  generates_token_for :email_confirmation, expires_in: 7.days do
+    unconfirmed_email
+  end
+
+  # 4. Confirmation method
+  def confirm_email
+    update(email_address: unconfirmed_email, unconfirmed_email: nil)
+  end
+
+
   private
 
   def acceptable_avatar
@@ -48,6 +66,12 @@ class User < ApplicationRecord
     acceptable_types = [ "image/jpeg", "image/png", "image/webp" ]
     unless acceptable_types.include?(avatar.content_type)
       errors.add(:avatar, "must be a JPEG, PNG, or WEBP image")
+    end
+  end
+
+  def unconfirmed_email_uniqueness
+    if unconfirmed_email.present? && User.exists?(email_address: unconfirmed_email)
+      errors.add(:unconfirmed_email, "is already taken")
     end
   end
 end
