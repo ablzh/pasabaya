@@ -1,0 +1,16 @@
+Hi <%= @user.first_name %>,
+
+You recently requested to update your email address on Pasabaya.app.
+
+To complete the change and verify this email, please click the link below:
+<%= email_confirmation_url(token: @token) %>
+The link is valid for 7 days.
+
+(If you didn't request this change, you can safely ignore this email. Your account is secure.)
+
+Pasabaya is a small, independent project built to help us beat the traffic and share the road here in the Philippines. Since I’m running and developing this app solo, your feedback is super important to me.
+
+If you ever get stuck, have an idea, or just want to report a bug, you can always reply directly to this email or find me on Facebook: https://www.facebook.com/people/Pasabayaapp-Carpooling-for-the-Community/61589209230043/
+
+Safe travels,
+Artem, Founder of Pasabaya.app
