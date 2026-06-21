@@ -1,14 +1,14 @@
-class ProfilesController < ApplicationController
-  def edit
+class Settings::ProfilesController < Settings::BaseController
+  def show
     @user = Current.user
   end
 
   def update
     @user = Current.user
     if @user.update(profile_params)
-      redirect_to edit_profile_path, notice: "Profile updated successfully."
+      redirect_to settings_profile_path, notice: "Profile updated successfully."
     else
-      render :edit, status: :unprocessable_content
+      render :show, status: :unprocessable_content
     end
   end
 
