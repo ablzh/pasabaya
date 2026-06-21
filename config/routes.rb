@@ -1,10 +1,25 @@
 Rails.application.routes.draw do
   resources :users, only: [ :show ]
-  resource :profile, only: [ :edit, :update ]
   # resource :dashboard, only: [ :show ]
   resources :ride_posts, path: "rides"
   resource :session
   resources :passwords, param: :token
+
+  namespace :settings do
+    resource :profile, only: [ :show, :update ]
+    resource :email, only: [ :update ]
+    resource :password, only: [ :update ]
+    resource :user, only: [ :destroy ]
+
+    get "profile/edit", to: redirect("/settings/profile")
+  end
+
+  # Deleted routes for legacy support
+  get "profile/edit", to: redirect("/settings/profile")
+
+  namespace :email do
+    resources :confirmations, param: :token, only: [ :show ]
+  end
 
   get "privacy", to: "pages#privacy"
   get "terms", to: "pages#terms"
