@@ -74,5 +74,4 @@ class User < ApplicationRecord
       errors.add(:unconfirmed_email, "is already taken")
     end
   end
-
 end
