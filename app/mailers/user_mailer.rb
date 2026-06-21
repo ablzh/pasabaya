@@ -13,5 +13,4 @@ class UserMailer < ApplicationMailer
       subject: "Confirm your new email address"
     )
   end
-
 end
