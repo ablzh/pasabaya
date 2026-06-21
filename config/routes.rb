@@ -10,12 +10,7 @@ Rails.application.routes.draw do
     resource :email, only: [ :update ]
     resource :password, only: [ :update ]
     resource :user, only: [ :destroy ]
-
-    get "profile/edit", to: redirect("/settings/profile")
   end
-
-  # Deleted routes for legacy support
-  get "profile/edit", to: redirect("/settings/profile")
 
   namespace :email do
     resources :confirmations, param: :token, only: [ :show ]
