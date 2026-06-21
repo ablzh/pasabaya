@@ -1,0 +1,194 @@
+<div class="max-w-2xl mx-auto px-4 py-8 space-y-8">
+  <h1 class="text-3xl font-extrabold text-neutral-900 dark:text-white text-center">Account Settings</h1>
+
+  <%# CARD 1: Profile Details %>
+    <%= render "shared/components/card/card", rounded: "3xl", padding: "lg" do %>
+      <%= form_with model: @user, url: settings_profile_path, method: :patch, class: "space-y-6" do |form| %>
+
+        <% if @user.errors.any? %>
+          <div class="bg-red-50 dark:bg-red-900/10 text-red-600 px-4 py-3 font-medium rounded-xl border border-red-100 dark:border-red-900/20">
+            <ul class="list-disc ml-6 text-sm">
+              <% @user.errors.full_messages.each do |message| %>
+                <li><%= message %></li>
+              <% end %>
+            </ul>
+          </div>
+        <% end %>
+
+        <div class="flex items-center gap-6" data-controller="avatar-preview">
+
+          <%# 1. Wrap or update user_avatar rendering to attach the target %>
+          <% if @user.avatar.attached? %>
+            <%= image_tag @user.avatar.variant(:thumb),
+                          class: "w-20 h-20 rounded-full object-cover text-2xl bg-neutral-200",
+                          data: { avatar_preview_target: "preview" } %>
+          <% else %>
+            <div class="w-20 h-20 rounded-full flex items-center justify-center font-medium bg-neutral-200 text-neutral-600 text-2xl"
+                 data-avatar-preview-target="initials">
+              <%= @user.initials %>
+            </div>
+          <% end %>
+
+          <div class="flex-1">
+            <%= render "shared/components/forms/form_group",
+                       label: "Upload Avatar",
+                       name: :avatar,
+                       error: @user.errors[:avatar].first do %>
+
+              <%# 2. Connect input target & trigger change action %>
+              <%= form.file_field :avatar,
+                                  direct_upload: true,
+                                  accept: "image/png, image/jpeg, image/webp",
+                                  data: {
+                                    avatar_preview_target: "input",
+                                    action: "change->avatar-preview#preview"
+                                  },
+                                  class: "block w-full text-sm text-neutral-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border file:border-neutral-200 dark:file:border-neutral-700 file:text-sm file:font-semibold file:bg-neutral-50 dark:file:bg-neutral-800 file:text-neutral-700 dark:file:text-neutral-300
+  hover:file:bg-neutral-100 dark:hover:file:bg-neutral-700 cursor-pointer" %>
+            <% end %>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+          <%= render "shared/components/forms/form_group",
+                     label: "First Name",
+                     name: :first_name,
+                     required: true,
+                     error: @user.errors[:first_name].first do %>
+            <%= form.text_field :first_name, required: true, class: "w-full rounded-xl border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-base sm:text-sm focus:ring-blue-500 focus:border-blue-500 py-3 px-4" %>
+          <% end %>
+
+          <%= render "shared/components/forms/form_group",
+                     label: "Last Name",
+                     name: :last_name,
+                     required: true,
+                     error: @user.errors[:last_name].first do %>
+            <%= form.text_field :last_name, required: true, class: "w-full rounded-xl border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-base sm:text-sm focus:ring-blue-500 focus:border-blue-500 py-3 px-4" %>
+          <% end %>
+        </div>
+
+        <%= render "shared/components/forms/form_group",
+                   label: "Facebook Profile URL",
+                   name: :facebook_profile_url,
+                   required: true,
+                   helper_text: "Required. Other members will use this to view your profile and contact you.",
+                   error: @user.errors[:facebook_profile_url].first do %>
+          <%= form.url_field :facebook_profile_url, required: true, placeholder: "https://facebook.com/username", class: "w-full rounded-xl border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-base sm:text-sm focus:ring-blue-500 focus:border-blue-500 py-3 px-4" %>
+        <% end %>
+
+        <div class="pt-6 border-t border-neutral-100 dark:border-white/5">
+          <%= render "shared/components/buttons/button", text: "Save Profile Changes", type: "submit", size: "lg" %>
+        </div>
+      <% end %>
+    <% end %>
+
+  <%# CARD 2: Email Management %>
+  <%= render "shared/components/card/card", rounded: "3xl", padding: "lg" do %>
+    <h2 class="text-xl font-bold text-neutral-900 dark:text-white mb-6">Change Email Address</h2>
+
+    <%= form_with model: @user, url: settings_email_path, method: :patch, class: "space-y-6" do |form| %>
+      <% if @user.errors.any? && (@user.errors[:unconfirmed_email].any? || (@user.errors[:password_challenge].any? && form.object.unconfirmed_email.present?)) %>
+        <div class="bg-red-50 dark:bg-red-900/10 text-red-600 px-4 py-3 font-medium rounded-xl border border-red-100 dark:border-red-900/20 text-sm">
+          <%= @user.errors.full_messages.first %>
+        </div>
+      <% end %>
+
+      <div class="text-sm text-neutral-600 dark:text-neutral-400">
+        Current email: <strong class="text-neutral-800 dark:text-neutral-200"><%= @user.email_address %></strong>
+        <% if @user.unconfirmed_email_was.present? %>
+          <div class="mt-2 p-3 bg-amber-50 dark:bg-amber-950/20 text-amber-700 dark:text-amber-400 rounded-xl border border-amber-200 dark:border-amber-900/30">
+            Pending verification: <strong><%= @user.unconfirmed_email_was %></strong>
+          </div>
+        <% end %>
+      </div>
+
+      <%= render "shared/components/forms/form_group",
+                 label: "New email address",
+                 name: :unconfirmed_email,
+                 required: true do %>
+        <%= form.email_field :unconfirmed_email, required: true, class: "w-full rounded-xl border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-base sm:text-sm focus:ring-blue-500 focus:border-blue-500 py-3 px-4" %>
+      <% end %>
+
+      <%= render "shared/components/forms/form_group",
+                 label: "Current password",
+                 name: :password_challenge,
+                 required: true,
+                 helper_text: "Verify identity with your current password" do %>
+        <%= form.password_field :password_challenge, required: true, autocomplete: "current-password", class: "w-full rounded-xl border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-base sm:text-sm focus:ring-blue-500 focus:border-blue-500 py-3 px-4" %>
+      <% end %>
+
+      <div class="pt-4">
+        <%= render "shared/components/buttons/button", text: "Update Email Address", type: "submit", size: "lg" %>
+      </div>
+    <% end %>
+  <% end %>
+
+  <%# CARD 3: Password Management %>
+  <%= render "shared/components/card/card", rounded: "3xl", padding: "lg" do %>
+    <h2 class="text-xl font-bold text-neutral-900 dark:text-white mb-6">Change Password</h2>
+
+    <%= form_with model: @user, url: settings_password_path, method: :patch, class: "space-y-6" do |form| %>
+      <% if @user.errors.any? && (@user.errors[:password].any? || @user.errors[:password_confirmation].any? || (@user.errors[:password_challenge].any? && form.object.password.present?)) %>
+        <div class="bg-red-50 dark:bg-red-900/10 text-red-600 px-4 py-3 font-medium rounded-xl border border-red-100 dark:border-red-900/20 text-sm">
+          <%= @user.errors.full_messages.first %>
+        </div>
+      <% end %>
+
+      <%= render "shared/components/forms/form_group",
+                 label: "Current password",
+                 name: :password_challenge,
+                 required: true do %>
+        <%= form.password_field :password_challenge, required: true, autocomplete: "current-password", class: "w-full rounded-xl border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-base sm:text-sm focus:ring-blue-500 focus:border-blue-500 py-3 px-4" %>
+      <% end %>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+        <%= render "shared/components/forms/form_group",
+                   label: "New password",
+                   name: :password,
+                   required: true do %>
+          <%= form.password_field :password, required: true, class: "w-full rounded-xl border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-base sm:text-sm focus:ring-blue-500 focus:border-blue-500 py-3 px-4" %>
+        <% end %>
+
+        <%= render "shared/components/forms/form_group",
+                   label: "Confirm new password",
+                   name: :password_confirmation,
+                   required: true do %>
+          <%= form.password_field :password_confirmation, required: true, class: "w-full rounded-xl border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-base sm:text-sm focus:ring-blue-500 focus:border-blue-500 py-3 px-4" %>
+        <% end %>
+      </div>
+
+      <div class="pt-4">
+        <%= render "shared/components/buttons/button", text: "Update Password", type: "submit", size: "lg" %>
+      </div>
+    <% end %>
+  <% end %>
+
+  <%# CARD 4: Danger Zone %>
+  <%= render "shared/components/card/card", rounded: "3xl", padding: "lg", classes: "border-red-500/20 dark:border-red-500/30" do %>
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+      <div class="max-w-md">
+        <h2 class="text-xl font-bold text-red-600 dark:text-red-400 mb-2">Delete Account</h2>
+        <p class="text-sm text-neutral-600 dark:text-neutral-400">
+          Permanently remove your profile and all associated data. This action is irreversible.
+        </p>
+      </div>
+      <div class="shrink-0 w-full sm:w-auto">
+        <%= form_with url: settings_user_path, method: :delete, data: { turbo_confirm: "Are you sure you want to permanently delete your account?
+  All your rides will also be deleted." }, class: "space-y-4" do |form| %>
+          <div>
+            <%= form.password_field :password_challenge,
+                                    required: true,
+                                    placeholder: "Confirm password",
+                                    class: "w-full rounded-xl border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800
+  text-base sm:text-sm focus:ring-blue-500 focus:border-blue-500 py-2.5 px-4" %>
+          </div>
+          <%= render "shared/components/buttons/button",
+                     text: "Delete My Account",
+                     variant: "destructive",
+                     type: "submit",
+                     full_width: true %>
+        <% end %>
+      </div>
+    </div>
+  <% end %>
+</div>
