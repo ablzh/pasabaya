@@ -64,3 +64,6 @@ Thanks to the **Solid Trifecta** (Solid Queue, Solid Cache, and Solid Cable) run
 4. To log in, use the test user data: 
 _email:_ admin@example.com 
 e_password:_ password
+
+## Monitoring
+The public-facing performance dashboard for this application is available at [Skylight OSS](https://oss.skylight.io/app/applications/6Ku64X6eveQt/recent/6h/endpoints)
