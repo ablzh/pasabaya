@@ -34,22 +34,33 @@ The project leverages **Rails 8.1** capabilities to their fullest, adhering to t
 ---
 
 ## 🚀 How to run locally
-**First time contributing?** Welcome! This guide will help you get the website running locally in just a few steps.
+
+**First time contributing?** Welcome! This guide will help you get the website running locally in just a few steps. 
+
+Thanks to the **Solid Trifecta** (Solid Queue, Solid Cache, and Solid Cable) running on SQLite, there is no need for Redis, Memcached, or any other external services. The project runs fully on SQLite and Import Maps, meaning you don't need to install PostgreSQL, Redis, or Node.js to get started.
 
 ### Prerequisites
 
-- **Ruby** (latest stable version recommended) - [Install Ruby](https://www.ruby-lang.org/en/documentation/installation/)
--  **Git** - [Install Git](https://git-scm.com/downloads)
+- **macOS / Linux / Windows with WSL2 (Ubuntu)** — If you are on Windows, I assume you are using WSL2 to run the commands.
+- **Ruby 4.0.1** (I recommend installing it via [mise](https://mise.jdx.dev/))
+- **Git**
 
 ### Get It Running
-1. **Clone and setup the project**:
-```bash
-    git clone https://github.com/ablzh/pasabaya.git
-    bundle install                                                                                                                                                                                                                                                                                                  
-    bin/rails db:prepare                                                                                                                                                                                                                                                                                               
-```
-2. **Start the server**:
-```bash
-    bin/rails server
-```
+
+1. **Clone the repository**:
+   ```bash
+   git clone https://github.com/ablzh/pasabaya.git
+   cd pasabaya
+   ```
+
+2. **Run the setup script**:
+   ```bash
+   bin/setup
+   ```
+   *This command will install all gems, prepare your SQLite database, and boot the development server.*
+
 3. **Access the app**: Open your browser and navigate to `http://localhost:3000` to see the app in action!
+
+4. To log in, use the test user data: 
+_email:_ admin@example.com 
+e_password:_ password
