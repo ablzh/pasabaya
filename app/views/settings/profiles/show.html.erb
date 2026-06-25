@@ -5,7 +5,7 @@
     <%= render "shared/components/card/card", rounded: "3xl", padding: "lg" do %>
       <%= form_with model: @user, url: settings_profile_path, method: :patch, class: "space-y-6" do |form| %>
 
-        <% if @user.errors.any? %>
+        <% if controller_name == "profiles" && @user.errors.any? %>
           <div class="bg-red-50 dark:bg-red-900/10 text-red-600 px-4 py-3 font-medium rounded-xl border border-red-100 dark:border-red-900/20">
             <ul class="list-disc ml-6 text-sm">
               <% @user.errors.full_messages.each do |message| %>
@@ -87,9 +87,11 @@
     <h2 class="text-xl font-bold text-neutral-900 dark:text-white mb-6">Change Email Address</h2>
 
     <%= form_with model: @user, url: settings_email_path, method: :patch, class: "space-y-6" do |form| %>
-      <% if @user.errors.any? && (@user.errors[:unconfirmed_email].any? || (@user.errors[:password_challenge].any? && form.object.unconfirmed_email.present?)) %>
+      <% if controller_name == "emails" && @user.errors.any?  %>
         <div class="bg-red-50 dark:bg-red-900/10 text-red-600 px-4 py-3 font-medium rounded-xl border border-red-100 dark:border-red-900/20 text-sm">
-          <%= @user.errors.full_messages.first %>
+          <% @user.errors.full_messages.each do |message| %>
+            <li><%= message %></li>
+          <% end %>
         </div>
       <% end %>
 
@@ -128,9 +130,11 @@
     <h2 class="text-xl font-bold text-neutral-900 dark:text-white mb-6">Change Password</h2>
 
     <%= form_with model: @user, url: settings_password_path, method: :patch, class: "space-y-6" do |form| %>
-      <% if @user.errors.any? && (@user.errors[:password].any? || @user.errors[:password_confirmation].any? || (@user.errors[:password_challenge].any? && form.object.password.present?)) %>
+      <% if controller_name == "passwords" && @user.errors.any?  %>
         <div class="bg-red-50 dark:bg-red-900/10 text-red-600 px-4 py-3 font-medium rounded-xl border border-red-100 dark:border-red-900/20 text-sm">
-          <%= @user.errors.full_messages.first %>
+          <% @user.errors.full_messages.each do |message| %>
+            <li><%= message %></li>
+          <% end %>
         </div>
       <% end %>
 
