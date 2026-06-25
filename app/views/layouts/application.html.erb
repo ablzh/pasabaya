@@ -22,6 +22,8 @@
   <meta name="application-name" content="Pasabaya - Carpooling Philippines">
   <meta name="mobile-web-app-capable" content="yes">
 
+  <%= turbo_refreshes_with method: :morph, scroll: :preserve %>
+
   <%= csrf_meta_tags %>
   <%= csp_meta_tag %>
 
