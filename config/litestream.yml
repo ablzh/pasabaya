@@ -1,10 +1,10 @@
+l0-retention-check-interval: 4h
 dbs:
-  - dir: /rails/storage
-    pattern: "*.sqlite3"
-    recursive: true
-    replica:
-      type: s3
-      endpoint: ${AWS_ENDPOINT}
-      bucket: pasabaya-backups
-      path: database
-      region: auto
+  - path: /rails/storage/production.sqlite3
+    replicas:
+      - type: s3
+        endpoint: ${AWS_ENDPOINT}
+        bucket: pasabaya-backups
+        path: database
+        region: auto
+        sync-interval: 1m

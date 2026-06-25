@@ -43,7 +43,11 @@ Thanks to the **Solid Trifecta** (Solid Queue, Solid Cache, and Solid Cable) run
 
 - **macOS / Linux / Windows with WSL2 (Ubuntu)** — If you are on Windows, I assume you are using WSL2 to run the commands.
 - **Ruby 4.0.1** (I recommend installing it via [mise](https://mise.jdx.dev/))
+- **Rails 8.1**
 - **Git**
+
+Just follow the official [**Ruby on Rails installation guide**](https://guides.rubyonrails.org/install_ruby_on_rails.html).
+But instead of ```mise use -g ruby@3``` use Ruby 4 ```mise use -g ruby@4``` :)
 
 ### Get It Running
 
