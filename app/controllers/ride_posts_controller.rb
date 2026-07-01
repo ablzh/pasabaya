@@ -4,6 +4,8 @@ class RidePostsController < ApplicationController
   before_action :resume_session, only: [ :index, :show ]
   before_action :set_grouped_locations, only: %i[ index new edit create update ]
   before_action :resolve_route_slugs, only: :index
+  before_action :redirect_to_seo_route, only: :index
+
 
   # GET /ride_posts or /ride_posts.json
   def index
@@ -142,5 +144,20 @@ class RidePostsController < ApplicationController
         type: "article"
       }
     )
+  end
+
+  def redirect_to_seo_route
+    if params[:origin_id].present? && params[:destination_id].present? && params[:origin_slug].blank? && request.format.html?
+      origin = Location.find_by(id: params[:origin_id])
+      destination = Location.find_by(id: params[:destination_id])
+
+      if origin && destination
+        redirect_to route_rides_path(
+                      origin_slug: origin.slug,
+                      destination_slug: destination.slug,
+                      post_type: params[:post_type].presence
+                    )
+      end
+    end
   end
 end

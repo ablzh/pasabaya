@@ -1,13 +1,15 @@
 # Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
 
 one:
-  name: MyString
-  location_type: 1
+  name: Manila
+  location_type: 2
   parent: one
-  country_code: MyString
+  country_code: PH
+  slug: manila
 
 two:
-  name: MyString
+  name: Makati
   location_type: 2
   parent: two
-  country_code: MyString
+  country_code: PH
+  slug: makati

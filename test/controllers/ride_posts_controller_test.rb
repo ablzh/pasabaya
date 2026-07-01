@@ -15,15 +15,30 @@ class RidePostsControllerTest < ActionDispatch::IntegrationTest
     assert_select "h3", "Where are you heading?"
   end
 
-  test "should get index with results when search params match active posts" do
+  test "should redirect search with both origin and destination to seo route" do
     sign_out
     get ride_posts_url, params: {
       post_type: @ride_post.post_type,
       origin_id: @ride_post.origin_id,
       destination_id: @ride_post.destination_id
     }
+
+    # Проверяем, что произошел редирект на красивый SEO-URL
+    assert_redirected_to route_rides_url(
+                           origin_slug: @ride_post.origin.slug,
+                           destination_slug: @ride_post.destination.slug,
+                           post_type: @ride_post.post_type
+                         )
+  end
+
+  test "should get index with results when only origin is searched (no redirect)" do
+    sign_out
+    get ride_posts_url, params: {
+      origin_id: @ride_post.origin_id
+    }
+
+    # Поиск по одному критерию не должен редиректить
     assert_response :success
-    assert_select "h3", "#{@ride_post.origin.name} → #{@ride_post.destination.name}"
   end
 
   test "should get new" do

@@ -25,15 +25,37 @@ class Location < ApplicationRecord
       .transform_values { |cities| cities.map { |city| [ city.name, city.id ] } }
   end
 
+  before_validation :generate_slug, if: -> { slug.blank? || name_changed? }
+
   # Basic validations
   validates :name, presence: true
   validates :location_type, presence: true
+  validates :slug, presence: true, uniqueness: { case_sensitive: false }
 
   def self.find_by_slug(slug)
-    city.find_by("LOWER(REPLACE(name, ' ', '-')) = ?", slug.downcase)
+    city.find_by(slug: slug&.downcase)
   end
 
-  def slug
-    name.parameterize
+  private
+  def generate_slug
+    return if name.blank?
+
+    base_slug = name.parameterize
+    self.slug = base_slug
+
+    # Если слаг уже занят ДРУГОЙ локацией, пробуем добавить регион/родителя
+    if Location.where.not(id: id).exists?(slug: slug) && parent.present?
+      self.slug = "#{base_slug}-#{parent.name.parameterize}"
+    end
+
+    # Если всё еще занят (на всякий случай), добавляем суффикс
+    suffix = 1
+    final_slug = self.slug
+    while Location.where.not(id: id).exists?(slug: final_slug)
+      final_slug = "#{self.slug}-#{suffix}"
+      suffix += 1
+    end
+
+    self.slug = final_slug
   end
 end
