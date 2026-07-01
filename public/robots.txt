@@ -1,10 +1,10 @@
 # robots.txt для pasabaya.app
 
-    User-agent: *
+User-agent: *
 
-    Disallow: /session/
-    Disallow: /passwords/
-    Disallow: /settings/
-    Disallow: /up
+Disallow: /session/
+Disallow: /passwords/
+Disallow: /settings/
+Disallow: /up
 
-    Sitemap: https://pasabaya.app/sitemap.xml
+Sitemap: https://pasabaya.app/sitemap.xml
