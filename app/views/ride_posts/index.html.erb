@@ -31,13 +31,42 @@
         </div>
       </div>
     <% else %>
-      <%# Initial visit, prompt to search %>
-      <div class="col-span-full py-20 text-center bg-white dark:bg-neutral-900 rounded-3xl border border-neutral-100 dark:border-white/5 shadow-sm">
-        <div class="inline-flex items-center justify-center size-16 rounded-full bg-blue-50 text-blue-600 mb-4">
-          <svg class="size-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+      <div class="col-span-full space-y-12">
+        <% if @popular_routes.any? %>
+          <div class="bg-neutral-50 dark:bg-neutral-900/50 rounded-3xl p-8 border border-neutral-100 dark:border-white/5">
+            <h3 class="text-lg font-bold text-neutral-900 dark:text-white mb-6 flex items-center gap-2">
+              <span>📍</span> Active Carpool Routes
+            </h3>
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+              <% @popular_routes.each do |route| %>
+                <%= link_to route_rides_path(origin_slug: route[:origin].slug, destination_slug: route[:destination].slug),
+                            class: "flex items-center justify-between p-4 bg-white dark:bg-neutral-900 rounded-2xl border border-neutral-100 dark:border-white/5 hover:border-indigo-500 dark:hover:border-indigo-500/50 hover:shadow-md transition group" do %>
+                  <div class="flex flex-col">
+                        <span class="text-sm font-medium text-neutral-700 dark:text-neutral-300 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition">
+                          <%= route[:origin].name %> → <%= route[:destination].name %>
+                        </span>
+                    <span class="text-xs text-neutral-400 mt-1">
+                      <%= pluralize(route[:count], "active listing") %>
+                    </span>
+                  </div>
+                  <span class="text-neutral-400 group-hover:translate-x-1 transition-transform">→</span>
+                <% end %>
+              <% end %>
+            </div>
+          </div>
+        <% end %>
+
+        <div class="py-16 text-center bg-white dark:bg-neutral-900 rounded-3xl border border-neutral-100 dark:border-white/5 shadow-sm">
+          <div class="inline-flex items-center justify-center size-16 rounded-full bg-blue-50 text-blue-600 mb-4 dark:bg-blue-950/30 dark:text-blue-400">
+            <svg class="size-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+            </svg>
+          </div>
+          <h3 class="mt-4 text-xl font-bold text-neutral-900 dark:text-white">Where are you heading?</h3>
+          <p class="mt-2 text-sm text-neutral-500 max-w-sm mx-auto">
+            Enter an origin or destination in the search bar above to find active offers and requests, or choose an active route from the list.
+          </p>
         </div>
-        <h3 class="mt-4 text-xl font-bold text-neutral-900 dark:text-white">Where are you heading?</h3>
-        <p class="mt-2 text-sm text-neutral-500 max-w-sm mx-auto">Enter an origin or destination in the search bar above to find available rides, or post your own.</p>
       </div>
     <% end %>
   </div>

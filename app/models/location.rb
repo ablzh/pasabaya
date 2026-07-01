@@ -28,4 +28,12 @@ class Location < ApplicationRecord
   # Basic validations
   validates :name, presence: true
   validates :location_type, presence: true
+
+  def self.find_by_slug(slug)
+    city.find_by("LOWER(REPLACE(name, ' ', '-')) = ?", slug.downcase)
+  end
+
+  def slug
+    name.parameterize
+  end
 end

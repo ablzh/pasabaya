@@ -8,6 +8,6 @@ one:
 
 two:
   name: MyString
-  location_type: 1
+  location_type: 2
   parent: two
   country_code: MyString
