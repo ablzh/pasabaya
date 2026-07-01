@@ -3,17 +3,22 @@ class RidePostsController < ApplicationController
   before_action :set_ride_post, only: %i[ show edit update destroy ]
   before_action :resume_session, only: [ :index, :show ]
   before_action :set_grouped_locations, only: %i[ index new edit create update ]
+  before_action :resolve_route_slugs, only: :index
 
   # GET /ride_posts or /ride_posts.json
   def index
     if params.key?(:post_type) || params.key?(:origin_id) || params.key?(:destination_id)
       @ride_posts = RidePost.active
-                            .includes(:origin, :destination, :user).order(departure_time: :asc)
+                            .includes(:origin, :destination, :user)
+                            .order(departure_time: :asc)
                             .filter_by_post_type(params[:post_type])
                             .filter_by_origin(params[:origin_id])
                             .filter_by_destination(params[:destination_id])
+
+      setup_route_meta_tags if @origin && @destination
     else
       @ride_posts = RidePost.none
+      @popular_routes = RidePost.popular_routes
     end
   end
 
@@ -86,5 +91,30 @@ class RidePostsController < ApplicationController
 
   def set_grouped_locations
     @grouped_locations = Location.grouped_by_region
+  end
+
+  def resolve_route_slugs
+    if params[:origin_slug].present? && params[:destination_slug].present?
+      @origin = Location.find_by_slug(params[:origin_slug])
+      @destination = Location.find_by_slug(params[:destination_slug])
+
+      if @origin && @destination
+        params[:origin_id] = @origin.id
+        params[:destination_id] = @destination.id
+      else
+        redirect_to ride_posts_path, alert: "Route not found"
+      end
+    end
+  end
+
+  def setup_route_meta_tags
+    set_meta_tags(
+      title: "Carpool from #{@origin.name} to #{@destination.name}",
+      description: "Find rides and carpools from #{@origin.name} to #{@destination.name} on Pasabaya.app. Share fuel costs and travel together.",
+      og: {
+        title: "Carpool from #{@origin.name} to #{@destination.name} | Pasabaya",
+        description: "Find travel companions from #{@origin.name} to #{@destination.name}. No booking fees."
+      }
+    )
   end
 end
