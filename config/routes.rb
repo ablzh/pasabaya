@@ -17,6 +17,7 @@ Rails.application.routes.draw do
     resources :confirmations, param: :token, only: [ :show ]
   end
 
+  get "sitemap.xml", to: "sitemaps#show", as: :sitemap, defaults: { format: :xml }
   get "privacy", to: "pages#privacy"
   get "terms", to: "pages#terms"
 
