@@ -1,1 +1,10 @@
-# See https://www.robotstxt.org/robotstxt.html for documentation on how to use the robots.txt file
+# robots.txt для pasabaya.app
+
+    User-agent: *
+
+    Disallow: /session/
+    Disallow: /passwords/
+    Disallow: /settings/
+    Disallow: /up
+
+    Sitemap: https://pasabaya.app/sitemap.xml
