@@ -46,6 +46,25 @@ export default class extends Controller {
   };
 
   connect() {
+    this.#initialize();
+
+    // Слушаем события рендеринга Turbo для корректного морфинга
+    this.beforeRenderHandler = this.#cleanup.bind(this);
+    this.renderHandler = this.#initialize.bind(this);
+
+    document.addEventListener("turbo:before-render", this.beforeRenderHandler);
+    document.addEventListener("turbo:render", this.renderHandler);
+  }
+
+  disconnect() {
+    this.#cleanup();
+    document.removeEventListener("turbo:before-render", this.beforeRenderHandler);
+    document.removeEventListener("turbo:render", this.renderHandler);
+  }
+
+  // Private methods
+
+  #initialize() {
     if (this.element.tomselect) return;
 
     const options = this.#buildOptions();
@@ -60,12 +79,6 @@ export default class extends Controller {
 
     this.element.style.visibility = "visible";
   }
-
-  disconnect() {
-    this.#cleanup();
-  }
-
-  // Private methods
 
   #buildOptions() {
     const plugins = this.#getPlugins();
