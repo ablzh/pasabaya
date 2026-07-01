@@ -88,4 +88,16 @@ class RidePostsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select "title", text: /Carpool from #{origin.name} to #{destination.name}/
   end
+
+  test "should show ride_post with correct SEO tags" do
+    sign_out
+    get ride_post_url(@ride_post)
+    assert_response :success
+
+    assert_select "title", text: /Ride from #{@ride_post.origin.name} to #{@ride_post.destination.name}/
+
+    assert_select "meta[name='description']" do |elements|
+      assert_match /#{@ride_post.user.first_name}/, elements.first["content"]
+    end
+  end
 end
