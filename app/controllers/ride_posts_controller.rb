@@ -125,9 +125,9 @@ class RidePostsController < ApplicationController
   def setup_show_meta_tags
     formatted_time = if @ride_post.regular?
                        "Flexible departure"
-                     else
+    else
                        @ride_post.departure_time.strftime("%A, %b %d at %I:%M %p")
-                     end
+    end
 
     title_text = "Ride from #{@ride_post.origin.name} to #{@ride_post.destination.name}"
     desc_text = "#{@ride_post.user.first_name} is #{@ride_post.post_type} a ride. " \
