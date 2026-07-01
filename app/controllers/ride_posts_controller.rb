@@ -26,8 +26,10 @@ class RidePostsController < ApplicationController
   def show
     if params[:id] != @ride_post.to_param
       redirect_to @ride_post, status: :moved_permanently
-      nil
+      return # Use return to stop execution after redirecting
     end
+
+    setup_show_meta_tags
   end
 
   # GET /ride_posts/new
@@ -114,6 +116,30 @@ class RidePostsController < ApplicationController
       og: {
         title: "Carpool from #{@origin.name} to #{@destination.name} | Pasabaya",
         description: "Find travel companions from #{@origin.name} to #{@destination.name}. No booking fees."
+      }
+    )
+  end
+
+  def setup_show_meta_tags
+    formatted_time = if @ride_post.regular?
+                       "Flexible departure"
+                     else
+                       @ride_post.departure_time.strftime("%A, %b %d at %I:%M %p")
+                     end
+
+    title_text = "Ride from #{@ride_post.origin.name} to #{@ride_post.destination.name}"
+    desc_text = "#{@ride_post.user.first_name} is #{@ride_post.post_type} a ride. " \
+      "Departure: #{formatted_time}. " \
+      "Seats available: #{@ride_post.seats}. " \
+      "Check notes and coordinate via Facebook."
+
+    set_meta_tags(
+      title: title_text,
+      description: desc_text,
+      og: {
+        title: "#{title_text} | Pasabaya",
+        description: desc_text,
+        type: "article"
       }
     )
   end
