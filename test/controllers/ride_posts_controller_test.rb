@@ -76,4 +76,16 @@ class RidePostsControllerTest < ActionDispatch::IntegrationTest
 
     assert_redirected_to ride_posts_url
   end
+
+  test "should get route page with dynamic SEO tags" do
+    sign_out
+
+    origin = @ride_post.origin
+    destination = @ride_post.destination
+
+    get route_rides_url(origin_slug: origin.slug, destination_slug: destination.slug)
+
+    assert_response :success
+    assert_select "title", text: /Carpool from #{origin.name} to #{destination.name}/
+  end
 end
