@@ -5,8 +5,6 @@ class SitemapsController < ApplicationController
     @static_pages = [ root_url, privacy_url, terms_url ]
 
     active_rides = RidePost.active.includes(:origin, :destination)
-    @ride_posts = active_rides.select { |r| r.origin.present? && r.destination.present? }
-
     location_pairs = active_rides.pluck(:origin_id, :destination_id).uniq
     location_ids = location_pairs.flatten.uniq
     locations_by_id = Location.where(id: location_ids).index_by(&:id)
