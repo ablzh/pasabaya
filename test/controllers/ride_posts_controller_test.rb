@@ -92,7 +92,7 @@ class RidePostsControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to ride_posts_url
   end
 
-  test "should get route page with dynamic SEO tags" do
+  test "should get route page with dynamic SEO tags and H1" do
     sign_out
 
     origin = @ride_post.origin
@@ -103,17 +103,19 @@ class RidePostsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select "title", text: /Carpool from #{origin.name} to #{destination.name}/
+    assert_select "h1", text: /Carpool from #{origin.name} to #{destination.name}/
     assert_select "link[rel='canonical'][href='#{expected_url}']"
     assert_select "meta[property='og:url'][content='#{expected_url}']"
   end
 
-  test "should show ride_post with correct SEO tags" do
+  test "should show ride_post with noindex robots tag" do
     sign_out
     expected_url = ride_post_url(@ride_post)
     get expected_url
     assert_response :success
 
     assert_select "title", text: /Ride from #{@ride_post.origin.name} to #{@ride_post.destination.name}/
+    assert_select "meta[name='robots'][content*='noindex']"
     assert_select "link[rel='canonical'][href='#{expected_url}']"
     assert_select "meta[property='og:url'][content='#{expected_url}']"
 

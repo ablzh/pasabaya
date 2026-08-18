@@ -20,6 +20,32 @@
       <div class="max-w-4xl mx-auto pt-8">
         <%= render "ride_posts/search_form" %>
       </div>
+
+      <% if @popular_routes.present? && @popular_routes.any? %>
+        <div class="max-w-4xl mx-auto text-left">
+          <div class="bg-neutral-50 dark:bg-neutral-900/50 rounded-3xl p-6 sm:p-8 border border-neutral-100 dark:border-white/5">
+            <h2 class="text-lg font-bold text-neutral-900 dark:text-white mb-4 flex items-center gap-2">
+              <span>📍</span> Active Carpool Routes
+            </h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+              <% @popular_routes.each do |route| %>
+                <%= link_to route_rides_path(origin_slug: route[:origin].slug, destination_slug: route[:destination].slug),
+                            class: "flex items-center justify-between p-3.5 bg-white dark:bg-neutral-900 rounded-2xl border border-neutral-100 dark:border-white/5 hover:border-indigo-500 dark:hover:border-indigo-500/50 hover:shadow-md transition group" do %>
+                  <div class="flex flex-col">
+                    <span class="text-sm font-medium text-neutral-700 dark:text-neutral-300 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition">
+                      <%= route[:origin].name %> → <%= route[:destination].name %>
+                    </span>
+                    <span class="text-xs text-neutral-400 mt-0.5">
+                      <%= pluralize(route[:count], "active listing") %>
+                    </span>
+                  </div>
+                  <span class="text-neutral-400 group-hover:translate-x-1 transition-transform text-sm">→</span>
+                <% end %>
+              <% end %>
+            </div>
+          </div>
+        </div>
+      <% end %>
     </header>
 
     <%# Video Section %>

@@ -143,6 +143,7 @@ class RidePostsController < ApplicationController
       title: title_text,
       description: desc_text,
       canonical: canonical_url,
+      noindex: true,
       og: {
         title: "#{title_text} | Pasabaya",
         description: desc_text,
