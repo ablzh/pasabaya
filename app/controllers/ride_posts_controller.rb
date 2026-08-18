@@ -112,12 +112,15 @@ class RidePostsController < ApplicationController
   end
 
   def setup_route_meta_tags
+    route_url = route_rides_url(origin_slug: @origin.slug, destination_slug: @destination.slug)
     set_meta_tags(
       title: "Carpool from #{@origin.name} to #{@destination.name}",
       description: "Find rides and carpools from #{@origin.name} to #{@destination.name} on Pasabaya.app. Share fuel costs and travel together.",
+      canonical: route_url,
       og: {
         title: "Carpool from #{@origin.name} to #{@destination.name} | Pasabaya",
-        description: "Find travel companions from #{@origin.name} to #{@destination.name}. No booking fees."
+        description: "Find travel companions from #{@origin.name} to #{@destination.name}. No booking fees.",
+        url: route_url
       }
     )
   end
@@ -135,13 +138,16 @@ class RidePostsController < ApplicationController
       "Seats available: #{@ride_post.seats}. " \
       "Check notes and coordinate via Facebook."
 
+    canonical_url = ride_post_url(@ride_post)
     set_meta_tags(
       title: title_text,
       description: desc_text,
+      canonical: canonical_url,
       og: {
         title: "#{title_text} | Pasabaya",
         description: desc_text,
-        type: "article"
+        type: "article",
+        url: canonical_url
       }
     )
   end
