@@ -97,19 +97,25 @@ class RidePostsControllerTest < ActionDispatch::IntegrationTest
 
     origin = @ride_post.origin
     destination = @ride_post.destination
+    expected_url = route_rides_url(origin_slug: origin.slug, destination_slug: destination.slug)
 
-    get route_rides_url(origin_slug: origin.slug, destination_slug: destination.slug)
+    get expected_url
 
     assert_response :success
     assert_select "title", text: /Carpool from #{origin.name} to #{destination.name}/
+    assert_select "link[rel='canonical'][href='#{expected_url}']"
+    assert_select "meta[property='og:url'][content='#{expected_url}']"
   end
 
   test "should show ride_post with correct SEO tags" do
     sign_out
-    get ride_post_url(@ride_post)
+    expected_url = ride_post_url(@ride_post)
+    get expected_url
     assert_response :success
 
     assert_select "title", text: /Ride from #{@ride_post.origin.name} to #{@ride_post.destination.name}/
+    assert_select "link[rel='canonical'][href='#{expected_url}']"
+    assert_select "meta[property='og:url'][content='#{expected_url}']"
 
     assert_select "meta[name='description']" do |elements|
       assert_match /#{@ride_post.user.first_name}/, elements.first["content"]
