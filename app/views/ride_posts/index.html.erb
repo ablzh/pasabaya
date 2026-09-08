@@ -43,7 +43,11 @@
         <% if @popular_routes.any? %>
           <div class="bg-neutral-50 dark:bg-neutral-900/50 rounded-3xl p-8 border border-neutral-100 dark:border-white/5">
             <h3 class="text-lg font-bold text-neutral-900 dark:text-white mb-6 flex items-center gap-2">
-              <span>📍</span> Active Carpool Routes
+              <svg class="size-5 text-indigo-600 dark:text-indigo-400 shrink-0" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5C15 12.1569 13.6569 13.5 12 13.5C10.3431 13.5 9 12.1569 9 10.5C9 8.84315 10.3431 7.5 12 7.5C13.6569 7.5 15 8.84315 15 10.5Z" />
+                <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5C19.5 17.6421 12 21.75 12 21.75C12 21.75 4.5 17.6421 4.5 10.5C4.5 6.35786 7.85786 3 12 3C16.1421 3 19.5 6.35786 19.5 10.5Z" />
+              </svg>
+              Active Carpool Routes
             </h3>
             <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
               <% @popular_routes.each do |route| %>
