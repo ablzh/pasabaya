@@ -28,11 +28,11 @@
 
       <% if Current.user == @ride_post.user %>
         <div class="flex gap-2">
-          <%= render "shared/components/buttons/button",
+          <%= render Buttons::Component.new(
                      text: "Edit",
                      href: edit_ride_post_path(@ride_post),
-                     variant: "secondary",
-                     size: "sm" %>
+                     variant: :secondary,
+                     size: :sm) %>
         </div>
       <% end %>
     </div>
@@ -93,11 +93,11 @@
       Is looking for travel partners. Contact them directly on Facebook to coordinate details and confirm your ride.
     </p>
 
-    <%= render "shared/components/buttons/button",
+    <%= render Buttons::Component.new(
                text: Current.user.present? ? "Contact on Facebook" : "Login to View Contact",
                href: Current.user.present? ? @ride_post.user.facebook_profile_url : new_session_path(return_to: request.path),
-               style: "fancy",
-               size: "lg"
+               style: :fancy,
+               size: :lg)
     %>
   </div>
 </div>

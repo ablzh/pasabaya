@@ -3,10 +3,11 @@
   <%= form_with url: ride_posts_path, method: :get, class: "flex flex-col sm:flex-row gap-4 items-end" do |form| %>
     
     <%# 1. Post Type Select %>
-    <%= render "shared/components/forms/form_group",
+    <%= render(Forms::Component.new(
       label: "Looking for...",
       name: :post_type,
-      classes: "flex-1 w-full" do %>
+      classes: "flex-1 w-full"
+    )) do %>
       <%= form.select :post_type, 
           options_for_select([["All Rides", ""], ["Offerings", "offering"], ["Requests", "requesting"]], params[:post_type]),
           {}, 
@@ -14,34 +15,36 @@
     <% end %>
 
     <%# 2. Origin Select (Grouped Combobox) %>
-    <%= render "shared/components/forms/form_group",
+    <%= render(Forms::Component.new(
       label: "From",
       name: :origin_id,
-      classes: "flex-1 w-full" do %>
-      <%= render "shared/components/combobox/combobox",
+      classes: "flex-1 w-full"
+    )) do %>
+      <%= render Combobox::Component.new(
                  name: :origin_id,
                  id: "origin_id",
                  grouped_options: @grouped_locations,
                  selected: params[:origin_id],
-                 placeholder: "Any Origin" %>
+                 placeholder: "Any Origin") %>
     <% end %>
 
     <%# 3. Destination Select (Grouped Combobox) %>
-    <%= render "shared/components/forms/form_group",
+    <%= render(Forms::Component.new(
       label: "To",
       name: :destination_id,
-      classes: "flex-1 w-full" do %>
-      <%= render "shared/components/combobox/combobox",
+      classes: "flex-1 w-full"
+    )) do %>
+      <%= render Combobox::Component.new(
                  name: :destination_id,
                  id: "destination_id",
                  grouped_options: @grouped_locations,
                  selected: params[:destination_id],
-                 placeholder: "Any Destination" %>
+                 placeholder: "Any Destination") %>
     <% end %>
 
     <%# Submit Button %>
     <div class="w-full sm:w-auto">
-       <%= render "shared/components/buttons/button", text: "Search", type: "submit", size: "md", full_width: true, classes: "py-2.5" %>
+       <%= render Buttons::Component.new(text: "Search", type: "submit", size: :md, full_width: true, classes: "py-2.5") %>
     </div>
     
   <% end %>

@@ -32,12 +32,12 @@
       </div>
       
       <%= form_with model: @ride_post, method: :delete, data: { turbo_confirm: "Are you sure?" } do %>
-        <%= render "shared/components/buttons/button", 
+        <%= render Buttons::Component.new(
                    text: "Delete Post", 
-                   variant: "destructive", 
+                   variant: :destructive, 
                    type: "submit", 
-                   size: "sm",
-                   style: "fancy" %>
+                   size: :sm,
+                   style: :fancy) %>
       <% end %>
     </div>
   </div>
