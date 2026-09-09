@@ -4,15 +4,17 @@
   <h1 class="font-bold text-4xl text-center">Sign in</h1>
 
   <%= form_with url: session_url, class: "space-y-6" do |form| %>
-    <%= render "shared/components/forms/form_group",
+    <%= render(Forms::Component.new(
       label: "Email Address",
-      name: :email_address do %>
+      name: :email_address
+    )) do %>
       <%= form.email_field :email_address, required: true, autofocus: true, autocomplete: "username", placeholder: "Enter your email address", value: params[:email_address], class: "block w-full rounded-xl border-neutral-300 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-base sm:text-sm focus:ring-blue-500 focus:border-blue-500 shadow-sm px-4 py-3" %>
     <% end %>
 
-    <%= render "shared/components/forms/form_group",
+    <%= render(Forms::Component.new(
       label: "Password",
-      name: :password do %>
+      name: :password
+    )) do %>
       <%= form.password_field :password, required: true, autocomplete: "current-password", placeholder: "Enter your password", maxlength: 72, class: "block w-full rounded-xl border-neutral-300 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-base sm:text-sm focus:ring-blue-500 focus:border-blue-500 shadow-sm px-4 py-3" %>
     <% end %>
 
