@@ -1,7 +1,7 @@
 <div class="mx-auto md:w-2/3 w-full">
   <h1 class="font-bold text-4xl text-neutral-900 dark:text-white mb-8 text-center">Create Your Account</h1>
 
-  <%= render "shared/components/card/card", rounded: "3xl", padding: "lg" do %>
+  <%= render(Card::Component.new(rounded: :"3xl", padding: :lg)) do %>
     <%= form_with model: @user, url: sign_up_path, class: "space-y-6" do |form| %>
 
       <% if @user.errors.any? %>
@@ -15,64 +15,76 @@
       <% end %>
 
       <div class="grid grid-cols-2 gap-4">
-        <%= render "shared/components/forms/form_group",
+        <%= render(Forms::Component.new(
           label: "First Name",
           name: :first_name,
+          id: form.field_id(:first_name),
           required: true,
-          error: @user.errors[:first_name].first do %>
+          error: @user.errors[:first_name].first
+        )) do %>
           <%= form.text_field :first_name, required: true, class: "w-full rounded-xl border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-base sm:text-sm focus:ring-blue-500 focus:border-blue-500 py-3 px-4" %>
         <% end %>
 
-        <%= render "shared/components/forms/form_group",
+        <%= render(Forms::Component.new(
           label: "Last Name",
           name: :last_name,
+          id: form.field_id(:last_name),
           required: true,
-          error: @user.errors[:last_name].first do %>
+          error: @user.errors[:last_name].first
+        )) do %>
           <%= form.text_field :last_name, required: true, class: "w-full rounded-xl border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-base sm:text-sm focus:ring-blue-500 focus:border-blue-500 py-3 px-4" %>
         <% end %>
       </div>
 
-      <%= render "shared/components/forms/form_group",
+      <%= render(Forms::Component.new(
         label: "Facebook Profile URL",
         name: :facebook_profile_url,
+        id: form.field_id(:facebook_profile_url),
         required: true,
         helper_text: "Required for trust safety. Other users will view this link to verify you and connect with you.",
-        error: @user.errors[:facebook_profile_url].first do %>
+        error: @user.errors[:facebook_profile_url].first
+      )) do %>
         <%= form.url_field :facebook_profile_url, required: true, placeholder: "https://facebook.com/username", class: "w-full rounded-xl border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-base sm:text-sm focus:ring-blue-500 focus:border-blue-500 py-3 px-4" %>
       <% end %>
 
-      <%= render "shared/components/forms/form_group",
+      <%= render(Forms::Component.new(
         label: "Email Address",
         name: :email_address,
+        id: form.field_id(:email_address),
         required: true,
-        error: @user.errors[:email_address].first do %>
+        error: @user.errors[:email_address].first
+      )) do %>
         <%= form.email_field :email_address, required: true, class: "w-full rounded-xl border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-base sm:text-sm focus:ring-blue-500 focus:border-blue-500 py-3 px-4" %>
       <% end %>
 
-      <%= render "shared/components/forms/form_group",
+      <%= render(Forms::Component.new(
         label: "Password",
         name: :password,
+        id: form.field_id(:password),
         required: true,
-        error: @user.errors[:password].first do %>
+        error: @user.errors[:password].first
+      )) do %>
         <%= form.password_field :password, required: true, class: "w-full rounded-xl border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-base sm:text-sm focus:ring-blue-500 focus:border-blue-500 py-3 px-4" %>
       <% end %>
 
-      <%= render "shared/components/forms/form_group",
+      <%= render(Forms::Component.new(
         label: "Confirm Password",
         name: :password_confirmation,
+        id: form.field_id(:password_confirmation),
         required: true,
-        error: @user.errors[:password_confirmation].first do %>
+        error: @user.errors[:password_confirmation].first
+      )) do %>
         <%= form.password_field :password_confirmation, required: true, class: "w-full rounded-xl border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-base sm:text-sm focus:ring-blue-500 focus:border-blue-500 py-3 px-4" %>
       <% end %>
 
 
-      <%= render "shared/components/switch/switch",
-        label: "I accept the #{link_to 'Terms of Service', terms_path, class: 'text-blue-600 dark:text-blue-400 hover:underline font-semibold'} and #{link_to 'Privacy Policy', privacy_path, class: 'text-blue-600 dark:text-blue-400 hover:underline font-semibold'}".html_safe,
+      <%= render Switch::Component.new(
+        label: "I accept the #{link_to 'Terms of Service', terms_path, class: 'text-blue-600 dark:text-blue-400 hover:underline font-semibold', onclick: 'event.stopPropagation()'} and #{link_to 'Privacy Policy', privacy_path, class: 'text-blue-600 dark:text-blue-400 hover:underline font-semibold', onclick: 'event.stopPropagation()'}".html_safe,
         name: "accept_terms",
-        required: true %>
+        required: true) %>
 
       <div class="pt-4">
-        <%= render "shared/components/buttons/button", text: "Create Account & Log In", type: "submit", size: "lg", full_width: true %>
+        <%= render Buttons::Component.new(text: "Create Account & Log In", type: "submit", size: :lg, full_width: true) %>
       </div>
     <% end %>
   <% end %>
