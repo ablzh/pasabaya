@@ -1,7 +1,7 @@
 <div class="max-w-4xl mx-auto px-4 py-8 space-y-12">
 
   <%# 1. Profile Header Card %>
-  <%= render "shared/components/card/card", rounded: "3xl", padding: "lg" do %>
+  <%= render(Card::Component.new(rounded: :"3xl", padding: :lg)) do %>
     <div class="flex flex-col sm:flex-row items-center gap-6 text-center sm:text-left">
       <%= user_avatar(@user, classes: "w-32 h-32 text-3xl shrink-0") %>
       <div class="flex-1 space-y-2">
@@ -15,20 +15,20 @@
         <%# Button Actions (Facebook Profile + Conditional Edit Profile) %>
         <div class="mt-4 flex flex-wrap gap-3 justify-center sm:justify-start">
           <% if @user.facebook_profile_url.present? %>
-            <%= render "shared/components/buttons/button",
+            <%= render Buttons::Component.new(
                        text: "View Facebook Profile",
                        href: @user.facebook_profile_url,
-                       variant: "primary",
-                       size: "sm",
-                       target: "_blank" %>
+                       variant: :primary,
+                       size: :sm,
+                       target: "_blank") %>
           <% end %>
 
           <% if Current.user == @user %>
-            <%= render "shared/components/buttons/button",
+            <%= render Buttons::Component.new(
                        text: "Edit Profile",
                        href: settings_profile_path,
-                       variant: "outline",
-                       size: "sm" %>
+                       variant: :outline,
+                       size: :sm) %>
           <% end %>
         </div>
       </div>
