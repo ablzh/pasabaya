@@ -2,13 +2,15 @@
 service: pasabaya
 
 # Name of the container image (use your-user/app-name on external registries).
-image: ghcr.io/ablzh/pasabaya
+image: ablzh/pasabaya
 
 # Deploy to these servers.
 servers:
   web:
     hosts:
       - 140.245.98.120
+    options:
+      memory: 10g
 
 # Enable SSL auto certification via Let's Encrypt and allow for multiple apps on a single web server.
 # If used with Cloudflare, set encryption mode in SSL/TLS setting to "Full" to enable CF-to-app encryption.
