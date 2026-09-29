@@ -8,6 +8,8 @@ class RidePost < ApplicationRecord
   has_many :bookings, dependent: :destroy
   has_many :notifications, as: :notifiable, dependent: :destroy
   has_many :chat_messages, dependent: :destroy
+  has_many :trip_reviews, dependent: :destroy
+  has_many :no_show_incidents, dependent: :destroy
 
   enum :post_type, { offering: 0, requesting: 1 }
   enum :status, { active: 0, fulfilled: 1, canceled: 2, completed: 3, draft: 4 }
@@ -152,6 +154,16 @@ class RidePost < ApplicationRecord
   end
 
   def user_authorized_for_chat?(u)
+    return false unless u
+
+    user_id == u.id || bookings.accepted.exists?(passenger_id: u.id)
+  end
+
+  def participants
+    User.where(id: [ user_id ] + bookings.accepted.pluck(:passenger_id))
+  end
+
+  def participant?(u)
     return false unless u
 
     user_id == u.id || bookings.accepted.exists?(passenger_id: u.id)

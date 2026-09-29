@@ -9,6 +9,10 @@ class User < ApplicationRecord
   has_many :chat_messages, dependent: :destroy
   has_many :community_memberships, dependent: :destroy
   has_many :communities, through: :community_memberships
+  has_many :reported_trip_reviews, class_name: "TripReview", foreign_key: :reporter_id, dependent: :destroy, inverse_of: :reporter
+  has_many :received_trip_reviews, class_name: "TripReview", foreign_key: :reported_user_id, dependent: :destroy, inverse_of: :reported_user
+  has_many :no_show_incidents, dependent: :destroy
+  has_many :adjudicated_incidents, class_name: "NoShowIncident", foreign_key: :reviewer_id, dependent: :nullify, inverse_of: :reviewer
 
   enum :gender, { unspecified: 0, female: 1, male: 2, non_binary: 3 }, default: :unspecified
 
@@ -72,6 +76,14 @@ class User < ApplicationRecord
   def verified_member_of?(community_or_id)
     comm_id = community_or_id.is_a?(Community) ? community_or_id.id : community_or_id
     verified_community_memberships.where(community_id: comm_id).exists?
+  end
+
+  def recent_upheld_incidents_count
+    no_show_incidents.upheld.where("occurred_at >= ?", 60.days.ago).count
+  end
+
+  def reliability_warning?
+    recent_upheld_incidents_count >= 2
   end
 
 
