@@ -1,0 +1,64 @@
+<div class="max-w-xl mx-auto px-4 py-8 space-y-6">
+  <div>
+    <%= link_to "&larr; Back to ride".html_safe, ride_post_path(@ride_post), class: "text-xs font-semibold text-neutral-500 hover:text-neutral-900 dark:hover:text-white" %>
+    <h1 class="text-2xl font-extrabold text-neutral-900 dark:text-white tracking-tight mt-2">
+      Trip Feedback &amp; Incident Report
+    </h1>
+    <p class="text-sm text-neutral-500 mt-1">
+      <%= @ride_post.origin.name %> &rarr; <%= @ride_post.destination.name %>
+    </p>
+  </div>
+
+  <%= render(Card::Component.new(rounded: :"2xl", padding: :lg)) do %>
+    <%= form_with(model: [@ride_post, @trip_review], url: ride_post_reviews_path(@ride_post), class: "space-y-6") do |form| %>
+      <% if @trip_review.errors.any? %>
+        <div class="bg-red-50 dark:bg-red-900/10 text-red-600 px-4 py-3 font-medium rounded-xl border border-red-100 dark:border-red-900/20 text-sm">
+          <ul class="list-disc ml-6">
+            <% @trip_review.errors.full_messages.each do |message| %>
+              <li><%= message %></li>
+            <% end %>
+          </ul>
+        </div>
+      <% end %>
+
+      <!-- Participant selection -->
+      <% if @possible_reviewees.count > 1 %>
+        <div>
+          <label class="block text-xs font-bold uppercase tracking-wider text-neutral-500 mb-2">Participant to Review</label>
+          <%= form.collection_select :reported_user_id, @possible_reviewees, :id, ->(u) { "#{u.first_name} #{u.last_name}" }, {},
+              class: "w-full rounded-xl border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-sm py-3 px-4" %>
+        </div>
+      <% elsif @possible_reviewees.one? %>
+        <%= form.hidden_field :reported_user_id, value: @possible_reviewees.first.id %>
+        <div class="p-3.5 rounded-xl bg-neutral-50 dark:bg-neutral-800/50 border border-neutral-200 dark:border-neutral-700">
+          <p class="text-xs text-neutral-500">Reviewing participant:</p>
+          <p class="text-sm font-bold text-neutral-900 dark:text-white"><%= @possible_reviewees.first.first_name %> <%= @possible_reviewees.first.last_name %></p>
+        </div>
+      <% end %>
+
+      <!-- Outcome selection -->
+      <div>
+        <label class="block text-xs font-bold uppercase tracking-wider text-neutral-500 mb-2">Trip Outcome</label>
+        <%= form.select :outcome, [
+          ["Ride completed smoothly", "completed"],
+          ["Passenger did not show up (No-show)", "passenger_no_show"],
+          ["Driver did not show up (No-show)", "driver_no_show"],
+          ["Canceled last minute", "canceled_last_minute"],
+          ["Other issue / dispute", "other_issue"]
+        ], {}, class: "w-full rounded-xl border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-sm py-3 px-4" %>
+      </div>
+
+      <!-- Notes -->
+      <div>
+        <label class="block text-xs font-bold uppercase tracking-wider text-neutral-500 mb-2">Details or Notes (Optional)</label>
+        <%= form.text_area :notes, rows: 4, placeholder: "Provide any helpful context or details about what happened...",
+            class: "w-full rounded-xl border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-sm py-3 px-4" %>
+      </div>
+
+      <div class="pt-4 border-t border-neutral-100 dark:border-white/5 flex items-center justify-between">
+        <%= link_to "Cancel", ride_post_path(@ride_post), class: "text-xs font-semibold text-neutral-500 hover:underline" %>
+        <%= render Buttons::Component.new(text: "Submit Report", type: "submit", size: :md) %>
+      </div>
+    <% end %>
+  <% end %>
+</div>

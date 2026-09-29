@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_29_202500) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_29_204000) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.bigint "blob_id", null: false
     t.datetime "created_at", null: false
@@ -102,6 +102,21 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_29_202500) do
     t.index ["slug"], name: "index_locations_on_slug", unique: true
   end
 
+  create_table "no_show_incidents", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.text "decision_reason"
+    t.datetime "occurred_at", null: false
+    t.datetime "resolved_at"
+    t.integer "reviewer_id"
+    t.integer "ride_post_id", null: false
+    t.integer "status", default: 0, null: false
+    t.datetime "updated_at", null: false
+    t.integer "user_id", null: false
+    t.index ["reviewer_id"], name: "index_no_show_incidents_on_reviewer_id"
+    t.index ["ride_post_id", "user_id"], name: "index_no_show_incidents_unique_per_trip_user", unique: true
+    t.index ["user_id"], name: "index_no_show_incidents_on_user_id"
+  end
+
   create_table "notifications", force: :cascade do |t|
     t.integer "actor_id"
     t.datetime "created_at", null: false
@@ -166,6 +181,19 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_29_202500) do
     t.datetime "updated_at", null: false
   end
 
+  create_table "trip_reviews", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.text "notes"
+    t.integer "outcome", default: 0, null: false
+    t.integer "reported_user_id", null: false
+    t.integer "reporter_id", null: false
+    t.integer "ride_post_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["reported_user_id"], name: "index_trip_reviews_on_reported_user_id"
+    t.index ["reporter_id"], name: "index_trip_reviews_on_reporter_id"
+    t.index ["ride_post_id", "reporter_id", "reported_user_id"], name: "index_trip_reviews_unique_per_participant", unique: true
+  end
+
   create_table "users", force: :cascade do |t|
     t.boolean "admin", default: false, null: false
     t.datetime "banned_at"
@@ -192,6 +220,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_29_202500) do
   add_foreign_key "community_memberships", "communities"
   add_foreign_key "community_memberships", "users"
   add_foreign_key "locations", "locations", column: "parent_id"
+  add_foreign_key "no_show_incidents", "ride_posts"
+  add_foreign_key "no_show_incidents", "users"
+  add_foreign_key "no_show_incidents", "users", column: "reviewer_id", on_delete: :nullify
   add_foreign_key "notifications", "users", column: "actor_id", on_delete: :nullify
   add_foreign_key "notifications", "users", column: "recipient_id"
   add_foreign_key "ride_posts", "communities", on_delete: :nullify
@@ -199,4 +230,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_29_202500) do
   add_foreign_key "ride_posts", "locations", column: "origin_id"
   add_foreign_key "ride_posts", "users"
   add_foreign_key "sessions", "users"
+  add_foreign_key "trip_reviews", "ride_posts"
+  add_foreign_key "trip_reviews", "users", column: "reported_user_id"
+  add_foreign_key "trip_reviews", "users", column: "reporter_id"
 end
