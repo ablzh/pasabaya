@@ -6,6 +6,7 @@ class User < ApplicationRecord
   has_many :canceled_bookings, class_name: "Booking", foreign_key: :canceled_by_id, dependent: :nullify, inverse_of: :canceled_by
   has_many :received_notifications, class_name: "Notification", foreign_key: :recipient_id, dependent: :destroy, inverse_of: :recipient
   has_many :acted_notifications, class_name: "Notification", foreign_key: :actor_id, dependent: :nullify, inverse_of: :actor
+  has_many :chat_messages, dependent: :destroy
 
   enum :gender, { unspecified: 0, female: 1, male: 2, non_binary: 3 }, default: :unspecified
 

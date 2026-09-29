@@ -53,10 +53,16 @@
       </section>
 
       <section>
-        <h2 class="text-xl font-bold text-neutral-900 dark:text-white">5. Data Retention</h2>
+        <h2 class="text-xl font-bold text-neutral-900 dark:text-white">5. Data Retention & Chat Privacy</h2>
         <p>
-          We retain your personal information for as long as your account is active or as needed to provide you with the Service. You may delete your ride posts or your entire account at any time through your account settings.
+          We retain your personal information for as long as your account is active. To protect user privacy, we enforce tiered retention:
         </p>
+        <ul class="list-disc pl-5 space-y-2 mt-2">
+          <li><strong>Live Trip Chat:</strong> Messages in trip coordination chats are automatically deleted from the live system 30 days after creation. Writes are closed 24 hours after departure.</li>
+          <li><strong>Real-Time Delivery Payloads:</strong> WebSocket message buffers are retained for up to 24 hours.</li>
+          <li><strong>Safety & Incident Records:</strong> Safety reports, no-show allegations, and moderation actions are retained as necessary to enforce community safety and accountability.</li>
+          <li><strong>Disaster Recovery Backups:</strong> System snapshots are retained encrypted for disaster recovery. In the event a backup snapshot is restored, automated retention scrubbing is performed immediately before serving traffic.</li>
+        </ul>
       </section>
 
       <section>
