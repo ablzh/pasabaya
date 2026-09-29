@@ -47,6 +47,12 @@ class RidePostsController < ApplicationController
   # POST /ride_posts or /ride_posts.json
   def create
     @ride_post = Current.user.ride_posts.build(ride_post_params)
+    if @ride_post.offering?
+      @ride_post.remaining_seats ||= @ride_post.seats
+      if @ride_post.departure_time.blank? || @ride_post.expected_arrival_at.blank?
+        @ride_post.status = :draft
+      end
+    end
 
     respond_to do |format|
       if @ride_post.save
@@ -61,8 +67,14 @@ class RidePostsController < ApplicationController
 
   # PATCH/PUT /ride_posts/1 or /ride_posts/1.json
   def update
+    @ride_post.assign_attributes(ride_post_params)
+    if @ride_post.offering? && @ride_post.draft? && @ride_post.departure_time.present? && @ride_post.expected_arrival_at.present?
+      @ride_post.status = :active
+      @ride_post.remaining_seats ||= @ride_post.seats
+    end
+
     respond_to do |format|
-      if @ride_post.update(ride_post_params)
+      if @ride_post.save
         format.html { redirect_to @ride_post, notice: "Ride post was successfully updated.", status: :see_other }
         format.json { render :show, status: :ok, location: @ride_post }
       else
@@ -95,7 +107,11 @@ class RidePostsController < ApplicationController
 
   # Only allow a list of trusted parameters through.
   def ride_post_params
-    params.expect(ride_post: [ :post_type, :origin_id, :destination_id, :departure_time, :seats, :notes ])
+    params.expect(ride_post: [
+      :post_type, :origin_id, :destination_id, :departure_time, :expected_arrival_at,
+      :seats, :remaining_seats, :notes, :is_free_ride, :share_tolls, :split_gas,
+      :ladies_only, :visibility, :community_id
+    ])
   end
 
   def set_grouped_locations

@@ -54,6 +54,7 @@ class RidePostsControllerTest < ActionDispatch::IntegrationTest
           origin_id: locations(:one).id,
           destination_id: locations(:two).id,
           departure_time: 1.day.from_now,
+          expected_arrival_at: 1.day.from_now + 2.hours,
           seats: 3,
           notes: "Leaving early morning"
         }

@@ -66,6 +66,18 @@
                               min: Time.current.strftime("%Y-%m-%dT%H:%M") %>
     <% end %>
 
+    <!-- Expected Arrival Time -->
+    <%= render(Forms::Component.new(
+      label: "Expected Arrival Time (required for ride offers)",
+      name: :expected_arrival_at,
+      id: form.field_id(:expected_arrival_at),
+      error: ride_post.errors[:expected_arrival_at].first
+    )) do %>
+      <%= form.datetime_field :expected_arrival_at,
+                              class: "block w-full rounded-xl border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-base sm:text-sm text-neutral-900 dark:text-white focus:ring-blue-500 focus:border-blue-500 transition-all py-3 px-4",
+                              min: Time.current.strftime("%Y-%m-%dT%H:%M") %>
+    <% end %>
+
     <!-- Seats Available/Needed -->
     <%= render(Forms::Component.new(
       label: "Seats",
@@ -76,6 +88,50 @@
       <%= form.number_field :seats, min: 1, 
           class: "block w-full rounded-xl border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-base sm:text-sm text-neutral-900 dark:text-white focus:ring-blue-500 focus:border-blue-500 transition-all py-3 px-4" %>
     <% end %>
+
+    <!-- Cost Sharing Tags & Community Policies -->
+    <div class="col-span-full border-t border-neutral-100 dark:border-white/5 pt-4 space-y-3">
+      <h3 class="text-sm font-bold uppercase tracking-wider text-neutral-700 dark:text-neutral-300">Cost Sharing (Non-Commercial)</h3>
+      <p class="text-xs text-neutral-500">Pasabaya is a community carpool matching tool. Commercial passenger transport and fixed fares are prohibited on the platform.</p>
+
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <label class="flex items-center gap-3 p-3.5 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 cursor-pointer hover:bg-neutral-100 dark:hover:bg-neutral-750 transition-colors">
+          <%= form.check_box :is_free_ride, class: "rounded text-blue-600 focus:ring-blue-500 size-4" %>
+          <div>
+            <span class="text-sm font-semibold text-neutral-900 dark:text-white block">Libreng Sakay</span>
+            <span class="text-xs text-neutral-500">100% Free community ride</span>
+          </div>
+        </label>
+
+        <label class="flex items-center gap-3 p-3.5 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 cursor-pointer hover:bg-neutral-100 dark:hover:bg-neutral-750 transition-colors">
+          <%= form.check_box :share_tolls, class: "rounded text-blue-600 focus:ring-blue-500 size-4" %>
+          <div>
+            <span class="text-sm font-semibold text-neutral-900 dark:text-white block">Share Tolls</span>
+            <span class="text-xs text-neutral-500">Split RFID / Expressways</span>
+          </div>
+        </label>
+
+        <label class="flex items-center gap-3 p-3.5 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 cursor-pointer hover:bg-neutral-100 dark:hover:bg-neutral-750 transition-colors">
+          <%= form.check_box :split_gas, class: "rounded text-blue-600 focus:ring-blue-500 size-4" %>
+          <div>
+            <span class="text-sm font-semibold text-neutral-900 dark:text-white block">Split Gas</span>
+            <span class="text-xs text-neutral-500">Modest fuel contribution</span>
+          </div>
+        </label>
+      </div>
+
+      <% if Current.user&.female? %>
+        <div class="pt-1">
+          <label class="flex items-center gap-3 p-3.5 rounded-xl border border-rose-200 dark:border-rose-900/30 bg-rose-50/50 dark:bg-rose-950/20 cursor-pointer hover:bg-rose-100/50 transition-colors">
+            <%= form.check_box :ladies_only, class: "rounded text-rose-600 focus:ring-rose-500 size-4" %>
+            <div>
+              <span class="text-sm font-semibold text-rose-900 dark:text-rose-300 block">Ladies Only Carpool</span>
+              <span class="text-xs text-rose-700 dark:text-rose-400">Reserve seats for female passengers. You retain discretion to review and accept requests.</span>
+            </div>
+          </label>
+        </div>
+      <% end %>
+    </div>
 
     <!-- Notes -->
     <%= render(Forms::Component.new(
