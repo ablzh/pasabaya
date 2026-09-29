@@ -65,6 +65,11 @@ group :development, :test do
   gem "rubocop-rails-omakase", require: false
 
   gem "kamal-backup"
+  gem "database_consistency", require: false
+  gem "herb", require: false
+  gem "prosopite"
+  gem "pg_query"
+  gem "archspec", require: false
 end
 
 group :development do
@@ -75,6 +80,7 @@ end
 group :test do
   # Use system testing [https://guides.rubyonrails.org/testing.html#system-testing]
   gem "capybara"
+  gem "cuprite"
 end
 
 gem "tailwindcss-rails", "~> 4.6"

@@ -71,6 +71,15 @@ jobs:
       - name: Lint code for consistent style
         run: bin/rubocop -f github
 
+      - name: Lint ERB templates
+        run: bin/herb lint app/views
+
+      - name: Check database consistency
+        run: bin/database_consistency
+
+      - name: Check architecture
+        run: bundle exec archspec check
+
   test:
     runs-on: ubuntu-latest
 
@@ -99,6 +108,11 @@ jobs:
           # REDIS_URL: redis://localhost:6379/0
         run: bin/rails db:test:prepare test
 
+      - name: Verify seeds replant cleanly
+        env:
+          RAILS_ENV: test
+        run: bin/rails db:seed:replant
+
   system-test:
     runs-on: ubuntu-latest
 
@@ -114,6 +128,11 @@ jobs:
 
       - name: Install system dependencies
         run: sudo apt-get update -qq && sudo apt-get install -y libvips
+
+      - name: Set up Chrome
+        uses: browser-actions/setup-chrome@v1
+        with:
+          chrome-version: stable
 
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1

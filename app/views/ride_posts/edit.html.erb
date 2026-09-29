@@ -17,7 +17,7 @@
 
   <%# Form Card %>
   <div class="bg-white dark:bg-neutral-900 p-8 rounded-3xl border border-neutral-100 dark:border-white/5 shadow-xl">
-    <%= render "form", ride_post: @ride_post do %>
+    <%= render "form", ride_post: @ride_post, grouped_locations: @grouped_locations do %>
       <%= link_to "Discard Changes", @ride_post, class: "text-sm font-semibold text-neutral-500 hover:text-neutral-700 transition" %>
     <% end %>
   </div>
@@ -30,7 +30,7 @@
         <p class="text-sm font-bold text-neutral-900 dark:text-white">Delete this post</p>
         <p class="text-xs text-neutral-500 mt-1">Once deleted, this ride will be permanently removed from the board.</p>
       </div>
-      
+
       <%= form_with model: @ride_post, method: :delete, data: { turbo_confirm: "Are you sure?" } do %>
         <%= render Buttons::Component.new(
                    text: "Delete Post", 

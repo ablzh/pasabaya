@@ -69,6 +69,11 @@ class RidePostsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
   end
 
+  test "should allow another signed-in user to show ride_post" do
+    get ride_post_url(ride_posts(:two))
+    assert_response :success
+  end
+
   test "should get edit" do
     get edit_ride_post_url(@ride_post)
     assert_response :success
@@ -90,6 +95,34 @@ class RidePostsControllerTest < ActionDispatch::IntegrationTest
     end
 
     assert_redirected_to ride_posts_url
+  end
+
+  test "should not get edit for ride_post owned by another user" do
+    other_post = ride_posts(:two)
+    get edit_ride_post_url(other_post)
+    assert_response :not_found
+  end
+
+  test "should not update ride_post owned by another user and leave record unchanged" do
+    other_post = ride_posts(:two)
+    assert_no_changes -> { other_post.reload.attributes } do
+      patch ride_post_url(other_post), params: {
+        ride_post: {
+          seats: 4,
+          notes: "Unauthorized modification"
+        }
+      }
+    end
+    assert_response :not_found
+  end
+
+  test "should not destroy ride_post owned by another user and leave record intact" do
+    other_post = ride_posts(:two)
+    assert_no_difference("RidePost.count") do
+      delete ride_post_url(other_post)
+    end
+    assert_response :not_found
+    assert RidePost.exists?(other_post.id)
   end
 
   test "should get route page with dynamic SEO tags and H1" do

@@ -1,3 +1,4 @@
+<% grouped_locations = local_assigns[:grouped_locations] || Location.grouped_by_region %>
 <%= form_with(model: ride_post, class: "w-full space-y-6") do |form| %>
   <% if ride_post.errors.any? %>
     <div id="error_explanation" class="bg-red-50 dark:bg-red-900/10 text-red-600 px-4 py-3 font-medium rounded-xl mt-3 mb-6 border border-red-100 dark:border-red-900/20">
@@ -33,7 +34,7 @@
       <%= render Combobox::Component.new(
                  name: "ride_post[origin_id]",
                  id: "ride_post_origin_id",
-                 grouped_options: @grouped_locations,
+                 grouped_options: grouped_locations,
                  selected: ride_post.origin_id,
                  placeholder: "Select a city...") %>
     <% end %>
@@ -48,7 +49,7 @@
       <%= render Combobox::Component.new(
                  name: "ride_post[destination_id]",
                  id: "ride_post_destination_id",
-                 grouped_options: @grouped_locations,
+                 grouped_options: grouped_locations,
                  selected: ride_post.destination_id,
                  placeholder: "Select a city...") %>
     <% end %>
@@ -62,7 +63,7 @@
     )) do %>
       <%= form.datetime_field :departure_time,
                               class: "block w-full rounded-xl border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-base sm:text-sm text-neutral-900 dark:text-white focus:ring-blue-500 focus:border-blue-500 transition-all py-3 px-4",
-                              min: Time.current.strftime("%Y-%m-%dT%H:%M")%>
+                              min: Time.current.strftime("%Y-%m-%dT%H:%M") %>
     <% end %>
 
     <!-- Seats Available/Needed -->

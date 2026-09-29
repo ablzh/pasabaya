@@ -49,7 +49,7 @@
           <%= ride_post.offering? ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400' : 'bg-sky-100 text-sky-700 dark:bg-sky-500/10 dark:text-sky-400' %>">
           <%= ride_post.post_type %>
         </span>
-        
+
         <div class="flex items-center text-neutral-500">
           <span class="text-xs font-bold text-neutral-900 dark:text-white"><%= ride_post.seats %></span>
           <span class="text-[10px] ml-1 uppercase">seats</span>
@@ -61,7 +61,7 @@
         <h3 class="text-lg font-bold text-neutral-900 dark:text-white leading-tight">
           <%= ride_post.origin.name %> → <%= ride_post.destination.name %>
         </h3>
-        
+
         <%# Departure Time %>
         <div class="mt-2 flex items-center gap-1.5 text-blue-600 dark:text-blue-400">
           <svg class="size-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>

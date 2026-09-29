@@ -11,6 +11,8 @@ class RidePost < ApplicationRecord
   validates :seats, presence: true, numericality: { greater_than: 0 }
   validates :post_type, presence: true
 
+  before_validation :preload_locations, if: -> { origin_id.present? && destination_id.present? }
+
   scope :filter_by_post_type, ->(type) { where(post_type: type) if type.present? }
   scope :filter_by_origin, ->(origin_id) { where(origin_id: origin_id) if origin_id.present? }
   scope :filter_by_destination, ->(destination_id) { where(destination_id: destination_id)  if destination_id.present? }
@@ -23,6 +25,12 @@ class RidePost < ApplicationRecord
   end
 
   def to_param
+    return id.to_s unless origin_id && destination_id
+
+    unless association(:origin).loaded? && association(:destination).loaded?
+      ActiveRecord::Associations::Preloader.new(records: [ self ], associations: [ :origin, :destination ]).call
+    end
+
     return id.to_s unless origin && destination
 
     "#{id}-#{origin.name.parameterize}-to-#{destination.name.parameterize}"
@@ -49,6 +57,12 @@ class RidePost < ApplicationRecord
   end
 
   private
+  def preload_locations
+    unless association(:origin).loaded? && association(:destination).loaded?
+      ActiveRecord::Associations::Preloader.new(records: [ self ], associations: [ :origin, :destination ]).call
+    end
+  end
+
   def departure_time_cannot_be_in_the_past
     if departure_time.present? && departure_time < Time.current
       errors.add(:departure_time, "can't be in the past")

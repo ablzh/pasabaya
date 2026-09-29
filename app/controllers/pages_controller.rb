@@ -3,7 +3,7 @@ class PagesController < ApplicationController
   def home
     @grouped_locations = Location.grouped_by_region
     @popular_routes = RidePost.popular_routes
-    set_meta_tags(canonical: root_url)
+    set_meta_tags(title: "Carpooling Philippines", reverse: false, canonical: root_url)
   end
 
   def privacy
