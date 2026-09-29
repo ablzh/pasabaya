@@ -85,6 +85,6 @@ end
 
 gem "tailwindcss-rails", "~> 4.6"
 
-gem "meta-tags", "~> 2.23"
+gem "meta-tags", "~> 2.24"
 
 gem "ruby-vips", "~> 2.3"
