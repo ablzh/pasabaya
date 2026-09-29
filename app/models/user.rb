@@ -7,6 +7,8 @@ class User < ApplicationRecord
   has_many :received_notifications, class_name: "Notification", foreign_key: :recipient_id, dependent: :destroy, inverse_of: :recipient
   has_many :acted_notifications, class_name: "Notification", foreign_key: :actor_id, dependent: :nullify, inverse_of: :actor
   has_many :chat_messages, dependent: :destroy
+  has_many :community_memberships, dependent: :destroy
+  has_many :communities, through: :community_memberships
 
   enum :gender, { unspecified: 0, female: 1, male: 2, non_binary: 3 }, default: :unspecified
 
@@ -53,6 +55,23 @@ class User < ApplicationRecord
 
   def eligible_for_offering?
     banned_at.blank? && !booking_frozen?
+  end
+
+  def verified_community_memberships
+    community_memberships.active_verified
+  end
+
+  def verified_communities
+    communities.merge(CommunityMembership.active_verified)
+  end
+
+  def verified_community_ids
+    verified_community_memberships.pluck(:community_id)
+  end
+
+  def verified_member_of?(community_or_id)
+    comm_id = community_or_id.is_a?(Community) ? community_or_id.id : community_or_id
+    verified_community_memberships.where(community_id: comm_id).exists?
   end
 
 

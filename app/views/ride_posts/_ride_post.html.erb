@@ -80,6 +80,12 @@
               Ladies Only
             </span>
           <% end %>
+
+          <% if ride_post.hub_only? && ride_post.community %>
+            <span class="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold bg-purple-50 text-purple-700 dark:bg-purple-950/40 dark:text-purple-300">
+              <%= ride_post.community.name %> Hub
+            </span>
+          <% end %>
         </div>
 
         <div class="flex items-center text-neutral-500 shrink-0">

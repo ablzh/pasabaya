@@ -19,6 +19,12 @@ Rails.application.routes.draw do
       patch :mark_as_read
     end
   end
+
+  resources :communities, only: [ :index, :show ] do
+    resources :memberships, only: [ :create, :destroy ], controller: "community_memberships"
+  end
+  get "community_memberships/verify/:token", to: "community_memberships#verify", as: :verify_community_membership
+
   resource :session
   resources :passwords, param: :token
 

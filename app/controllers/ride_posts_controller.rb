@@ -10,13 +10,16 @@ class RidePostsController < ApplicationController
 
   # GET /ride_posts or /ride_posts.json
   def index
-    if params.key?(:post_type) || params.key?(:origin_id) || params.key?(:destination_id)
+    if params.key?(:post_type) || params.key?(:origin_id) || params.key?(:destination_id) || params.key?(:community_id) || params.key?(:ladies_only)
       @ride_posts = RidePost.active
-                            .includes(:origin, :destination, :user)
+                            .visible_to(Current.user)
+                            .includes(:origin, :destination, :user, :community)
                             .order(departure_time: :asc)
                             .filter_by_post_type(params[:post_type])
                             .filter_by_origin(params[:origin_id])
                             .filter_by_destination(params[:destination_id])
+                            .filter_by_community(params[:community_id])
+                            .filter_by_ladies_only(params[:ladies_only])
 
       setup_route_meta_tags if @origin && @destination
     else
@@ -27,6 +30,14 @@ class RidePostsController < ApplicationController
 
   # GET /ride_posts/1 or /ride_posts/1.json
   def show
+    unless @ride_post.authorized_viewer?(Current.user)
+      respond_to do |format|
+        format.html { redirect_to ride_posts_path, alert: "You are not authorized to view this restricted ride." }
+        format.json { render json: { error: "Forbidden" }, status: :forbidden }
+      end
+      return
+    end
+
     if params[:id] != @ride_post.to_param
       redirect_to @ride_post, status: :moved_permanently
       return # Use return to stop execution after redirecting
@@ -98,7 +109,7 @@ class RidePostsController < ApplicationController
 
   # Use callbacks to share common setup or constraints between actions.
   def set_ride_post
-    @ride_post = RidePost.includes(:origin, :destination).find(params.expect(:id))
+    @ride_post = RidePost.includes(:origin, :destination, :community).find(params.expect(:id))
   end
 
   def set_user_ride_post

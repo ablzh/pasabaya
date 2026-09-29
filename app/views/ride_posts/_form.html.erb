@@ -133,6 +133,40 @@
       <% end %>
     </div>
 
+    <!-- Audience & Community Visibility -->
+    <div class="col-span-full border-t border-neutral-100 dark:border-white/5 pt-4 space-y-4">
+      <h3 class="text-sm font-bold uppercase tracking-wider text-neutral-700 dark:text-neutral-300">Audience & Visibility</h3>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <%= render(Forms::Component.new(
+          label: "Visibility",
+          name: :visibility,
+          id: form.field_id(:visibility),
+          error: ride_post.errors[:visibility].first
+        )) do %>
+          <%= form.select :visibility, [["Public (Everyone)", "public_ride"], ["Community / Closed Hub Only", "hub_only"]], {},
+              class: "block w-full rounded-xl border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-base sm:text-sm text-neutral-900 dark:text-white focus:ring-blue-500 focus:border-blue-500 transition-all py-3 px-4" %>
+        <% end %>
+
+        <% verified_communities = Current.user&.verified_communities || [] %>
+        <%= render(Forms::Component.new(
+          label: "Community Hub (for hub-only rides)",
+          name: :community_id,
+          id: form.field_id(:community_id),
+          error: ride_post.errors[:community_id].first || ride_post.errors[:community].first
+        )) do %>
+          <%= form.collection_select :community_id, verified_communities, :id, :name, { include_blank: "Select your community..." },
+              class: "block w-full rounded-xl border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-base sm:text-sm text-neutral-900 dark:text-white focus:ring-blue-500 focus:border-blue-500 transition-all py-3 px-4" %>
+        <% end %>
+      </div>
+
+      <% if verified_communities.none? %>
+        <p class="text-xs text-neutral-500">
+          Want to restrict rides to your company or university campus? Visit <%= link_to "Hubs", communities_path, class: "text-blue-600 underline font-medium" %> to verify your institutional email.
+        </p>
+      <% end %>
+    </div>
+
     <!-- Notes -->
     <%= render(Forms::Component.new(
       label: "Details & Preferences",

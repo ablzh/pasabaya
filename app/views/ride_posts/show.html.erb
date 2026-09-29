@@ -50,6 +50,12 @@
             </span>
           <% end %>
 
+          <% if @ride_post.hub_only? && @ride_post.community %>
+            <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold bg-purple-50 text-purple-700 dark:bg-purple-950/40 dark:text-purple-300">
+              <%= @ride_post.community.name %> Hub Only
+            </span>
+          <% end %>
+
           <span class="text-sm text-neutral-500">
             Posted <%= time_ago_in_words(@ride_post.created_at) %> ago
           </span>
@@ -219,18 +225,37 @@
             </div>
             <%= button_to "Cancel Booking", cancel_booking_path(existing_booking), method: :patch, data: { turbo_confirm: "Are you sure you want to cancel your seat?" }, class: "px-4 py-2 text-xs font-semibold rounded-xl bg-neutral-700 text-white hover:bg-neutral-600 transition-colors" %>
           <% elsif @ride_post.bookable? %>
-            <p class="text-neutral-400 dark:text-neutral-500 text-sm mb-4 max-w-sm">
-              Request 1 seat on this carpool. The driver will review your profile to confirm.
-            </p>
-            <%= form_with(url: ride_post_bookings_path(@ride_post), method: :post, class: "w-full max-w-sm space-y-3") do |f| %>
-              <%= f.text_field "booking[pickup_notes]", placeholder: "Pickup point or small note (optional)...", class: "w-full px-4 py-2.5 rounded-xl text-sm bg-neutral-800 dark:bg-neutral-100 text-white dark:text-neutral-900 border border-neutral-700 dark:border-neutral-300 focus:ring-blue-500" %>
-              <div class="flex justify-center">
-                <%= render Buttons::Component.new(
-                           text: "Request Seat",
-                           type: "submit",
-                           style: :fancy,
-                           size: :lg) %>
-              </div>
+            <% if !@ride_post.authorized_for_booking?(Current.user) %>
+              <% if @ride_post.ladies_only? && !Current.user.female? %>
+                <div class="my-4 p-4 rounded-xl bg-rose-500/20 border border-rose-500/40 text-rose-200 dark:text-rose-800">
+                  <p class="font-bold text-sm">Ladies Only Carpool</p>
+                  <p class="text-xs mt-1">This ride is reserved for female passengers.</p>
+                </div>
+              <% elsif @ride_post.hub_only? && !Current.user.verified_member_of?(@ride_post.community_id) %>
+                <div class="my-4 p-4 rounded-xl bg-purple-500/20 border border-purple-500/40 text-purple-200 dark:text-purple-800">
+                  <p class="font-bold text-sm"><%= @ride_post.community&.name %> Hub Only</p>
+                  <p class="text-xs mt-1">Please verify your institutional email in <a href="<%= communities_path %>" class="underline font-semibold">Hubs</a> to request a seat.</p>
+                </div>
+              <% elsif Current.user.booking_frozen? %>
+                <div class="my-4 p-4 rounded-xl bg-red-500/20 border border-red-500/40 text-red-200 dark:text-red-800">
+                  <p class="font-bold text-sm">Account Frozen</p>
+                  <p class="text-xs mt-1">Your account is temporarily unable to request new bookings.</p>
+                </div>
+              <% end %>
+            <% else %>
+              <p class="text-neutral-400 dark:text-neutral-500 text-sm mb-4 max-w-sm">
+                Request 1 seat on this carpool. The driver will review your profile to confirm.
+              </p>
+              <%= form_with(url: ride_post_bookings_path(@ride_post), method: :post, class: "w-full max-w-sm space-y-3") do |f| %>
+                <%= f.text_field "booking[pickup_notes]", placeholder: "Pickup point or small note (optional)...", class: "w-full px-4 py-2.5 rounded-xl text-sm bg-neutral-800 dark:bg-neutral-100 text-white dark:text-neutral-900 border border-neutral-700 dark:border-neutral-300 focus:ring-blue-500" %>
+                <div class="flex justify-center">
+                  <%= render Buttons::Component.new(
+                             text: "Request Seat",
+                             type: "submit",
+                             style: :fancy,
+                             size: :lg) %>
+                </div>
+              <% end %>
             <% end %>
           <% elsif @ride_post.full? %>
             <p class="text-neutral-400 dark:text-neutral-500 text-sm my-4">This ride is fully booked.</p>

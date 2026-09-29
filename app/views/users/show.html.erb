@@ -12,6 +12,20 @@
           Member since <%= @user.created_at.strftime("%B %Y") %>
         </p>
 
+        <div class="flex flex-wrap gap-2 items-center justify-center sm:justify-start pt-1">
+          <% @user.verified_communities.each do |comm| %>
+            <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800">
+              <svg class="size-3" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12c0 1.268-.63 2.39-1.593 3.068a3.745 3.745 0 01-1.043 3.296 3.745 3.745 0 01-3.296 1.043A3.745 3.745 0 0112 21c-1.268 0-2.39-.63-3.068-1.593a3.746 3.746 0 01-3.296-1.043 3.745 3.745 0 01-1.043-3.296A3.745 3.745 0 013 12c0-1.268.63-2.39 1.593-3.068a3.745 3.745 0 011.043-3.296 3.746 3.746 0 013.296-1.043A3.746 3.746 0 0112 3c1.268 0 2.39.63 3.068 1.593a3.746 3.746 0 013.296 1.043 3.746 3.746 0 011.043 3.296A3.745 3.745 0 0121 12z" /></svg>
+              <%= comm.name %>
+            </span>
+          <% end %>
+          <% if @user.female? %>
+            <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-pink-100 text-pink-800 dark:bg-pink-950/60 dark:text-pink-300 border border-pink-300 dark:border-pink-800">
+              Female Profile
+            </span>
+          <% end %>
+        </div>
+
         <%# Button Actions (Facebook Profile + Conditional Edit Profile) %>
         <div class="mt-4 flex flex-wrap gap-3 justify-center sm:justify-start">
           <% if @user.facebook_profile_url.present? %>

@@ -15,6 +15,6 @@ class Settings::ProfilesController < Settings::BaseController
   private
 
   def profile_params
-    params.expect(user: [ :first_name, :last_name, :facebook_profile_url, :avatar ])
+    params.expect(user: [ :first_name, :last_name, :facebook_profile_url, :avatar, :gender ])
   end
 end

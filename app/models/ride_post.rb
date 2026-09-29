@@ -3,6 +3,7 @@ class RidePost < ApplicationRecord
 
   belongs_to :origin, class_name: "Location"
   belongs_to :destination, class_name: "Location"
+  belongs_to :community, optional: true
 
   has_many :bookings, dependent: :destroy
   has_many :notifications, as: :notifiable, dependent: :destroy
@@ -23,15 +24,48 @@ class RidePost < ApplicationRecord
   validates :split_gas, inclusion: { in: [ true, false ] }
   validates :is_free_ride, inclusion: { in: [ true, false ] }
 
+  validates :community, presence: true, if: :hub_only?
+
   validate :cost_sharing_mutual_exclusion
+  validate :driver_must_be_verified_community_member, if: -> { hub_only? && !canceled? && !completed? }
+  validate :driver_must_be_female_for_ladies_only, if: -> { ladies_only? && !canceled? && !completed? }
   validate :bookable_offering_requirements, if: -> { offering? && !draft? }
   validate :lock_attributes_when_accepted_bookings_exist, on: :update
 
   before_validation :preload_locations, if: -> { origin_id.present? && destination_id.present? }
 
+  scope :publicly_visible, -> { public_ride.where(ladies_only: false) }
   scope :filter_by_post_type, ->(type) { where(post_type: type) if type.present? }
   scope :filter_by_origin, ->(origin_id) { where(origin_id: origin_id) if origin_id.present? }
   scope :filter_by_destination, ->(destination_id) { where(destination_id: destination_id)  if destination_id.present? }
+  scope :filter_by_community, ->(comm_id) { where(community_id: comm_id) if comm_id.present? }
+  scope :filter_by_ladies_only, ->(ladies) { where(ladies_only: true) if ladies.to_s == "true" }
+
+  scope :visible_to, ->(user) {
+    if user.nil?
+      publicly_visible
+    else
+      verified_ids = user.verified_community_ids
+
+      conditions = [ sanitize_sql_for_conditions([ "ride_posts.user_id = ?", user.id ]) ]
+
+      if user.female?
+        conditions << sanitize_sql_for_conditions([ "ride_posts.visibility = 0" ])
+      else
+        conditions << sanitize_sql_for_conditions([ "ride_posts.visibility = 0 AND ride_posts.ladies_only = ?", false ])
+      end
+
+      if verified_ids.any?
+        if user.female?
+          conditions << sanitize_sql_for_conditions([ "ride_posts.visibility = 1 AND ride_posts.community_id IN (?)", verified_ids ])
+        else
+          conditions << sanitize_sql_for_conditions([ "ride_posts.visibility = 1 AND ride_posts.community_id IN (?) AND ride_posts.ladies_only = ?", verified_ids, false ])
+        end
+      end
+
+      where(conditions.join(" OR "))
+    end
+  }
 
   scope :regular, -> { where(departure_time: nil) }
   scope :specific, -> { where.not(departure_time: nil) }
@@ -53,7 +87,7 @@ class RidePost < ApplicationRecord
   end
 
   def self.popular_routes(limit = 12)
-    route_counts = active.group(:origin_id, :destination_id)
+    route_counts = publicly_visible.active.group(:origin_id, :destination_id)
                          .order(Arel.sql("count(*) DESC"))
                          .limit(limit)
                          .count
@@ -82,6 +116,31 @@ class RidePost < ApplicationRecord
 
   def full?
     offering? && (fulfilled? || remaining_seats.to_i <= 0)
+  end
+
+  def authorized_viewer?(viewer)
+    return false if viewer.blank? && (hub_only? || ladies_only?)
+    return true if viewer.blank?
+
+    return true if user_id == viewer.id
+
+    if ladies_only? && !viewer.female?
+      return false
+    end
+
+    if hub_only?
+      return false unless viewer.verified_member_of?(community_id)
+    end
+
+    true
+  end
+
+  def authorized_for_booking?(passenger)
+    return false unless passenger
+    return false if user_id == passenger.id
+    return false unless passenger.eligible_for_booking?
+
+    authorized_viewer?(passenger)
   end
 
   def chat_unlocked?
@@ -149,6 +208,22 @@ class RidePost < ApplicationRecord
 
     if changed_locked_fields.any?
       errors.add(:base, "Cannot modify route, schedule, capacity, or audience while accepted bookings exist")
+    end
+  end
+
+  def driver_must_be_verified_community_member
+    return unless user && community_id
+
+    unless user.verified_member_of?(community_id)
+      errors.add(:community, "requires an active verified membership")
+    end
+  end
+
+  def driver_must_be_female_for_ladies_only
+    return unless user
+
+    unless user.female?
+      errors.add(:ladies_only, "can only be offered by female drivers")
     end
   end
 end

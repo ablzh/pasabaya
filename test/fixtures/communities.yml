@@ -1,0 +1,11 @@
+one:
+  name: Accenture Philippines
+  slug: accenture-ph
+  domain: accenture.com
+  hub_type: 0
+
+two:
+  name: UP Diliman
+  slug: up-diliman
+  domain: up.edu.ph
+  hub_type: 1

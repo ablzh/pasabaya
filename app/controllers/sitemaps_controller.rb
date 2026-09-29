@@ -4,7 +4,7 @@ class SitemapsController < ApplicationController
   def show
     @static_pages = [ root_url, privacy_url, terms_url ]
 
-    active_rides = RidePost.active.includes(:origin, :destination)
+    active_rides = RidePost.active.publicly_visible.includes(:origin, :destination)
     location_pairs = active_rides.pluck(:origin_id, :destination_id).uniq
     location_ids = location_pairs.flatten.uniq
     locations_by_id = Location.where(id: location_ids).index_by(&:id)
