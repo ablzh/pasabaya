@@ -1,7 +1,23 @@
 Rails.application.routes.draw do
   resources :users, only: [ :show ]
   get "rides/from-:origin_slug-to-:destination_slug", to: "ride_posts#index", as: :route_rides
-  resources :ride_posts, path: "rides"
+  resources :ride_posts, path: "rides" do
+    resources :bookings, only: [ :create ]
+  end
+
+  resources :bookings, only: [ :show ] do
+    member do
+      patch :accept
+      patch :decline
+      patch :cancel
+    end
+  end
+
+  resources :notifications, only: [ :index, :show ] do
+    member do
+      patch :mark_as_read
+    end
+  end
   resource :session
   resources :passwords, param: :token
 

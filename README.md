@@ -9,7 +9,7 @@
                                          |___/                   |_|    |_|    
 ```
 
-[![CI](https://github.com/ablzh/pasabaya/actions/workflows/ci.yml/badge.svg)](https://github.com/ablzh/pasabaya/actions/workflows/ci.yml)
+[![CI](https://github.com/ablzh/pasabaya/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/ablzh/pasabaya/actions/workflows/ci.yml)
 ![Ruby](https://img.shields.io/badge/Ruby-4.0.1-red.svg)
 ![Rails](https://img.shields.io/badge/Rails-8.1.3-cc0000.svg)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)

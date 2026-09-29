@@ -2,6 +2,12 @@ class User < ApplicationRecord
   has_secure_password
   has_many :sessions, dependent: :destroy
   has_many :ride_posts, dependent: :destroy
+  has_many :bookings, foreign_key: :passenger_id, dependent: :destroy, inverse_of: :passenger
+  has_many :canceled_bookings, class_name: "Booking", foreign_key: :canceled_by_id, dependent: :nullify, inverse_of: :canceled_by
+  has_many :received_notifications, class_name: "Notification", foreign_key: :recipient_id, dependent: :destroy, inverse_of: :recipient
+  has_many :acted_notifications, class_name: "Notification", foreign_key: :actor_id, dependent: :nullify, inverse_of: :actor
+
+  enum :gender, { unspecified: 0, female: 1, male: 2, non_binary: 3 }, default: :unspecified
 
   has_one_attached :avatar do |attachable|
     attachable.variant :thumb,
@@ -30,8 +36,22 @@ class User < ApplicationRecord
 
   attr_readonly :admin
 
+  validates :gender, presence: true
+
   def initials
     "#{first_name&.first}#{last_name&.first}".upcase
+  end
+
+  def booking_frozen?
+    booking_freeze_until.present? && booking_freeze_until > Time.current
+  end
+
+  def eligible_for_booking?
+    banned_at.blank? && !booking_frozen?
+  end
+
+  def eligible_for_offering?
+    banned_at.blank? && !booking_frozen?
   end
 
 

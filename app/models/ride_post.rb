@@ -4,12 +4,27 @@ class RidePost < ApplicationRecord
   belongs_to :origin, class_name: "Location"
   belongs_to :destination, class_name: "Location"
 
+  has_many :bookings, dependent: :destroy
+  has_many :notifications, as: :notifiable, dependent: :destroy
+
   enum :post_type, { offering: 0, requesting: 1 }
-  enum :status, { active: 0, fulfilled: 1, canceled: 2 }
+  enum :status, { active: 0, fulfilled: 1, canceled: 2, completed: 3, draft: 4 }
+  enum :visibility, { public_ride: 0, hub_only: 1 }, default: :public_ride
 
   validate :departure_time_cannot_be_in_the_past
   validates :seats, presence: true, numericality: { greater_than: 0 }
   validates :post_type, presence: true
+  validates :status, presence: true
+  validates :visibility, presence: true
+  validates :remaining_seats, numericality: { greater_than_or_equal_to: 0, less_than_or_equal_to: :seats }, allow_nil: true
+  validates :ladies_only, inclusion: { in: [ true, false ] }
+  validates :share_tolls, inclusion: { in: [ true, false ] }
+  validates :split_gas, inclusion: { in: [ true, false ] }
+  validates :is_free_ride, inclusion: { in: [ true, false ] }
+
+  validate :cost_sharing_mutual_exclusion
+  validate :bookable_offering_requirements, if: -> { offering? && !draft? }
+  validate :lock_attributes_when_accepted_bookings_exist, on: :update
 
   before_validation :preload_locations, if: -> { origin_id.present? && destination_id.present? }
 
@@ -56,7 +71,20 @@ class RidePost < ApplicationRecord
     end.compact
   end
 
+  def published?
+    active? || fulfilled?
+  end
+
+  def bookable?
+    offering? && active? && remaining_seats.to_i > 0 && departure_time.present? && departure_time > Time.current
+  end
+
+  def full?
+    offering? && (fulfilled? || remaining_seats.to_i <= 0)
+  end
+
   private
+
   def preload_locations
     unless association(:origin).loaded? && association(:destination).loaded?
       ActiveRecord::Associations::Preloader.new(records: [ self ], associations: [ :origin, :destination ]).call
@@ -64,8 +92,48 @@ class RidePost < ApplicationRecord
   end
 
   def departure_time_cannot_be_in_the_past
-    if departure_time.present? && departure_time < Time.current
+    return unless departure_time.present?
+    return unless new_record? || will_save_change_to_departure_time?
+
+    if departure_time < Time.current
       errors.add(:departure_time, "can't be in the past")
+    end
+  end
+
+  def cost_sharing_mutual_exclusion
+    if is_free_ride? && (share_tolls? || split_gas?)
+      errors.add(:base, "Free rides cannot be combined with toll or gas sharing")
+    end
+  end
+
+  def bookable_offering_requirements
+    if departure_time.blank?
+      errors.add(:departure_time, "is required for published ride offers")
+    end
+
+    if expected_arrival_at.blank?
+      errors.add(:expected_arrival_at, "is required for published ride offers")
+    elsif departure_time.present? && expected_arrival_at <= departure_time
+      errors.add(:expected_arrival_at, "must be after departure time")
+    end
+
+    if remaining_seats.nil?
+      errors.add(:remaining_seats, "must be confirmed for published ride offers")
+    end
+
+    if user.present? && !user.eligible_for_offering?
+      errors.add(:user, "is not eligible to publish ride offers")
+    end
+  end
+
+  def lock_attributes_when_accepted_bookings_exist
+    return unless bookings.accepted.exists?
+
+    locked_fields = %w[origin_id destination_id departure_time expected_arrival_at seats post_type visibility ladies_only community_id]
+    changed_locked_fields = (changes.keys & locked_fields)
+
+    if changed_locked_fields.any?
+      errors.add(:base, "Cannot modify route, schedule, capacity, or audience while accepted bookings exist")
     end
   end
 end

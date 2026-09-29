@@ -43,16 +43,53 @@
              hoverable: true,
              padding: :sm)) do |card| %>
     <% card.with_body do %>
-      <%# Top Row: Badge + Seats %>
-      <div class="flex justify-between items-start mb-3">
-        <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider
-          <%= ride_post.offering? ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400' : 'bg-sky-100 text-sky-700 dark:bg-sky-500/10 dark:text-sky-400' %>">
-          <%= ride_post.post_type %>
-        </span>
+      <%# Top Row: Badge + Badges + Seats %>
+      <div class="flex justify-between items-start mb-3 gap-2">
+        <div class="flex flex-wrap items-center gap-1.5">
+          <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider
+            <%= ride_post.offering? ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400' : 'bg-sky-100 text-sky-700 dark:bg-sky-500/10 dark:text-sky-400' %>">
+            <%= ride_post.post_type %>
+          </span>
 
-        <div class="flex items-center text-neutral-500">
-          <span class="text-xs font-bold text-neutral-900 dark:text-white"><%= ride_post.seats %></span>
-          <span class="text-[10px] ml-1 uppercase">seats</span>
+          <% if ride_post.full? %>
+            <span class="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider bg-neutral-200 text-neutral-700 dark:bg-neutral-800 dark:text-neutral-300">
+              Full
+            </span>
+          <% end %>
+
+          <% if ride_post.is_free_ride? %>
+            <span class="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300">
+              Libreng Sakay
+            </span>
+          <% end %>
+
+          <% if ride_post.share_tolls? %>
+            <span class="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300">
+              Tolls
+            </span>
+          <% end %>
+
+          <% if ride_post.split_gas? %>
+            <span class="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300">
+              Gas
+            </span>
+          <% end %>
+
+          <% if ride_post.ladies_only? %>
+            <span class="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-300">
+              Ladies Only
+            </span>
+          <% end %>
+        </div>
+
+        <div class="flex items-center text-neutral-500 shrink-0">
+          <% if ride_post.offering? && ride_post.remaining_seats.present? %>
+            <span class="text-xs font-bold text-neutral-900 dark:text-white"><%= ride_post.remaining_seats %>/<%= ride_post.seats %></span>
+            <span class="text-[10px] ml-1 uppercase">left</span>
+          <% else %>
+            <span class="text-xs font-bold text-neutral-900 dark:text-white"><%= ride_post.seats %></span>
+            <span class="text-[10px] ml-1 uppercase">seats</span>
+          <% end %>
         </div>
       </div>
 
