@@ -22,7 +22,7 @@
   </div>
 
   <%# Search & Filter Bar %>
-  <%= render "search_form" %>
+  <%= render "search_form", grouped_locations: @grouped_locations %>
 
   <%# Grid of Ride Posts %>
   <div id="ride_posts" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">

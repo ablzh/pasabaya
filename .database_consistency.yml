@@ -1,0 +1,70 @@
+# Database consistency configuration
+# Exclusions for existing schema baseline mismatches
+
+Location:
+  # DB unique index is case-sensitive; model validator specifies case_sensitive: false
+  index_locations_on_slug:
+    UniqueIndexChecker:
+      enabled: false
+  lower(slug):
+    MissingUniqueIndexChecker:
+      enabled: false
+  # Existing columns without database NOT NULL constraints; model validates presence
+  location_type:
+    ColumnPresenceChecker:
+      enabled: false
+  name:
+    ColumnPresenceChecker:
+      enabled: false
+  slug:
+    ColumnPresenceChecker:
+      enabled: false
+
+RidePost:
+  # Location rides associations are retained when locations exist; prevent cascade deletes on shared locations
+  destination:
+    MissingDependentDestroyChecker:
+      enabled: false
+  origin:
+    MissingDependentDestroyChecker:
+      enabled: false
+  # Existing columns without database NOT NULL / CHECK constraints; model validates presence & numericality
+  post_type:
+    ColumnPresenceChecker:
+      enabled: false
+  seats:
+    ColumnPresenceChecker:
+      enabled: false
+    NumericalityConstraintChecker:
+      enabled: false
+
+Subscriber:
+  # Existing columns without database NOT NULL constraints; model validates presence
+  name:
+    ColumnPresenceChecker:
+      enabled: false
+  email:
+    ColumnPresenceChecker:
+      enabled: false
+    # Subscriber email index lookup
+    MissingIndexFindByChecker:
+      enabled: false
+  lower(email):
+    MissingUniqueIndexChecker:
+      enabled: false
+
+User:
+  # Existing columns without database NOT NULL constraints; model validates presence
+  facebook_profile_url:
+    ColumnPresenceChecker:
+      enabled: false
+  first_name:
+    ColumnPresenceChecker:
+      enabled: false
+  last_name:
+    ColumnPresenceChecker:
+      enabled: false
+  # password_digest is populated by has_secure_password via password presence validation
+  password_digest:
+    NullConstraintChecker:
+      enabled: false

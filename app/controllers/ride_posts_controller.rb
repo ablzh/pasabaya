@@ -1,6 +1,7 @@
 class RidePostsController < ApplicationController
   before_action :require_authentication, except: %i[ index show ]
-  before_action :set_ride_post, only: %i[ show edit update destroy ]
+  before_action :set_ride_post, only: :show
+  before_action :set_user_ride_post, only: %i[ edit update destroy ]
   before_action :resume_session, only: [ :index, :show ]
   before_action :set_grouped_locations, only: %i[ index new edit create update ]
   before_action :resolve_route_slugs, only: :index
@@ -85,7 +86,11 @@ class RidePostsController < ApplicationController
 
   # Use callbacks to share common setup or constraints between actions.
   def set_ride_post
-    @ride_post = RidePost.find(params.expect(:id))
+    @ride_post = RidePost.includes(:origin, :destination).find(params.expect(:id))
+  end
+
+  def set_user_ride_post
+    @ride_post = Current.user.ride_posts.includes(:origin, :destination).find(params.expect(:id))
   end
 
   # Only allow a list of trusted parameters through.

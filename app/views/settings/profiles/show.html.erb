@@ -95,7 +95,7 @@
     <h2 class="text-xl font-bold text-neutral-900 dark:text-white mb-6">Change Email Address</h2>
 
     <%= form_with model: @user, url: settings_email_path, method: :patch, class: "space-y-6" do |form| %>
-      <% if controller_name == "emails" && @user.errors.any?  %>
+      <% if controller_name == "emails" && @user.errors.any? %>
         <div class="bg-red-50 dark:bg-red-900/10 text-red-600 px-4 py-3 font-medium rounded-xl border border-red-100 dark:border-red-900/20 text-sm">
           <% @user.errors.full_messages.each do |message| %>
             <li><%= message %></li>
@@ -142,7 +142,7 @@
     <h2 class="text-xl font-bold text-neutral-900 dark:text-white mb-6">Change Password</h2>
 
     <%= form_with model: @user, url: settings_password_path, method: :patch, class: "space-y-6" do |form| %>
-      <% if controller_name == "passwords" && @user.errors.any?  %>
+      <% if controller_name == "passwords" && @user.errors.any? %>
         <div class="bg-red-50 dark:bg-red-900/10 text-red-600 px-4 py-3 font-medium rounded-xl border border-red-100 dark:border-red-900/20 text-sm">
           <% @user.errors.full_messages.each do |message| %>
             <li><%= message %></li>

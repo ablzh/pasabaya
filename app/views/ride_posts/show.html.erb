@@ -97,7 +97,6 @@
                text: Current.user.present? ? "Contact on Facebook" : "Login to View Contact",
                href: Current.user.present? ? @ride_post.user.facebook_profile_url : new_session_path(return_to: request.path),
                style: :fancy,
-               size: :lg)
-    %>
+               size: :lg) %>
   </div>
 </div>

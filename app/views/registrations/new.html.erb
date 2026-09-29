@@ -79,7 +79,12 @@
 
 
       <%= render Switch::Component.new(
-        label: "I accept the #{link_to 'Terms of Service', terms_path, class: 'text-blue-600 dark:text-blue-400 hover:underline font-semibold', onclick: 'event.stopPropagation()'} and #{link_to 'Privacy Policy', privacy_path, class: 'text-blue-600 dark:text-blue-400 hover:underline font-semibold', onclick: 'event.stopPropagation()'}".html_safe,
+        label: safe_join([
+          "I accept the ",
+          link_to("Terms of Service", terms_path, class: "text-blue-600 dark:text-blue-400 hover:underline font-semibold", onclick: "event.stopPropagation()"),
+          " and ",
+          link_to("Privacy Policy", privacy_path, class: "text-blue-600 dark:text-blue-400 hover:underline font-semibold", onclick: "event.stopPropagation()")
+        ]),
         name: "accept_terms",
         required: true) %>
 

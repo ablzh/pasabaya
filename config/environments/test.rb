@@ -50,4 +50,32 @@ Rails.application.configure do
 
   # Raise error when a before_action's only/except options reference missing actions.
   config.action_controller.raise_on_missing_callback_actions = true
+
+  # Configure Prosopite for N+1 query detection with SQLite + pg_query
+  config.after_initialize do
+    Prosopite.raise = true
+
+    module SQLitePgQueryFingerprint
+      def fingerprint(query)
+        super(query.gsub("?", "$1"))
+      rescue PgQuery::ParseError
+        query.gsub(/\d+/, "?").gsub(/'[^']*'/, "?")
+      end
+    end
+    Prosopite.singleton_class.prepend(SQLitePgQueryFingerprint)
+  end
+
+  # Middleware to detect N+1 queries in the thread handling application requests
+  config.middleware.use(Class.new do
+    def initialize(app)
+      @app = app
+    end
+
+    def call(env)
+      Prosopite.scan
+      @app.call(env)
+    ensure
+      Prosopite.finish
+    end
+  end)
 end
