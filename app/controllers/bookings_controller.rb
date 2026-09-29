@@ -7,10 +7,12 @@ class BookingsController < ApplicationController
 
   # POST /rides/:ride_post_id/bookings
   def create
-    @booking = @ride_post.bookings.build(booking_params.merge(passenger: Current.user))
+    Booking.transaction do
+      @booking = @ride_post.bookings.build(booking_params.merge(passenger: Current.user))
+      @booking.save!
 
-    if @booking.save
-      delivery_key = "booking_requested:#{@booking.id}:#{@booking.created_at.to_i}"
+      now = Time.current
+      delivery_key = "booking_requested:#{@booking.id}:#{now.to_i}"
       Notification.find_or_create_by!(delivery_key: delivery_key) do |n|
         n.recipient = @ride_post.user
         n.actor = Current.user
@@ -18,11 +20,11 @@ class BookingsController < ApplicationController
         n.event_name = "booking.requested"
         n.delivery_status = :pending
       end
-
-      redirect_to @ride_post, notice: "Seat requested! The driver has been notified."
-    else
-      redirect_to @ride_post, alert: @booking.errors.full_messages.to_sentence
     end
+
+    redirect_to @ride_post, notice: "Seat requested! The driver has been notified."
+  rescue ActiveRecord::RecordInvalid => e
+    redirect_to @ride_post, alert: (@booking&.errors&.full_messages&.to_sentence || e.message)
   end
 
   # GET /bookings/:id

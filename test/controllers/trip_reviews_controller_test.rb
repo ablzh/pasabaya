@@ -43,7 +43,16 @@ class TripReviewsControllerTest < ActionDispatch::IntegrationTest
     assert_match(/Only trip participants can submit a review/, response.body)
   end
 
-  test "new succeeds for participant" do
+  test "new rejects review before trip departure" do
+    sign_in_as(@driver)
+    get new_ride_post_review_url(@ride_post)
+    assert_redirected_to ride_post_url(@ride_post)
+    follow_redirect!
+    assert_match(/Reviews and no-show reports cannot be submitted before trip departure/, response.body)
+  end
+
+  test "new succeeds for participant after trip departure" do
+    @ride_post.update_columns(departure_time: 2.hours.ago, expected_arrival_at: 1.hour.ago)
     sign_in_as(@driver)
     get new_ride_post_review_url(@ride_post)
     assert_response :success
@@ -51,6 +60,7 @@ class TripReviewsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "create saves review and creates incident on no-show" do
+    @ride_post.update_columns(departure_time: 2.hours.ago, expected_arrival_at: 1.hour.ago)
     sign_in_as(@driver)
     assert_difference -> { TripReview.count }, 1 do
       assert_difference -> { NoShowIncident.count }, 1 do

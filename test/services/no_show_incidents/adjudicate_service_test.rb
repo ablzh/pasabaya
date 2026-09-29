@@ -87,11 +87,32 @@ class NoShowIncidents::AdjudicateServiceTest < ActiveSupport::TestCase
     inc3 = NoShowIncident.create!(ride_post: ride3, user: @user, status: :pending, occurred_at: 1.day.ago)
     NoShowIncidents::AdjudicateService.call(inc3, status: :upheld)
     assert_equal 3, @user.recent_upheld_incidents_count
-    assert @user.booking_frozen?
+    assert @user.reload.booking_frozen?
 
     # Dismissal on appeal reduces strikes and unfreezes
     NoShowIncidents::AdjudicateService.call(inc3, status: :dismissed, reason: "Evidence of emergency provided")
     assert_equal 2, @user.recent_upheld_incidents_count
     assert_not @user.reload.booking_frozen?
+  end
+
+  test "repeated adjudication does not extend freeze or duplicate notifications" do
+    inc = NoShowIncident.create!(ride_post: @ride_post, user: @user, status: :pending, occurred_at: 1.day.ago)
+    @user.update_columns(booking_freeze_until: 7.days.from_now)
+    original_freeze = @user.reload.booking_freeze_until
+
+    assert_difference -> { Notification.where(event_name: "incident.resolved").count } => 1 do
+      NoShowIncidents::AdjudicateService.call(inc, status: :upheld)
+    end
+
+    assert_equal original_freeze.to_i, @user.reload.booking_freeze_until.to_i
+
+    # Reprocessing one hour later
+    travel 1.hour do
+      assert_no_difference -> { Notification.where(event_name: "incident.resolved").count } do
+        NoShowIncidents::AdjudicateService.call(inc, status: :upheld)
+      end
+
+      assert_equal original_freeze.to_i, @user.reload.booking_freeze_until.to_i
+    end
   end
 end

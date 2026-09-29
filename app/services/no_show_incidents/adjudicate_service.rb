@@ -17,40 +17,43 @@ module NoShowIncidents
 
     def call
       ActiveRecord::Base.transaction do
-        incident.update!(
+        incident_record = NoShowIncident.lock.find(incident.id)
+        previous_status = incident_record.status.to_sym
+
+        return incident_record if previous_status == status
+
+        now = Time.current
+        incident_record.update!(
           status: status,
           reviewer: reviewer,
           decision_reason: reason,
-          resolved_at: Time.current
+          resolved_at: now
         )
 
-        user = incident.user
+        user = User.lock.find(incident_record.user_id)
 
         if status == :upheld
-          # Count strikes in rolling 60 days
           strikes = user.recent_upheld_incidents_count
 
-          if strikes >= 3
+          if strikes >= 3 && !user.booking_frozen?
             user.update!(booking_freeze_until: 7.days.from_now)
           end
 
-          # Create notification for affected user
-          delivery_key = "incident_resolved:#{incident.id}:#{Time.current.to_i}"
+          delivery_key = "incident_resolved:#{incident_record.id}:upheld"
           Notification.find_or_create_by!(delivery_key: delivery_key) do |n|
             n.recipient = user
             n.actor = reviewer
-            n.notifiable = incident.ride_post
+            n.notifiable = incident_record.ride_post
             n.event_name = "incident.resolved"
             n.delivery_status = :pending
           end
         elsif status == :dismissed
-          # If an appeal or dismissal happened and user has fewer than 3 strikes now, unfreeze
           if user.booking_frozen? && user.recent_upheld_incidents_count < 3
             user.update!(booking_freeze_until: nil)
           end
         end
 
-        incident
+        incident_record
       end
     end
 

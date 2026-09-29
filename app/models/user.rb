@@ -9,10 +9,13 @@ class User < ApplicationRecord
   has_many :chat_messages, dependent: :destroy
   has_many :community_memberships, dependent: :destroy
   has_many :communities, through: :community_memberships
-  has_many :reported_trip_reviews, class_name: "TripReview", foreign_key: :reporter_id, dependent: :destroy, inverse_of: :reporter
-  has_many :received_trip_reviews, class_name: "TripReview", foreign_key: :reported_user_id, dependent: :destroy, inverse_of: :reported_user
-  has_many :no_show_incidents, dependent: :destroy
+  has_many :reported_trip_reviews, class_name: "TripReview", foreign_key: :reporter_id, dependent: :restrict_with_error, inverse_of: :reporter
+  has_many :received_trip_reviews, class_name: "TripReview", foreign_key: :reported_user_id, dependent: :restrict_with_error, inverse_of: :reported_user
+  has_many :no_show_incidents, dependent: :restrict_with_error
   has_many :adjudicated_incidents, class_name: "NoShowIncident", foreign_key: :reviewer_id, dependent: :nullify, inverse_of: :reviewer
+
+  before_destroy :cancel_active_commitments, prepend: true
+  after_update_commit :withdraw_ineligible_participation, if: :saved_change_to_gender?
 
   enum :gender, { unspecified: 0, female: 1, male: 2, non_binary: 3 }, default: :unspecified
 
@@ -124,6 +127,37 @@ class User < ApplicationRecord
   def unconfirmed_email_uniqueness
     if unconfirmed_email.present? && User.exists?(email_address: unconfirmed_email)
       errors.add(:unconfirmed_email, "is already taken")
+    end
+  end
+
+  def cancel_active_commitments
+    bookings.active.find_each do |b|
+      Bookings::CancelService.call(b, actor: self)
+    end
+
+    ride_posts.where(status: [ :active, :fulfilled ]).find_each do |ride|
+      RidePosts::CancelService.call(ride, actor: self)
+    end
+  end
+
+  def withdraw_ineligible_participation
+    return if female?
+
+    # Cancel passenger bookings on ladies-only rides
+    bookings.joins(:ride_post)
+            .where(status: [ :pending, :accepted ])
+            .where(ride_posts: { ladies_only: true })
+            .where("ride_posts.departure_time > ?", Time.current)
+            .find_each do |booking|
+      Bookings::CancelService.call(booking, actor: self)
+    end
+
+    # Cancel driver offers for ladies-only rides
+    ride_posts.where(ladies_only: true)
+              .where("departure_time > ?", Time.current)
+              .where(status: [ :active, :fulfilled ])
+              .find_each do |ride|
+      RidePosts::CancelService.call(ride, actor: self)
     end
   end
 end

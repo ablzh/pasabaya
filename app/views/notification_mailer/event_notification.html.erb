@@ -1,0 +1,28 @@
+<div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+  <h2>Notification from Pasabaya</h2>
+
+  <p>Hello <%= @recipient.first_name %>,</p>
+
+  <p>
+    <% case @event_name %>
+    <% when "booking.requested" %>
+      <strong><%= @actor&.first_name || "A passenger" %></strong> has requested a seat on your ride.
+    <% when "booking.accepted" %>
+      Great news! Your seat request has been <strong>confirmed</strong> by the driver.
+    <% when "booking.canceled" %>
+      A booking on your ride has been <strong>canceled</strong>.
+    <% when "ride.canceled" %>
+      An upcoming ride you booked has been <strong>canceled</strong> by the driver.
+    <% when "incident.resolved" %>
+      A decision has been reached regarding your reported incident on Pasabaya.
+    <% else %>
+      You have a new update regarding your trip on Pasabaya.
+    <% end %>
+  </p>
+
+  <p style="margin-top: 30px;">
+    <a href="<%= root_url %>" style="display: inline-block; padding: 10px 20px; background-color: #2563eb; color: #ffffff; text-decoration: none; border-radius: 6px; font-weight: bold;">
+      Open Pasabaya
+    </a>
+  </p>
+</div>

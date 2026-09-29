@@ -63,4 +63,16 @@ class BookingsControllerTest < ActionDispatch::IntegrationTest
 
     assert_redirected_to new_session_url
   end
+
+  test "failed booking request does not create notification" do
+    sign_in_as(@passenger)
+
+    assert_no_difference [ "Booking.count", "Notification.count" ] do
+      post ride_post_bookings_url(@ride), params: {
+        booking: { pickup_notes: "Duplicate booking" }
+      }
+    end
+
+    assert_redirected_to ride_post_url(@ride)
+  end
 end

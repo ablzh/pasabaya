@@ -1,0 +1,42 @@
+<div id="<%= dom_id(notification) %>" class="p-4 flex items-center justify-between gap-4 transition-colors hover:bg-neutral-50 dark:hover:bg-neutral-800/50 <%= 'bg-blue-50/30 dark:bg-blue-950/10' unless notification.read? %>">
+  <div class="flex items-start gap-3">
+    <div class="mt-0.5">
+      <% case notification.event_name %>
+      <% when "booking.requested" %>
+        <span class="inline-flex items-center justify-center size-8 rounded-full bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300 text-xs font-bold">REQ</span>
+      <% when "booking.accepted" %>
+        <span class="inline-flex items-center justify-center size-8 rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300 text-xs font-bold">CONF</span>
+      <% when "booking.declined" %>
+        <span class="inline-flex items-center justify-center size-8 rounded-full bg-neutral-200 text-neutral-700 dark:bg-neutral-700 dark:text-neutral-300 text-xs font-bold">DEC</span>
+      <% when "booking.canceled", "ride.canceled" %>
+        <span class="inline-flex items-center justify-center size-8 rounded-full bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300 text-xs font-bold">CAN</span>
+      <% else %>
+        <span class="inline-flex items-center justify-center size-8 rounded-full bg-neutral-100 text-neutral-700 text-xs font-bold">NOT</span>
+      <% end %>
+    </div>
+    <div>
+      <p class="text-sm text-neutral-900 dark:text-white font-medium">
+        <% case notification.event_name %>
+        <% when "booking.requested" %>
+          <%= notification.actor&.first_name || "A passenger" %> requested a seat on your ride.
+        <% when "booking.accepted" %>
+          Your seat request has been confirmed!
+        <% when "booking.declined" %>
+          Your seat request was declined by the driver.
+        <% when "booking.canceled" %>
+          <%= notification.actor&.first_name || "A user" %> canceled their seat booking.
+        <% when "ride.canceled" %>
+          A ride you had booked has been canceled by the driver.
+        <% else %>
+          <%= notification.event_name.humanize %>
+        <% end %>
+      </p>
+      <p class="text-xs text-neutral-400 mt-0.5">
+        <%= time_ago_in_words(notification.created_at || Time.current) %> ago
+      </p>
+    </div>
+  </div>
+  <div>
+    <%= link_to "View", notification_path(notification), class: "text-xs font-semibold px-3 py-1.5 rounded-lg bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 dark:hover:bg-neutral-700 text-neutral-700 dark:text-neutral-300 transition-colors" %>
+  </div>
+</div>

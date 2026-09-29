@@ -21,6 +21,7 @@ class TripReview < ApplicationRecord
 
   validate :reporter_and_reported_must_be_different
   validate :participants_must_belong_to_trip
+  validate :trip_must_have_departed
 
   private
 
@@ -39,6 +40,14 @@ class TripReview < ApplicationRecord
 
     unless ride_post.participant?(reported_user)
       errors.add(:reported_user, "must be a driver or accepted passenger on this trip")
+    end
+  end
+
+  def trip_must_have_departed
+    return unless ride_post&.departure_time.present?
+
+    if Time.current < ride_post.departure_time
+      errors.add(:base, "Reviews and no-show reports cannot be submitted before trip departure")
     end
   end
 end

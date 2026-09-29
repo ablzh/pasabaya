@@ -97,11 +97,16 @@ class RidePostsController < ApplicationController
 
   # DELETE /ride_posts/1 or /ride_posts/1.json
   def destroy
-    @ride_post.destroy!
-
-    respond_to do |format|
-      format.html { redirect_to ride_posts_path, notice: "Ride post was successfully destroyed.", status: :see_other }
-      format.json { head :no_content }
+    if @ride_post.destroy
+      respond_to do |format|
+        format.html { redirect_to ride_posts_path, notice: "Ride post was successfully destroyed.", status: :see_other }
+        format.json { head :no_content }
+      end
+    else
+      respond_to do |format|
+        format.html { redirect_to @ride_post, alert: @ride_post.errors.full_messages.to_sentence, status: :see_other }
+        format.json { render json: @ride_post.errors, status: :unprocessable_content }
+      end
     end
   end
 
@@ -120,7 +125,7 @@ class RidePostsController < ApplicationController
   def ride_post_params
     params.expect(ride_post: [
       :post_type, :origin_id, :destination_id, :departure_time, :expected_arrival_at,
-      :seats, :remaining_seats, :notes, :is_free_ride, :share_tolls, :split_gas,
+      :seats, :notes, :is_free_ride, :share_tolls, :split_gas,
       :ladies_only, :visibility, :community_id
     ])
   end

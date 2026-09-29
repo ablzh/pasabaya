@@ -41,4 +41,23 @@ class RideChatChannelTest < ActionCable::Channel::TestCase
     subscribe signed_stream_name: "tampered_stream_name"
     assert subscription.rejected?
   end
+
+  test "stops transmission and rejects subscription when passenger booking is canceled" do
+    @booking.update_columns(status: Booking.statuses[:accepted])
+    stub_connection current_user: @passenger
+    signed = Turbo::StreamsChannel.signed_stream_name([ @ride, :chat ])
+
+    subscribe signed_stream_name: signed
+    assert subscription.confirmed?
+
+    # Cancel the booking
+    @booking.update_columns(status: Booking.statuses[:canceled])
+
+    # Attempt delivery
+    subscription.deliver_or_reject(@ride, signed, "<div>hello</div>")
+
+    # The subscription should not transmit the message to the canceled user
+    assert_empty transmissions
+    assert subscription.rejected?
+  end
 end
