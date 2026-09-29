@@ -1,0 +1,21 @@
+<p>Hi <%= @user.first_name %>,</p>
+
+<p>You requested to verify your institutional email address (<strong><%= @membership.institutional_email %></strong>) for the <strong><%= @community.name %></strong> hub on Pasabaya.</p>
+
+<p>Click the link below to confirm your institutional mailbox and unlock closed-hub carpooling:</p>
+
+<p>
+  <a href="<%= verify_community_membership_url(token: @token) %>" style="display: inline-block; padding: 10px 20px; font-size: 14px; color: #ffffff; background-color: #2563eb; text-decoration: none; border-radius: 6px;">
+    Verify My Community Email
+  </a>
+</p>
+
+<p>Or copy and paste this link into your browser:<br>
+<%= verify_community_membership_url(token: @token) %></p>
+
+<p>This verification link is valid for 24 hours and can only be used once.</p>
+
+<p>If you didn't request this verification, you can safely ignore this email.</p>
+
+<p>Safe travels,<br>
+Artem, Founder of Pasabaya.app</p>

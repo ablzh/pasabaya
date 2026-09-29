@@ -63,6 +63,10 @@ module Bookings
           raise InvalidStateError, "Passenger is no longer eligible for booking"
         end
 
+        unless ride.authorized_for_booking?(b.passenger)
+          raise InvalidStateError, "Passenger is no longer eligible for this ride's audience"
+        end
+
         if ride.remaining_seats.to_i <= 0
           raise CapacityError, "No remaining seats available on this ride"
         end

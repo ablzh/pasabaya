@@ -1,0 +1,13 @@
+one:
+  user: one
+  community: one
+  institutional_email: juan@accenture.com
+  verified_at: <%= 1.day.ago.to_fs(:db) %>
+  expires_at: <%= 1.year.from_now.to_fs(:db) %>
+
+two:
+  user: two
+  community: two
+  institutional_email: maria@up.edu.ph
+  verified_at: <%= 1.day.ago.to_fs(:db) %>
+  expires_at: <%= 1.year.from_now.to_fs(:db) %>

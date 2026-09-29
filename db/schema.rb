@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_29_120717) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_29_202500) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.bigint "blob_id", null: false
     t.datetime "created_at", null: false
@@ -63,6 +63,31 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_29_120717) do
     t.integer "user_id", null: false
     t.index ["ride_post_id", "created_at"], name: "index_chat_messages_on_ride_post_id_and_created_at"
     t.index ["user_id"], name: "index_chat_messages_on_user_id"
+  end
+
+  create_table "communities", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "domain", null: false
+    t.integer "hub_type", default: 0, null: false
+    t.string "name", null: false
+    t.string "slug", null: false
+    t.datetime "updated_at", null: false
+    t.index ["domain"], name: "index_communities_on_domain", unique: true
+    t.index ["slug"], name: "index_communities_on_slug", unique: true
+  end
+
+  create_table "community_memberships", force: :cascade do |t|
+    t.integer "community_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "expires_at"
+    t.string "institutional_email", null: false
+    t.datetime "revoked_at"
+    t.datetime "updated_at", null: false
+    t.integer "user_id", null: false
+    t.datetime "verified_at"
+    t.index ["community_id"], name: "index_community_memberships_on_community_id"
+    t.index ["institutional_email"], name: "index_community_memberships_on_institutional_email_active", unique: true, where: "verified_at IS NOT NULL AND revoked_at IS NULL"
+    t.index ["user_id", "community_id"], name: "index_community_memberships_on_user_id_and_community_id", unique: true
   end
 
   create_table "locations", force: :cascade do |t|
@@ -121,6 +146,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_29_120717) do
     t.check_constraint "NOT (is_free_ride = 1 AND (share_tolls = 1 OR split_gas = 1))", name: "check_ride_posts_cost_sharing"
     t.check_constraint "post_type != 0 OR remaining_seats IS NULL OR (remaining_seats >= 0 AND remaining_seats <= seats)", name: "check_ride_posts_offering_inventory"
     t.check_constraint "seats > 0", name: "check_ride_posts_seats_positive"
+    t.check_constraint "visibility != 1 OR community_id IS NOT NULL", name: "check_ride_posts_hub_only_requires_community"
   end
 
   create_table "sessions", force: :cascade do |t|
@@ -163,9 +189,12 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_29_120717) do
   add_foreign_key "bookings", "users", column: "passenger_id"
   add_foreign_key "chat_messages", "ride_posts"
   add_foreign_key "chat_messages", "users"
+  add_foreign_key "community_memberships", "communities"
+  add_foreign_key "community_memberships", "users"
   add_foreign_key "locations", "locations", column: "parent_id"
   add_foreign_key "notifications", "users", column: "actor_id", on_delete: :nullify
   add_foreign_key "notifications", "users", column: "recipient_id"
+  add_foreign_key "ride_posts", "communities", on_delete: :nullify
   add_foreign_key "ride_posts", "locations", column: "destination_id"
   add_foreign_key "ride_posts", "locations", column: "origin_id"
   add_foreign_key "ride_posts", "users"

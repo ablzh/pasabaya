@@ -17,6 +17,7 @@ class Booking < ApplicationRecord
   validate :passenger_cannot_be_driver, on: :create
   validate :validate_passenger_eligibility, on: :create
   validate :validate_ride_bookable, on: :create
+  validate :validate_audience_eligibility, on: :create
 
   scope :active, -> { where(status: [ :pending, :accepted ]) }
   scope :pending, -> { where(status: :pending) }
@@ -51,6 +52,14 @@ class Booking < ApplicationRecord
 
     unless ride_post.bookable?
       errors.add(:ride_post, "is not available for booking")
+    end
+  end
+
+  def validate_audience_eligibility
+    return unless ride_post && passenger
+
+    unless ride_post.authorized_for_booking?(passenger)
+      errors.add(:base, "You are not eligible to book this ride")
     end
   end
 end
