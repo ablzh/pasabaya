@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_29_114141) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_29_120717) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.bigint "blob_id", null: false
     t.datetime "created_at", null: false
@@ -53,6 +53,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_29_114141) do
     t.index ["passenger_id", "status"], name: "index_bookings_on_passenger_id_and_status"
     t.index ["ride_post_id", "passenger_id"], name: "index_bookings_on_ride_and_passenger_active", unique: true, where: "status IN (0, 1)"
     t.index ["ride_post_id", "status"], name: "index_bookings_on_ride_post_id_and_status"
+  end
+
+  create_table "chat_messages", force: :cascade do |t|
+    t.text "body", null: false
+    t.datetime "created_at", null: false
+    t.integer "ride_post_id", null: false
+    t.datetime "updated_at", null: false
+    t.integer "user_id", null: false
+    t.index ["ride_post_id", "created_at"], name: "index_chat_messages_on_ride_post_id_and_created_at"
+    t.index ["user_id"], name: "index_chat_messages_on_user_id"
   end
 
   create_table "locations", force: :cascade do |t|
@@ -151,6 +161,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_29_114141) do
   add_foreign_key "bookings", "ride_posts"
   add_foreign_key "bookings", "users", column: "canceled_by_id", on_delete: :nullify
   add_foreign_key "bookings", "users", column: "passenger_id"
+  add_foreign_key "chat_messages", "ride_posts"
+  add_foreign_key "chat_messages", "users"
   add_foreign_key "locations", "locations", column: "parent_id"
   add_foreign_key "notifications", "users", column: "actor_id", on_delete: :nullify
   add_foreign_key "notifications", "users", column: "recipient_id"

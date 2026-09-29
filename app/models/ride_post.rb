@@ -6,6 +6,7 @@ class RidePost < ApplicationRecord
 
   has_many :bookings, dependent: :destroy
   has_many :notifications, as: :notifiable, dependent: :destroy
+  has_many :chat_messages, dependent: :destroy
 
   enum :post_type, { offering: 0, requesting: 1 }
   enum :status, { active: 0, fulfilled: 1, canceled: 2, completed: 3, draft: 4 }
@@ -81,6 +82,20 @@ class RidePost < ApplicationRecord
 
   def full?
     offering? && (fulfilled? || remaining_seats.to_i <= 0)
+  end
+
+  def chat_unlocked?
+    bookings.accepted.exists?
+  end
+
+  def chat_writable?
+    chat_unlocked? && (departure_time.blank? || Time.current <= departure_time + 24.hours)
+  end
+
+  def user_authorized_for_chat?(u)
+    return false unless u
+
+    user_id == u.id || bookings.accepted.exists?(passenger_id: u.id)
   end
 
   private

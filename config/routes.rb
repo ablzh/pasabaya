@@ -3,6 +3,7 @@ Rails.application.routes.draw do
   get "rides/from-:origin_slug-to-:destination_slug", to: "ride_posts#index", as: :route_rides
   resources :ride_posts, path: "rides" do
     resources :bookings, only: [ :create ]
+    resources :chat_messages, only: [ :create ]
   end
 
   resources :bookings, only: [ :show ] do

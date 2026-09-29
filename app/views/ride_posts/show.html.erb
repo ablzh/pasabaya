@@ -249,6 +249,49 @@
         <% end %>
       </div>
     <% end %>
+
+    <%# Private Trip Chat (Driver & Confirmed Passengers) %>
+    <% if Current.user && @ride_post.user_authorized_for_chat?(Current.user) %>
+      <div class="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 p-6 rounded-3xl shadow-sm mb-8 space-y-4">
+        <div class="flex items-center justify-between pb-3 border-b border-neutral-100 dark:border-neutral-800">
+          <div>
+            <h3 class="text-base font-bold text-neutral-900 dark:text-white flex items-center gap-2">
+              <svg xmlns="http://www.w3.org/2000/svg" class="size-4 text-blue-600 dark:text-blue-400" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 01-2.555-.337A5.972 5.972 0 015.41 20.97a.75.75 0 01-1.154-.755c.106-.777.37-1.503.766-2.148A7.776 7.776 0 013 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25z" /></svg>
+              Private Trip Coordination Chat
+            </h3>
+            <p class="text-xs text-neutral-500">Visible only to the driver and confirmed carpool passengers.</p>
+          </div>
+          <% if @ride_post.chat_writable? %>
+            <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300">
+              <span class="size-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+              Live
+            </span>
+          <% else %>
+            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-neutral-100 text-neutral-600 dark:bg-neutral-800 dark:text-neutral-400">
+              Closed (Read-only)
+            </span>
+          <% end %>
+        </div>
+
+        <% if @ride_post.chat_unlocked? %>
+          <%= turbo_stream_from [@ride_post, :chat], channel: "RideChatChannel" %>
+
+          <div id="chat_messages_list" class="space-y-3 max-h-80 overflow-y-auto pr-1">
+            <% if @ride_post.chat_messages.any? %>
+              <%= render partial: "chat_messages/chat_message", collection: @ride_post.chat_messages.recent_first %>
+            <% else %>
+              <p class="text-xs text-neutral-400 italic text-center py-4">No messages yet. Say hello or coordinate pickup details!</p>
+            <% end %>
+          </div>
+
+          <%= render "chat_messages/form", ride_post: @ride_post, chat_message: @ride_post.chat_messages.build %>
+        <% else %>
+          <div class="text-center py-6 text-neutral-400 text-xs italic">
+            Chat will unlock automatically once the first passenger booking is confirmed.
+          </div>
+        <% end %>
+      </div>
+    <% end %>
   <% else %>
     <%# Passenger Request Post (Discovery board) %>
     <div class="bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 p-8 rounded-3xl shadow-xl flex flex-col items-center text-center">

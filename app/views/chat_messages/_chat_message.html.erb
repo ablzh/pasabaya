@@ -1,0 +1,19 @@
+<div id="<%= dom_id chat_message %>" class="flex items-start gap-3 p-3 rounded-2xl <%= chat_message.user == Current.user ? 'bg-blue-50/70 dark:bg-blue-950/20 ml-6 sm:ml-12 border border-blue-100 dark:border-blue-900/30' : 'bg-neutral-50 dark:bg-neutral-800/60 mr-6 sm:mr-12 border border-neutral-100 dark:border-neutral-800' %>">
+  <%= user_avatar(chat_message.user, classes: "size-8 text-xs shrink-0 mt-0.5") %>
+  <div class="flex-1 min-w-0">
+    <div class="flex items-baseline justify-between gap-2">
+      <p class="text-xs font-bold text-neutral-900 dark:text-white truncate">
+        <%= chat_message.user.first_name %> <%= chat_message.user.last_name %>
+        <% if chat_message.user == chat_message.ride_post.user %>
+          <span class="text-[9px] uppercase px-1.5 py-0.2 rounded-full font-bold bg-neutral-200 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-300 ml-1">Driver</span>
+        <% end %>
+      </p>
+      <span class="text-[10px] text-neutral-400 shrink-0">
+        <%= time_ago_in_words(chat_message.created_at) %> ago
+      </span>
+    </div>
+    <div class="mt-1 text-sm text-neutral-800 dark:text-neutral-200 whitespace-pre-wrap break-words">
+      <%= chat_message.body %>
+    </div>
+  </div>
+</div>
