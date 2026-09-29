@@ -9,11 +9,22 @@ class RideChatChannel < ActionCable::Channel::Base
       ride = locate_ride(stream_name)
 
       if ride && current_user && ride.user_authorized_for_chat?(current_user)
-        stream_from stream_name
+        stream_from stream_name do |data|
+          deliver_or_reject(ride, stream_name, data)
+        end
       else
         reject
       end
     else
+      reject
+    end
+  end
+
+  def deliver_or_reject(ride, stream_name, data)
+    if current_user && ride.reload.user_authorized_for_chat?(current_user)
+      transmit data
+    else
+      stop_stream_from stream_name
       reject
     end
   end

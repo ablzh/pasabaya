@@ -125,4 +125,68 @@ class CommunityMembershipTest < ActiveSupport::TestCase
     assert booking.reload.canceled?
     assert user_ride.reload.canceled?
   end
+
+  test "verification token cannot be reused after verification" do
+    membership = CommunityMembership.create!(
+      user: @user,
+      community: @community,
+      institutional_email: "reuse_test@accenture.com"
+    )
+
+    token = membership.generate_token_for(:verification)
+    assert_equal membership, CommunityMembership.find_by_token_for(:verification, token)
+
+    membership.verify!
+    assert membership.reload.verified?
+
+    # Token must be invalidated upon verification
+    assert_nil CommunityMembership.find_by_token_for(:verification, token)
+  end
+
+  test "token generated prior to revocation cannot verify a revoked membership" do
+    membership = CommunityMembership.create!(
+      user: @user,
+      community: @community,
+      institutional_email: "revoked_token_test@accenture.com"
+    )
+
+    token = membership.generate_token_for(:verification)
+    membership.revoke!
+
+    # Old token cannot locate membership
+    assert_nil CommunityMembership.find_by_token_for(:verification, token)
+
+    assert_raises(ActiveRecord::RecordInvalid) do
+      membership.verify!
+    end
+  end
+
+  test "revoke cancels fulfilled upcoming driver offers in the hub" do
+    membership = CommunityMembership.create!(
+      user: @user,
+      community: @community,
+      institutional_email: "full_offer_driver@accenture.com",
+      verified_at: Time.current
+    )
+
+    origin = Location.create!(name: "Makati Full", location_type: :city)
+    dest = Location.create!(name: "BGC Full", location_type: :city)
+
+    fulfilled_ride = RidePost.create!(
+      user: @user,
+      origin: origin,
+      destination: dest,
+      post_type: :offering,
+      seats: 1,
+      remaining_seats: 0,
+      status: :fulfilled,
+      visibility: :hub_only,
+      community: @community,
+      departure_time: 3.days.from_now,
+      expected_arrival_at: 3.days.from_now + 2.hours
+    )
+
+    membership.revoke!
+    assert fulfilled_ride.reload.canceled?
+  end
 end

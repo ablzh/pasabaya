@@ -9,9 +9,19 @@ class Notification < ApplicationRecord
   validates :delivery_key, presence: true, uniqueness: true
   validates :delivery_status, presence: true
 
+  after_create_commit :enqueue_delivery
+
   scope :unread, -> { where(read_at: nil) }
   scope :read, -> { where.not(read_at: nil) }
   scope :recent, -> { order(created_at: :desc) }
+
+  EMAIL_EVENTS = %w[
+    booking.requested
+    booking.accepted
+    booking.canceled
+    ride.canceled
+    incident.resolved
+  ].freeze
 
   def mark_as_read!
     update!(read_at: Time.current) unless read_at?
@@ -19,5 +29,31 @@ class Notification < ApplicationRecord
 
   def read?
     read_at.present?
+  end
+
+  def deliver!
+    return if delivered?
+
+    if EMAIL_EVENTS.include?(event_name) && recipient&.email_address.present?
+      NotificationMailer.with(notification: self).event_notification.deliver_now
+    end
+
+    Turbo::StreamsChannel.broadcast_prepend_to(
+      [ recipient, :notifications ],
+      target: "notifications_list",
+      partial: "notifications/notification",
+      locals: { notification: self }
+    )
+
+    update!(delivery_status: :delivered, delivered_at: Time.current)
+  rescue StandardError => e
+    update!(delivery_status: :failed)
+    raise e
+  end
+
+  private
+
+  def enqueue_delivery
+    NotificationDeliveryJob.perform_later(id)
   end
 end

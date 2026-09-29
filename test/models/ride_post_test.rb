@@ -68,4 +68,92 @@ class RidePostTest < ActiveSupport::TestCase
     assert_not ride.valid?
     assert_includes ride.errors[:base], "Cannot modify route, schedule, capacity, or audience while accepted bookings exist"
   end
+
+  test "cannot manually modify remaining_seats while accepted bookings exist" do
+    ride = ride_posts(:one)
+    booking = bookings(:one)
+    booking.update_columns(status: Booking.statuses[:accepted])
+    ride.update_columns(remaining_seats: ride.seats - 1)
+
+    # Driver attempts to reset remaining_seats back to full capacity
+    ride.remaining_seats = ride.seats
+    assert_not ride.valid?
+    assert_includes ride.errors[:remaining_seats], "cannot exceed available capacity (2) while accepted bookings exist"
+  end
+
+  test "draft offers require ownership to view" do
+    ride = ride_posts(:one)
+    ride.update_columns(status: RidePost.statuses[:draft])
+
+    driver = ride.user
+    other_user = users(:two)
+
+    assert ride.authorized_viewer?(driver)
+    assert_not ride.authorized_viewer?(other_user)
+    assert_not ride.authorized_viewer?(nil)
+  end
+
+  test "frozen driver can cancel their ride" do
+    ride = ride_posts(:one)
+    driver = ride.user
+    driver.update_columns(booking_freeze_until: 7.days.from_now)
+
+    assert driver.booking_frozen?
+    assert_not driver.eligible_for_offering?
+
+    # Canceling the ride should succeed without RecordInvalid
+    assert_nothing_raised do
+      RidePosts::CancelService.call(ride, actor: driver)
+    end
+    assert ride.reload.canceled?
+  end
+
+  test "passenger can cancel booking and restore seats even if driver is frozen" do
+    ride = ride_posts(:one)
+    driver = ride.user
+    booking = bookings(:one)
+    booking.update_columns(status: Booking.statuses[:accepted])
+    ride.update_columns(remaining_seats: ride.seats - 1, status: RidePost.statuses[:fulfilled])
+
+    # Driver becomes frozen
+    driver.update_columns(booking_freeze_until: 7.days.from_now)
+
+    # Passenger cancels booking
+    assert_nothing_raised do
+      Bookings::CancelService.call(booking, actor: booking.passenger)
+    end
+
+    assert booking.reload.canceled?
+    assert_equal ride.seats, ride.reload.remaining_seats
+    assert ride.active?
+  end
+
+  test "deleting ride with accepted bookings is prohibited and directs to cancellation" do
+    ride = ride_posts(:one)
+    booking = bookings(:one)
+    booking.update_columns(status: Booking.statuses[:accepted])
+
+    assert_no_difference "RidePost.count" do
+      assert_not ride.destroy
+    end
+
+    assert_includes ride.errors[:base], "Cannot delete a ride with accepted bookings. Please cancel the trip instead."
+  end
+
+  test "deleting ride with trip reviews is restricted" do
+    ride = ride_posts(:one)
+    booking = bookings(:one)
+    booking.update_columns(status: Booking.statuses[:accepted])
+    ride.update_columns(departure_time: 2.hours.ago, expected_arrival_at: 1.hour.ago)
+
+    TripReview.create!(
+      ride_post: ride,
+      reporter: ride.user,
+      reported_user: booking.passenger,
+      outcome: :completed
+    )
+
+    assert_not ride.destroy
+    assert_includes ride.errors[:base], "Cannot delete a ride with trip reviews or incident history."
+  end
 end

@@ -8,8 +8,10 @@ class RidePost < ApplicationRecord
   has_many :bookings, dependent: :destroy
   has_many :notifications, as: :notifiable, dependent: :destroy
   has_many :chat_messages, dependent: :destroy
-  has_many :trip_reviews, dependent: :destroy
-  has_many :no_show_incidents, dependent: :destroy
+  has_many :trip_reviews, dependent: :restrict_with_error
+  has_many :no_show_incidents, dependent: :restrict_with_error
+
+  before_destroy :check_destruction_allowed, prepend: true
 
   enum :post_type, { offering: 0, requesting: 1 }
   enum :status, { active: 0, fulfilled: 1, canceled: 2, completed: 3, draft: 4 }
@@ -31,10 +33,14 @@ class RidePost < ApplicationRecord
   validate :cost_sharing_mutual_exclusion
   validate :driver_must_be_verified_community_member, if: -> { hub_only? && !canceled? && !completed? }
   validate :driver_must_be_female_for_ladies_only, if: -> { ladies_only? && !canceled? && !completed? }
-  validate :bookable_offering_requirements, if: -> { offering? && !draft? }
+  validate :bookable_offering_requirements, if: -> { offering? && !draft? && !canceled? && !completed? }
   validate :lock_attributes_when_accepted_bookings_exist, on: :update
 
+  before_validation :initialize_remaining_seats, on: :create
+  before_validation :sync_remaining_seats_with_capacity, on: :update
   before_validation :preload_locations, if: -> { origin_id.present? && destination_id.present? }
+
+  after_save_commit :schedule_trip_audit, if: :should_schedule_audit?
 
   scope :publicly_visible, -> { public_ride.where(ladies_only: false) }
   scope :filter_by_post_type, ->(type) { where(post_type: type) if type.present? }
@@ -121,6 +127,8 @@ class RidePost < ApplicationRecord
   end
 
   def authorized_viewer?(viewer)
+    return viewer.present? && user_id == viewer.id if draft?
+
     return false if viewer.blank? && (hub_only? || ladies_only?)
     return true if viewer.blank?
 
@@ -155,8 +163,13 @@ class RidePost < ApplicationRecord
 
   def user_authorized_for_chat?(u)
     return false unless u
+    return false unless authorized_viewer?(u)
 
-    user_id == u.id || bookings.accepted.exists?(passenger_id: u.id)
+    if user_id == u.id
+      u.banned_at.blank?
+    else
+      bookings.accepted.exists?(passenger_id: u.id) && u.banned_at.blank?
+    end
   end
 
   def participants
@@ -170,6 +183,44 @@ class RidePost < ApplicationRecord
   end
 
   private
+
+  def check_destruction_allowed
+    if trip_reviews.exists? || no_show_incidents.exists?
+      errors.add(:base, "Cannot delete a ride with trip reviews or incident history.")
+      throw :abort
+    end
+
+    if bookings.accepted.exists?
+      errors.add(:base, "Cannot delete a ride with accepted bookings. Please cancel the trip instead.")
+      throw :abort
+    end
+
+    bookings.pending.find_each do |b|
+      Bookings::CancelService.call(b, actor: user)
+    end
+  end
+
+  def initialize_remaining_seats
+    self.remaining_seats ||= seats if offering? && seats.present?
+  end
+
+  def sync_remaining_seats_with_capacity
+    if offering? && !bookings.accepted.exists? && will_save_change_to_seats?
+      self.remaining_seats = seats
+    end
+  end
+
+  def should_schedule_audit?
+    offering? && published? && expected_arrival_at.present? && (saved_change_to_expected_arrival_at? || saved_change_to_status?)
+  end
+
+  def schedule_trip_audit
+    TripAuditJob.set(wait_until: expected_arrival_at + 2.hours).perform_later(id)
+  end
+
+  def publishing?
+    new_record? || (will_save_change_to_status? && (status_before_last_save || status_was) == "draft")
+  end
 
   def preload_locations
     unless association(:origin).loaded? && association(:destination).loaded?
@@ -207,7 +258,7 @@ class RidePost < ApplicationRecord
       errors.add(:remaining_seats, "must be confirmed for published ride offers")
     end
 
-    if user.present? && !user.eligible_for_offering?
+    if user.present? && publishing? && !user.eligible_for_offering?
       errors.add(:user, "is not eligible to publish ride offers")
     end
   end
@@ -220,6 +271,13 @@ class RidePost < ApplicationRecord
 
     if changed_locked_fields.any?
       errors.add(:base, "Cannot modify route, schedule, capacity, or audience while accepted bookings exist")
+    end
+
+    if will_save_change_to_remaining_seats?
+      max_allowed = [ seats - bookings.accepted.count, 0 ].max
+      if remaining_seats > max_allowed
+        errors.add(:remaining_seats, "cannot exceed available capacity (#{max_allowed}) while accepted bookings exist")
+      end
     end
   end
 

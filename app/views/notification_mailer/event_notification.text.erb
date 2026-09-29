@@ -1,0 +1,18 @@
+Hello <%= @recipient.first_name %>,
+
+<% case @event_name %>
+<% when "booking.requested" %>
+<%= @actor&.first_name || "A passenger" %> has requested a seat on your ride.
+<% when "booking.accepted" %>
+Great news! Your seat request has been confirmed by the driver.
+<% when "booking.canceled" %>
+A booking on your ride has been canceled.
+<% when "ride.canceled" %>
+An upcoming ride you booked has been canceled by the driver.
+<% when "incident.resolved" %>
+A decision has been reached regarding your reported incident on Pasabaya.
+<% else %>
+You have a new update regarding your trip on Pasabaya.
+<% end %>
+
+Visit Pasabaya to check the latest updates: <%= root_url %>

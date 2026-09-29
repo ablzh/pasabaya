@@ -98,6 +98,37 @@ class RidePostsControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to ride_posts_url
   end
 
+  test "draft offers cannot be viewed by anonymous or non-owner users" do
+    @ride_post.update_columns(status: RidePost.statuses[:draft])
+
+    sign_out
+    get ride_post_url(@ride_post)
+    assert_redirected_to ride_posts_url
+
+    get ride_post_url(@ride_post, format: :json)
+    assert_response :forbidden
+
+    sign_in_as(users(:two))
+    get ride_post_url(@ride_post)
+    assert_redirected_to ride_posts_url
+
+    # Owner can view draft
+    sign_in_as(@ride_post.user)
+    get ride_post_url(@ride_post)
+    assert_response :success
+  end
+
+  test "cannot destroy ride_post with accepted bookings" do
+    booking = bookings(:one)
+    booking.update_columns(status: Booking.statuses[:accepted])
+
+    assert_no_difference("RidePost.count") do
+      delete ride_post_url(@ride_post)
+    end
+
+    assert_redirected_to ride_post_url(@ride_post)
+  end
+
   test "should not get edit for ride_post owned by another user" do
     other_post = ride_posts(:two)
     get edit_ride_post_url(other_post)

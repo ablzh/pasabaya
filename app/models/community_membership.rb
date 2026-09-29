@@ -13,7 +13,7 @@ class CommunityMembership < ApplicationRecord
   validate :email_domain_matches_community
 
   generates_token_for :verification, expires_in: 24.hours do
-    institutional_email
+    [ institutional_email, verified_at, revoked_at, updated_at ]
   end
 
   scope :active_verified, -> {
@@ -21,6 +21,16 @@ class CommunityMembership < ApplicationRecord
          .where(revoked_at: nil)
          .where("expires_at IS NULL OR expires_at > ?", Time.current)
   }
+
+  scope :expired, -> {
+    where.not(expires_at: nil)
+         .where("expires_at <= ?", Time.current)
+         .where(revoked_at: nil)
+  }
+
+  def self.revoke_expired!
+    expired.find_each(&:revoke!)
+  end
 
   def verified?
     verified_at.present? && revoked_at.blank? && (expires_at.blank? || expires_at > Time.current)
@@ -32,6 +42,11 @@ class CommunityMembership < ApplicationRecord
 
   def verify!
     transaction do
+      if revoked_at.present?
+        errors.add(:base, "Revoked membership cannot be verified directly. Please request a new verification link.")
+        raise ActiveRecord::RecordInvalid.new(self)
+      end
+
       if CommunityMembership.active_verified.where(institutional_email: institutional_email).where.not(id: id).exists?
         errors.add(:institutional_email, "is already verified by another account")
         raise ActiveRecord::RecordInvalid.new(self)
@@ -55,8 +70,11 @@ class CommunityMembership < ApplicationRecord
         Bookings::CancelService.new(booking, actor: user).call
       end
 
-      # 2. Cancel driver's upcoming hub-only rides for this community
-      user.ride_posts.hub_only.where(community_id: community_id).where("departure_time > ?", Time.current).active.find_each do |ride|
+      # 2. Cancel driver's upcoming hub-only rides (both active and fulfilled) for this community
+      user.ride_posts.hub_only.where(community_id: community_id)
+                             .where("departure_time > ?", Time.current)
+                             .where(status: [ :active, :fulfilled ])
+                             .find_each do |ride|
         RidePosts::CancelService.new(ride, actor: user).call
       end
     end

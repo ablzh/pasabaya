@@ -23,7 +23,15 @@ class TripAuditJobTest < ActiveJob::TestCase
     @booking = Booking.create!(ride_post: @ride_post, passenger: @passenger, status: :accepted)
   end
 
-  test "perform generates review.requested notifications for trip participants" do
+  test "skips execution if expected arrival time has not passed plus 2 hours" do
+    assert_no_difference -> { Notification.where(event_name: "review.requested").count } do
+      TripAuditJob.perform_now(@ride_post.id)
+    end
+  end
+
+  test "perform generates review.requested notifications for trip participants once arrived" do
+    @ride_post.update_columns(departure_time: 5.hours.ago, expected_arrival_at: 3.hours.ago)
+
     assert_difference -> { Notification.where(event_name: "review.requested").count }, 2 do
       TripAuditJob.perform_now(@ride_post.id)
     end

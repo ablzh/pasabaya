@@ -28,6 +28,31 @@ class TripReviewTest < ActiveSupport::TestCase
       expected_arrival_at: 1.day.from_now + 2.hours
     )
     @booking = Booking.create!(ride_post: @ride_post, passenger: @passenger, status: :accepted)
+    @ride_post.update_columns(departure_time: 2.hours.ago, expected_arrival_at: 1.hour.ago)
+  end
+
+  test "cannot review future trips before departure" do
+    future_ride = RidePost.create!(
+      user: @driver,
+      origin: @origin,
+      destination: @destination,
+      post_type: :offering,
+      seats: 3,
+      remaining_seats: 2,
+      status: :active,
+      departure_time: 1.day.from_now,
+      expected_arrival_at: 1.day.from_now + 2.hours
+    )
+    Booking.create!(ride_post: future_ride, passenger: @passenger, status: :accepted)
+
+    review = TripReview.new(
+      ride_post: future_ride,
+      reporter: @driver,
+      reported_user: @passenger,
+      outcome: :passenger_no_show
+    )
+    assert_not review.valid?
+    assert_includes review.errors[:base], "Reviews and no-show reports cannot be submitted before trip departure"
   end
 
   test "valid review between trip participants" do
