@@ -9,7 +9,7 @@ class RideChatChannel < ActionCable::Channel::Base
       ride = locate_ride(stream_name)
 
       if ride && current_user && ride.user_authorized_for_chat?(current_user)
-        stream_from stream_name do |data|
+        stream_from stream_name, coder: ActiveSupport::JSON do |data|
           deliver_or_reject(ride, stream_name, data)
         end
       else
@@ -21,7 +21,13 @@ class RideChatChannel < ActionCable::Channel::Base
   end
 
   def deliver_or_reject(ride, stream_name, data)
-    if current_user && ride.reload.user_authorized_for_chat?(current_user)
+    user = begin
+      current_user&.reload
+    rescue ActiveRecord::RecordNotFound
+      nil
+    end
+
+    if user && ride.reload.user_authorized_for_chat?(user)
       transmit data
     else
       stop_stream_from stream_name

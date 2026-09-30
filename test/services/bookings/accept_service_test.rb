@@ -86,5 +86,60 @@ module Bookings
 
       assert_equal 0, @ride.reload.remaining_seats
     end
+
+    test "rejects acceptance when hub driver community membership has expired" do
+      community = communities(:one)
+      driver_membership = community_memberships(:one)
+
+      passenger_membership = CommunityMembership.create!(
+        user: @passenger,
+        community: community,
+        institutional_email: "passenger_hub_test@accenture.com",
+        verified_at: 1.month.ago,
+        expires_at: 1.year.from_now
+      )
+
+      hub_ride = RidePost.create!(
+        user: @driver,
+        origin: locations(:one),
+        destination: locations(:two),
+        post_type: :offering,
+        seats: 3,
+        remaining_seats: 2,
+        status: :active,
+        visibility: :hub_only,
+        community: community,
+        departure_time: 3.days.from_now,
+        expected_arrival_at: 3.days.from_now + 2.hours
+      )
+
+      pending_booking = Booking.create!(
+        ride_post: hub_ride,
+        passenger: @passenger,
+        status: :pending
+      )
+
+      # Driver membership expires before cleanup runs
+      driver_membership.update_columns(expires_at: 1.hour.ago)
+
+      error = assert_raises(AcceptService::InvalidStateError) do
+        AcceptService.call(pending_booking, actor: @driver)
+      end
+
+      assert_match(/Driver is no longer eligible/, error.message)
+      assert pending_booking.reload.pending?
+      assert_equal 2, hub_ride.reload.remaining_seats
+    end
+
+    test "rejects acceptance when driver is banned" do
+      @driver.update_columns(banned_at: Time.current)
+
+      error = assert_raises(AcceptService::InvalidStateError) do
+        AcceptService.call(@booking, actor: @driver)
+      end
+
+      assert_match(/Driver is no longer eligible/, error.message)
+      assert @booking.reload.pending?
+    end
   end
 end

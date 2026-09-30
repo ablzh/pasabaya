@@ -63,12 +63,18 @@
       </div>
 
       <% if Current.user == @ride_post.user %>
-        <div class="flex gap-2">
+        <div class="flex items-center gap-2">
           <%= render Buttons::Component.new(
                      text: "Edit",
                      href: edit_ride_post_path(@ride_post),
                      variant: :secondary,
                      size: :sm) %>
+          <% if !@ride_post.canceled? && !@ride_post.completed? %>
+            <%= button_to "Cancel Trip", cancel_ride_post_path(@ride_post),
+                          method: :patch,
+                          data: { turbo_confirm: "Are you sure you want to cancel this entire trip? All accepted and pending passengers will be notified." },
+                          class: "px-3 py-1.5 text-xs font-semibold rounded-lg bg-red-50 hover:bg-red-100 text-red-600 dark:bg-red-950/20 dark:hover:bg-red-950/40 dark:text-red-400 transition-colors cursor-pointer" %>
+          <% end %>
         </div>
       <% end %>
     </div>

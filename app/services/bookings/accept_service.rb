@@ -59,6 +59,11 @@ module Bookings
           raise InvalidStateError, "Ride is not published and accepting bookings"
         end
 
+        ride.user.reload
+        unless ride.driver_eligible?
+          raise InvalidStateError, "Driver is no longer eligible to accept bookings for this ride"
+        end
+
         unless b.passenger.eligible_for_booking?
           raise InvalidStateError, "Passenger is no longer eligible for booking"
         end

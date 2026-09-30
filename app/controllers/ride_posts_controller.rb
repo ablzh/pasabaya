@@ -1,7 +1,7 @@
 class RidePostsController < ApplicationController
   before_action :require_authentication, except: %i[ index show ]
   before_action :set_ride_post, only: :show
-  before_action :set_user_ride_post, only: %i[ edit update destroy ]
+  before_action :set_user_ride_post, only: %i[ edit update destroy cancel ]
   before_action :resume_session, only: [ :index, :show ]
   before_action :set_grouped_locations, only: %i[ index new edit create update ]
   before_action :resolve_route_slugs, only: :index
@@ -107,6 +107,20 @@ class RidePostsController < ApplicationController
         format.html { redirect_to @ride_post, alert: @ride_post.errors.full_messages.to_sentence, status: :see_other }
         format.json { render json: @ride_post.errors, status: :unprocessable_content }
       end
+    end
+  end
+
+  # PATCH /rides/1/cancel
+  def cancel
+    RidePosts::CancelService.call(@ride_post, actor: Current.user)
+    respond_to do |format|
+      format.html { redirect_to @ride_post, notice: "Trip was successfully canceled.", status: :see_other }
+      format.json { head :no_content }
+    end
+  rescue RidePosts::CancelService::Error => e
+    respond_to do |format|
+      format.html { redirect_to @ride_post, alert: e.message, status: :see_other }
+      format.json { render json: { error: e.message }, status: :unprocessable_content }
     end
   end
 

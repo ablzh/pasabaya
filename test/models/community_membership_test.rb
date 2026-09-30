@@ -189,4 +189,59 @@ class CommunityMembershipTest < ActiveSupport::TestCase
     membership.revoke!
     assert fulfilled_ride.reload.canceled?
   end
+
+  test "revoke cancels passenger booking and restores seats even if driver membership has also expired" do
+    driver = @user
+    driver_membership = CommunityMembership.create!(
+      user: driver,
+      community: @community,
+      institutional_email: "driver_expired@accenture.com",
+      verified_at: 1.month.ago,
+      expires_at: 1.year.from_now
+    )
+
+    passenger = User.create!(
+      email_address: "passenger_comm@example.com",
+      password: "password",
+      first_name: "Pass",
+      last_name: "Comm",
+      facebook_profile_url: "https://facebook.com/passcomm"
+    )
+    passenger_membership = CommunityMembership.create!(
+      user: passenger,
+      community: @community,
+      institutional_email: "passenger_expired@accenture.com",
+      verified_at: 1.month.ago,
+      expires_at: 1.year.from_now
+    )
+
+    origin = locations(:one)
+    dest = locations(:two)
+    ride = RidePost.create!(
+      user: driver,
+      origin: origin,
+      destination: dest,
+      post_type: :offering,
+      seats: 3,
+      remaining_seats: 2,
+      status: :active,
+      visibility: :hub_only,
+      community: @community,
+      departure_time: 3.days.from_now,
+      expected_arrival_at: 3.days.from_now + 2.hours
+    )
+    booking = Booking.create!(ride_post: ride, passenger: passenger, status: :accepted)
+
+    # Both memberships expire before revocation loop
+    driver_membership.update_columns(expires_at: 1.day.ago)
+    passenger_membership.update_columns(expires_at: 1.day.ago)
+
+    # Passenger membership is revoked first
+    assert_nothing_raised do
+      passenger_membership.revoke!
+    end
+
+    assert booking.reload.canceled?
+    assert_equal 3, ride.reload.remaining_seats
+  end
 end

@@ -6,7 +6,7 @@ class RidePost < ApplicationRecord
   belongs_to :community, optional: true
 
   has_many :bookings, dependent: :destroy
-  has_many :notifications, as: :notifiable, dependent: :destroy
+  has_many :notifications, as: :notifiable
   has_many :chat_messages, dependent: :destroy
   has_many :trip_reviews, dependent: :restrict_with_error
   has_many :no_show_incidents, dependent: :restrict_with_error
@@ -31,8 +31,8 @@ class RidePost < ApplicationRecord
   validates :community, presence: true, if: :hub_only?
 
   validate :cost_sharing_mutual_exclusion
-  validate :driver_must_be_verified_community_member, if: -> { hub_only? && !canceled? && !completed? }
-  validate :driver_must_be_female_for_ladies_only, if: -> { ladies_only? && !canceled? && !completed? }
+  validate :driver_must_be_verified_community_member, if: -> { hub_only? && !canceled? && !completed? && (publishing? || will_save_change_to_community_id? || will_save_change_to_visibility?) }
+  validate :driver_must_be_female_for_ladies_only, if: -> { ladies_only? && !canceled? && !completed? && (publishing? || will_save_change_to_ladies_only?) }
   validate :bookable_offering_requirements, if: -> { offering? && !draft? && !canceled? && !completed? }
   validate :lock_attributes_when_accepted_bookings_exist, on: :update
 
@@ -151,6 +151,14 @@ class RidePost < ApplicationRecord
     return false unless passenger.eligible_for_booking?
 
     authorized_viewer?(passenger)
+  end
+
+  def driver_eligible?
+    return false unless user&.eligible_for_offering?
+    return false if hub_only? && !user.verified_member_of?(community_id)
+    return false if ladies_only? && !user.female?
+
+    true
   end
 
   def chat_unlocked?

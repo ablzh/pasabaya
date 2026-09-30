@@ -2,6 +2,7 @@
 
 class NotificationDeliveryJob < ApplicationJob
   queue_as :default
+  limits_concurrency to: 1, key: ->(notification_id) { "notification_delivery_#{notification_id}" }
 
   retry_on StandardError, wait: :polynomially_longer, attempts: 3
 
