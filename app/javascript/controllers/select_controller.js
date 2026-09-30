@@ -9,7 +9,8 @@ export default class extends Controller {
       maxOptions: null,
       closeAfterSelect: !this.element.multiple,
       allowEmptyOption: true,
-      create: false
+      create: false,
+      plugins: ["dropdown_input"]
     });
   }
 
