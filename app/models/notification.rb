@@ -32,6 +32,7 @@ class Notification < ApplicationRecord
   end
 
   def deliver!
+    reload
     return if delivered?
 
     if EMAIL_EVENTS.include?(event_name) && recipient&.email_address.present?
@@ -47,7 +48,13 @@ class Notification < ApplicationRecord
 
     update!(delivery_status: :delivered, delivered_at: Time.current)
   rescue StandardError => e
-    update!(delivery_status: :failed)
+    if persisted?
+      begin
+        update_column(:delivery_status, Notification.delivery_statuses[:failed])
+      rescue StandardError
+        nil
+      end
+    end
     raise e
   end
 

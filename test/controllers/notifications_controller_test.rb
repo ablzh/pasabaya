@@ -27,4 +27,32 @@ class NotificationsControllerTest < ActionDispatch::IntegrationTest
     get notifications_url
     assert_redirected_to new_session_url
   end
+
+  test "viewing a notification when notifiable was deleted redirects to rides index" do
+    sign_in_as(@user)
+    ride = RidePost.create!(
+      user: users(:two),
+      origin: locations(:one),
+      destination: locations(:two),
+      post_type: :offering,
+      seats: 2,
+      departure_time: 2.days.from_now,
+      expected_arrival_at: 2.days.from_now + 2.hours,
+      status: :active
+    )
+    orphan_notification = Notification.create!(
+      recipient: @user,
+      notifiable: ride,
+      event_name: "ride.canceled",
+      delivery_key: "orphan_test_key",
+      delivery_status: :delivered
+    )
+    ride.destroy!
+
+    get notification_url(orphan_notification)
+
+    assert orphan_notification.reload.read?
+    assert_redirected_to ride_posts_url
+    assert_equal "The trip is no longer available.", flash[:notice]
+  end
 end

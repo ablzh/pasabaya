@@ -102,4 +102,60 @@ class UserTest < ActiveSupport::TestCase
     passenger.destroy!
     assert_equal initial_remaining, ride.reload.remaining_seats
   end
+
+  test "passenger account deletion preserves driver cancellation notification and allows delivery" do
+    driver = users(:one)
+    passenger = User.create!(
+      email_address: "passenger_del_notif@example.com",
+      password: "password",
+      first_name: "Pedro",
+      last_name: "Penduko",
+      facebook_profile_url: "https://facebook.com/pedro"
+    )
+
+    ride = ride_posts(:one)
+    Booking.create!(ride_post: ride, passenger: passenger, status: :accepted)
+
+    passenger.destroy!
+
+    notif = driver.received_notifications.find_by(event_name: "booking.canceled")
+    assert_not_nil notif
+    assert_equal ride, notif.notifiable
+    assert_nothing_raised do
+      NotificationDeliveryJob.perform_now(notif.id)
+    end
+    assert notif.reload.delivered?
+  end
+
+  test "driver account deletion preserves passenger cancellation notification and allows delivery" do
+    driver = User.create!(
+      email_address: "driver_del_notif@example.com",
+      password: "password",
+      first_name: "Diego",
+      last_name: "Driver",
+      facebook_profile_url: "https://facebook.com/diego"
+    )
+    passenger = users(:two)
+
+    ride = RidePost.create!(
+      user: driver,
+      origin: locations(:one),
+      destination: locations(:two),
+      post_type: :offering,
+      seats: 3,
+      departure_time: 2.days.from_now,
+      expected_arrival_at: 2.days.from_now + 2.hours,
+      status: :active
+    )
+    Booking.create!(ride_post: ride, passenger: passenger, status: :accepted)
+
+    driver.destroy!
+
+    notif = passenger.received_notifications.find_by(event_name: "ride.canceled")
+    assert_not_nil notif
+    assert_nothing_raised do
+      NotificationDeliveryJob.perform_now(notif.id)
+    end
+    assert notif.reload.delivered?
+  end
 end

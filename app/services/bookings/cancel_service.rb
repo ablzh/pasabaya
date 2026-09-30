@@ -74,7 +74,7 @@ module Bookings
         Notification.find_or_create_by!(delivery_key: delivery_key) do |n|
           n.recipient = recipient
           n.actor = actor
-          n.notifiable = b
+          n.notifiable = ride
           n.event_name = "booking.canceled"
           n.delivery_status = :pending
         end

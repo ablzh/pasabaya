@@ -15,11 +15,15 @@ class NotificationsController < ApplicationController
 
     case @notification.notifiable
     when Booking
-      redirect_to ride_post_path(@notification.notifiable.ride_post)
+      if (ride = @notification.notifiable.ride_post)
+        redirect_to ride_post_path(ride)
+      else
+        redirect_to ride_posts_path, notice: "The trip is no longer available."
+      end
     when RidePost
       redirect_to ride_post_path(@notification.notifiable)
     else
-      redirect_to notifications_path
+      redirect_to ride_posts_path, notice: "The trip is no longer available."
     end
   end
 

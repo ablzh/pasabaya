@@ -188,4 +188,42 @@ class RidePostsControllerTest < ActionDispatch::IntegrationTest
       assert_match /#{@ride_post.user.first_name}/, elements.first["content"]
     end
   end
+
+  test "owner can cancel their trip" do
+    assert_not @ride_post.canceled?
+
+    patch cancel_ride_post_url(@ride_post)
+
+    assert_redirected_to ride_post_url(@ride_post)
+    assert_equal "Trip was successfully canceled.", flash[:notice]
+    assert @ride_post.reload.canceled?
+  end
+
+  test "show page displays cancel trip button for owner" do
+    get ride_post_url(@ride_post)
+    assert_response :success
+    assert_select "form[action='#{cancel_ride_post_path(@ride_post)}']" do
+      assert_select "button", text: "Cancel Trip"
+    end
+  end
+
+  test "handles cancel service error gracefully" do
+    original_call = RidePosts::CancelService.method(:call)
+    RidePosts::CancelService.define_singleton_method(:call) do |*|
+      raise RidePosts::CancelService::Error, "Cannot cancel this trip"
+    end
+
+    patch cancel_ride_post_url(@ride_post)
+    assert_redirected_to ride_post_url(@ride_post)
+    assert_equal "Cannot cancel this trip", flash[:alert]
+  ensure
+    RidePosts::CancelService.define_singleton_method(:call, original_call)
+  end
+
+  test "non-owner cannot cancel someone else's trip" do
+    other_post = ride_posts(:two)
+    patch cancel_ride_post_url(other_post)
+    assert_response :not_found
+    assert_not other_post.reload.canceled?
+  end
 end

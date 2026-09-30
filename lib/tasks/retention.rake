@@ -10,3 +10,13 @@ namespace :retention do
     puts "Revoked expired community memberships."
   end
 end
+
+namespace :db do
+  namespace :restore do
+    desc "Post-restoration workflow: run migrations and automated retention scrubbing before serving traffic"
+    task finish: :environment do
+      Rake::Task["db:migrate"].invoke if Rake::Task.task_defined?("db:migrate")
+      Rake::Task["retention:scrub"].invoke
+    end
+  end
+end

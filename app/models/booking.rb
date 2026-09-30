@@ -3,7 +3,7 @@ class Booking < ApplicationRecord
   belongs_to :passenger, class_name: "User"
   belongs_to :canceled_by, class_name: "User", optional: true
 
-  has_many :notifications, as: :notifiable, dependent: :destroy
+  has_many :notifications, as: :notifiable
 
   enum :status, { pending: 0, accepted: 1, declined: 2, canceled: 3, expired: 4 }, default: :pending
 
