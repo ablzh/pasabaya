@@ -226,4 +226,20 @@ class RidePostsControllerTest < ActionDispatch::IntegrationTest
     assert_response :not_found
     assert_not other_post.reload.canceled?
   end
+
+  test "authorized participant sees chat tab and messages container on show" do
+    get ride_post_url(@ride_post)
+    assert_response :success
+    assert_select "div[data-controller*='trip-view']"
+    assert_select "button[data-tab-name='chat']"
+    assert_select "div[data-trip-view-target='chatPane']"
+  end
+
+  test "unauthorized viewer does not see chat tab on show" do
+    sign_out
+    get ride_post_url(@ride_post)
+    assert_response :success
+    assert_select "button[data-tab-name='chat']", 0
+    assert_select "div[data-trip-view-target='chatPane']", 0
+  end
 end

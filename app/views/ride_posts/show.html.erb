@@ -1,7 +1,7 @@
-<div class="max-w-2xl mx-auto my-8 px-4 sm:px-0">
+<div class="max-w-4xl mx-auto my-8 px-4 sm:px-6">
   <%# Header Section %>
-  <div class="mb-8">
-    <%= link_to ride_posts_path, class: "text-sm text-neutral-500 hover:text-neutral-700 flex items-center gap-1 mb-4" do %>
+  <div class="mb-6">
+    <%= link_to ride_posts_path, class: "text-sm text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300 inline-flex items-center gap-1.5 mb-4 font-medium transition-colors" do %>
       <svg class="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
       </svg>
@@ -17,10 +17,10 @@
 
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
       <div>
-        <h1 class="text-3xl font-extrabold text-neutral-900 dark:text-white tracking-tight">
-          <%= @ride_post.origin.name %> <span class="text-neutral-400">&rarr;</span> <%= @ride_post.destination.name %>
+        <h1 class="text-3xl sm:text-4xl font-extrabold text-neutral-900 dark:text-white tracking-tight">
+          <%= @ride_post.origin.name %> <span class="text-neutral-400 font-normal">&rarr;</span> <%= @ride_post.destination.name %>
         </h1>
-        <div class="mt-2 flex flex-wrap items-center gap-2">
+        <div class="mt-2.5 flex flex-wrap items-center gap-2">
           <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-bold uppercase tracking-wider
             <%= @ride_post.offering? ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400' : 'bg-sky-100 text-sky-700 dark:bg-sky-500/10 dark:text-sky-400' %>">
             <%= @ride_post.post_type %>
@@ -56,297 +56,404 @@
             </span>
           <% end %>
 
-          <span class="text-sm text-neutral-500">
+          <span class="text-xs text-neutral-500 dark:text-neutral-400 ml-1">
             Posted <%= time_ago_in_words(@ride_post.created_at) %> ago
           </span>
         </div>
       </div>
 
       <% if Current.user == @ride_post.user %>
-        <div class="flex items-center gap-2">
+        <div class="flex items-center gap-2 shrink-0">
           <%= render Buttons::Component.new(
-                     text: "Edit",
+                     text: "Edit Post",
                      href: edit_ride_post_path(@ride_post),
                      variant: :secondary,
                      size: :sm) %>
-          <% if !@ride_post.canceled? && !@ride_post.completed? %>
-            <%= button_to "Cancel Trip", cancel_ride_post_path(@ride_post),
-                          method: :patch,
-                          data: { turbo_confirm: "Are you sure you want to cancel this entire trip? All accepted and pending passengers will be notified." },
-                          class: "px-3 py-1.5 text-xs font-semibold rounded-lg bg-red-50 hover:bg-red-100 text-red-600 dark:bg-red-950/20 dark:hover:bg-red-950/40 dark:text-red-400 transition-colors cursor-pointer" %>
-          <% end %>
         </div>
       <% end %>
     </div>
   </div>
 
-  <%# Main Content Grid %>
-  <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-    <div class="bg-white dark:bg-neutral-900 p-6 rounded-2xl border border-neutral-100 dark:border-white/5 shadow-sm">
-      <p class="text-[10px] font-bold text-neutral-400 uppercase tracking-widest mb-1">Departure</p>
-      <% if @ride_post.regular? %>
-        <p class="text-lg font-bold text-neutral-900 dark:text-white">
-          Regular/Flexible Ride
-        </p>
-      <% else %>
-        <p class="text-lg font-bold text-neutral-900 dark:text-white">
-          <%= @ride_post.departure_time.strftime("%a, %b %d") %>
-        </p>
-        <p class="text-sm text-blue-600 font-medium"><%= @ride_post.departure_time.strftime("%I:%M %p") %></p>
-        <% if @ride_post.expected_arrival_at.present? %>
-          <p class="text-xs text-neutral-400 mt-1">Arrival: <%= @ride_post.expected_arrival_at.strftime("%I:%M %p") %></p>
-        <% end %>
-      <% end %>
-    </div>
+  <% can_chat = Current.user && @ride_post.user_authorized_for_chat?(Current.user) %>
 
-    <div class="bg-white dark:bg-neutral-900 p-6 rounded-2xl border border-neutral-100 dark:border-white/5 shadow-sm">
-      <p class="text-[10px] font-bold text-neutral-400 uppercase tracking-widest mb-1">Capacity</p>
-      <p class="text-lg font-bold text-neutral-900 dark:text-white">
-        <% if @ride_post.offering? && @ride_post.remaining_seats.present? %>
-          <%= @ride_post.remaining_seats %> / <%= @ride_post.seats %>
-        <% else %>
-          <%= @ride_post.seats %>
-        <% end %>
-      </p>
-      <p class="text-sm text-neutral-500 font-medium">Seats available</p>
-    </div>
+  <div data-controller="<%= 'trip-view' if can_chat %>" data-trip-view-default-tab-value="<%= params[:tab] == 'chat' ? 'chat' : 'details' %>">
+    <% if can_chat %>
+      <%# Tab Switcher for Authorized Participants %>
+      <div class="flex items-center p-1 rounded-2xl bg-neutral-100 dark:bg-neutral-800/80 mb-6 border border-neutral-200/60 dark:border-neutral-700/60 max-w-sm sm:max-w-md mx-auto" role="tablist">
+        <button type="button"
+                data-action="trip-view#showDetails"
+                data-trip-view-target="tabBtn"
+                data-tab-name="details"
+                class="flex-1 py-2 px-4 rounded-xl text-xs sm:text-sm font-semibold transition-all flex items-center justify-center gap-2 cursor-pointer"
+                role="tab"
+                aria-selected="true">
+          <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+          </svg>
+          <span>Trip Details</span>
+        </button>
 
-    <div class="bg-white dark:bg-neutral-900 p-6 rounded-2xl border border-neutral-100 dark:border-white/5 shadow-sm">
-      <p class="text-[10px] font-bold text-neutral-400 uppercase tracking-widest mb-1">Status</p>
-      <p class="text-lg font-bold text-neutral-900 dark:text-white capitalize">
-        <%= @ride_post.status %>
-      </p>
-      <p class="text-sm text-neutral-500 font-medium">
-        <%= @ride_post.full? ? "Fully booked" : "Accepting requests" %>
-      </p>
-    </div>
-  </div>
-
-  <%# Notes Section %>
-  <% if @ride_post.notes.present? %>
-    <div class="mb-8">
-      <h2 class="text-sm font-bold text-neutral-400 uppercase tracking-widest mb-4"><%= possessive(@ride_post.user.first_name) %> Notes</h2>
-      <div class="prose prose-neutral dark:prose-invert max-w-none bg-neutral-50 dark:bg-neutral-800/50 p-6 rounded-2xl">
-        <%= @ride_post.notes %>
+        <button type="button"
+                data-action="trip-view#showChat"
+                data-trip-view-target="tabBtn"
+                data-tab-name="chat"
+                class="flex-1 py-2 px-4 rounded-xl text-xs sm:text-sm font-semibold transition-all flex items-center justify-center gap-2 cursor-pointer"
+                role="tab"
+                aria-selected="false">
+          <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 01-2.555-.337A5.972 5.972 0 015.41 20.97a.75.75 0 01-1.154-.755c.106-.777.37-1.503.766-2.148A7.776 7.776 0 013 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25z" />
+          </svg>
+          <span>Live Chat</span>
+          <% if @ride_post.chat_writable? %>
+            <span class="size-2 rounded-full bg-emerald-500 animate-pulse"></span>
+          <% end %>
+        </button>
       </div>
-    </div>
-  <% end %>
-
-  <%# Cost Sharing Legal Notice %>
-  <div class="mb-8 p-4 rounded-2xl bg-neutral-50 dark:bg-neutral-800/40 border border-neutral-100 dark:border-white/5 text-xs text-neutral-500">
-    Pasabaya is a community carpool matching tool. Commercial passenger transport and fixed fares are prohibited on the platform.
-  </div>
-
-  <%# Poster Profile Card %>
-  <div class="bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 p-8 rounded-3xl shadow-xl flex flex-col items-center text-center mb-8">
-    <%= link_to user_path(@ride_post.user), class: "group flex flex-col items-center mb-1" do %>
-      <div class="mb-4">
-        <%= user_avatar(@ride_post.user, classes: "h-16 w-16 text-xl border-4 border-white/10 dark:border-neutral-900/10 transition-transform duration-200 group-hover:scale-105") %>
-      </div>
-      <h3 class="text-xl font-bold"><%= @ride_post.user.first_name %> <%= @ride_post.user.last_name %></h3>
     <% end %>
-    <p class="text-neutral-400 dark:text-neutral-500 text-sm max-w-sm">
-      <%= @ride_post.offering? ? "Driver" : "Passenger" %> &bull; <%= @ride_post.user.first_name %> <%= @ride_post.user.last_name %>
-    </p>
-  </div>
 
-  <%# Booking & Poster Action Section %>
-  <% if @ride_post.offering? %>
-    <%# Driver View: Manage Requests %>
-    <% if Current.user == @ride_post.user %>
-      <div class="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 p-6 rounded-3xl shadow-sm mb-8 space-y-6">
-        <h3 class="text-lg font-bold text-neutral-900 dark:text-white">Seat Requests & Confirmed Passengers</h3>
-
-        <% pending_bookings = @ride_post.bookings.pending.includes(:passenger) %>
-        <% accepted_bookings = @ride_post.bookings.accepted.includes(:passenger) %>
-
-        <div>
-          <h4 class="text-xs font-bold uppercase tracking-wider text-neutral-400 mb-3">Pending Requests (<%= pending_bookings.count %>)</h4>
-          <% if pending_bookings.any? %>
-            <div class="space-y-3">
-              <% pending_bookings.each do |b| %>
-                <div class="flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-xl border border-neutral-100 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-800/50 gap-3">
-                  <div class="flex items-center gap-3">
-                    <%= user_avatar(b.passenger, classes: "h-10 w-10 text-sm") %>
-                    <div>
-                      <p class="font-bold text-sm text-neutral-900 dark:text-white"><%= b.passenger.first_name %> <%= b.passenger.last_name %></p>
-                      <% if b.pickup_notes.present? %>
-                        <p class="text-xs text-neutral-500 mt-0.5">"<%= b.pickup_notes %>"</p>
-                      <% end %>
-                    </div>
-                  </div>
-                  <div class="flex items-center gap-2 self-end sm:self-auto">
-                    <%= button_to "Accept", accept_booking_path(b), method: :patch, class: "px-3 py-1.5 text-xs font-semibold rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 transition-colors" %>
-                    <%= button_to "Decline", decline_booking_path(b), method: :patch, class: "px-3 py-1.5 text-xs font-semibold rounded-lg bg-neutral-200 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-300 transition-colors" %>
-                  </div>
-                </div>
-              <% end %>
-            </div>
+    <%# PANE 1: TRIP DETAILS %>
+    <div data-trip-view-target="detailsPane" class="space-y-6">
+      <%# Main Stat Cards %>
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
+        <div class="bg-white dark:bg-neutral-900 p-5 sm:p-6 rounded-2xl border border-neutral-100 dark:border-white/5 shadow-xs">
+          <p class="text-[10px] font-bold text-neutral-400 uppercase tracking-widest mb-1">Departure</p>
+          <% if @ride_post.regular? %>
+            <p class="text-base sm:text-lg font-bold text-neutral-900 dark:text-white">
+              Regular / Flexible
+            </p>
           <% else %>
-            <p class="text-xs text-neutral-500 italic">No pending requests.</p>
+            <p class="text-base sm:text-lg font-bold text-neutral-900 dark:text-white">
+              <%= @ride_post.departure_time.strftime("%a, %b %d") %>
+            </p>
+            <p class="text-sm text-blue-600 dark:text-blue-400 font-semibold"><%= @ride_post.departure_time.strftime("%I:%M %p") %></p>
+            <% if @ride_post.expected_arrival_at.present? %>
+              <p class="text-xs text-neutral-400 mt-1">Arrival: <%= @ride_post.expected_arrival_at.strftime("%I:%M %p") %></p>
+            <% end %>
           <% end %>
         </div>
 
-        <div class="border-t border-neutral-100 dark:border-neutral-800 pt-4">
-          <h4 class="text-xs font-bold uppercase tracking-wider text-neutral-400 mb-3">Confirmed Passengers (<%= accepted_bookings.count %> / <%= @ride_post.seats %>)</h4>
-          <% if accepted_bookings.any? %>
-            <div class="space-y-3">
-              <% accepted_bookings.each do |b| %>
-                <div class="flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-xl border border-emerald-100 dark:border-emerald-900/30 bg-emerald-50/50 dark:bg-emerald-950/20 gap-3">
-                  <div class="flex items-center gap-3">
-                    <%= user_avatar(b.passenger, classes: "h-10 w-10 text-sm") %>
-                    <div>
-                      <p class="font-bold text-sm text-neutral-900 dark:text-white"><%= b.passenger.first_name %> <%= b.passenger.last_name %></p>
-                      <% if b.pickup_notes.present? %>
-                        <p class="text-xs text-neutral-500 mt-0.5">"<%= b.pickup_notes %>"</p>
-                      <% end %>
-                    </div>
-                  </div>
-                  <div class="self-end sm:self-auto">
-                    <%= button_to "Cancel Seat", cancel_booking_path(b), method: :patch, data: { turbo_confirm: "Are you sure you want to cancel this passenger's seat?" }, class: "px-3 py-1.5 text-xs font-semibold rounded-lg text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20 transition-colors" %>
-                  </div>
-                </div>
-              <% end %>
-            </div>
-          <% else %>
-            <p class="text-xs text-neutral-500 italic">No confirmed passengers yet.</p>
-          <% end %>
+        <div class="bg-white dark:bg-neutral-900 p-5 sm:p-6 rounded-2xl border border-neutral-100 dark:border-white/5 shadow-xs">
+          <p class="text-[10px] font-bold text-neutral-400 uppercase tracking-widest mb-1">Capacity</p>
+          <p class="text-base sm:text-lg font-bold text-neutral-900 dark:text-white">
+            <% if @ride_post.offering? && @ride_post.remaining_seats.present? %>
+              <%= @ride_post.remaining_seats %> / <%= @ride_post.seats %>
+            <% else %>
+              <%= @ride_post.seats %>
+            <% end %>
+          </p>
+          <p class="text-xs sm:text-sm text-neutral-500 font-medium">Seats available</p>
+        </div>
+
+        <div class="bg-white dark:bg-neutral-900 p-5 sm:p-6 rounded-2xl border border-neutral-100 dark:border-white/5 shadow-xs">
+          <p class="text-[10px] font-bold text-neutral-400 uppercase tracking-widest mb-1">Status</p>
+          <p class="text-base sm:text-lg font-bold text-neutral-900 dark:text-white capitalize">
+            <%= @ride_post.status %>
+          </p>
+          <p class="text-xs sm:text-sm text-neutral-500 font-medium">
+            <%= @ride_post.full? ? "Fully booked" : "Accepting requests" %>
+          </p>
         </div>
       </div>
-    <% else %>
-      <%# Passenger View: Book a Seat %>
-      <div class="bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 p-8 rounded-3xl shadow-xl flex flex-col items-center text-center mb-8">
-        <% if Current.user.present? %>
-          <% existing_booking = @ride_post.bookings.find_by(passenger: Current.user) %>
-          <% if existing_booking&.pending? %>
-            <div class="my-4 p-4 rounded-xl bg-amber-500/20 border border-amber-500/40 text-amber-200 dark:text-amber-800">
-              <p class="font-bold text-sm">Seat Requested</p>
-              <p class="text-xs mt-1">Waiting for <%= @ride_post.user.first_name %> to accept your request.</p>
+
+      <%# PRIMARY ACTION SECTION (Prominently placed right under stats) %>
+      <% if @ride_post.offering? %>
+        <% if Current.user == @ride_post.user %>
+          <%# DRIVER MANAGEMENT: Pending Requests & Confirmed Passengers %>
+          <div class="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 p-6 rounded-3xl shadow-xs space-y-6">
+            <h2 class="text-base sm:text-lg font-bold text-neutral-900 dark:text-white">Seat Requests &amp; Confirmed Passengers</h2>
+
+            <% pending_bookings = @ride_post.bookings.pending.includes(:passenger) %>
+            <% accepted_bookings = @ride_post.bookings.accepted.includes(:passenger) %>
+
+            <div>
+              <h3 class="text-xs font-bold uppercase tracking-wider text-neutral-400 mb-3">Pending Requests (<%= pending_bookings.count %>)</h3>
+              <% if pending_bookings.any? %>
+                <div class="space-y-3">
+                  <% pending_bookings.each do |b| %>
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-xl border border-neutral-100 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-800/50 gap-3">
+                      <div class="flex items-center gap-3">
+                        <%= user_avatar(b.passenger, classes: "h-10 w-10 text-sm") %>
+                        <div>
+                          <p class="font-bold text-sm text-neutral-900 dark:text-white"><%= b.passenger.first_name %> <%= b.passenger.last_name %></p>
+                          <% if b.pickup_notes.present? %>
+                            <p class="text-xs text-neutral-500 mt-0.5">"<%= b.pickup_notes %>"</p>
+                          <% end %>
+                        </div>
+                      </div>
+                      <div class="flex items-center gap-2 self-end sm:self-auto">
+                        <%= button_to "Accept", accept_booking_path(b), method: :patch, class: "px-3.5 py-1.5 text-xs font-semibold rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 transition-colors cursor-pointer" %>
+                        <%= button_to "Decline", decline_booking_path(b), method: :patch, class: "px-3.5 py-1.5 text-xs font-semibold rounded-lg bg-neutral-200 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-300 dark:hover:bg-neutral-600 transition-colors cursor-pointer" %>
+                      </div>
+                    </div>
+                  <% end %>
+                </div>
+              <% else %>
+                <p class="text-xs text-neutral-500 italic">No pending requests at the moment.</p>
+              <% end %>
             </div>
-            <%= button_to "Cancel Request", cancel_booking_path(existing_booking), method: :patch, class: "px-4 py-2 text-xs font-semibold rounded-xl bg-red-600 text-white hover:bg-red-700 transition-colors" %>
-          <% elsif existing_booking&.accepted? %>
-            <div class="my-4 p-4 rounded-xl bg-emerald-500/20 border border-emerald-500/40 text-emerald-200 dark:text-emerald-800">
-              <p class="font-bold text-sm">Seat Confirmed!</p>
-              <p class="text-xs mt-1">Your seat is reserved on this carpool.</p>
+
+            <div class="border-t border-neutral-100 dark:border-neutral-800 pt-4">
+              <h3 class="text-xs font-bold uppercase tracking-wider text-neutral-400 mb-3">Confirmed Passengers (<%= accepted_bookings.count %> / <%= @ride_post.seats %>)</h3>
+              <% if accepted_bookings.any? %>
+                <div class="space-y-3">
+                  <% accepted_bookings.each do |b| %>
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-xl border border-emerald-100 dark:border-emerald-900/30 bg-emerald-50/50 dark:bg-emerald-950/20 gap-3">
+                      <div class="flex items-center gap-3">
+                        <%= user_avatar(b.passenger, classes: "h-10 w-10 text-sm") %>
+                        <div>
+                          <p class="font-bold text-sm text-neutral-900 dark:text-white"><%= b.passenger.first_name %> <%= b.passenger.last_name %></p>
+                          <% if b.pickup_notes.present? %>
+                            <p class="text-xs text-neutral-500 mt-0.5">"<%= b.pickup_notes %>"</p>
+                          <% end %>
+                        </div>
+                      </div>
+                      <div class="self-end sm:self-auto">
+                        <%= button_to "Cancel Seat", cancel_booking_path(b), method: :patch, data: { turbo_confirm: "Are you sure you want to cancel this passenger's seat?" }, class: "px-3 py-1.5 text-xs font-semibold rounded-lg text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20 transition-colors cursor-pointer" %>
+                      </div>
+                    </div>
+                  <% end %>
+                </div>
+              <% else %>
+                <p class="text-xs text-neutral-500 italic">No confirmed passengers yet.</p>
+              <% end %>
             </div>
-            <%= button_to "Cancel Booking", cancel_booking_path(existing_booking), method: :patch, data: { turbo_confirm: "Are you sure you want to cancel your seat?" }, class: "px-4 py-2 text-xs font-semibold rounded-xl bg-neutral-700 text-white hover:bg-neutral-600 transition-colors" %>
-          <% elsif @ride_post.bookable? %>
-            <% if !@ride_post.authorized_for_booking?(Current.user) %>
-              <% if @ride_post.ladies_only? && !Current.user.female? %>
-                <div class="my-4 p-4 rounded-xl bg-rose-500/20 border border-rose-500/40 text-rose-200 dark:text-rose-800">
-                  <p class="font-bold text-sm">Ladies Only Carpool</p>
-                  <p class="text-xs mt-1">This ride is reserved for female passengers.</p>
+          </div>
+        <% else %>
+          <%# PASSENGER BOOKING CARD %>
+          <div class="bg-neutral-900 dark:bg-neutral-800/90 text-white p-6 sm:p-8 rounded-3xl shadow-lg flex flex-col items-center text-center">
+            <% if Current.user.present? %>
+              <% existing_booking = @ride_post.bookings.find_by(passenger: Current.user) %>
+              <% if existing_booking&.pending? %>
+                <div class="my-2 p-4 rounded-2xl bg-amber-500/20 border border-amber-500/40 text-amber-200 max-w-md w-full">
+                  <p class="font-bold text-sm">Seat Requested</p>
+                  <p class="text-xs mt-1">Waiting for <%= @ride_post.user.first_name %> to accept your request.</p>
                 </div>
-              <% elsif @ride_post.hub_only? && !Current.user.verified_member_of?(@ride_post.community_id) %>
-                <div class="my-4 p-4 rounded-xl bg-purple-500/20 border border-purple-500/40 text-purple-200 dark:text-purple-800">
-                  <p class="font-bold text-sm"><%= @ride_post.community&.name %> Hub Only</p>
-                  <p class="text-xs mt-1">Please verify your institutional email in <a href="<%= communities_path %>" class="underline font-semibold">Hubs</a> to request a seat.</p>
+                <div class="mt-4">
+                  <%= button_to "Cancel Request", cancel_booking_path(existing_booking), method: :patch, class: "px-4 py-2 text-xs font-semibold rounded-xl bg-red-600 text-white hover:bg-red-700 transition-colors cursor-pointer" %>
                 </div>
-              <% elsif Current.user.booking_frozen? %>
-                <div class="my-4 p-4 rounded-xl bg-red-500/20 border border-red-500/40 text-red-200 dark:text-red-800">
-                  <p class="font-bold text-sm">Account Frozen</p>
-                  <p class="text-xs mt-1">Your account is temporarily unable to request new bookings.</p>
+              <% elsif existing_booking&.accepted? %>
+                <div class="my-2 p-4 rounded-2xl bg-emerald-500/20 border border-emerald-500/40 text-emerald-200 max-w-md w-full">
+                  <p class="font-bold text-sm">Seat Confirmed!</p>
+                  <p class="text-xs mt-1">Your seat is reserved on this carpool. Use Live Chat to coordinate pickup!</p>
                 </div>
+                <div class="mt-4 flex gap-3">
+                  <button type="button" data-action="trip-view#showChat" class="px-4 py-2 text-xs font-semibold rounded-xl bg-blue-600 text-white hover:bg-blue-700 transition-colors cursor-pointer">
+                    Open Trip Chat
+                  </button>
+                  <%= button_to "Cancel Booking", cancel_booking_path(existing_booking), method: :patch, data: { turbo_confirm: "Are you sure you want to cancel your seat?" }, class: "px-4 py-2 text-xs font-semibold rounded-xl bg-neutral-700 text-white hover:bg-neutral-600 transition-colors cursor-pointer" %>
+                </div>
+              <% elsif @ride_post.bookable? %>
+                <% if !@ride_post.authorized_for_booking?(Current.user) %>
+                  <% if @ride_post.ladies_only? && !Current.user.female? %>
+                    <div class="my-2 p-4 rounded-2xl bg-rose-500/20 border border-rose-500/40 text-rose-200 max-w-md w-full">
+                      <p class="font-bold text-sm">Ladies Only Carpool</p>
+                      <p class="text-xs mt-1">This ride is reserved for female passengers.</p>
+                    </div>
+                  <% elsif @ride_post.hub_only? && !Current.user.verified_member_of?(@ride_post.community_id) %>
+                    <div class="my-2 p-4 rounded-2xl bg-purple-500/20 border border-purple-500/40 text-purple-200 max-w-md w-full">
+                      <p class="font-bold text-sm"><%= @ride_post.community&.name %> Hub Only</p>
+                      <p class="text-xs mt-1">Please verify your institutional email in <%= link_to "Hubs", communities_path, class: "underline font-semibold" %> to request a seat.</p>
+                    </div>
+                  <% elsif Current.user.booking_frozen? %>
+                    <div class="my-2 p-4 rounded-2xl bg-red-500/20 border border-red-500/40 text-red-200 max-w-md w-full">
+                      <p class="font-bold text-sm">Account Frozen</p>
+                      <p class="text-xs mt-1">Your account is temporarily unable to request new bookings.</p>
+                    </div>
+                  <% end %>
+                <% else %>
+                  <h2 class="text-lg font-bold mb-1">Request a Seat</h2>
+                  <p class="text-neutral-300 text-xs sm:text-sm mb-4 max-w-sm">
+                    Request 1 seat on this carpool. The driver will review your profile to confirm.
+                  </p>
+                  <%= form_with(url: ride_post_bookings_path(@ride_post), method: :post, class: "w-full max-w-sm space-y-3") do |f| %>
+                    <%= f.text_field "booking[pickup_notes]", placeholder: "Pickup point or small note (optional)...", class: "w-full px-4 py-2.5 rounded-xl text-sm bg-neutral-800 text-white border border-neutral-700 focus:ring-2 focus:ring-blue-500" %>
+                    <div class="flex justify-center">
+                      <%= render Buttons::Component.new(
+                                 text: "Request Seat",
+                                 type: "submit",
+                                 style: :fancy,
+                                 size: :lg) %>
+                    </div>
+                  <% end %>
+                <% end %>
+              <% elsif @ride_post.full? %>
+                <p class="text-neutral-300 text-sm my-2">This ride is currently fully booked.</p>
+              <% else %>
+                <p class="text-neutral-300 text-sm my-2">This ride offer is currently not accepting bookings.</p>
               <% end %>
             <% else %>
-              <p class="text-neutral-400 dark:text-neutral-500 text-sm mb-4 max-w-sm">
-                Request 1 seat on this carpool. The driver will review your profile to confirm.
+              <h2 class="text-lg font-bold mb-1">Join this Carpool</h2>
+              <p class="text-neutral-300 text-xs sm:text-sm mb-5 max-w-sm">
+                Sign in to your Pasabaya account to request a seat on this carpool.
               </p>
-              <%= form_with(url: ride_post_bookings_path(@ride_post), method: :post, class: "w-full max-w-sm space-y-3") do |f| %>
-                <%= f.text_field "booking[pickup_notes]", placeholder: "Pickup point or small note (optional)...", class: "w-full px-4 py-2.5 rounded-xl text-sm bg-neutral-800 dark:bg-neutral-100 text-white dark:text-neutral-900 border border-neutral-700 dark:border-neutral-300 focus:ring-blue-500" %>
-                <div class="flex justify-center">
-                  <%= render Buttons::Component.new(
-                             text: "Request Seat",
-                             type: "submit",
-                             style: :fancy,
-                             size: :lg) %>
-                </div>
-              <% end %>
+              <%= render Buttons::Component.new(
+                         text: "Login to Request Seat",
+                         href: new_session_path(return_to: request.path),
+                         style: :fancy,
+                         size: :lg) %>
             <% end %>
-          <% elsif @ride_post.full? %>
-            <p class="text-neutral-400 dark:text-neutral-500 text-sm my-4">This ride is fully booked.</p>
-          <% else %>
-            <p class="text-neutral-400 dark:text-neutral-500 text-sm my-4">This ride offer is currently not accepting bookings.</p>
-          <% end %>
-        <% else %>
-          <p class="text-neutral-400 dark:text-neutral-500 text-sm mb-6 max-w-sm">
-            Sign in to your Pasabaya account to request a seat on this carpool.
-          </p>
-          <%= render Buttons::Component.new(
-                     text: "Login to Request Seat",
-                     href: new_session_path(return_to: request.path),
-                     style: :fancy,
-                     size: :lg) %>
+          </div>
         <% end %>
+      <% end %>
+
+      <%# UNIFIED DRIVER / POSTER PROFILE CARD %>
+      <div class="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 p-6 sm:p-7 rounded-3xl shadow-xs">
+        <div class="flex flex-col sm:flex-row items-center sm:items-start gap-5 text-center sm:text-left">
+          <%= link_to user_path(@ride_post.user), class: "group shrink-0" do %>
+            <%= user_avatar(@ride_post.user, classes: "size-16 sm:size-18 text-xl border-2 border-neutral-100 dark:border-neutral-800 transition-transform duration-200 group-hover:scale-105") %>
+          <% end %>
+
+          <div class="flex-1 min-w-0">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div>
+                <span class="text-[10px] font-bold uppercase tracking-wider text-neutral-400">
+                  <%= @ride_post.offering? ? "Driver" : "Passenger" %>
+                </span>
+                <h3 class="text-xl font-bold text-neutral-900 dark:text-white">
+                  <%= link_to user_path(@ride_post.user), class: "hover:underline" do %>
+                    <%= @ride_post.user.first_name %> <%= @ride_post.user.last_name %>
+                  <% end %>
+                </h3>
+                <p class="text-xs text-neutral-500 mt-0.5">
+                  Member since <%= @ride_post.user.created_at.strftime("%B %Y") %>
+                </p>
+              </div>
+
+              <div class="flex items-center gap-2 self-center sm:self-start">
+                <% if @ride_post.user.facebook_profile_url.present? %>
+                  <%= render Buttons::Component.new(
+                             text: Current.user.present? ? "Facebook Profile" : "Login to View Profile",
+                             href: Current.user.present? ? @ride_post.user.facebook_profile_url : new_session_path(return_to: request.path),
+                             variant: :secondary,
+                             size: :xs,
+                             target: Current.user.present? ? "_blank" : nil) %>
+                <% end %>
+              </div>
+            </div>
+
+            <div class="mt-3 flex flex-wrap items-center justify-center sm:justify-start gap-1.5">
+              <% @ride_post.user.verified_communities.each do |comm| %>
+                <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
+                  <svg class="size-3" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
+                  <%= comm.name %>
+                </span>
+              <% end %>
+
+              <% if @ride_post.user.female? %>
+                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-pink-50 text-pink-700 dark:bg-pink-950/40 dark:text-pink-300 border border-pink-200 dark:border-pink-800/40">
+                  Female Profile
+                </span>
+              <% end %>
+            </div>
+          </div>
+        </div>
       </div>
 
+      <%# Notes Section %>
+      <% if @ride_post.notes.present? %>
+        <div class="bg-white dark:bg-neutral-900 border border-neutral-100 dark:border-white/5 p-6 rounded-3xl shadow-xs">
+          <h2 class="text-xs font-bold text-neutral-400 uppercase tracking-widest mb-3"><%= possessive(@ride_post.user.first_name) %> Notes</h2>
+          <div class="prose prose-neutral dark:prose-invert max-w-none text-sm text-neutral-700 dark:text-neutral-300 leading-relaxed whitespace-pre-wrap">
+            <%= @ride_post.notes %>
+          </div>
+        </div>
+      <% end %>
+
+      <%# Cost Sharing Legal Notice %>
+      <div class="p-4 rounded-2xl bg-neutral-50 dark:bg-neutral-800/40 border border-neutral-100 dark:border-white/5 text-xs text-neutral-500">
+        Pasabaya is a community carpool matching tool. Commercial passenger transport and fixed fares are prohibited on the platform.
+      </div>
+
+      <%# Review Link %>
       <% if Current.user && @ride_post.participant?(Current.user) && (@ride_post.departure_time.blank? || Time.current >= @ride_post.departure_time) %>
-        <div class="text-center mb-6">
+        <div class="text-center pt-2">
           <%= link_to "Review Trip / Report No-Show", new_ride_post_review_path(@ride_post), class: "text-xs font-semibold text-neutral-500 hover:text-neutral-900 dark:hover:text-white underline" %>
         </div>
       <% end %>
-    <% end %>
 
-    <%# Private Trip Chat (Driver & Confirmed Passengers) %>
-    <% if Current.user && @ride_post.user_authorized_for_chat?(Current.user) %>
-      <div class="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 p-6 rounded-3xl shadow-sm mb-8 space-y-4">
-        <div class="flex items-center justify-between pb-3 border-b border-neutral-100 dark:border-neutral-800">
+      <%# DANGER ZONE / TRIP MANAGEMENT (At the bottom, safely positioned) %>
+      <% if Current.user == @ride_post.user && !@ride_post.canceled? && !@ride_post.completed? %>
+        <div class="mt-8 pt-6 border-t border-neutral-100 dark:border-neutral-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 rounded-2xl bg-red-50/40 dark:bg-red-950/10 border border-red-100 dark:border-red-900/20">
           <div>
-            <h3 class="text-base font-bold text-neutral-900 dark:text-white flex items-center gap-2">
-              <svg xmlns="http://www.w3.org/2000/svg" class="size-4 text-blue-600 dark:text-blue-400" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 01-2.555-.337A5.972 5.972 0 015.41 20.97a.75.75 0 01-1.154-.755c.106-.777.37-1.503.766-2.148A7.776 7.776 0 013 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25z" /></svg>
-              Private Trip Coordination Chat
-            </h3>
-            <p class="text-xs text-neutral-500">Visible only to the driver and confirmed carpool passengers.</p>
+            <h3 class="text-sm font-bold text-red-700 dark:text-red-400">Cancel Entire Trip</h3>
+            <p class="text-xs text-red-600/80 dark:text-red-400/70 mt-0.5">Canceling will notify all pending and confirmed passengers.</p>
           </div>
-          <% if @ride_post.chat_writable? %>
-            <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300">
-              <span class="size-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-              Live
-            </span>
+          <%= button_to "Cancel Trip", cancel_ride_post_path(@ride_post),
+                        method: :patch,
+                        data: { turbo_confirm: "Are you sure you want to cancel this entire trip? All accepted and pending passengers will be notified." },
+                        class: "px-4 py-2 text-xs font-semibold rounded-xl bg-red-600 hover:bg-red-700 text-white transition-colors cursor-pointer shrink-0" %>
+        </div>
+      <% end %>
+    </div>
+
+    <%# PANE 2: LIVE COORDINATION CHAT %>
+    <% if can_chat %>
+      <div data-trip-view-target="chatPane" class="hidden">
+        <div class="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-3xl shadow-sm overflow-hidden flex flex-col h-[560px] sm:h-[620px]" data-controller="chat-scroll">
+          <%# Chat Header %>
+          <div class="px-5 py-4 border-b border-neutral-100 dark:border-neutral-800 flex items-center justify-between bg-neutral-50/60 dark:bg-neutral-800/40">
+            <div class="flex items-center gap-3">
+              <div class="p-2 rounded-xl bg-blue-100 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 shrink-0">
+                <svg class="size-4.5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 01-2.555-.337A5.972 5.972 0 015.41 20.97a.75.75 0 01-1.154-.755c.106-.777.37-1.503.766-2.148A7.776 7.776 0 013 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25z" />
+                </svg>
+              </div>
+              <div>
+                <h2 class="text-sm sm:text-base font-bold text-neutral-900 dark:text-white leading-tight">
+                  Trip Coordination Chat
+                </h2>
+                <p class="text-xs text-neutral-500 mt-0.5">
+                  <%= @ride_post.origin.name %> &rarr; <%= @ride_post.destination.name %> &bull; <%= pluralize(@ride_post.participants.count, "participant") %>
+                </p>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-2">
+              <% if @ride_post.chat_writable? %>
+                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300">
+                  <span class="size-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                  Live
+                </span>
+              <% else %>
+                <span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-neutral-100 text-neutral-600 dark:bg-neutral-800 dark:text-neutral-400">
+                  Read-only
+                </span>
+              <% end %>
+            </div>
+          </div>
+
+          <%# Messages Stream %>
+          <% if @ride_post.chat_unlocked? %>
+            <%= turbo_stream_from [@ride_post, :chat], channel: "RideChatChannel" %>
+
+            <div id="chat_messages_list"
+                 data-chat-scroll-target="messages"
+                 class="flex-1 p-4 sm:p-6 overflow-y-auto space-y-3.5 bg-neutral-50/30 dark:bg-neutral-900/40">
+              <% if @ride_post.chat_messages.any? %>
+                <%= render partial: "chat_messages/chat_message", collection: @ride_post.chat_messages.recent_first %>
+              <% else %>
+                <div class="flex flex-col items-center justify-center h-full text-center py-12 text-neutral-400 dark:text-neutral-500 space-y-2">
+                  <p class="text-sm font-medium">No messages yet.</p>
+                  <p class="text-xs max-w-xs">Coordinate pickup spots, landmarks, or estimated arrival times with your travel companions!</p>
+                </div>
+              <% end %>
+            </div>
+
+            <%# Sticky Bottom Form %>
+            <%= render "chat_messages/form", ride_post: @ride_post, chat_message: @ride_post.chat_messages.build %>
           <% else %>
-            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-neutral-100 text-neutral-600 dark:bg-neutral-800 dark:text-neutral-400">
-              Closed (Read-only)
-            </span>
+            <div class="flex-1 flex flex-col items-center justify-center p-8 text-center text-neutral-500 space-y-3">
+              <div class="p-3 rounded-full bg-neutral-100 dark:bg-neutral-800 text-neutral-400">
+                <svg class="size-8" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
+                </svg>
+              </div>
+              <p class="text-sm font-semibold text-neutral-900 dark:text-white">Chat is Currently Locked</p>
+              <p class="text-xs text-neutral-500 max-w-sm">Private coordination chat will automatically unlock once the driver accepts the first passenger booking.</p>
+            </div>
           <% end %>
         </div>
-
-        <% if @ride_post.chat_unlocked? %>
-          <%= turbo_stream_from [@ride_post, :chat], channel: "RideChatChannel" %>
-
-          <div id="chat_messages_list" class="space-y-3 max-h-80 overflow-y-auto pr-1">
-            <% if @ride_post.chat_messages.any? %>
-              <%= render partial: "chat_messages/chat_message", collection: @ride_post.chat_messages.recent_first %>
-            <% else %>
-              <p class="text-xs text-neutral-400 italic text-center py-4">No messages yet. Say hello or coordinate pickup details!</p>
-            <% end %>
-          </div>
-
-          <%= render "chat_messages/form", ride_post: @ride_post, chat_message: @ride_post.chat_messages.build %>
-        <% else %>
-          <div class="text-center py-6 text-neutral-400 text-xs italic">
-            Chat will unlock automatically once the first passenger booking is confirmed.
-          </div>
-        <% end %>
       </div>
     <% end %>
-  <% else %>
-    <%# Passenger Request Post (Discovery board) %>
-    <div class="bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 p-8 rounded-3xl shadow-xl flex flex-col items-center text-center">
-      <%= link_to user_path(@ride_post.user), class: "group flex flex-col items-center mb-1" do %>
-        <div class="mb-4">
-          <%= user_avatar(@ride_post.user, classes: "h-16 w-16 text-xl border-4 border-white/10 dark:border-neutral-900/10 transition-transform duration-200 group-hover:scale-105") %>
-        </div>
-        <h3 class="text-xl font-bold"><%= @ride_post.user.first_name %> <%= @ride_post.user.last_name %></h3>
-      <% end %>
-      <p class="text-neutral-400 dark:text-neutral-500 text-sm mb-6 max-w-sm">
-        Is looking for a carpool along this route. Drivers heading this way can view their profile to connect.
-      </p>
-
-      <%= render Buttons::Component.new(
-                 text: Current.user.present? ? "View Facebook Profile" : "Login to View Profile",
-                 href: Current.user.present? ? @ride_post.user.facebook_profile_url : new_session_path(return_to: request.path),
-                 style: :fancy,
-                 size: :lg) %>
-    </div>
-  <% end %>
+  </div>
 </div>

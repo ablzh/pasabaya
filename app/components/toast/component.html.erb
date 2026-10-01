@@ -1,0 +1,31 @@
+<div
+  id="toast-container"
+  class="<%= container_classes %>"
+  data-controller="toast"
+  data-toast-position-value="<%= @position %>"
+  data-toast-layout-value="<%= @layout %>"
+  data-toast-auto-dismiss-duration-value="<%= @auto_dismiss_duration %>"
+  data-toast-limit-value="<%= @limit %>"
+  data-toast-gap-value="<%= @gap %>"
+  data-action="mouseenter->toast#handleMouseEnter mouseleave->toast#handleMouseLeave"
+>
+  <ol
+    data-toast-target="container"
+    class="relative flex flex-col-reverse sm:flex-col gap-0 pointer-events-auto [&>li]:pointer-events-auto"
+    style="height: 0px;"
+  >
+  </ol>
+</div>
+
+<% if flash_items.any? %>
+  <div data-controller="flash-toasts" class="hidden" aria-live="polite">
+    <% flash_items.each do |item| %>
+      <div data-flash-toasts-target="item"
+           data-type="<%= item[:type] %>"
+           data-message="<%= item[:message] %>"
+           class="sr-only">
+        <%= item[:message] %>
+      </div>
+    <% end %>
+  </div>
+<% end %>
