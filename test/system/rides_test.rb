@@ -17,8 +17,8 @@ class RidesTest < ApplicationSystemTestCase
     click_link "Search"
     assert_current_path ride_posts_path
 
-    select "Offerings", from: "Looking for..."
-    click_button "Search"
+    find("label", text: "Available Drivers").click
+    click_button "Search Rides"
 
     # Assert search results show the matching ride and not the requesting ride
     assert_selector "#ride_posts article, #ride_posts [id^='ride_post_']", text: "Manila → Makati"

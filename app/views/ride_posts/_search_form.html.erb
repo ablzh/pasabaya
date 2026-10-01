@@ -1,51 +1,113 @@
 <%# app/views/ride_posts/_search_form.html.erb %>
 <% grouped_locations = local_assigns[:grouped_locations] || Location.grouped_by_region %>
-<div class="bg-white dark:bg-neutral-900 p-4 rounded-2xl border border-neutral-100 dark:border-white/5 shadow-sm mb-12">
-  <%= form_with url: ride_posts_path, method: :get, class: "flex flex-col sm:flex-row gap-4 items-end" do |form| %>
+<% has_active_filters = params[:origin_id].present? || params[:destination_id].present? || params[:post_type].present? || params[:departure_date].present? || params[:community_id].present? %>
 
-    <%# 1. Post Type Select %>
-    <%= render(Forms::Component.new(
-      label: "Looking for...",
-      name: :post_type,
-      classes: "flex-1 w-full"
-    )) do %>
-      <%= form.select :post_type, 
-          options_for_select([["All Rides", ""], ["Offerings", "offering"], ["Requests", "requesting"]], params[:post_type]),
-          {}, 
-          class: "w-full rounded-xl border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-base sm:text-sm focus:ring-blue-500 focus:border-blue-500 py-3" %>
-    <% end %>
+<div class="bg-white dark:bg-neutral-900 p-4 sm:p-6 rounded-3xl border border-neutral-100 dark:border-white/5 shadow-xs mb-10" data-controller="swap-inputs">
+  <%= form_with url: ride_posts_path, method: :get, class: "space-y-4" do |form| %>
 
-    <%# 2. Origin Select (Grouped Combobox) %>
-    <%= render(Forms::Component.new(
-      label: "From",
-      name: :origin_id,
-      classes: "flex-1 w-full"
-    )) do %>
-      <%= render Combobox::Component.new(
-                 name: :origin_id,
-                 id: "origin_id",
-                 grouped_options: grouped_locations,
-                 selected: params[:origin_id],
-                 placeholder: "Any Origin") %>
-    <% end %>
+    <%# 1. Top Bar: Segmented Ride Intent Switcher + Reset Link %>
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-neutral-100 dark:border-neutral-800">
+      <div class="inline-flex items-center p-1 rounded-2xl bg-neutral-100 dark:bg-neutral-800/80 border border-neutral-200/50 dark:border-neutral-700/50 w-full sm:w-auto">
+        <label class="flex-1 sm:flex-initial text-center cursor-pointer">
+          <%= form.radio_button :post_type, "", checked: params[:post_type].blank?, class: "sr-only peer" %>
+          <span class="block py-1.5 px-3.5 text-xs font-semibold rounded-xl text-neutral-600 dark:text-neutral-400 peer-checked:bg-white peer-checked:text-neutral-900 peer-checked:shadow-xs dark:peer-checked:bg-neutral-900 dark:peer-checked:text-white transition">
+            All Rides
+          </span>
+        </label>
+        <label class="flex-1 sm:flex-initial text-center cursor-pointer">
+          <%= form.radio_button :post_type, "offering", checked: params[:post_type] == "offering", class: "sr-only peer" %>
+          <span class="block py-1.5 px-3.5 text-xs font-semibold rounded-xl text-neutral-600 dark:text-neutral-400 peer-checked:bg-white peer-checked:text-neutral-900 peer-checked:shadow-xs dark:peer-checked:bg-neutral-900 dark:peer-checked:text-white transition">
+            Available Drivers
+          </span>
+        </label>
+        <label class="flex-1 sm:flex-initial text-center cursor-pointer">
+          <%= form.radio_button :post_type, "requesting", checked: params[:post_type] == "requesting", class: "sr-only peer" %>
+          <span class="block py-1.5 px-3.5 text-xs font-semibold rounded-xl text-neutral-600 dark:text-neutral-400 peer-checked:bg-white peer-checked:text-neutral-900 peer-checked:shadow-xs dark:peer-checked:bg-neutral-900 dark:peer-checked:text-white transition">
+            Passenger Requests
+          </span>
+        </label>
+      </div>
 
-    <%# 3. Destination Select (Grouped Combobox) %>
-    <%= render(Forms::Component.new(
-      label: "To",
-      name: :destination_id,
-      classes: "flex-1 w-full"
-    )) do %>
-      <%= render Combobox::Component.new(
-                 name: :destination_id,
-                 id: "destination_id",
-                 grouped_options: grouped_locations,
-                 selected: params[:destination_id],
-                 placeholder: "Any Destination") %>
-    <% end %>
+      <% if has_active_filters %>
+        <%= link_to ride_posts_path, class: "inline-flex items-center gap-1.5 text-xs font-medium text-neutral-500 hover:text-red-600 dark:hover:text-red-400 transition-colors self-end sm:self-auto" do %>
+          <svg class="size-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+          <span>Clear filters</span>
+        <% end %>
+      <% end %>
+    </div>
 
-    <%# Submit Button %>
-    <div class="w-full sm:w-auto">
-       <%= render Buttons::Component.new(text: "Search", type: "submit", size: :md, full_width: true, classes: "py-2.5") %>
+    <%# 2. Main Controls Row %>
+    <div class="grid grid-cols-1 sm:grid-cols-12 gap-3 items-end">
+      <%# Origin Select %>
+      <div class="sm:col-span-4">
+        <%= render(Forms::Component.new(
+          label: "From",
+          name: :origin_id,
+          classes: "w-full"
+        )) do %>
+          <%= render Combobox::Component.new(
+                     name: :origin_id,
+                     id: "origin_id",
+                     grouped_options: grouped_locations,
+                     selected: params[:origin_id],
+                     placeholder: "Any Origin") %>
+        <% end %>
+      </div>
+
+      <%# Swap Button (Centered between origin & destination) %>
+      <div class="sm:col-span-1 flex justify-center pb-1">
+        <button type="button"
+                data-action="click->swap-inputs#swap"
+                class="size-10 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-700 hover:text-blue-600 dark:hover:text-blue-400 flex items-center justify-center transition shadow-xs cursor-pointer"
+                title="Swap Origin and Destination"
+                aria-label="Swap Origin and Destination">
+          <svg class="size-4.5 rotate-90 sm:rotate-0 transition-transform" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M7.5 21L3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5" />
+          </svg>
+        </button>
+      </div>
+
+      <%# Destination Select %>
+      <div class="sm:col-span-4">
+        <%= render(Forms::Component.new(
+          label: "To",
+          name: :destination_id,
+          classes: "w-full"
+        )) do %>
+          <%= render Combobox::Component.new(
+                     name: :destination_id,
+                     id: "destination_id",
+                     grouped_options: grouped_locations,
+                     selected: params[:destination_id],
+                     placeholder: "Any Destination") %>
+        <% end %>
+      </div>
+
+      <%# Date Field %>
+      <div class="sm:col-span-3">
+        <%= render(Forms::Component.new(
+          label: "Date",
+          name: :departure_date,
+          classes: "w-full"
+        )) do %>
+          <%= form.date_field :departure_date,
+                              value: params[:departure_date],
+                              min: Date.current.to_s,
+                              class: "w-full rounded-xl border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-base sm:text-sm text-neutral-900 dark:text-white focus:ring-blue-500 focus:border-blue-500 py-2.5 px-3" %>
+        <% end %>
+      </div>
+
+      <%# Submit Button %>
+      <div class="sm:col-span-12 flex justify-end pt-1">
+        <%= render Buttons::Component.new(
+                   text: "Search Rides",
+                   type: "submit",
+                   size: :md,
+                   style: :fancy,
+                   classes: "w-full sm:w-auto px-6 py-2.5") %>
+      </div>
     </div>
 
   <% end %>
