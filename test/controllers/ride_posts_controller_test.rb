@@ -242,4 +242,29 @@ class RidePostsControllerTest < ActionDispatch::IntegrationTest
     assert_select "button[data-tab-name='chat']", 0
     assert_select "div[data-trip-view-target='chatPane']", 0
   end
+
+  test "index filters by departure_date" do
+    target_date = 2.days.from_now.to_date
+    @ride_post.update_columns(departure_time: target_date.to_time + 8.hours)
+    ride_posts(:two).update_columns(departure_time: (target_date + 4.days).to_time)
+
+    get ride_posts_url(departure_date: target_date.to_s)
+    assert_response :success
+    assert_select "#ride_post_#{@ride_post.id}"
+    assert_select "#ride_post_#{ride_posts(:two).id}", 0
+  end
+
+  test "redirects to seo route preserving departure_date parameter" do
+    target_date = 2.days.from_now.to_date.to_s
+    get ride_posts_url(
+      origin_id: @ride_post.origin_id,
+      destination_id: @ride_post.destination_id,
+      departure_date: target_date
+    )
+    assert_redirected_to route_rides_url(
+      origin_slug: @ride_post.origin.slug,
+      destination_slug: @ride_post.destination.slug,
+      departure_date: target_date
+    )
+  end
 end

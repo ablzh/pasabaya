@@ -48,6 +48,16 @@ class RidePost < ApplicationRecord
   scope :filter_by_destination, ->(destination_id) { where(destination_id: destination_id)  if destination_id.present? }
   scope :filter_by_community, ->(comm_id) { where(community_id: comm_id) if comm_id.present? }
   scope :filter_by_ladies_only, ->(ladies) { where(ladies_only: true) if ladies.to_s == "true" }
+  scope :filter_by_departure_date, ->(date_str) {
+    if date_str.present?
+      begin
+        d = Date.parse(date_str.to_s)
+        where(departure_time: d.beginning_of_day..d.end_of_day).or(where(departure_time: nil))
+      rescue ArgumentError, TypeError
+        all
+      end
+    end
+  }
 
   scope :visible_to, ->(user) {
     if user.nil?

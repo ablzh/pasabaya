@@ -10,7 +10,7 @@ class RidePostsController < ApplicationController
 
   # GET /ride_posts or /ride_posts.json
   def index
-    if params.key?(:post_type) || params.key?(:origin_id) || params.key?(:destination_id) || params.key?(:community_id) || params.key?(:ladies_only)
+    if params.key?(:post_type) || params.key?(:origin_id) || params.key?(:destination_id) || params.key?(:community_id) || params.key?(:ladies_only) || params.key?(:departure_date)
       @ride_posts = RidePost.active
                             .visible_to(Current.user)
                             .includes(:origin, :destination, :user, :community)
@@ -20,6 +20,7 @@ class RidePostsController < ApplicationController
                             .filter_by_destination(params[:destination_id])
                             .filter_by_community(params[:community_id])
                             .filter_by_ladies_only(params[:ladies_only])
+                            .filter_by_departure_date(params[:departure_date])
 
       setup_route_meta_tags if @origin && @destination
     else
@@ -213,7 +214,8 @@ class RidePostsController < ApplicationController
         redirect_to route_rides_path(
                       origin_slug: origin.slug,
                       destination_slug: destination.slug,
-                      post_type: params[:post_type].presence
+                      post_type: params[:post_type].presence,
+                      departure_date: params[:departure_date].presence
                     )
       end
     end

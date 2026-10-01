@@ -156,4 +156,17 @@ class RidePostTest < ActiveSupport::TestCase
     assert_not ride.destroy
     assert_includes ride.errors[:base], "Cannot delete a ride with trip reviews or incident history."
   end
+
+  test "filter_by_departure_date returns rides departing on target day" do
+    target_date = 2.days.from_now.to_date
+    ride_matching = ride_posts(:one)
+    ride_matching.update_columns(departure_time: target_date.to_time + 10.hours)
+
+    ride_other = ride_posts(:two)
+    ride_other.update_columns(departure_time: (target_date + 3.days).to_time)
+
+    results = RidePost.filter_by_departure_date(target_date.to_s)
+    assert_includes results, ride_matching
+    assert_not_includes results, ride_other
+  end
 end
