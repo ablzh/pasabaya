@@ -3,8 +3,6 @@
     <h1 class="text-2xl font-bold text-neutral-900 dark:text-white">Notifications</h1>
   </div>
 
-  <%= turbo_stream_from [ Current.user, :notifications ] %>
-
   <div id="notifications_container">
     <% if @notifications.any? %>
       <div id="notifications_list" class="divide-y divide-neutral-100 dark:divide-neutral-800 bg-white dark:bg-neutral-900 rounded-3xl border border-neutral-100 dark:border-neutral-800 shadow-sm overflow-hidden">

@@ -57,4 +57,26 @@ class ChatMessageTest < ActiveSupport::TestCase
     assert_not ChatMessage.exists?(old_msg.id)
     assert ChatMessage.exists?(recent_msg.id)
   end
+
+  test "creating a chat message broadcasts toast to participants" do
+    @booking.update_columns(status: Booking.statuses[:accepted])
+
+    broadcasts = []
+    original_broadcast = Turbo::StreamsChannel.method(:broadcast_append_to)
+    Turbo::StreamsChannel.define_singleton_method(:broadcast_append_to) do |stream, *args, **kwargs|
+      broadcasts << { stream: stream, kwargs: kwargs }
+      original_broadcast.call(stream, *args, **kwargs)
+    end
+
+    begin
+      @ride.chat_messages.create!(user: @driver, body: "See you at the pickup point!")
+      toast_broadcast = broadcasts.find { |b| b[:stream] == [ @passenger, :notifications ] && b[:kwargs][:target] == "toast-container" }
+      assert_not_nil toast_broadcast
+      assert_equal "chat_messages/toast", toast_broadcast[:kwargs][:partial]
+      assert_equal @ride.id, toast_broadcast[:kwargs][:locals][:ride_post_id]
+      assert_includes toast_broadcast[:kwargs][:locals][:title], @driver.first_name
+    ensure
+      Turbo::StreamsChannel.define_singleton_method(:broadcast_append_to, original_broadcast)
+    end
+  end
 end

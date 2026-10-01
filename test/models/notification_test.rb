@@ -53,4 +53,32 @@ class NotificationTest < ActiveSupport::TestCase
 
     assert inst2.reload.delivered?
   end
+
+  test "deliver! broadcasts toast partial to recipient notifications stream" do
+    notification = Notification.create!(
+      recipient: @user,
+      notifiable: @ride,
+      event_name: "booking.accepted",
+      delivery_key: "broadcast_deliver_test",
+      delivery_status: :pending
+    )
+
+    broadcasts = []
+    original_broadcast = Turbo::StreamsChannel.method(:broadcast_append_to)
+    Turbo::StreamsChannel.define_singleton_method(:broadcast_append_to) do |stream, *args, **kwargs|
+      broadcasts << { stream: stream, kwargs: kwargs }
+      original_broadcast.call(stream, *args, **kwargs)
+    end
+
+    begin
+      notification.deliver!
+      toast_broadcast = broadcasts.find { |b| b[:stream] == [ @user, :notifications ] && b[:kwargs][:target] == "toast-container" }
+      assert_not_nil toast_broadcast
+      assert_equal "notifications/toast", toast_broadcast[:kwargs][:partial]
+      assert_equal "success", notification.toast_type
+      assert_equal "Your seat request has been confirmed!", notification.summary
+    ensure
+      Turbo::StreamsChannel.define_singleton_method(:broadcast_append_to, original_broadcast)
+    end
+  end
 end
