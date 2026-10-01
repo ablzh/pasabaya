@@ -61,22 +61,114 @@
     </div>
   <% end %>
 
-  <%# 2. Listings Section %>
+  <%# 2. Activity / Listings Section %>
+  <% active_tab = (params[:tab] == "bookings") ? "bookings" : "posts" %>
   <div>
-    <div class="flex items-center justify-between mb-6">
-      <h2 class="text-2xl font-bold text-neutral-900 dark:text-white tracking-tight">Active Posts</h2>
-      <span class="text-xs font-bold text-neutral-400 uppercase tracking-widest"><%= @ride_posts.count %> listings</span>
-    </div>
+    <% if Current.user == @user %>
+      <div class="flex items-center gap-3 border-b border-neutral-200 dark:border-neutral-800 mb-6">
+        <%= link_to user_path(@user, tab: "posts"), class: "pb-3 px-1 text-sm font-semibold transition-colors border-b-2 #{active_tab == 'posts' ? 'border-neutral-900 text-neutral-900 dark:border-white dark:text-white' : 'border-transparent text-neutral-500 hover:text-neutral-700 dark:text-neutral-400 dark:hover:text-neutral-200'}" do %>
+          My Posts (<%= @ride_posts.count %>)
+        <% end %>
+        <%= link_to user_path(@user, tab: "bookings"), class: "pb-3 px-1 text-sm font-semibold transition-colors border-b-2 #{active_tab == 'bookings' ? 'border-neutral-900 text-neutral-900 dark:border-white dark:text-white' : 'border-transparent text-neutral-500 hover:text-neutral-700 dark:text-neutral-400 dark:hover:text-neutral-200'}" do %>
+          Joined Trips &amp; Bookings (<%= @passenger_bookings.count %>)
+        <% end %>
+      </div>
+    <% else %>
+      <div class="flex items-center justify-between mb-6">
+        <h2 class="text-2xl font-bold text-neutral-900 dark:text-white tracking-tight">Active Posts</h2>
+        <span class="text-xs font-bold text-neutral-400 uppercase tracking-widest"><%= @ride_posts.count %> listings</span>
+      </div>
+    <% end %>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-      <% if @ride_posts.any? %>
-        <%= render @ride_posts %>
-      <% else %>
-        <div class="col-span-full py-12 text-center text-neutral-500 bg-neutral-50 dark:bg-neutral-800/50 rounded-2xl border border-dashed border-neutral-200 dark:border-neutral-700">
-          No active ride offers or requests listed at the moment.
-        </div>
-      <% end %>
-    </div>
+    <% if active_tab == "bookings" && Current.user == @user %>
+      <div class="space-y-4">
+        <% if @passenger_bookings.any? %>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <% @passenger_bookings.each do |booking| %>
+              <% ride = booking.ride_post %>
+              <% next unless ride %>
+              <%= render(Card::Component.new(rounded: :"2xl", padding: :md, classes: "flex flex-col justify-between")) do %>
+                <div class="space-y-4">
+                  <div class="flex items-start justify-between gap-3">
+                    <div>
+                      <div class="flex items-center gap-2">
+                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold uppercase tracking-wider
+                          <% case booking.status %>
+                          <% when 'accepted' %>
+                            bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800
+                          <% when 'pending' %>
+                            bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-300 dark:border-amber-800
+                          <% when 'declined' %>
+                            bg-neutral-100 text-neutral-600 dark:bg-neutral-800 dark:text-neutral-400 border border-neutral-200 dark:border-neutral-700
+                          <% when 'canceled' %>
+                            bg-red-100 text-red-700 dark:bg-red-950/60 dark:text-red-300 border border-red-200 dark:border-red-800
+                          <% else %>
+                            bg-neutral-100 text-neutral-700 dark:bg-neutral-800 dark:text-neutral-300
+                          <% end %>">
+                          <% case booking.status %>
+                          <% when 'accepted' %>
+                            Confirmed Seat
+                          <% when 'pending' %>
+                            Pending Driver
+                          <% else %>
+                            <%= booking.status.humanize %>
+                          <% end %>
+                        </span>
+                      </div>
+                      <h3 class="text-lg font-bold text-neutral-900 dark:text-white mt-1.5">
+                        <%= link_to ride_post_path(ride), class: "hover:underline focus:outline-none" do %>
+                          <%= ride.origin.name %> &rarr; <%= ride.destination.name %>
+                        <% end %>
+                      </h3>
+                    </div>
+                    <%= user_avatar(ride.user, classes: "size-10 text-sm shrink-0") %>
+                  </div>
+
+                  <div class="space-y-1.5 text-xs text-neutral-600 dark:text-neutral-400">
+                    <div class="flex items-center gap-2">
+                      <span class="font-medium text-neutral-800 dark:text-neutral-200">Driver:</span>
+                      <span><%= ride.user.first_name %> <%= ride.user.last_name %></span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                      <span class="font-medium text-neutral-800 dark:text-neutral-200">Departure:</span>
+                      <span><%= ride.departure_time ? ride.departure_time.strftime("%a, %b %d • %I:%M %p") : "Regular / Flexible Schedule" %></span>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="pt-4 mt-4 border-t border-neutral-100 dark:border-neutral-800 flex items-center justify-between gap-2">
+                  <% if booking.accepted? %>
+                    <%= link_to ride_post_path(ride, tab: "chat"), class: "inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white transition-colors shadow-xs" do %>
+                      <svg class="size-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 01-2.555-.337A5.972 5.972 0 015.41 20.97a.75.75 0 01-.874-.954 6.002 6.002 0 011.085-2.083C4.248 16.51 3 14.402 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25z" />
+                      </svg>
+                      <span>Trip Chat</span>
+                    <% end %>
+                  <% end %>
+
+                  <div class="ml-auto flex items-center gap-2">
+                    <%= link_to "View Ride", ride_post_path(ride), class: "text-xs font-semibold px-3 py-1.5 rounded-xl bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 dark:hover:bg-neutral-700 text-neutral-700 dark:text-neutral-300 transition-colors" %>
+                  </div>
+                </div>
+              <% end %>
+            <% end %>
+          </div>
+        <% else %>
+          <div class="py-12 text-center text-neutral-500 bg-neutral-50 dark:bg-neutral-800/50 rounded-2xl border border-dashed border-neutral-200 dark:border-neutral-700">
+            You haven't booked or joined any rides yet.
+          </div>
+        <% end %>
+      </div>
+    <% else %>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <% if @ride_posts.any? %>
+          <%= render @ride_posts %>
+        <% else %>
+          <div class="col-span-full py-12 text-center text-neutral-500 bg-neutral-50 dark:bg-neutral-800/50 rounded-2xl border border-dashed border-neutral-200 dark:border-neutral-700">
+            No active ride offers or requests listed at the moment.
+          </div>
+        <% end %>
+      </div>
+    <% end %>
   </div>
-
 </div>

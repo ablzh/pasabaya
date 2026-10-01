@@ -158,4 +158,17 @@ class UserTest < ActiveSupport::TestCase
     end
     assert notif.reload.delivered?
   end
+
+  test "active_trips_count tallies active driver rides and accepted passenger bookings" do
+    driver = users(:one)
+    passenger = users(:two)
+
+    initial_driver_trips = driver.active_trips_count
+    assert initial_driver_trips >= 1
+
+    booking = bookings(:one)
+    booking.update_columns(status: Booking.statuses[:accepted])
+
+    assert passenger.active_trips_count >= 1
+  end
 end

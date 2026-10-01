@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require "test_helper"
 
 class UsersControllerTest < ActionDispatch::IntegrationTest
@@ -7,5 +9,40 @@ class UsersControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select "a[href='https://facebook.com/juan'][target='_blank'][rel='noopener noreferrer']"
+  end
+
+  test "owner viewing own profile sees activity tabs including joined trips" do
+    passenger = users(:two)
+    sign_in_as(passenger)
+
+    get user_url(passenger)
+
+    assert_response :success
+    assert_select "a[href='#{user_path(passenger, tab: 'posts')}']", text: /My Posts/
+    assert_select "a[href='#{user_path(passenger, tab: 'bookings')}']", text: /Joined Trips/
+  end
+
+  test "owner viewing bookings tab sees accepted booking with chat link" do
+    passenger = users(:two)
+    booking = bookings(:one)
+    booking.update_columns(status: Booking.statuses[:accepted])
+
+    sign_in_as(passenger)
+    get user_url(passenger, tab: "bookings")
+
+    assert_response :success
+    assert_select "a[href='#{ride_post_path(booking.ride_post, tab: 'chat')}']", text: /Trip Chat/
+  end
+
+  test "stranger viewing someone else's profile only sees public active posts" do
+    driver = users(:one)
+    stranger = users(:two)
+    sign_in_as(stranger)
+
+    get user_url(driver)
+
+    assert_response :success
+    assert_select "h2", text: "Active Posts"
+    assert_select "a[href='#{user_path(driver, tab: 'bookings')}']", count: 0
   end
 end

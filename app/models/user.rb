@@ -89,6 +89,12 @@ class User < ApplicationRecord
     recent_upheld_incidents_count >= 2
   end
 
+  def active_trips_count
+    driver_count = ride_posts.where(status: [ :active, :fulfilled ]).where("departure_time >= ? OR departure_time IS NULL", Time.current).count
+    passenger_count = bookings.accepted.joins(:ride_post).where(ride_posts: { status: [ :active, :fulfilled ] }).where("ride_posts.departure_time >= ? OR ride_posts.departure_time IS NULL", Time.current).count
+    driver_count + passenger_count
+  end
+
 
   # UPDATE EMAIL
 

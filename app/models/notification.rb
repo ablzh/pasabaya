@@ -31,6 +31,38 @@ class Notification < ApplicationRecord
     read_at.present?
   end
 
+  def summary
+    case event_name
+    when "booking.requested"
+      "#{actor&.first_name || 'A passenger'} requested a seat on your ride."
+    when "booking.accepted"
+      "Your seat request has been confirmed!"
+    when "booking.declined"
+      "Your seat request was declined by the driver."
+    when "booking.canceled"
+      "#{actor&.first_name || 'A user'} canceled their seat booking."
+    when "ride.canceled"
+      "A ride you had booked has been canceled by the driver."
+    when "review.requested"
+      "Please review your recent trip."
+    when "incident.resolved"
+      "An incident report was resolved."
+    else
+      event_name.humanize
+    end
+  end
+
+  def toast_type
+    case event_name
+    when "booking.accepted"
+      "success"
+    when "booking.canceled", "ride.canceled", "booking.declined"
+      "warning"
+    else
+      "info"
+    end
+  end
+
   def deliver!
     reload
     return if delivered?
@@ -46,7 +78,15 @@ class Notification < ApplicationRecord
       locals: { notification: self }
     )
 
+    Turbo::StreamsChannel.broadcast_append_to(
+      [ recipient, :notifications ],
+      target: "toast-container",
+      partial: "notifications/toast",
+      locals: { notification: self }
+    )
+
     update!(delivery_status: :delivered, delivered_at: Time.current)
+
   rescue StandardError => e
     if persisted?
       begin
