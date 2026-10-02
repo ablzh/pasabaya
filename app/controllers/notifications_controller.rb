@@ -5,7 +5,7 @@ class NotificationsController < ApplicationController
 
   # GET /notifications
   def index
-    @notifications = Current.user.received_notifications.recent.limit(50)
+    @notifications = Current.user.received_notifications.includes(:actor).recent.limit(50)
   end
 
   # GET /notifications/:id

@@ -81,12 +81,9 @@
           <svg class="size-4.5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" />
           </svg>
-          <% if Current.user.received_notifications.unread.any? %>
-            <span class="absolute top-1 right-1 flex size-2">
-              <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
-              <span class="relative inline-flex rounded-full size-2 bg-blue-600"></span>
-            </span>
-          <% end %>
+          <span data-notification-count class="absolute top-0 right-0">
+            <%= render "notifications/count", count: Current.user.received_notifications.unread.count %>
+          </span>
         <% end %>
       </li>
 
@@ -149,9 +146,9 @@
       <%= link_to notifications_path, class: "flex items-center gap-2 rounded-lg p-2 no-underline hover:bg-neutral-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-600 dark:hover:bg-neutral-700 dark:focus-visible:outline-neutral-200" do %>
         <span class="text-xs text-neutral-500 dark:text-neutral-400"><svg xmlns="http://www.w3.org/2000/svg" class="size-3.5 sm:size-4" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" /></svg></span>
         <span class="text-sm font-medium text-neutral-900 dark:text-neutral-100">Notifications</span>
-        <% if (unread_count = Current.user.received_notifications.unread.count) > 0 %>
-          <span class="ml-auto text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-blue-600 text-white"><%= unread_count %></span>
-        <% end %>
+        <span data-notification-count class="ml-auto">
+          <%= render "notifications/count", count: Current.user.received_notifications.unread.count %>
+        </span>
       <% end %>
 
       <div class="border-t border-neutral-200 dark:border-neutral-700"></div>

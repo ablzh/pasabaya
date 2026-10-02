@@ -56,7 +56,7 @@
 
     <!-- Departure Time -->
     <%= render(Forms::Component.new(
-      label: "Departure Time (leave blank for a regular/flexible ride)",
+      label: "Departure Time (required to publish a ride offer)",
       name: :departure_time,
       id: form.field_id(:departure_time),
       error: ride_post.errors[:departure_time].first
@@ -184,7 +184,7 @@
   <!-- Form Action -->
   <div class="flex items-center gap-6 pt-6 border-t border-neutral-100 dark:border-white/5">
     <%= render Buttons::Component.new(
-               text: ride_post.new_record? ? "Publish Post" : "Save Changes",
+               text: ride_post.new_record? ? "Save Post" : "Save Changes",
                type: "submit",
                size: :lg) %>
 

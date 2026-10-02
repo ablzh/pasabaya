@@ -29,7 +29,21 @@ export default class extends Controller {
     this.switchTab("chat")
   }
 
+  navigateTabs(event) {
+    const keys = ["ArrowLeft", "ArrowRight", "Home", "End"]
+    if (!keys.includes(event.key)) return
+    event.preventDefault()
+    const current = this.tabBtnTargets.indexOf(event.currentTarget)
+    const last = this.tabBtnTargets.length - 1
+    const next = event.key === "Home" ? 0 : event.key === "End" ? last :
+      (current + (event.key === "ArrowRight" ? 1 : last)) % this.tabBtnTargets.length
+    const button = this.tabBtnTargets[next]
+    this.switchTab(button.dataset.tabName)
+    button.focus()
+  }
+
   switchTab(tab) {
+    if (tab === "chat" && !this.hasChatPaneTarget) tab = "details"
     this.activeTabValue = tab
 
     if (this.hasDetailsPaneTarget) {
@@ -51,6 +65,7 @@ export default class extends Controller {
 
     this.tabBtnTargets.forEach((btn) => {
       const isTarget = btn.dataset.tabName === tab
+      btn.tabIndex = isTarget ? 0 : -1
       if (isTarget) {
         btn.classList.add("bg-neutral-900", "text-white", "dark:bg-white", "dark:text-neutral-900", "shadow-xs")
         btn.classList.remove("text-neutral-600", "dark:text-neutral-400", "hover:bg-neutral-100", "dark:hover:bg-neutral-800")

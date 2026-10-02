@@ -10,6 +10,7 @@ class Notification < ApplicationRecord
   validates :delivery_status, presence: true
 
   after_create_commit :enqueue_delivery
+  after_update_commit :broadcast_unread_count, if: :saved_change_to_read_at?
 
   scope :unread, -> { where(read_at: nil) }
   scope :read, -> { where.not(read_at: nil) }
@@ -86,6 +87,7 @@ class Notification < ApplicationRecord
     )
 
     update!(delivery_status: :delivered, delivered_at: Time.current)
+    broadcast_unread_count
 
   rescue StandardError => e
     if persisted?
@@ -99,6 +101,15 @@ class Notification < ApplicationRecord
   end
 
   private
+
+  def broadcast_unread_count
+    Turbo::StreamsChannel.broadcast_update_to(
+      [ recipient, :notifications ],
+      targets: "[data-notification-count]",
+      partial: "notifications/count",
+      locals: { count: recipient.received_notifications.unread.count }
+    )
+  end
 
   def enqueue_delivery
     NotificationDeliveryJob.perform_later(id)

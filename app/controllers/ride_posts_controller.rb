@@ -40,11 +40,12 @@ class RidePostsController < ApplicationController
     end
 
     if params[:id] != @ride_post.to_param
-      redirect_to @ride_post, status: :moved_permanently
+      redirect_to ride_post_path(@ride_post, tab: params[:tab].presence, format: params[:format]), status: :moved_permanently
       return # Use return to stop execution after redirecting
     end
 
     setup_show_meta_tags
+    @chat_messages = @ride_post.chat_messages.includes(user: { avatar_attachment: :blob }).order(created_at: :desc, id: :desc).limit(100).to_a.reverse if @ride_post.user_authorized_for_chat?(Current.user)
   end
 
   # GET /ride_posts/new
@@ -72,7 +73,8 @@ class RidePostsController < ApplicationController
 
     respond_to do |format|
       if @ride_post.save
-        format.html { redirect_to @ride_post, notice: "Ride post was successfully created." }
+        notice = @ride_post.draft? ? "Ride offer saved as a private draft. Add departure and arrival times to publish it." : "Ride post was successfully created."
+        format.html { redirect_to @ride_post, notice: notice, status: :see_other }
         format.json { render :show, status: :created, location: @ride_post }
       else
         format.html { render :new, status: :unprocessable_content }
@@ -211,15 +213,18 @@ class RidePostsController < ApplicationController
 
   def redirect_to_seo_route
     if params[:origin_id].present? && params[:destination_id].present? && params[:origin_slug].blank? && request.format.html?
-      origin = Location.find_by(id: params[:origin_id])
-      destination = Location.find_by(id: params[:destination_id])
+      locations = Location.where(id: [ params[:origin_id], params[:destination_id] ]).index_by(&:id)
+      origin = locations[params[:origin_id].to_i]
+      destination = locations[params[:destination_id].to_i]
 
       if origin && destination
         redirect_to route_rides_path(
                       origin_slug: origin.slug,
                       destination_slug: destination.slug,
                       post_type: params[:post_type].presence,
-                      departure_date: params[:departure_date].presence
+                      departure_date: params[:departure_date].presence,
+                      community_id: params[:community_id].presence,
+                      ladies_only: params[:ladies_only].presence
                     )
       end
     end

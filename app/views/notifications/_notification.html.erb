@@ -1,4 +1,4 @@
-<div id="<%= dom_id(notification) %>" class="p-4 flex items-center justify-between gap-4 transition-colors hover:bg-neutral-50 dark:hover:bg-neutral-800/50 <%= 'bg-blue-50/30 dark:bg-blue-950/10' unless notification.read? %>">
+<div id="<%= dom_id(notification) %>" class="notification p-4 flex items-center justify-between gap-4 transition-colors hover:bg-neutral-50 dark:hover:bg-neutral-800/50 <%= 'bg-blue-50/30 dark:bg-blue-950/10' unless notification.read? %>">
   <div class="flex items-start gap-3">
     <div class="mt-0.5">
       <% case notification.event_name %>

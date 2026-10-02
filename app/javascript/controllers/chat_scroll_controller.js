@@ -1,7 +1,12 @@
 import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
-  static targets = ["messages", "input"]
+  static targets = ["messages", "input", "message"]
+  static values = { currentUserId: Number }
+
+  messageTargetConnected(message) {
+    message.dataset.ownMessage = String(Number(message.dataset.senderId) === this.currentUserIdValue)
+  }
 
   connect() {
     this.scrollToBottom()
