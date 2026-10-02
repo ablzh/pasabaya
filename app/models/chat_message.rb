@@ -29,6 +29,8 @@ class ChatMessage < ApplicationRecord
 
   def broadcast_toast_to_participants
     ride_post.participants.where.not(id: user_id).find_each do |recipient|
+      next unless ride_post.user_authorized_for_chat?(recipient)
+
       role_label = (user_id == ride_post.user_id) ? "Driver" : "Passenger"
       title = "#{user.first_name} (#{role_label})"
       description = body.truncate(75)
