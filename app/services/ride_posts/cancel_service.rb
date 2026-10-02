@@ -4,6 +4,7 @@ module RidePosts
   class CancelService
     class Error < StandardError; end
     class UnauthorizedError < Error; end
+    class InvalidStateError < Error; end
 
     MAX_RETRIES = 3
 
@@ -43,12 +44,14 @@ module RidePosts
         end
 
         return ride if ride.canceled?
+        raise InvalidStateError, "Completed trips cannot be canceled" if ride.completed?
 
         now = Time.current
         ride.update!(status: :canceled)
 
         ride.bookings.active.find_each do |b|
-          b.update!(status: :canceled, canceled_at: now, canceled_by: actor)
+          b.update!(status: :canceled, canceled_at: now, canceled_by: actor,
+                    accepted_at: b.accepted_at || (b.accepted? ? b.decided_at || b.created_at : nil))
 
           delivery_key = "ride_canceled:#{ride.id}:booking:#{b.id}"
           Notification.find_or_create_by!(delivery_key: delivery_key) do |n|

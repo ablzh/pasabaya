@@ -87,6 +87,7 @@ class RidePost < ApplicationRecord
 
   scope :regular, -> { where(departure_time: nil) }
   scope :specific, -> { where.not(departure_time: nil) }
+  scope :upcoming, -> { where("departure_time > ? OR departure_time IS NULL", Time.current) }
 
   def regular?
     departure_time.nil?
@@ -105,7 +106,7 @@ class RidePost < ApplicationRecord
   end
 
   def self.popular_routes(limit = 12)
-    route_counts = publicly_visible.active.group(:origin_id, :destination_id)
+    route_counts = publicly_visible.active.upcoming.group(:origin_id, :destination_id)
                          .order(Arel.sql("count(*) DESC"))
                          .limit(limit)
                          .count
@@ -176,11 +177,12 @@ class RidePost < ApplicationRecord
   end
 
   def chat_writable?
-    chat_unlocked? && (departure_time.blank? || Time.current <= departure_time + 24.hours)
+    !canceled? && chat_unlocked? && (departure_time.blank? || Time.current <= departure_time + 24.hours)
   end
 
   def user_authorized_for_chat?(u)
     return false unless u
+    return false if canceled?
     return false unless authorized_viewer?(u)
 
     if user_id == u.id
@@ -197,7 +199,16 @@ class RidePost < ApplicationRecord
   def participant?(u)
     return false unless u
 
-    user_id == u.id || bookings.accepted.exists?(passenger_id: u.id)
+    review_participants.exists?(id: u.id)
+  end
+
+  def review_participants
+    participant_bookings = bookings.accepted
+    if departure_time.present?
+      late_cancellations = bookings.canceled.where("accepted_at <= ? AND canceled_at >= ?", departure_time, departure_time)
+      participant_bookings = participant_bookings.or(late_cancellations)
+    end
+    User.where(id: user_id).or(User.where(id: participant_bookings.select(:passenger_id)))
   end
 
   private

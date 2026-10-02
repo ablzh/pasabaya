@@ -51,6 +51,10 @@
             <%= ride_post.post_type %>
           </span>
 
+          <% if ride_post.draft? || ride_post.canceled? || ride_post.completed? %>
+            <span class="text-[10px] font-bold uppercase tracking-wider text-neutral-500"><%= ride_post.status.humanize %></span>
+          <% end %>
+
           <% if ride_post.full? %>
             <span class="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider bg-neutral-200 text-neutral-700 dark:bg-neutral-800 dark:text-neutral-300">
               Full

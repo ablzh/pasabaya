@@ -11,7 +11,7 @@ class RidePostsController < ApplicationController
   # GET /ride_posts or /ride_posts.json
   def index
     if params.key?(:post_type) || params.key?(:origin_id) || params.key?(:destination_id) || params.key?(:community_id) || params.key?(:ladies_only) || params.key?(:departure_date)
-      @ride_posts = RidePost.active
+      @ride_posts = RidePost.active.upcoming
                             .visible_to(Current.user)
                             .includes(:origin, :destination, :user, :community)
                             .order(departure_time: :asc)
@@ -49,7 +49,11 @@ class RidePostsController < ApplicationController
 
   # GET /ride_posts/new
   def new
-    @ride_post = RidePost.new
+    @ride_post = Current.user.ride_posts.build
+    if params[:community_id].present?
+      @ride_post.community = Current.user.verified_communities.find(params[:community_id])
+      @ride_post.visibility = :hub_only
+    end
   end
 
   # GET /ride_posts/1/edit

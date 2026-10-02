@@ -19,6 +19,8 @@ class Booking < ApplicationRecord
   validate :validate_ride_bookable, on: :create
   validate :validate_audience_eligibility, on: :create
 
+  before_save :record_acceptance, if: -> { accepted? && accepted_at.blank? }
+
   scope :active, -> { where(status: [ :pending, :accepted ]) }
   scope :pending, -> { where(status: :pending) }
   scope :accepted, -> { where(status: :accepted) }
@@ -30,6 +32,10 @@ class Booking < ApplicationRecord
   end
 
   private
+
+  def record_acceptance
+    self.accepted_at = decided_at || Time.current
+  end
 
   def passenger_cannot_be_driver
     return unless ride_post && passenger_id

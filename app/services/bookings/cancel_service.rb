@@ -56,7 +56,8 @@ module Bookings
         was_accepted = b.accepted?
         now = Time.current
 
-        b.update!(status: :canceled, canceled_at: now, canceled_by: actor)
+        b.update!(status: :canceled, canceled_at: now, canceled_by: actor,
+                  accepted_at: b.accepted_at || (was_accepted ? b.decided_at || b.created_at : nil))
 
         if was_accepted
           new_remaining = [ ride.remaining_seats + 1, ride.seats ].min

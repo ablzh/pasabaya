@@ -82,4 +82,46 @@ class TripReviewsControllerTest < ActionDispatch::IntegrationTest
     assert_not_nil incident
     assert incident.pending?
   end
+
+  test "passenger can review after the driver cancels a departed trip without retaining chat access" do
+    @booking.update_columns(accepted_at: 3.hours.ago)
+    @ride_post.update_columns(departure_time: 2.hours.ago, expected_arrival_at: 1.hour.ago)
+    RidePosts::CancelService.call(@ride_post, actor: @driver)
+
+    assert_not @ride_post.reload.user_authorized_for_chat?(@passenger)
+    sign_in_as(@passenger)
+    get new_ride_post_review_url(@ride_post)
+    assert_response :success
+
+    assert_difference "TripReview.count", 1 do
+      post ride_post_reviews_url(@ride_post), params: {
+        trip_review: { reported_user_id: @driver.id, outcome: "driver_no_show" }
+      }
+    end
+    assert_redirected_to ride_post_url(@ride_post)
+  end
+
+  test "cancellation before departure removes review eligibility" do
+    RidePosts::CancelService.call(@ride_post, actor: @driver)
+    assert_not @ride_post.participant?(@passenger)
+  end
+
+  test "incident failure rolls back its review" do
+    @ride_post.update_columns(departure_time: 2.hours.ago, expected_arrival_at: 1.hour.ago)
+    sign_in_as(@driver)
+    original = NoShowIncident.method(:find_or_create_by!)
+    NoShowIncident.define_singleton_method(:find_or_create_by!) do |*|
+      raise ActiveRecord::RecordInvalid.new(NoShowIncident.new)
+    end
+
+    assert_no_difference "TripReview.count" do
+      post ride_post_reviews_url(@ride_post), params: {
+        trip_review: { reported_user_id: @passenger.id, outcome: "passenger_no_show" }
+      }
+    end
+    assert_response :unprocessable_content
+    assert_select "li", text: /Could not save the incident report/
+  ensure
+    NoShowIncident.define_singleton_method(:find_or_create_by!, original) if original
+  end
 end

@@ -222,7 +222,7 @@
           <%# PASSENGER BOOKING CARD %>
           <div class="bg-neutral-900 dark:bg-neutral-800/90 text-white p-6 sm:p-8 rounded-3xl shadow-lg flex flex-col items-center text-center">
             <% if Current.user.present? %>
-              <% existing_booking = @ride_post.bookings.find_by(passenger: Current.user) %>
+              <% existing_booking = @ride_post.bookings.active.find_by(passenger: Current.user) %>
               <% if existing_booking&.pending? %>
                 <div class="my-2 p-4 rounded-2xl bg-amber-500/20 border border-amber-500/40 text-amber-200 max-w-md w-full">
                   <p class="font-bold text-sm">Seat Requested</p>
