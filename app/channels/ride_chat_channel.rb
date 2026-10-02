@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-class RideChatChannel < ActionCable::Channel::Base
+class RideChatChannel < ApplicationCable::Channel
   extend Turbo::Streams::Broadcasts, Turbo::Streams::StreamName
   include Turbo::Streams::StreamName::ClassMethods
 
@@ -8,7 +8,7 @@ class RideChatChannel < ActionCable::Channel::Base
     if (stream_name = verified_stream_name_from_params).present?
       ride = locate_ride(stream_name)
 
-      if ride && current_user && ride.user_authorized_for_chat?(current_user)
+      if active_session? && ride && current_user && ride.user_authorized_for_chat?(current_user)
         stream_from stream_name, coder: ActiveSupport::JSON do |data|
           deliver_or_reject(ride, stream_name, data)
         end
@@ -27,7 +27,7 @@ class RideChatChannel < ActionCable::Channel::Base
       nil
     end
 
-    if user && ride.reload.user_authorized_for_chat?(user)
+    if active_session? && user && ride.reload.user_authorized_for_chat?(user)
       transmit data
     else
       stop_stream_from stream_name

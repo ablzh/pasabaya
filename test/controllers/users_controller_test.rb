@@ -22,6 +22,15 @@ class UsersControllerTest < ActionDispatch::IntegrationTest
     assert_select "a[href='#{user_path(passenger, tab: 'bookings')}']", text: /Joined Trips/
   end
 
+  test "legacy unsafe Facebook URLs are not rendered as links" do
+    user = users(:one)
+    user.update_columns(facebook_profile_url: "javascript:alert(1)")
+    sign_in_as(user)
+    get user_url(user)
+    assert_response :success
+    assert_select "a[href^='javascript:']", count: 0
+  end
+
   test "owner viewing bookings tab sees accepted booking with chat link" do
     passenger = users(:two)
     booking = bookings(:one)

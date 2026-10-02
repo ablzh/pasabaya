@@ -11,7 +11,7 @@ class RideChatChannelTest < ActionCable::Channel::TestCase
   end
 
   test "subscribes when user is driver and stream is verified" do
-    stub_connection current_user: @driver
+    stub_connection current_user: @driver, current_session: @driver.sessions.create!
     signed = Turbo::StreamsChannel.signed_stream_name([ @ride, :chat ])
 
     subscribe signed_stream_name: signed
@@ -20,7 +20,7 @@ class RideChatChannelTest < ActionCable::Channel::TestCase
 
   test "subscribes when user is confirmed passenger" do
     @booking.update_columns(status: Booking.statuses[:accepted])
-    stub_connection current_user: @passenger
+    stub_connection current_user: @passenger, current_session: @passenger.sessions.create!
     signed = Turbo::StreamsChannel.signed_stream_name([ @ride, :chat ])
 
     subscribe signed_stream_name: signed
@@ -28,7 +28,7 @@ class RideChatChannelTest < ActionCable::Channel::TestCase
   end
 
   test "rejects subscription when user is not confirmed passenger or driver" do
-    stub_connection current_user: @passenger
+    stub_connection current_user: @passenger, current_session: @passenger.sessions.create!
     signed = Turbo::StreamsChannel.signed_stream_name([ @ride, :chat ])
 
     subscribe signed_stream_name: signed
@@ -36,7 +36,7 @@ class RideChatChannelTest < ActionCable::Channel::TestCase
   end
 
   test "rejects subscription when signed stream name is invalid" do
-    stub_connection current_user: @driver
+    stub_connection current_user: @driver, current_session: @driver.sessions.create!
 
     subscribe signed_stream_name: "tampered_stream_name"
     assert subscription.rejected?
@@ -44,7 +44,7 @@ class RideChatChannelTest < ActionCable::Channel::TestCase
 
   test "stops transmission and rejects subscription when passenger booking is canceled" do
     @booking.update_columns(status: Booking.statuses[:accepted])
-    stub_connection current_user: @passenger
+    stub_connection current_user: @passenger, current_session: @passenger.sessions.create!
     signed = Turbo::StreamsChannel.signed_stream_name([ @ride, :chat ])
 
     subscribe signed_stream_name: signed
@@ -75,7 +75,7 @@ class RideChatChannelTest < ActionCable::Channel::TestCase
 
     ActionCable::Channel::ChannelStub.prepend(interceptor)
 
-    stub_connection current_user: @driver
+    stub_connection current_user: @driver, current_session: @driver.sessions.create!
     signed = Turbo::StreamsChannel.signed_stream_name([ @ride, :chat ])
     subscribe signed_stream_name: signed
     assert_equal ActiveSupport::JSON, called_with_coder
@@ -90,7 +90,7 @@ class RideChatChannelTest < ActionCable::Channel::TestCase
 
   test "stops transmission and rejects subscription when user is banned after connecting" do
     @booking.update_columns(status: Booking.statuses[:accepted])
-    stub_connection current_user: @passenger
+    stub_connection current_user: @passenger, current_session: @passenger.sessions.create!
     signed = Turbo::StreamsChannel.signed_stream_name([ @ride, :chat ])
 
     subscribe signed_stream_name: signed
@@ -102,6 +102,19 @@ class RideChatChannelTest < ActionCable::Channel::TestCase
     # Attempt delivery
     subscription.deliver_or_reject(@ride, signed, "<div>hello</div>")
 
+    assert_empty transmissions
+    assert subscription.rejected?
+  end
+
+  test "stops transmission when the connecting session is revoked" do
+    session = @driver.sessions.create!
+    stub_connection current_user: @driver, current_session: session
+    signed = Turbo::StreamsChannel.signed_stream_name([ @ride, :chat ])
+    subscribe signed_stream_name: signed
+    assert subscription.confirmed?
+
+    session.destroy!
+    subscription.deliver_or_reject(@ride, signed, "private message")
     assert_empty transmissions
     assert subscription.rejected?
   end

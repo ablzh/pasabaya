@@ -41,8 +41,7 @@ class User < ApplicationRecord
   # Ensure the Facebook link is always provided
   validates :facebook_profile_url, presence: true
 
-  # A simple regex to ensure it looks vaguely like a URL
-  validates :facebook_profile_url, format: { with: URI::DEFAULT_PARSER.make_regexp }
+  validate :acceptable_facebook_profile_url
 
   attr_readonly :admin
 
@@ -50,6 +49,14 @@ class User < ApplicationRecord
 
   def initials
     "#{first_name&.first}#{last_name&.first}".upcase
+  end
+
+  def safe_facebook_profile_url?
+    uri = URI.parse(facebook_profile_url.to_s)
+    uri.is_a?(URI::HTTPS) && %w[facebook.com www.facebook.com m.facebook.com].include?(uri.host&.downcase) &&
+      uri.userinfo.nil? && uri.port == 443 && uri.path.present? && uri.path != "/"
+  rescue URI::InvalidURIError
+    false
   end
 
   def booking_frozen?
@@ -114,6 +121,12 @@ class User < ApplicationRecord
 
 
   private
+
+  def acceptable_facebook_profile_url
+    if facebook_profile_url.present? && !safe_facebook_profile_url?
+      errors.add(:facebook_profile_url, "must be an HTTPS Facebook profile URL")
+    end
+  end
 
   def acceptable_avatar
     return unless avatar.attached?

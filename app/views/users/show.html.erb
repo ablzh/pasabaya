@@ -40,7 +40,7 @@
 
         <%# Button Actions (Facebook Profile + Conditional Edit Profile) %>
         <div class="mt-4 flex flex-wrap gap-3 justify-center sm:justify-start">
-          <% if @user.facebook_profile_url.present? %>
+          <% if @user.safe_facebook_profile_url? %>
             <%= render Buttons::Component.new(
                        text: "View Facebook Profile",
                        href: @user.facebook_profile_url,

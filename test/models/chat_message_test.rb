@@ -79,4 +79,13 @@ class ChatMessageTest < ActiveSupport::TestCase
       Turbo::StreamsChannel.define_singleton_method(:broadcast_append_to, original_broadcast)
     end
   end
+
+  test "chat previews exclude banned participants" do
+    @booking.update_columns(status: Booking.statuses[:accepted])
+    @passenger.update_columns(banned_at: Time.current)
+    stream = Turbo::StreamsChannel.send(:stream_name_from, [ @passenger, :notifications ])
+    assert_no_broadcasts(stream) do
+      @ride.chat_messages.create!(user: @driver, body: "Private chat")
+    end
+  end
 end

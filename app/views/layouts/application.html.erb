@@ -166,7 +166,7 @@
 
 <%# Global Toast & Flash Notifications %>
 <%= render Toast::Component.new(position: "top-center", flash: flash) %>
-<%= turbo_stream_from [ Current.user, :notifications ] if authenticated? %>
+<%= turbo_stream_from [ Current.user, :notifications ], channel: NotificationsChannel if authenticated? %>
 
 <main class="container mx-auto px-4 mt-8 flex-grow">
   <%= yield %>

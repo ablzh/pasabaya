@@ -28,6 +28,17 @@ class UserTest < ActiveSupport::TestCase
     assert user.valid?
   end
 
+  test "rejects unsafe and non-Facebook profile URLs" do
+    user = users(:one)
+    %w[javascript:alert(1) https://example.com/juan https://facebook.com.evil.test/juan
+       https://facebook.com@evil.test/juan http://facebook.com/juan https://facebook.com/].each do |url|
+      user.facebook_profile_url = url
+      assert_not user.valid?, "Expected #{url} to be rejected"
+      assert_not user.safe_facebook_profile_url?
+      assert user.errors[:facebook_profile_url].any?
+    end
+  end
+
   test "changing gender from female withdraws ladies-only driver and passenger commitments" do
     female_user = User.create!(
       email_address: "maria_withdrawal@example.com",

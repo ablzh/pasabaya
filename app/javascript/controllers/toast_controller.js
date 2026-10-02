@@ -292,7 +292,9 @@ export default class extends Controller {
     }
 
     // Add close button
-    const closeBtn = document.createElement("span");
+    const closeBtn = document.createElement("button");
+    closeBtn.type = "button";
+    closeBtn.setAttribute("aria-label", "Dismiss notification");
     const hasActions = toast.action || toast.secondaryAction;
     closeBtn.className = `absolute right-0 p-1.5 mr-2.5 text-neutral-400 duration-100 ease-in-out rounded-full cursor-pointer hover:bg-neutral-50 dark:hover:bg-neutral-700 hover:text-neutral-500 dark:hover:text-neutral-300 ${
       !toast.description && !toast.html && !hasActions ? "top-1/2 -translate-y-1/2" : "top-0 mt-2.5"
@@ -308,6 +310,12 @@ export default class extends Controller {
     li.appendChild(span);
 
     return li;
+  }
+
+  escapeHTML(value) {
+    const element = document.createElement("span");
+    element.textContent = value == null ? "" : String(value);
+    return element.innerHTML;
   }
 
   getToastHTML(toast) {
@@ -342,12 +350,12 @@ export default class extends Controller {
         <div class="flex justify-end items-center gap-2 mt-0.5">
           ${
             toast.secondaryAction
-              ? `<button data-action-type="secondary" class="flex items-center justify-center gap-1.5 rounded-lg border border-neutral-200 bg-white/90 px-2 py-1.5 text-xs font-medium whitespace-nowrap text-neutral-800 shadow-xs transition-all duration-100 ease-in-out select-none hover:bg-neutral-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-600 disabled:cursor-not-allowed disabled:opacity-50 dark:border-white/10 dark:bg-neutral-700/50 dark:text-neutral-50 dark:hover:bg-neutral-700/75 dark:focus-visible:outline-neutral-200">${toast.secondaryAction.label}</button>`
+              ? `<button data-action-type="secondary" class="flex items-center justify-center gap-1.5 rounded-lg border border-neutral-200 bg-white/90 px-2 py-1.5 text-xs font-medium whitespace-nowrap text-neutral-800 shadow-xs transition-all duration-100 ease-in-out select-none hover:bg-neutral-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-600 disabled:cursor-not-allowed disabled:opacity-50 dark:border-white/10 dark:bg-neutral-700/50 dark:text-neutral-50 dark:hover:bg-neutral-700/75 dark:focus-visible:outline-neutral-200">${this.escapeHTML(toast.secondaryAction.label)}</button>`
               : ""
           }
           ${
             toast.action
-              ? `<button data-action-type="primary" class="flex items-center justify-center gap-1.5 rounded-lg border border-neutral-400/30 bg-neutral-800 px-2 py-1.5 text-xs font-medium whitespace-nowrap text-white shadow-sm transition-all duration-100 ease-in-out select-none hover:bg-neutral-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-600 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-white dark:text-neutral-800 dark:hover:bg-neutral-100 dark:focus-visible:outline-neutral-200">${toast.action.label}</button>`
+              ? `<button data-action-type="primary" class="flex items-center justify-center gap-1.5 rounded-lg border border-neutral-400/30 bg-neutral-800 px-2 py-1.5 text-xs font-medium whitespace-nowrap text-white shadow-sm transition-all duration-100 ease-in-out select-none hover:bg-neutral-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-600 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-white dark:text-neutral-800 dark:hover:bg-neutral-100 dark:focus-visible:outline-neutral-200">${this.escapeHTML(toast.action.label)}</button>`
               : ""
           }
         </div>`
@@ -360,13 +368,13 @@ export default class extends Controller {
             ${icon}
           </div>
           <p class="text-[13px] font-medium text-neutral-800 dark:text-neutral-200 pr-6">
-            ${toast.message}
+            ${this.escapeHTML(toast.message)}
           </p>
           ${
             toast.description
               ? `<div></div>
           <div class="text-xs text-neutral-600 dark:text-neutral-400">
-            ${toast.description}
+            ${this.escapeHTML(toast.description)}
           </div>`
               : ""
           }
