@@ -3,6 +3,24 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
+html[data-hotwire-native="true"] {
+    .web-navigation,
+    .web-footer {
+        display: none;
+    }
+
+    main h1 {
+        @apply sr-only;
+    }
+
+    .app-content {
+        margin-top: 1rem;
+        padding-left: max(1rem, env(safe-area-inset-left));
+        padding-right: max(1rem, env(safe-area-inset-right));
+        padding-bottom: max(1rem, env(safe-area-inset-bottom));
+    }
+}
+
 .trip-chat {
     height: min(620px, calc(100dvh - 20rem));
     min-height: 12rem;

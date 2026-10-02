@@ -28,6 +28,14 @@ class NotificationsControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to new_session_url
   end
 
+  test "marking a notification read with HTML redirects using GET" do
+    sign_in_as(@user)
+    patch mark_as_read_notification_url(@notification)
+    assert_response :see_other
+    assert_redirected_to notifications_url
+    assert @notification.reload.read?
+  end
+
   test "viewing a notification when notifiable was deleted redirects to rides index" do
     sign_in_as(@user)
     ride = RidePost.create!(

@@ -16,6 +16,7 @@ class CommunityMembershipsControllerTest < ActionDispatch::IntegrationTest
 
   test "create requires authentication" do
     post community_memberships_url(@community), params: { institutional_email: "cand@accenture.com" }
+    assert_response :see_other
     assert_redirected_to new_session_url
   end
 
@@ -24,6 +25,7 @@ class CommunityMembershipsControllerTest < ActionDispatch::IntegrationTest
     assert_enqueued_emails 1 do
       post community_memberships_url(@community), params: { institutional_email: "cand@accenture.com" }
     end
+    assert_response :see_other
     assert_redirected_to community_url(@community)
     follow_redirect!
     assert_match(/Verification email sent/, response.body)
@@ -38,6 +40,7 @@ class CommunityMembershipsControllerTest < ActionDispatch::IntegrationTest
     assert_no_emails do
       post community_memberships_url(@community), params: { institutional_email: "cand@otherdomain.com" }
     end
+    assert_response :see_other
     assert_redirected_to community_url(@community)
     follow_redirect!
     assert_match(/must match the community domain/, response.body)
@@ -77,6 +80,7 @@ class CommunityMembershipsControllerTest < ActionDispatch::IntegrationTest
     sign_in_as(@user)
 
     delete community_membership_url(@community, membership)
+    assert_response :see_other
     assert_redirected_to community_url(@community)
     follow_redirect!
     assert_match(/You have left the #{@community.name} community/, response.body)

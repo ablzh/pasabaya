@@ -33,7 +33,7 @@ class NotificationsController < ApplicationController
     @notification.mark_as_read!
 
     respond_to do |format|
-      format.html { redirect_back fallback_location: notifications_path }
+      format.html { redirect_back fallback_location: notifications_path, status: :see_other }
       format.turbo_stream
     end
   end

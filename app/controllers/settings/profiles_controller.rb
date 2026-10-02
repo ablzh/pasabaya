@@ -6,7 +6,7 @@ class Settings::ProfilesController < Settings::BaseController
   def update
     @user = Current.user
     if @user.update(profile_params)
-      redirect_to settings_profile_path, notice: "Profile updated successfully."
+      redirect_to settings_profile_path, notice: "Profile updated successfully.", status: :see_other
     else
       render :show, status: :unprocessable_content
     end

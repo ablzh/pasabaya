@@ -12,7 +12,7 @@ class ChatMessagesController < ApplicationController
     respond_to do |format|
       if @chat_message.save
         format.turbo_stream
-        format.html { redirect_to @ride_post, notice: "Message sent." }
+        format.html { redirect_to ride_post_path(@ride_post, tab: "chat"), notice: "Message sent.", status: :see_other }
       else
         format.turbo_stream do
           render turbo_stream: turbo_stream.replace(
@@ -21,7 +21,7 @@ class ChatMessagesController < ApplicationController
             locals: { ride_post: @ride_post, chat_message: @chat_message }
           ), status: :unprocessable_content
         end
-        format.html { redirect_to @ride_post, alert: @chat_message.errors.full_messages.to_sentence }
+        format.html { redirect_to ride_post_path(@ride_post, tab: "chat"), alert: @chat_message.errors.full_messages.to_sentence, status: :see_other }
       end
     end
   end

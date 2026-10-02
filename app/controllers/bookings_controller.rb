@@ -22,9 +22,9 @@ class BookingsController < ApplicationController
       end
     end
 
-    redirect_to @ride_post, notice: "Seat requested! The driver has been notified."
+    redirect_to @ride_post, notice: "Seat requested! The driver has been notified.", status: :see_other
   rescue ActiveRecord::RecordInvalid => e
-    redirect_to @ride_post, alert: (@booking&.errors&.full_messages&.to_sentence || e.message)
+    redirect_to @ride_post, alert: (@booking&.errors&.full_messages&.to_sentence || e.message), status: :see_other
   end
 
   # GET /bookings/:id
@@ -37,25 +37,25 @@ class BookingsController < ApplicationController
   # PATCH /bookings/:id/accept
   def accept
     Bookings::AcceptService.call(@booking, actor: Current.user)
-    redirect_to @booking.ride_post, notice: "Booking accepted! Passenger seat confirmed."
+    redirect_to @booking.ride_post, notice: "Booking accepted! Passenger seat confirmed.", status: :see_other
   rescue Bookings::AcceptService::Error => e
-    redirect_to @booking.ride_post, alert: e.message
+    redirect_to @booking.ride_post, alert: e.message, status: :see_other
   end
 
   # PATCH /bookings/:id/decline
   def decline
     Bookings::DeclineService.call(@booking, actor: Current.user)
-    redirect_to @booking.ride_post, notice: "Booking request declined."
+    redirect_to @booking.ride_post, notice: "Booking request declined.", status: :see_other
   rescue Bookings::DeclineService::Error => e
-    redirect_to @booking.ride_post, alert: e.message
+    redirect_to @booking.ride_post, alert: e.message, status: :see_other
   end
 
   # PATCH /bookings/:id/cancel
   def cancel
     Bookings::CancelService.call(@booking, actor: Current.user)
-    redirect_to @booking.ride_post, notice: "Booking has been canceled."
+    redirect_to @booking.ride_post, notice: "Booking has been canceled.", status: :see_other
   rescue Bookings::CancelService::Error => e
-    redirect_to @booking.ride_post, alert: e.message
+    redirect_to @booking.ride_post, alert: e.message, status: :see_other
   end
 
   private

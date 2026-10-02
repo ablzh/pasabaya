@@ -18,7 +18,8 @@ class SessionsControllerTest < ActionDispatch::IntegrationTest
   test "create with invalid credentials" do
     post session_path, params: { email_address: @user.email_address, password: "wrong" }
 
-    assert_redirected_to new_session_path
+    assert_response :unprocessable_content
+    assert_select "input[name='email_address'][value='#{@user.email_address}']"
     assert_nil cookies[:session_id]
   end
 
@@ -29,5 +30,11 @@ class SessionsControllerTest < ActionDispatch::IntegrationTest
 
     assert_redirected_to new_session_path
     assert_empty cookies[:session_id]
+  end
+
+  test "unsafe return paths cannot redirect to another host" do
+    get new_session_path, params: { return_to: "/\\evil.example" }
+    post session_path, params: { email_address: @user.email_address, password: "password" }
+    assert_redirected_to root_path
   end
 end

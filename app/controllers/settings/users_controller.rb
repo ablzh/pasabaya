@@ -8,10 +8,10 @@ class Settings::UsersController < Settings::BaseController
         terminate_session
         redirect_to root_path, notice: "Your account has been deleted.", status: :see_other
       else
-        redirect_to settings_profile_path, alert: @user.errors.full_messages.to_sentence.presence || "Account could not be deleted."
+        redirect_to settings_profile_path, alert: @user.errors.full_messages.to_sentence.presence || "Account could not be deleted.", status: :see_other
       end
     else
-      redirect_to settings_profile_path, alert: "Incorrect password. Account was not deleted."
+      redirect_to settings_profile_path, alert: "Incorrect password. Account was not deleted.", status: :see_other
     end
   end
 end

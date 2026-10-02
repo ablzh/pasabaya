@@ -1,0 +1,20 @@
+{
+  "settings": {
+    "tabs": [
+      { "title": "Search", "path": "/rides" },
+      { "title": "My Trips", "path": "/trips" },
+      { "title": "Hubs", "path": "/communities" },
+      { "title": "Account", "path": "/settings/profile" }
+    ]
+  },
+  "rules": [
+    {
+      "patterns": [".*"],
+      "properties": { "context": "default", "pull_to_refresh_enabled": true }
+    },
+    {
+      "patterns": ["^/session/new(?:\\?.*)?$", "^/sign_up(?:\\?.*)?$", "^/passwords/new(?:\\?.*)?$", "^/passwords/[^/]+/edit(?:\\?.*)?$", "^/rides/new(?:\\?.*)?$", "^/rides/[^/]+/edit(?:\\?.*)?$", "^/rides/[^/]+/reviews/new(?:\\?.*)?$"],
+      "properties": { "context": "modal", "pull_to_refresh_enabled": false }
+    }
+  ]
+}

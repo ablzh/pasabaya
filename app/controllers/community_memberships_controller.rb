@@ -14,9 +14,9 @@ class CommunityMembershipsController < ApplicationController
 
     if @membership.save
       CommunityMailer.verification_email(@membership).deliver_later
-      redirect_to @community, notice: "Verification email sent to #{institutional_email}. Please check your inbox within 24 hours to confirm."
+      redirect_to @community, notice: "Verification email sent to #{institutional_email}. Please check your inbox within 24 hours to confirm.", status: :see_other
     else
-      redirect_to @community, alert: @membership.errors.full_messages.to_sentence
+      redirect_to @community, alert: @membership.errors.full_messages.to_sentence, status: :see_other
     end
   end
 
@@ -25,7 +25,7 @@ class CommunityMembershipsController < ApplicationController
     @membership = Current.user.community_memberships.find_by!(community: @community)
     @membership.revoke!
 
-    redirect_to @community, notice: "You have left the #{@community.name} community. Any upcoming community rides or bookings have been canceled."
+    redirect_to @community, notice: "You have left the #{@community.name} community. Any upcoming community rides or bookings have been canceled.", status: :see_other
   end
 
   def verify

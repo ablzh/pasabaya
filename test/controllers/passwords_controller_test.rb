@@ -10,6 +10,7 @@ class PasswordsControllerTest < ActionDispatch::IntegrationTest
 
   test "create" do
     post passwords_path, params: { email_address: @user.email_address }
+    assert_response :see_other
     assert_enqueued_email_with PasswordsMailer, :reset, args: [ @user ]
     assert_redirected_to new_session_path
 
@@ -42,6 +43,7 @@ class PasswordsControllerTest < ActionDispatch::IntegrationTest
   test "update" do
     assert_changes -> { @user.reload.password_digest } do
       put password_path(@user.password_reset_token), params: { password: "new", password_confirmation: "new" }
+      assert_response :see_other
       assert_redirected_to new_session_path
     end
 
@@ -53,11 +55,11 @@ class PasswordsControllerTest < ActionDispatch::IntegrationTest
     token = @user.password_reset_token
     assert_no_changes -> { @user.reload.password_digest } do
       put password_path(token), params: { password: "no", password_confirmation: "match" }
-      assert_redirected_to edit_password_path(token)
+      assert_response :unprocessable_content
+      assert_select "form[action='#{password_path(token)}']"
     end
 
-    follow_redirect!
-    assert_notice "Passwords did not match"
+    assert_notice "doesn't match Password"
   end
 
   private

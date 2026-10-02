@@ -12,7 +12,7 @@ class RegistrationsController < ApplicationController
       # Log the user in immediately after creating their account
       start_new_session_for @user
       UserMailer.welcome(@user).deliver_later
-      redirect_to root_path, notice: "Welcome to Pasabaya! Your account was successfully created."
+      redirect_to root_path, notice: "Welcome to Pasabaya! Your account was successfully created.", status: :see_other
     else
       render :new, status: :unprocessable_content
     end
@@ -22,7 +22,7 @@ class RegistrationsController < ApplicationController
 
   def redirect_if_authenticated
     if authenticated?
-      redirect_to root_path, alert: "You are already signed in."
+      redirect_to root_path, alert: "You are already signed in.", status: :see_other
     end
   end
 

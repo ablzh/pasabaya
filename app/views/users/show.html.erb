@@ -63,13 +63,15 @@
 
   <%# 2. Activity / Listings Section %>
   <% active_tab = (params[:tab] == "bookings") ? "bookings" : "posts" %>
+  <% posts_path = action_name == "trips" ? trips_path(tab: "posts") : user_path(@user, tab: "posts") %>
+  <% bookings_path = action_name == "trips" ? trips_path(tab: "bookings") : user_path(@user, tab: "bookings") %>
   <div>
     <% if Current.user == @user %>
       <div class="flex items-center gap-3 border-b border-neutral-200 dark:border-neutral-800 mb-6">
-        <%= link_to user_path(@user, tab: "posts"), class: "pb-3 px-1 text-sm font-semibold transition-colors border-b-2 #{active_tab == 'posts' ? 'border-neutral-900 text-neutral-900 dark:border-white dark:text-white' : 'border-transparent text-neutral-500 hover:text-neutral-700 dark:text-neutral-400 dark:hover:text-neutral-200'}" do %>
+        <%= link_to posts_path, class: "pb-3 px-1 text-sm font-semibold transition-colors border-b-2 #{active_tab == 'posts' ? 'border-neutral-900 text-neutral-900 dark:border-white dark:text-white' : 'border-transparent text-neutral-500 hover:text-neutral-700 dark:text-neutral-400 dark:hover:text-neutral-200'}" do %>
           My Posts (<%= @ride_posts.count %>)
         <% end %>
-        <%= link_to user_path(@user, tab: "bookings"), class: "pb-3 px-1 text-sm font-semibold transition-colors border-b-2 #{active_tab == 'bookings' ? 'border-neutral-900 text-neutral-900 dark:border-white dark:text-white' : 'border-transparent text-neutral-500 hover:text-neutral-700 dark:text-neutral-400 dark:hover:text-neutral-200'}" do %>
+        <%= link_to bookings_path, class: "pb-3 px-1 text-sm font-semibold transition-colors border-b-2 #{active_tab == 'bookings' ? 'border-neutral-900 text-neutral-900 dark:border-white dark:text-white' : 'border-transparent text-neutral-500 hover:text-neutral-700 dark:text-neutral-400 dark:hover:text-neutral-200'}" do %>
           Joined Trips &amp; Bookings (<%= @passenger_bookings.count %>)
         <% end %>
       </div>
