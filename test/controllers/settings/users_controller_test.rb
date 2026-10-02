@@ -42,6 +42,7 @@ class Settings::UsersControllerTest < ActionDispatch::IntegrationTest
     end
 
     assert_redirected_to settings_profile_url
+    assert_response :see_other
     assert_match /Cannot delete record because dependent reported trip reviews exist/, flash[:alert]
     assert_not_empty cookies[:session_id]
   end
@@ -52,6 +53,7 @@ class Settings::UsersControllerTest < ActionDispatch::IntegrationTest
     end
 
     assert_redirected_to settings_profile_url
+    assert_response :see_other
     assert_equal "Incorrect password. Account was not deleted.", flash[:alert]
   end
 end

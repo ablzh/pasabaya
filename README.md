@@ -33,9 +33,9 @@ In creating Pasabaya.app, I was inspired by **The One Person Framework** philoso
 
 - **Community Ride Board:** Drivers can offer carpools; passengers can post ride requests.
 - **Route Discovery:** Browse and search rides between Philippine regions, provinces, and cities (e.g., Metro Manila ↔ Baguio, Quezon City ↔ Manila).
-- **Direct Social Connection:** Verified Facebook profiles for trust; no in-app financial transactions or commission fees.
+- **Direct Social Connection:** Facebook profile links for users to review; no in-app financial transactions or commission fees. Profile ownership is not independently verified.
 - **Modern Interface:** Encapsulated UI built with ViewComponents, Tailwind CSS 4, Heroicons, and native dark mode support.
-- **Progressive Web App (PWA):** Installable directly on mobile devices with offline fallback.
+- **Hotwire Native Foundation:** Shared Rails screens, stable tab destinations, persistent sessions, and versioned iOS/Android navigation configuration. Native apps and offline storage are not implemented yet. See [the mobile implementation guide](docs/hotwire-native.md).
 
 ---
 

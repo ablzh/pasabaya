@@ -20,7 +20,8 @@ class ChatMessagesControllerTest < ActionDispatch::IntegrationTest
       }
     end
 
-    assert_redirected_to ride_post_url(@ride)
+    assert_response :see_other
+    assert_redirected_to ride_post_url(@ride, tab: "chat")
     assert_equal "I am at the meeting point", @ride.chat_messages.last.body
   end
 

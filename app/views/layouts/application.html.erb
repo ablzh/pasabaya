@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="en" data-hotwire-native="<%= hotwire_native_app? %>">
 <head>
   <script>
     (function() {
@@ -14,6 +14,7 @@
     })();
   </script>
 
+  <% set_meta_tags title: native_page_title, site: nil if hotwire_native_app? %>
   <%= display_meta_tags site: 'Pasabaya',
                         title: 'Carpooling Philippines',
                         reverse: true,
@@ -29,7 +30,7 @@
                           image: image_url('og-preview.png')
                         } %>
 
-  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="application-name" content="Pasabaya - Carpooling Philippines">
   <meta name="mobile-web-app-capable" content="yes">
@@ -37,6 +38,7 @@
   <%= turbo_refreshes_with method: :morph, scroll: :preserve %>
 
   <%= csrf_meta_tags %>
+  <%= turbo_exempts_page_from_cache if hotwire_native_app? && authenticated? %>
   <%= csp_meta_tag %>
 
   <%= yield :head %>
@@ -58,9 +60,9 @@
   <% end %>
 </head>
 
-<body class="bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100 flex flex-col min-h-screen">
+<body class="bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100 flex flex-col min-h-dvh">
 
-<%= render(Navbar::Component.new(classes: "mx-auto", show_mobile_menu: false)) do |navbar| %>
+<%= render(Navbar::Component.new(classes: "mx-auto web-navigation", show_mobile_menu: false)) do |navbar| %>
   <% navbar.with_logo do %>
     <%= link_to root_path, class: "flex items-center mr-2 ml-2 select-none no-underline" do %>
       <%= image_tag "/icon.svg", size: "32x32", class: "h-8 w-8 object-contain", alt: "Pasabaya Logo" %>
@@ -115,7 +117,7 @@
         <span class="text-sm font-medium text-neutral-900 dark:text-neutral-100">Profile</span>
       <% end %>
 
-      <%= link_to user_path(Current.user, tab: "bookings"), class: "flex items-center gap-2 rounded-lg p-2 no-underline hover:bg-neutral-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-600 dark:hover:bg-neutral-700 dark:focus-visible:outline-neutral-200" do %>
+      <%= link_to trips_path, class: "flex items-center gap-2 rounded-lg p-2 no-underline hover:bg-neutral-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-600 dark:hover:bg-neutral-700 dark:focus-visible:outline-neutral-200" do %>
         <span class="text-xs text-neutral-500 dark:text-neutral-400">
           <svg class="size-3.5 sm:size-4" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 18.75a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 01-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h1.125c.621 0 1.129-.504 1.09-1.124a17.902 17.902 0 00-3.213-9.193 2.056 2.056 0 00-1.58-.86H14.25M16.5 18.75h-2.25m0-11.177v-.958c0-.568-.422-1.048-.987-1.106a48.554 48.554 0 00-10.026 0 1.106 1.106 0 00-.987 1.106v7.635m12-6.676V8.25m0 0h2.25" />
@@ -161,16 +163,18 @@
   <% end %>
 <% end %>
 
+<%= render "layouts/native_navigation" if hotwire_native_app? %>
+
 <%# Global Toast & Flash Notifications %>
 <%= render Toast::Component.new(position: "top-center", flash: flash) %>
 <%= turbo_stream_from [ Current.user, :notifications ], channel: NotificationsChannel if authenticated? %>
 
-<main class="container mx-auto px-4 mt-8 flex-grow">
+<main class="app-content container mx-auto px-4 mt-8 flex-grow">
   <%= yield %>
 </main>
 
 <%# Global Footer %>
-<footer class="mt-auto py-12 border-t border-neutral-200 dark:border-neutral-800">
+<footer class="web-footer mt-auto py-12 border-t border-neutral-200 dark:border-neutral-800">
   <div class="container mx-auto px-4">
     <div class="flex flex-col md:flex-row justify-between items-center gap-6">
       <div class="text-center md:text-left">

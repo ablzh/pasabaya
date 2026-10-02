@@ -1,5 +1,6 @@
 Rails.application.routes.draw do
   resources :users, only: [ :show ]
+  get "trips", to: "users#trips", as: :trips
   get "rides/from-:origin_slug-to-:destination_slug", to: "ride_posts#index", as: :route_rides
   resources :ride_posts, path: "rides" do
     member do

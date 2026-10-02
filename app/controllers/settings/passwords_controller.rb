@@ -3,7 +3,7 @@ class Settings::PasswordsController < Settings::BaseController
     @user = Current.user
     if @user.update(password_params)
       @user.sessions.where.not(id: Current.session.id).destroy_all
-      redirect_to settings_profile_path, notice: "Password changed successfully."
+      redirect_to settings_profile_path, notice: "Password changed successfully.", status: :see_other
     else
       render "settings/profiles/show", status: :unprocessable_content
     end

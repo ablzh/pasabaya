@@ -3,7 +3,7 @@ class Settings::EmailsController < Settings::BaseController
     @user = Current.user
     if @user.update(email_params)
       UserMailer.with(user: @user).email_confirmation.deliver_later
-      redirect_to settings_profile_path, notice: "Confirmation link sent to #{@user.unconfirmed_email}."
+      redirect_to settings_profile_path, notice: "Confirmation link sent to #{@user.unconfirmed_email}.", status: :see_other
     else
       render "settings/profiles/show", status: :unprocessable_content
     end
