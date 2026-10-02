@@ -3,6 +3,31 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
+.trip-chat {
+    height: min(620px, calc(100dvh - 20rem));
+    min-height: 12rem;
+}
+
+.chat-message[data-own-message="true"] {
+    justify-content: flex-end;
+}
+
+.chat-message[data-own-message="true"] .chat-message-content {
+    align-items: flex-end;
+}
+
+.chat-message[data-own-message="true"] .chat-message-avatar,
+.chat-message[data-own-message="true"] .chat-message-author,
+#chat_messages_list:has(.chat-message) #chat_messages_empty,
+#notifications_list:not(:has(.notification)),
+#notifications_list:has(.notification) + #notifications_empty {
+    display: none;
+}
+
+.chat-message[data-own-message="true"] .chat-message-body {
+    @apply bg-blue-600 text-white border-blue-600 rounded-bl-2xl rounded-br-xs dark:bg-blue-600 dark:text-white dark:border-blue-600;
+}
+
 kbd {
     @apply rounded-md border border-black/10 bg-white px-1 font-mono text-[11px] text-neutral-800 shadow-[0px_1.5px_0px_0px_rgba(0,0,0,0.05)] dark:border-white/10 dark:bg-neutral-900 dark:text-neutral-200 dark:shadow-[0px_1px_0px_0px_rgba(255,255,255,0.1)];
 }

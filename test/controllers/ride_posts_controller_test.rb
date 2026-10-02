@@ -1,6 +1,24 @@
 require "test_helper"
 
 class RidePostsControllerTest < ActionDispatch::IntegrationTest
+  test "canonical ride redirect retains chat and response format" do
+    ride = ride_posts(:one)
+    get ride_post_url(ride.id, tab: "chat")
+    assert_redirected_to ride_post_url(ride, tab: "chat")
+    get ride_post_url(ride.id, format: :json)
+    assert_redirected_to ride_post_url(ride, format: :json)
+  end
+
+  test "SEO redirects retain audience filters and departure date" do
+    origin = locations(:one)
+    destination = locations(:two)
+    get ride_posts_url(origin_id: origin.id, destination_id: destination.id,
+                       community_id: communities(:one).id, ladies_only: true, departure_date: Date.tomorrow.to_s)
+    query = Rack::Utils.parse_query(URI.parse(response.location).query)
+    assert_equal communities(:one).id.to_s, query["community_id"]
+    assert_equal "true", query["ladies_only"]
+    assert_equal Date.tomorrow.to_s, query["departure_date"]
+  end
   test "new Hub rides retain their restricted audience" do
     sign_in_as(users(:one))
     get new_ride_post_url(community_id: communities(:one).id)

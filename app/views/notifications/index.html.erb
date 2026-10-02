@@ -4,15 +4,11 @@
   </div>
 
   <div id="notifications_container">
-    <% if @notifications.any? %>
       <div id="notifications_list" class="divide-y divide-neutral-100 dark:divide-neutral-800 bg-white dark:bg-neutral-900 rounded-3xl border border-neutral-100 dark:border-neutral-800 shadow-sm overflow-hidden">
         <%= render partial: "notifications/notification", collection: @notifications, as: :notification %>
       </div>
-    <% else %>
-      <div id="notifications_list" class="divide-y divide-neutral-100 dark:divide-neutral-800 bg-white dark:bg-neutral-900 rounded-3xl border border-neutral-100 dark:border-neutral-800 shadow-sm overflow-hidden hidden"></div>
       <div id="notifications_empty" class="text-center py-12 bg-white dark:bg-neutral-900 rounded-3xl border border-neutral-100 dark:border-neutral-800 p-8">
         <p class="text-neutral-500 text-sm">No notifications yet.</p>
       </div>
-    <% end %>
   </div>
 </div>

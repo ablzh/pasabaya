@@ -50,10 +50,10 @@ class RidesTest < ApplicationSystemTestCase
     fill_in "Seats", with: 4
     fill_in "Details & Preferences", with: "Carpooling together tomorrow morning, 4 seats open."
 
-    click_button "Publish Post"
+    click_button "Save Post"
 
     # Assert user-visible outcomes of creation
-    assert_text "Ride post was successfully created."
+    assert_text "Ride offer saved as a private draft."
     assert_selector "h1", text: /Makati\s+→\s+Manila/
     assert_text "4"
     assert_text "Carpooling together tomorrow morning, 4 seats open."
