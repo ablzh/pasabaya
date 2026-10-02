@@ -1,6 +1,37 @@
 require "test_helper"
 
 class RidePostsControllerTest < ActionDispatch::IntegrationTest
+  test "new Hub rides retain their restricted audience" do
+    sign_in_as(users(:one))
+    get new_ride_post_url(community_id: communities(:one).id)
+    assert_response :success
+    assert_select "select[name='ride_post[visibility]'] option[value='hub_only'][selected]"
+    assert_select "select[name='ride_post[community_id]'] option[value='#{communities(:one).id}'][selected]"
+  end
+
+  test "unverified members cannot prefill Hub rides" do
+    sign_in_as(users(:two))
+    get new_ride_post_url(community_id: communities(:one).id)
+    assert_response :not_found
+  end
+
+  test "repeat request displays the current booking rather than a canceled one" do
+    passenger = users(:two)
+    ride = ride_posts(:one)
+    bookings(:one).update_columns(status: Booking.statuses[:canceled])
+    Booking.create!(ride_post: ride, passenger: passenger, status: :pending)
+    sign_in_as(passenger)
+    get ride_post_url(ride)
+    assert_select "p", text: "Seat Requested"
+    assert_select "button", text: "Request Seat", count: 0
+  end
+
+  test "search omits departed rides even before the audit runs" do
+    ride = ride_posts(:one)
+    ride.update_columns(departure_time: 1.hour.ago)
+    get ride_posts_url(post_type: "offering")
+    assert_select "#ride_post_#{ride.id}", count: 0
+  end
   setup do
     @user = users(:one)
     @ride_post = ride_posts(:one)

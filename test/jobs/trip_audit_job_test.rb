@@ -41,10 +41,20 @@ class TripAuditJobTest < ActiveJob::TestCase
 
     assert_not_nil driver_notif
     assert_not_nil passenger_notif
+    assert @ride_post.reload.completed?
 
     # Idempotent: repeated run should not create duplicate notifications
     assert_no_difference -> { Notification.where(event_name: "review.requested").count } do
       TripAuditJob.perform_now(@ride_post.id)
     end
+  end
+
+  test "expires unanswered requests when a trip completes" do
+    @booking.update_columns(status: Booking.statuses[:pending], accepted_at: nil)
+    @ride_post.update_columns(departure_time: 5.hours.ago, expected_arrival_at: 3.hours.ago)
+    TripAuditJob.perform_now(@ride_post.id)
+    assert @ride_post.reload.completed?
+    assert @booking.reload.expired?
+    assert_not Notification.exists?(recipient: @passenger, notifiable: @ride_post, event_name: "review.requested")
   end
 end
