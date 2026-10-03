@@ -10,6 +10,7 @@ class Settings::ProfilesControllerTest < ActionDispatch::IntegrationTest
 
   test "removes facebook_profile_url and hides profile action" do
     assert @user.safe_facebook_profile_url?
+    assert_nil @user.registration_accepted_at
 
     patch settings_profile_url, params: {
       user: {
@@ -22,6 +23,8 @@ class Settings::ProfilesControllerTest < ActionDispatch::IntegrationTest
 
     @user.reload
     assert_nil @user.facebook_profile_url
+    assert_nil @user.registration_accepted_at
+    assert_nil @user.registration_policy_version
     assert_not @user.safe_facebook_profile_url?
 
     get user_url(@user)
