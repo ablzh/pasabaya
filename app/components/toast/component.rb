@@ -33,7 +33,7 @@ module Toast
     end
 
     def container_classes
-      base = "fixed z-[99999] w-full px-4 sm:px-0 sm:w-auto pointer-events-none transition-all duration-300 ease-in-out"
+      base = "fixed inset-auto m-0 z-[99999] w-[calc(100%-2rem)] sm:w-96 p-0 border-0 bg-transparent overflow-visible pointer-events-none"
       [ base, position_classes, @classes ].compact.reject(&:empty?).join(" ")
     end
 

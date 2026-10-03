@@ -24,7 +24,7 @@
       <!-- Participant selection -->
       <% if @possible_reviewees.count > 1 %>
         <div>
-          <label class="block text-xs font-bold uppercase tracking-wider text-neutral-500 mb-2">Participant to Review</label>
+          <%= form.label :reported_user_id, "Participant to Review", class: "block text-xs font-bold uppercase tracking-wider text-neutral-500 mb-2" %>
           <%= form.collection_select :reported_user_id, @possible_reviewees, :id, ->(u) { "#{u.first_name} #{u.last_name}" }, {},
               class: "w-full rounded-xl border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-sm py-3 px-4" %>
         </div>
@@ -38,7 +38,7 @@
 
       <!-- Outcome selection -->
       <div>
-        <label class="block text-xs font-bold uppercase tracking-wider text-neutral-500 mb-2">Trip Outcome</label>
+        <%= form.label :outcome, "Trip Outcome", class: "block text-xs font-bold uppercase tracking-wider text-neutral-500 mb-2" %>
         <%= form.select :outcome, [
           ["Ride completed smoothly", "completed"],
           ["Passenger did not show up (No-show)", "passenger_no_show"],
@@ -50,7 +50,7 @@
 
       <!-- Notes -->
       <div>
-        <label class="block text-xs font-bold uppercase tracking-wider text-neutral-500 mb-2">Details or Notes (Optional)</label>
+        <%= form.label :notes, "Details or Notes (Optional)", class: "block text-xs font-bold uppercase tracking-wider text-neutral-500 mb-2" %>
         <%= form.text_area :notes, rows: 4, placeholder: "Provide any helpful context or details about what happened...",
             class: "w-full rounded-xl border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-sm py-3 px-4" %>
       </div>

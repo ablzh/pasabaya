@@ -1,0 +1,99 @@
+require "test_helper"
+
+class RidePostsLifecycleTest < ActionDispatch::IntegrationTest
+  test "availability follows lifecycle before capacity and guest login only promises bookable seats" do
+    ride = ride_posts(:one)
+    cases = [
+      [ :draft, nil, 3, "Unpublished — edit to publish" ],
+      [ :canceled, 1.day.from_now, 0, "Canceled — bookings closed" ],
+      [ :completed, 1.day.ago, 0, "Trip completed — bookings closed" ],
+      [ :active, 1.hour.ago, 0, "Departed — bookings closed" ],
+      [ :fulfilled, 1.day.from_now, 0, "Fully booked" ],
+      [ :active, 1.day.from_now, 3, "Accepting requests" ]
+    ]
+    cases.each do |status, departure, seats, wording|
+      ride.update_columns(status: RidePost.statuses[status], departure_time: departure, remaining_seats: seats)
+      sign_in_as(ride.user)
+      get ride_post_url(ride)
+      assert_select "p", text: wording
+      assert_select "a", text: "Review Trip / Report No-Show", count: 0
+      if status == :draft
+        assert_select "a", text: "Edit Post"
+        assert_select "h2", text: "Seat Requests & Confirmed Passengers", count: 0
+      else
+        sign_out
+        get ride_post_url(ride)
+        assert_response :success
+        assert_select "a", text: "Login to Request Seat", count: status == :active && departure.future? ? 1 : 0
+        assert_select "a", text: "Find another ride", count: ride.bookable? ? 0 : 1
+      end
+    end
+    assert_select "a[href='#{new_session_path(return_to: ride_post_path(ride))}']", text: "Login to Request Seat"
+  end
+
+  test "both pending and accepted passenger rows link to their own profiles" do
+    sign_in_as(users(:one))
+    booking = bookings(:one)
+    [ :pending, :accepted ].each do |status|
+      booking.update_columns(status: Booking.statuses[status])
+      get ride_post_url(booking.ride_post)
+      assert_select "a[href='#{user_path(booking.passenger)}']", text: "Maria Clara", count: 1
+    end
+  end
+
+  test "same day overnight and year rollover arrivals retain their complete dates" do
+    sign_in_as(users(:one))
+    ride = ride_posts(:one)
+    departure = Time.zone.local(Time.current.year + 1, 12, 30, 9)
+    [ departure + 3.hours, departure + 1.day, departure + 3.days ].each do |arrival|
+      ride.update_columns(departure_time: departure, expected_arrival_at: arrival)
+      get ride_post_url(ride)
+      assert_select "p", text: "Arrival: #{arrival.strftime('%a, %b %d, %Y • %I:%M %p %Z')}"
+    end
+  end
+
+  test "request detail and cards describe seats needed with correct pluralization" do
+    ride = ride_posts(:two)
+    sign_in_as(ride.user)
+    ride.update_columns(departure_time: nil)
+    get ride_post_url(ride)
+    assert_select "p", text: "Seats needed"
+    assert_select "p", text: "Looking for a driver"
+    assert_select "p", text: /Posting a request does not reserve a seat/
+    assert_select "p", text: "Canceling closes this request for a driver."
+    assert_select "a", text: "Review Trip / Report No-Show", count: 0
+    [ 1, 2 ].each do |seats|
+      ride.update_columns(seats: seats)
+      get ride_posts_url(post_type: "requesting")
+      assert_select "#ride_post_#{ride.id} span", text: "#{seats} #{seats == 1 ? 'seat' : 'seats'} needed"
+    end
+    get edit_ride_post_url(ride)
+    assert_select "label[for='ride_post_departure_time']", text: "Preferred Departure (optional)"
+    assert_select "label[for='ride_post_expected_arrival_at']", text: "Preferred Arrival (optional)"
+    assert_select "label[for='ride_post_seats']", text: "Seats needed"
+  end
+
+  test "settings passwords have unique IDs and associated labels without changing parameter names" do
+    sign_in_as(users(:one))
+    get settings_profile_url
+    ids = css_select("[id]").map { |element| element["id"] }
+    assert_equal ids.uniq, ids
+    %w[email_change password_change].each do |namespace|
+      id = "#{namespace}_user_password_challenge"
+      assert_select "input##{id}[name='user[password_challenge]']"
+      assert_select "label[for='#{id}']", text: /Current password/, count: 1
+    end
+  end
+
+  test "home and metadata describe approval chat voluntary expenses and profile limitations" do
+    get root_url
+    assert_select "p", text: /request a seat, and wait for the driver to approve it/
+    assert_select "p", text: /private in-app trip chat/
+    assert_select "p", text: /voluntary sharing of fuel and toll expenses/
+    assert_select "p", text: /do not verify identity/
+    get ride_post_url(ride_posts(:one))
+    assert_select "meta[name='description']" do |meta|
+      assert_match /driver approval.*private in-app chat/, meta.first["content"]
+    end
+  end
+end

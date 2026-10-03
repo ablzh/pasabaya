@@ -85,6 +85,7 @@ export default class extends Controller {
       viewportLeft = (triggerRect.left + triggerRect.right) / 2 - viewportWidth / 2;
     }
 
+    viewportLeft = Math.max(16, Math.min(viewportLeft, window.innerWidth - viewportWidth - 16));
     const relativeLeft = viewportLeft - parentRect.left;
     this.viewportTarget.style.left = `${relativeLeft}px`;
 

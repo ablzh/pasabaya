@@ -239,7 +239,7 @@ export default class extends Controller {
   createToastElement(toast) {
     const li = document.createElement("li");
     li.id = toast.id;
-    li.className = "toast-item sm:max-w-xs";
+    li.className = "toast-item";
     li.style.pointerEvents = "auto";
     li.dataset.mounted = "false";
     li.dataset.removed = "false";
@@ -254,7 +254,7 @@ export default class extends Controller {
     }
 
     const span = document.createElement("span");
-    span.className = `relative flex flex-col items-start shadow-xs w-full transition-all duration-200 bg-white border border-neutral-200 dark:border-neutral-700 dark:bg-neutral-800 rounded-lg sm:rounded-xl sm:max-w-xs group ${
+    span.className = `relative flex flex-col items-start shadow-xs w-full transition-all duration-200 bg-white border border-neutral-200 dark:border-neutral-700 dark:bg-neutral-800 rounded-lg sm:rounded-xl group ${
       toast.html ? "p-0" : "p-4"
     }`;
     span.style.transitionTimingFunction = "cubic-bezier(0.4, 0, 0.2, 1)";

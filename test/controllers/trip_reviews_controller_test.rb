@@ -124,4 +124,32 @@ class TripReviewsControllerTest < ActionDispatch::IntegrationTest
   ensure
     NoShowIncident.define_singleton_method(:find_or_create_by!, original) if original
   end
+  test "draft undated request and empty departed offer cannot open or submit reviews" do
+    sign_in_as(@driver)
+    [ { status: :draft, departure_time: nil },
+      { status: :active, post_type: :requesting, departure_time: nil },
+      { status: :active, post_type: :offering, departure_time: 2.hours.ago } ].each do |attributes|
+      @ride_post.update_columns(attributes)
+      @booking.update_columns(status: Booking.statuses[:pending])
+      get new_ride_post_review_url(@ride_post)
+      assert_redirected_to ride_post_url(@ride_post)
+      assert_no_difference [ "TripReview.count", "NoShowIncident.count" ] do
+        post ride_post_reviews_url(@ride_post), params: {
+          trip_review: { reported_user_id: @passenger.id, outcome: "completed" }
+        }
+      end
+      assert_redirected_to ride_post_url(@ride_post)
+    end
+  end
+
+  test "review form labels identify every rendered field" do
+    Booking.create!(ride_post: @ride_post, passenger: @outsider, status: :accepted)
+    @ride_post.update_columns(departure_time: 2.hours.ago)
+    sign_in_as(@driver)
+    get new_ride_post_review_url(@ride_post)
+    %w[reported_user_id outcome notes].each do |field|
+      assert_select "label[for='trip_review_#{field}']", count: 1
+      assert_select "#trip_review_#{field}", count: 1
+    end
+  end
 end

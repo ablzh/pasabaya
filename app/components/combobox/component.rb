@@ -212,6 +212,7 @@ module Combobox
     def base_select_data_attributes
       data = {
         controller: "select",
+        action: "turbo:before-render@document->select#teardown turbo:render@document->select#connect turbo:before-cache@document->select#teardown",
         select_dropdown_input_value: @searchable
       }
       data[:select_clear_button_value] = @clearable unless @multiple
