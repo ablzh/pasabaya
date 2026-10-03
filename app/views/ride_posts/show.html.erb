@@ -21,11 +21,6 @@
           <%= @ride_post.origin.name %> <span class="text-neutral-400 font-normal">&rarr;</span> <%= @ride_post.destination.name %>
         </h1>
         <div class="mt-2.5 flex flex-wrap items-center gap-2">
-          <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-bold uppercase tracking-wider
-            <%= @ride_post.offering? ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400' : 'bg-sky-100 text-sky-700 dark:bg-sky-500/10 dark:text-sky-400' %>">
-            <%= @ride_post.post_type %>
-          </span>
-
           <% if @ride_post.ladies_only? %>
             <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-300">
               Ladies Only
@@ -102,7 +97,7 @@
       <%# Main Stat Cards %>
       <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
         <div class="bg-white dark:bg-neutral-900 p-5 sm:p-6 rounded-2xl border border-neutral-100 dark:border-white/5 shadow-xs">
-          <p class="text-[10px] font-bold text-neutral-400 uppercase tracking-widest mb-1"><%= @ride_post.requesting? ? "Preferred departure" : "Departure" %></p>
+          <p class="text-[10px] font-bold text-neutral-400 uppercase tracking-widest mb-1">Departure</p>
           <% if @ride_post.regular? %>
             <p class="text-base sm:text-lg font-bold text-neutral-900 dark:text-white">
               Regular / Flexible
@@ -119,7 +114,7 @@
         </div>
 
         <div class="bg-white dark:bg-neutral-900 p-5 sm:p-6 rounded-2xl border border-neutral-100 dark:border-white/5 shadow-xs">
-          <p class="text-[10px] font-bold text-neutral-400 uppercase tracking-widest mb-1"><%= @ride_post.requesting? ? "Passenger request" : "Capacity" %></p>
+          <p class="text-[10px] font-bold text-neutral-400 uppercase tracking-widest mb-1">Capacity</p>
           <p class="text-base sm:text-lg font-bold text-neutral-900 dark:text-white">
             <% if @ride_post.offering? && @ride_post.published? && @ride_post.departure_time&.future? && @ride_post.remaining_seats.present? %>
               <%= @ride_post.remaining_seats %> / <%= @ride_post.seats %>
@@ -127,7 +122,7 @@
               <%= @ride_post.seats %>
             <% end %>
           </p>
-          <p class="text-xs sm:text-sm text-neutral-500 font-medium"><%= @ride_post.requesting? ? "Seats needed" : (@ride_post.bookable? ? "Seats available" : "Total seats planned") %></p>
+          <p class="text-xs sm:text-sm text-neutral-500 font-medium"><%= @ride_post.bookable? ? "Seats available" : "Total seats planned" %></p>
         </div>
 
         <div class="bg-white dark:bg-neutral-900 p-5 sm:p-6 rounded-2xl border border-neutral-100 dark:border-white/5 shadow-xs">
@@ -284,10 +279,6 @@
         <% end %>
       <% end %>
 
-      <% if @ride_post.requesting? && @ride_post.active? %>
-        <p class="text-sm text-neutral-500">This passenger is looking for a driver. View their profile to discuss a possible ride. Posting a request does not reserve a seat; request a seat on a driver's offer for approval and private trip chat.</p>
-      <% end %>
-
       <% if Current.user != @ride_post.user %>
       <%# UNIFIED DRIVER / POSTER PROFILE CARD %>
       <div class="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 p-6 sm:p-7 rounded-3xl shadow-xs">
@@ -300,7 +291,7 @@
             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div>
                 <span class="text-[10px] font-bold uppercase tracking-wider text-neutral-400">
-                  <%= @ride_post.offering? ? "Driver" : "Passenger" %>
+                  Driver
                 </span>
                 <h3 class="text-xl font-bold text-neutral-900 dark:text-white">
                   <%= link_to user_path(@ride_post.user), class: "hover:underline" do %>
@@ -361,12 +352,12 @@
       <% if Current.user == @ride_post.user && !@ride_post.canceled? && !@ride_post.completed? %>
         <div class="mt-8 pt-6 border-t border-neutral-100 dark:border-neutral-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 rounded-2xl bg-red-50/40 dark:bg-red-950/10 border border-red-100 dark:border-red-900/20">
           <div>
-            <h3 class="text-sm font-bold text-red-700 dark:text-red-400"><%= @ride_post.requesting? ? "Cancel Passenger Request" : "Cancel Entire Trip" %></h3>
-            <p class="text-xs text-red-600/80 dark:text-red-400/70 mt-0.5"><%= @ride_post.requesting? ? "Canceling closes this request for a driver." : "Canceling will notify all pending and confirmed passengers." %></p>
+            <h3 class="text-sm font-bold text-red-700 dark:text-red-400">Cancel Entire Trip</h3>
+            <p class="text-xs text-red-600/80 dark:text-red-400/70 mt-0.5">Canceling will notify all pending and confirmed passengers.</p>
           </div>
           <%= button_to "Cancel Trip", cancel_ride_post_path(@ride_post),
                         method: :patch,
-                        data: { turbo_confirm: @ride_post.requesting? ? "Cancel this passenger request?" : "Are you sure you want to cancel this entire trip? All accepted and pending passengers will be notified." },
+                        data: { turbo_confirm: "Are you sure you want to cancel this entire trip? All accepted and pending passengers will be notified." },
                         class: "px-4 py-2 text-xs font-semibold rounded-xl bg-red-600 hover:bg-red-700 text-white transition-colors cursor-pointer shrink-0" %>
         </div>
       <% end %>

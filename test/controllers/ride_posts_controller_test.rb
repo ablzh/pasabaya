@@ -65,9 +65,19 @@ class RidePostsControllerTest < ActionDispatch::IntegrationTest
   test "search omits departed rides even before the audit runs" do
     ride = ride_posts(:one)
     ride.update_columns(departure_time: 1.hour.ago)
-    get ride_posts_url(post_type: "offering")
+    get ride_posts_url(origin_id: "")
     assert_select "#ride_post_#{ride.id}", count: 0
   end
+  test "submitted passenger intent cannot create a passenger ride post" do
+    post ride_posts_url, params: { ride_post: {
+      post_type: "requesting", origin_id: @ride_post.origin_id, destination_id: @ride_post.destination_id,
+      seats: 2, departure_time: 1.day.from_now, expected_arrival_at: 1.day.from_now + 2.hours
+    } }
+    assert_response :see_other
+    assert RidePost.last.offering?
+    assert RidePost.last.bookable?
+  end
+
   setup do
     @user = users(:one)
     @ride_post = ride_posts(:one)
@@ -85,7 +95,6 @@ class RidePostsControllerTest < ActionDispatch::IntegrationTest
   test "should redirect search with both origin and destination to seo route" do
     sign_out
     get ride_posts_url, params: {
-      post_type: @ride_post.post_type,
       origin_id: @ride_post.origin_id,
       destination_id: @ride_post.destination_id
     }
@@ -93,8 +102,7 @@ class RidePostsControllerTest < ActionDispatch::IntegrationTest
     # Проверяем, что произошел редирект на красивый SEO-URL
     assert_redirected_to route_rides_url(
                            origin_slug: @ride_post.origin.slug,
-                           destination_slug: @ride_post.destination.slug,
-                           post_type: @ride_post.post_type
+                           destination_slug: @ride_post.destination.slug
                          )
   end
 
