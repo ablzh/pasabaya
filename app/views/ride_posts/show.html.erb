@@ -26,24 +26,6 @@
             <%= @ride_post.post_type %>
           </span>
 
-          <% if @ride_post.is_free_ride? %>
-            <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300">
-              Libreng Sakay
-            </span>
-          <% end %>
-
-          <% if @ride_post.share_tolls? %>
-            <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300">
-              Share Tolls
-            </span>
-          <% end %>
-
-          <% if @ride_post.split_gas? %>
-            <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300">
-              Split Gas
-            </span>
-          <% end %>
-
           <% if @ride_post.ladies_only? %>
             <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-300">
               Ladies Only
@@ -371,7 +353,7 @@
 
       <%# Cost Sharing Legal Notice %>
       <div class="p-4 rounded-2xl bg-neutral-50 dark:bg-neutral-800/40 border border-neutral-100 dark:border-white/5 text-xs text-neutral-500">
-        Pasabaya is a community carpool matching tool. Commercial passenger transport and fixed fares are prohibited on the platform.
+        Pasabaya is a free community carpool matching board. Users arrange any expense sharing among themselves; Pasabaya does not set amounts or handle payments.
       </div>
 
       <%# Review Link %>

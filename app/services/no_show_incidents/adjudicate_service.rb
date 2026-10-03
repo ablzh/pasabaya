@@ -31,6 +31,7 @@ module NoShowIncidents
         )
 
         user = User.lock.find(incident_record.user_id)
+        return incident_record if user.deleted?
 
         if status == :upheld
           strikes = user.recent_upheld_incidents_count

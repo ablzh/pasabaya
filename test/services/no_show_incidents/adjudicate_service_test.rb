@@ -115,4 +115,17 @@ class NoShowIncidents::AdjudicateServiceTest < ActiveSupport::TestCase
       assert_equal original_freeze.to_i, @user.reload.booking_freeze_until.to_i
     end
   end
+
+  test "adjudicates retained incidents without notifying or modifying deleted accounts" do
+    incident = NoShowIncident.create!(ride_post: @ride_post, user: @user, status: :pending, occurred_at: Time.current)
+    assert Users::AnonymizeService.call(@user)
+
+    assert_no_difference("Notification.count") do
+      NoShowIncidents::AdjudicateService.call(incident, status: :upheld, reviewer: @driver)
+    end
+
+    assert incident.reload.upheld?
+    assert @user.reload.deleted?
+    assert_nil @user.booking_freeze_until
+  end
 end

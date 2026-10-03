@@ -8,7 +8,7 @@ module ApplicationCable
 
     private
       def set_current_user
-        if (session = Session.find_by(id: cookies.signed[:session_id])) && session.user.banned_at.blank?
+        if (session = Session.includes(:user).find_by(id: cookies.signed[:session_id])) && session.user.banned_at.blank? && !session.user.deleted?
           self.current_user = session.user
           self.current_session = session
         end

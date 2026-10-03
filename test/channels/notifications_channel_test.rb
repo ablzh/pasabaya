@@ -32,4 +32,18 @@ class NotificationsChannelTest < ActionCable::Channel::TestCase
     assert_empty transmissions
     assert subscription.rejected?
   end
+
+  test "deleted users cannot subscribe even when a session survives" do
+    @user.update_columns(deleted_at: Time.current)
+    subscribe signed_stream_name: Turbo::StreamsChannel.signed_stream_name([ @user, :notifications ])
+    assert subscription.rejected?
+  end
+
+  test "deleted users cannot receive notifications through an existing stream" do
+    subscribe signed_stream_name: Turbo::StreamsChannel.signed_stream_name([ @user, :notifications ])
+    @user.update_columns(deleted_at: Time.current)
+    subscription.deliver_or_reject("private notification")
+    assert_empty transmissions
+    assert subscription.rejected?
+  end
 end

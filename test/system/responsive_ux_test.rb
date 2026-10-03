@@ -12,16 +12,15 @@ class ResponsiveUxTest < ApplicationSystemTestCase
     fill_in "Seats available", with: 1
     fill_in "Departure Time", with: 3.days.from_now.strftime("%Y-%m-%dT09:00")
     fill_in "Expected Arrival Time", with: 3.days.from_now.strftime("%Y-%m-%dT12:00")
-    check "Libreng Sakay"
-    check "Split Gas"
+    select "Community / Closed Hub Only", from: "Visibility"
     page.execute_script("window.formRenders = 0; document.addEventListener('turbo:render', () => window.formRenders++)")
     2.times do
       submit_and_wait("Save Post")
-      assert_text "cannot be combined"
+      assert_text "Community can't be blank"
       assert_routes
       reopen_routes
     end
-    uncheck "Split Gas"
+    select "Public (Everyone)", from: "Visibility"
     click_button "Save Post"
     assert_text "Ride post was successfully created."
     ride = RidePost.order(:created_at).last
@@ -31,13 +30,13 @@ class ResponsiveUxTest < ApplicationSystemTestCase
 
     click_link "Edit Post"
     assert_selector "#ride_post_origin_id-ts-control"
-    check "Split Gas"
+    select "Community / Closed Hub Only", from: "Visibility"
     2.times do
       submit_and_wait("Save Changes")
       assert_routes
       reopen_routes
     end
-    uncheck "Split Gas"
+    select "Public (Everyone)", from: "Visibility"
     click_button "Save Changes"
     assert_text "Ride post was successfully updated."
     assert_equal [ locations(:one).id, locations(:two).id ], [ ride.reload.origin_id, ride.destination_id ]
@@ -132,13 +131,12 @@ class ResponsiveUxTest < ApplicationSystemTestCase
     choose_city("ride_post_origin_id", "Manila")
     choose_city("ride_post_destination_id", "Makati")
     fill_in "Seats needed", with: 1
-    check "Libreng Sakay"
-    check "Split Gas"
+    select "Community / Closed Hub Only", from: "Visibility"
     click_button "Save Post"
     assert_selector "#error_explanation"
     assert_selector "label", text: "Preferred Departure (optional)", exact_text: true
     assert_routes
-    uncheck "Split Gas"
+    select "Public (Everyone)", from: "Visibility"
     click_button "Save Post"
     assert_text "Ride post was successfully created."
     assert_text "Looking for a driver"

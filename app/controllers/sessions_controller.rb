@@ -12,7 +12,11 @@ class SessionsController < ApplicationController
 
   def create
     if user = User.authenticate_by(params.permit(:email_address, :password))
-      start_new_session_for user
+      if user.deleted? || !start_new_session_for(user)
+        redirect_to new_session_path, alert: "This account has been deleted.", status: :see_other
+        return
+      end
+
       redirect_to after_authentication_url, status: :see_other
     else
       flash.now[:alert] = "Try another email address or password."

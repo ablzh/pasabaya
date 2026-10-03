@@ -24,13 +24,9 @@ class RidePost < ApplicationRecord
   validates :visibility, presence: true
   validates :remaining_seats, numericality: { greater_than_or_equal_to: 0, less_than_or_equal_to: :seats }, allow_nil: true
   validates :ladies_only, inclusion: { in: [ true, false ] }
-  validates :share_tolls, inclusion: { in: [ true, false ] }
-  validates :split_gas, inclusion: { in: [ true, false ] }
-  validates :is_free_ride, inclusion: { in: [ true, false ] }
 
   validates :community, presence: true, if: :hub_only?
 
-  validate :cost_sharing_mutual_exclusion
   validate :driver_must_be_verified_community_member, if: -> { hub_only? && !canceled? && !completed? && (publishing? || will_save_change_to_community_id? || will_save_change_to_visibility?) }
   validate :driver_must_be_female_for_ladies_only, if: -> { ladies_only? && !canceled? && !completed? && (publishing? || will_save_change_to_ladies_only?) }
   validate :bookable_offering_requirements, if: -> { offering? && !draft? && !canceled? && !completed? }
@@ -186,9 +182,9 @@ class RidePost < ApplicationRecord
     return false unless authorized_viewer?(u)
 
     if user_id == u.id
-      u.banned_at.blank?
+      u.banned_at.blank? && !u.deleted?
     else
-      bookings.accepted.exists?(passenger_id: u.id) && u.banned_at.blank?
+      bookings.accepted.exists?(passenger_id: u.id) && u.banned_at.blank? && !u.deleted?
     end
   end
 
@@ -292,12 +288,6 @@ class RidePost < ApplicationRecord
 
     if departure_time < Time.current
       errors.add(:departure_time, "can't be in the past")
-    end
-  end
-
-  def cost_sharing_mutual_exclusion
-    if is_free_ride? && (share_tolls? || split_gas?)
-      errors.add(:base, "Free rides cannot be combined with toll or gas sharing")
     end
   end
 

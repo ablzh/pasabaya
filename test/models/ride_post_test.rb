@@ -19,22 +19,6 @@ class RidePostTest < ActiveSupport::TestCase
     assert ride.save
   end
 
-  test "cost sharing enforces mutual exclusion between free ride and toll/gas contribution" do
-    ride = ride_posts(:one)
-    ride.is_free_ride = true
-    ride.share_tolls = true
-
-    assert_not ride.valid?
-    assert_includes ride.errors[:base], "Free rides cannot be combined with toll or gas sharing"
-
-    ride.share_tolls = false
-    ride.split_gas = true
-    assert_not ride.valid?
-
-    ride.split_gas = false
-    assert ride.valid?
-  end
-
   test "published offering requires arrival after departure and remaining seats" do
     ride = RidePost.new(
       user: users(:one),
