@@ -202,6 +202,14 @@ class RidePost < ApplicationRecord
     review_participants.exists?(id: u.id)
   end
 
+  def reviewable_trip?
+    offering? && !draft? && departure_time.present? && departure_time <= Time.current
+  end
+
+  def reviewable_by?(reviewer)
+    reviewable_trip? && participant?(reviewer) && review_participants.where.not(id: reviewer.id).exists?
+  end
+
   def review_participants
     participant_bookings = bookings.accepted
     if departure_time.present?
@@ -209,6 +217,22 @@ class RidePost < ApplicationRecord
       participant_bookings = participant_bookings.or(late_cancellations)
     end
     User.where(id: user_id).or(User.where(id: participant_bookings.select(:passenger_id)))
+  end
+
+  def historical_reviewable_bookings
+    dep_time = departure_time_was || departure_time
+    return bookings.none if dep_time.blank?
+
+    accepted_bookings = bookings.accepted
+    late_cancellations = bookings.canceled.where("accepted_at <= ? AND canceled_at >= ?", dep_time, dep_time)
+    accepted_bookings.or(late_cancellations)
+  end
+
+  def historical_reviewable_participation?
+    dep_time = departure_time_was || departure_time
+    return false if dep_time.blank? || dep_time > Time.current
+
+    historical_reviewable_bookings.exists?
   end
 
   private
@@ -221,6 +245,11 @@ class RidePost < ApplicationRecord
 
     if bookings.accepted.exists?
       errors.add(:base, "Cannot delete a ride with accepted bookings. Please cancel the trip instead.")
+      throw :abort
+    end
+
+    if historical_reviewable_participation?
+      errors.add(:base, "Cannot delete a departed ride with historical participation. Trip records must be preserved for review eligibility.")
       throw :abort
     end
 
@@ -293,16 +322,22 @@ class RidePost < ApplicationRecord
   end
 
   def lock_attributes_when_accepted_bookings_exist
-    return unless bookings.accepted.exists?
+    has_accepted = bookings.accepted.exists?
+    has_historical = historical_reviewable_participation?
+    return unless has_accepted || has_historical
 
     locked_fields = %w[origin_id destination_id departure_time expected_arrival_at seats post_type visibility ladies_only community_id]
     changed_locked_fields = (changes.keys & locked_fields)
 
     if changed_locked_fields.any?
-      errors.add(:base, "Cannot modify route, schedule, capacity, or audience while accepted bookings exist")
+      if has_accepted
+        errors.add(:base, "Cannot modify route, schedule, capacity, or audience while accepted bookings exist")
+      else
+        errors.add(:base, "Cannot modify route, schedule, capacity, or audience for trips with historical participation")
+      end
     end
 
-    if will_save_change_to_remaining_seats?
+    if has_accepted && will_save_change_to_remaining_seats?
       max_allowed = [ seats - bookings.accepted.count, 0 ].max
       if remaining_seats > max_allowed
         errors.add(:remaining_seats, "cannot exceed available capacity (#{max_allowed}) while accepted bookings exist")

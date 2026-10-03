@@ -15,6 +15,7 @@ class User < ApplicationRecord
   has_many :adjudicated_incidents, class_name: "NoShowIncident", foreign_key: :reviewer_id, dependent: :nullify, inverse_of: :reviewer
 
   before_destroy :cancel_active_commitments, prepend: true
+  before_destroy :check_destruction_allowed, prepend: true
   after_update_commit :withdraw_ineligible_participation, if: :saved_change_to_gender?
 
   enum :gender, { unspecified: 0, female: 1, male: 2, non_binary: 3 }, default: :unspecified
@@ -147,6 +148,20 @@ class User < ApplicationRecord
   def unconfirmed_email_uniqueness
     if unconfirmed_email.present? && User.exists?(email_address: unconfirmed_email)
       errors.add(:unconfirmed_email, "is already taken")
+    end
+  end
+
+  def check_destruction_allowed
+    return if reported_trip_reviews.exists? || received_trip_reviews.exists?
+
+    if ride_posts.any?(&:historical_reviewable_participation?)
+      errors.add(:base, "Cannot delete account with departed rides that retain historical participation.")
+      throw :abort
+    end
+
+    if bookings.any?(&:historical_reviewable?)
+      errors.add(:base, "Cannot delete account with historical trip participation.")
+      throw :abort
     end
   end
 

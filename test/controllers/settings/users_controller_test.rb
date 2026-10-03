@@ -56,4 +56,37 @@ class Settings::UsersControllerTest < ActionDispatch::IntegrationTest
     assert_response :see_other
     assert_equal "Incorrect password. Account was not deleted.", flash[:alert]
   end
+
+  test "fails to delete account when driver has departed ride with historical participation" do
+    ride = ride_posts(:one)
+    booking = bookings(:one)
+    ride.update_columns(user_id: @user.id, departure_time: 2.hours.ago, expected_arrival_at: 1.hour.ago)
+    booking.update_columns(status: Booking.statuses[:accepted], accepted_at: 3.hours.ago)
+
+    assert_no_difference "User.count" do
+      delete settings_user_url, params: { password_challenge: "password" }
+    end
+
+    assert_redirected_to settings_profile_url
+    assert_match /Cannot delete account with departed rides that retain historical participation/, flash[:alert]
+    assert_not_empty cookies[:session_id]
+    assert User.exists?(@user.id)
+    assert RidePost.exists?(ride.id)
+  end
+
+  test "fails to delete account when passenger has historical participation on departed ride" do
+    ride = ride_posts(:one)
+    booking = bookings(:one)
+    booking.update_columns(passenger_id: @user.id, status: Booking.statuses[:accepted], accepted_at: 3.hours.ago)
+    ride.update_columns(departure_time: 2.hours.ago, expected_arrival_at: 1.hour.ago)
+
+    assert_no_difference "User.count" do
+      delete settings_user_url, params: { password_challenge: "password" }
+    end
+
+    assert_redirected_to settings_profile_url
+    assert_match /Cannot delete account with historical trip participation/, flash[:alert]
+    assert_not_empty cookies[:session_id]
+    assert User.exists?(@user.id)
+  end
 end
