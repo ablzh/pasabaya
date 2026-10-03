@@ -28,7 +28,7 @@ class ResponsiveFlowsTest < ApplicationSystemTestCase
       assert_fits
       visit new_ride_post_path
       assert_selector "#ride_post_origin_id-ts-control"
-      assert_selector "label", text: "Seats available", exact_text: true
+      assert_selector "label", text: "Available passenger seats", exact_text: true
       assert_text "save a private draft"
       visit ride_post_path(offer)
       assert_link "Maria Clara", href: user_path(users(:two))
