@@ -4,7 +4,7 @@ class TripReviewsController < ApplicationController
   before_action :require_authentication
   before_action :set_ride_post
   before_action :require_participant
-  before_action :require_trip_departed, only: %i[ new create ]
+  before_action :require_review_eligibility, only: %i[ new create ]
 
   def new
     @possible_reviewees = @ride_post.review_participants.where.not(id: Current.user.id)
@@ -49,9 +49,11 @@ class TripReviewsController < ApplicationController
     end
   end
 
-  def require_trip_departed
+  def require_review_eligibility
     if @ride_post.departure_time.present? && Time.current < @ride_post.departure_time
       redirect_to @ride_post, alert: "Reviews and no-show reports cannot be submitted before trip departure."
+    elsif !@ride_post.reviewable_by?(Current.user)
+      redirect_to @ride_post, alert: "Reviews require a departed ride offer with another eligible participant."
     end
   end
 

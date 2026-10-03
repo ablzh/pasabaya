@@ -62,16 +62,21 @@
 
 <body class="bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100 flex flex-col min-h-dvh">
 
-<%= render(Navbar::Component.new(classes: "mx-auto web-navigation", show_mobile_menu: false)) do |navbar| %>
+<%= render(Navbar::Component.new(classes: "mx-auto web-navigation", show_mobile_menu: true)) do |navbar| %>
   <% navbar.with_logo do %>
-    <%= link_to root_path, class: "flex items-center mr-2 ml-2 select-none no-underline" do %>
-      <%= image_tag "/icon.svg", size: "32x32", class: "h-8 w-8 object-contain", alt: "Pasabaya Logo" %>
+    <%= link_to root_path, class: "flex shrink-0 items-center mr-2 ml-2 select-none no-underline" do %>
+      <%= image_tag "/icon.svg", size: "32x32", class: "h-8 w-8 shrink-0 object-contain", alt: "Pasabaya Logo" %>
     <% end %>
   <% end %>
 
-  <% navbar.with_item(label: "Search", href: ride_posts_path) %>
-  <% navbar.with_item(label: "Hubs", href: communities_path) %>
-  <% navbar.with_item(label: "Add a ride", href: new_ride_post_path) %>
+  <% navbar.with_item(label: "Search", href: ride_posts_path, mobile_hidden: true) %>
+  <% navbar.with_item(label: "Hubs", href: communities_path, mobile_hidden: true) %>
+  <% navbar.with_item(label: safe_join([tag.span("Post", class: "sm:hidden"), tag.span("Add a ride", class: "hidden sm:inline")]), href: new_ride_post_path, classes: "whitespace-nowrap") %>
+
+  <% navbar.with_dropdown_content(id: "mobile-menu-content", width: "w-[calc(100vw-2rem)]") do %>
+    <%= link_to "Search", ride_posts_path, class: "block rounded-lg p-3 hover:bg-neutral-100 dark:hover:bg-neutral-700" %>
+    <%= link_to "Hubs", communities_path, class: "block rounded-lg p-3 hover:bg-neutral-100 dark:hover:bg-neutral-700" %>
+  <% end %>
 
   <% navbar.with_actions do %>
     <% if authenticated? %>
@@ -91,7 +96,7 @@
 
       <!-- Profile Dropdown Trigger -->
       <li class="ml-0.5">
-        <button type="button" data-navbar-target="trigger" data-content-id="profile-content" aria-controls="profile-content" aria-expanded="false" data-align="end" data-action="click->navbar#toggleMenu pointerenter->navbar#handlePointerEnter pointermove->navbar#handlePointerMove pointerleave->navbar#handlePointerLeave keydown->navbar#handleTriggerKeydown" data-state="closed" class="group flex items-center gap-2 rounded-md px-2 py-2 text-sm font-medium text-neutral-700 select-none hover:bg-neutral-100 dark:text-neutral-300 dark:hover:bg-neutral-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-600 dark:focus-visible:outline-neutral-200">
+        <button type="button" data-navbar-target="trigger" data-content-id="profile-content" aria-label="Account menu" aria-controls="profile-content" aria-expanded="false" data-align="end" data-action="click->navbar#toggleMenu pointerenter->navbar#handlePointerEnter pointermove->navbar#handlePointerMove pointerleave->navbar#handlePointerLeave keydown->navbar#handleTriggerKeydown" data-state="closed" class="group flex items-center gap-2 rounded-md px-2 py-2 text-sm font-medium text-neutral-700 select-none hover:bg-neutral-100 dark:text-neutral-300 dark:hover:bg-neutral-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-600 dark:focus-visible:outline-neutral-200">
           <%= user_avatar Current.user, classes: "flex items-center justify-center size-6 rounded-full bg-gradient-to-br from-red-400 to-red-600 text-white text-xs font-semibold" %>
         </button>
       </li>

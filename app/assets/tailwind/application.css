@@ -671,3 +671,48 @@ select[data-select-disable-typing-value="true"] + .ts-wrapper.single.input-activ
         cursor: pointer;
     }
 }
+
+/* The popover host is only a positioning layer; each card paints its surface. */
+#toast-container::backdrop {
+    background: transparent;
+}
+
+.toast-item {
+    position: absolute;
+    top: 0;
+    width: 100%;
+    z-index: var(--toast-z-index, 1);
+    transform-origin: top center;
+    transition: transform 200ms ease, opacity 200ms ease;
+}
+
+.toast-item[data-position^="bottom"] {
+    top: auto;
+    bottom: 0;
+    transform-origin: bottom center;
+    --toast-direction: -1;
+}
+
+.toast-item[data-expanded="false"] {
+    transform: translateY(calc(var(--toast-direction, 1) * var(--toast-index, 0) * 12px)) scale(calc(1 - var(--toast-index, 0) * 0.04));
+}
+
+.toast-item[data-expanded="true"] {
+    transform: translateY(calc(var(--toast-direction, 1) * var(--toast-offset, 0px)));
+}
+
+.toast-item[data-mounted="false"],
+.toast-item[data-removed="true"],
+.toast-item[data-visible="false"] {
+    opacity: 0;
+    pointer-events: none !important;
+}
+
+.toast-item[data-expanded="false"]:not([data-front="true"]) > span {
+    height: var(--front-toast-height);
+    overflow: hidden;
+}
+
+.toast-item[data-expanded="false"]:not([data-front="true"]) > span > * {
+    visibility: hidden;
+}

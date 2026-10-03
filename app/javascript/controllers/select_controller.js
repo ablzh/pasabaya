@@ -15,8 +15,18 @@ export default class extends Controller {
   }
 
   disconnect() {
+    this.teardown();
+  }
+
+  teardown() {
+    // Morph the original select, not Tom Select's generated controls.
     if (this.select) {
+      const value = this.select.getValue();
       this.select.destroy();
+      for (const option of this.element.options) {
+        option.selected = [value].flat().includes(option.value);
+        option.toggleAttribute("selected", option.selected);
+      }
       this.select = null;
     }
   }

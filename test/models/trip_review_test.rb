@@ -114,4 +114,13 @@ class TripReviewTest < ActiveSupport::TestCase
     assert_not duplicate.valid?
     assert_includes duplicate.errors[:ride_post_id], "has already been reviewed by this user for this trip"
   end
+  test "undated requests and drafts cannot be reviewed even with an accepted participant" do
+    [ { post_type: :requesting, departure_time: nil },
+      { post_type: :offering, status: :draft, departure_time: 2.hours.ago } ].each do |attributes|
+      @ride_post.update_columns(attributes)
+      review = TripReview.new(ride_post: @ride_post, reporter: @driver, reported_user: @passenger)
+      assert_not review.valid?
+      assert_includes review.errors[:base], "Reviews require a departed ride offer"
+    end
+  end
 end

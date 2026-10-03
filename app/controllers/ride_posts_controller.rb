@@ -193,8 +193,8 @@ class RidePostsController < ApplicationController
     title_text = "Ride from #{@ride_post.origin.name} to #{@ride_post.destination.name}"
     desc_text = "#{@ride_post.user.first_name} is #{@ride_post.post_type} a ride. " \
       "Departure: #{formatted_time}. " \
-      "Seats available: #{@ride_post.seats}. " \
-      "Check notes and coordinate via Facebook."
+      "#{@ride_post.requesting? ? 'Seats needed' : 'Total seats'}: #{@ride_post.seats}. " \
+      "View profiles before traveling. Seat requests need driver approval; accepted participants coordinate in private in-app chat."
 
     canonical_url = ride_post_url(@ride_post)
     set_meta_tags(
