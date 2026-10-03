@@ -4,14 +4,20 @@
 
 **Blocked by:** None (can start immediately).
 
-**Status:** ready-for-agent
+**Status:** done
 
-- [ ] Remove Facebook buttons and links from ride board cards and ride detail pages.
-- [ ] A member profile with a configured URL has View Facebook Profile opening in a new tab with appropriate external-link attributes.
-- [ ] When no URL is configured, show the subtle Facebook profile not linked label.
-- [ ] Profile access and Facebook URL visibility remain restricted to signed-in users; guests cannot retrieve the URL through the profile.
-- [ ] Settings explicitly state that a linked Facebook profile is visible to other signed-in members.
-- [ ] Continue validating acceptable Facebook links and preserving existing profile data.
-- [ ] Add the smallest relevant behavior or regression test for code changes, covering this ticket's user-visible behavior and important failure boundary. Do not require a browser test for changes with no browser behavior.
-- [ ] Run bin/ci before declaring the implementation complete; report any check that could not run rather than calling the gate green.
+- [x] Remove Facebook buttons and links from ride board cards and ride detail pages.
+- [x] A member profile with a configured URL has View Facebook Profile opening in a new tab with appropriate external-link attributes.
+- [x] When no URL is configured, show the subtle Facebook profile not linked label.
+- [x] Profile access and Facebook URL visibility remain restricted to signed-in users; guests cannot retrieve the URL through the profile.
+- [x] Settings explicitly state that a linked Facebook profile is visible to other signed-in members.
+- [x] Continue validating acceptable Facebook links and preserving existing profile data.
+- [x] Add the smallest relevant behavior or regression test for code changes, covering this ticket's user-visible behavior and important failure boundary. Do not require a browser test for changes with no browser behavior.
+- [x] Run bin/ci before declaring the implementation complete; report any check that could not run rather than calling the gate green.
 
+
+
+
+## Implementation evidence
+
+Implementation commit 23c000a integrated at d2c24db. Profile-only external Facebook URL with signed-in authorization, absent-link label and settings visibility copy verified. 25 targeted tests pass; full bin/ci passes all checks (ticket-09-ci.log). No blocked checks.

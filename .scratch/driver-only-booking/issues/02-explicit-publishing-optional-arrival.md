@@ -4,7 +4,7 @@
 
 **Blocked by:** None (can start immediately).
 
-**Status:** ready-for-agent
+**Status:** in-progress
 
 - [ ] Save draft and Publish ride are distinct intentional actions. Editing a draft does not publish it automatically.
 - [ ] Publishing requires a valid route, future exact departure and available passenger seats; expected arrival is optional, and its label does not suggest it is required.
@@ -16,3 +16,8 @@
 - [ ] Add the smallest relevant behavior or regression test for code changes, covering this ticket's user-visible behavior and important failure boundary. Do not require a browser test for changes with no browser behavior.
 - [ ] Run bin/ci before declaring the implementation complete; report any check that could not run rather than calling the gate green.
 
+
+
+## Implementation evidence
+
+Isolated worker implementing and verifying ticket 02.
