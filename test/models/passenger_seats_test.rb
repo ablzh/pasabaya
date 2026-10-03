@@ -3,7 +3,7 @@ require "test_helper"
 class PassengerSeatsTest < ActiveSupport::TestCase
   test "offered passenger seats are positive integers without arbitrary cap" do
     ride = ride_posts(:one)
-    [0, -1, "1.5", "2places"].each do |value|
+    [ 0, -1, "1.5", "2places" ].each do |value|
       ride.seats = value
       assert_not ride.valid?, "accepted #{value.inspect}"
       assert ride.errors[:seats].any?

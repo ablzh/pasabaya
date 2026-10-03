@@ -107,7 +107,7 @@ class RidePostsLifecycleTest < ActionDispatch::IntegrationTest
     sign_in_as(ride.user)
     get new_ride_post_url
     assert_select "select[name='ride_post[post_type]']", count: 0
-    assert_select "label[for='ride_post_seats']", text: "Seats available"
+    assert_select "label[for='ride_post_seats']", text: "Available passenger seats"
     get ride_posts_url(origin_id: ride.origin_id)
     assert_select "input[name='post_type']", count: 0
     assert_select "#ride_post_#{ride.id}", count: 1
