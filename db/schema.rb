@@ -160,7 +160,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_03_180001) do
     t.integer "origin_id"
     t.integer "post_type", default: 0, null: false
     t.integer "remaining_seats"
-    t.integer "seats", null: false
+    t.integer "seats"
     t.boolean "share_tolls", default: false, null: false
     t.boolean "split_gas", default: false, null: false
     t.integer "status", default: 0, null: false
@@ -175,6 +175,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_03_180001) do
     t.check_constraint "post_type = 0", name: "check_ride_posts_driver_offers_only"
     t.check_constraint "remaining_seats IS NULL OR (remaining_seats >= 0 AND remaining_seats <= seats)", name: "check_ride_posts_offering_inventory"
     t.check_constraint "seats > 0", name: "check_ride_posts_seats_positive"
+    t.check_constraint "status = 4 OR seats IS NOT NULL", name: "check_ride_posts_seats_presence"
     t.check_constraint "visibility != 1 OR community_id IS NOT NULL", name: "check_ride_posts_hub_only_requires_community"
   end
 

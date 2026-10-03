@@ -34,7 +34,7 @@ class RidePostTest < ActiveSupport::TestCase
     ride.seats = 0
     assert_not ride.valid?
     assert_raises(ActiveRecord::StatementInvalid) { ride.update_columns(seats: 0) }
-    assert_raises(ActiveRecord::NotNullViolation) { ride.update_columns(seats: nil) }
+    assert_raises(ActiveRecord::StatementInvalid) { ride.update_columns(seats: nil) }
   end
 
   test "publishing requires distinct route future exact departure and available passenger seats" do
