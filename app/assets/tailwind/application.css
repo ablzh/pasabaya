@@ -9,7 +9,7 @@ html[data-hotwire-native="true"] {
         display: none;
     }
 
-    main h1 {
+    main h1:not([data-profile-name], .profile-name) {
         @apply sr-only;
     }
 

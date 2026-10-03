@@ -11,6 +11,37 @@ Pasabaya keeps search, rides, bookings, chat, account forms, and authorization i
 
 Each phase is verified with behavior tests and `bin/ci`, then committed locally before the next phase.
 
+## Updated follow-up plan — 3 October 2026
+
+The initial four Rails phases are committed. The current working tree also contains the QA01–QA13 fixes and their tests, documented in [the browser QA report](qa/2026-10-03-browser-audit.md#implementation-results-and-evidence). That report records verification within Rails/Chromium coverage; real-device and production checks remain separate. Preserve these changes and their evidence rather than implementing the same fixes again.
+
+The review follow-ups below remain open in the inspected source. In particular, the new review-form eligibility guards address impossible review forms, but do not yet prevent editing or deleting historical canceled trips.
+
+### Phase 5: Optional Facebook links and legacy backfill (Completed — commit `8473ae2`)
+
+- Facebook links are optional in models, signup, profile settings, and privacy copy; profile links render safely without implying verified identity.
+- Validation allows blank inputs and validates new or changed links without blocking password resets on unchanged legacy values.
+- Implemented `Users::BackfillFacebookUrlsService` and rake task `users:backfill_facebook_urls` with dry-run summary, safety normalization, audit backup in `tmp/`, idempotent updates in batches, and production safety guards.
+
+### Phase 6: Protect historical trip participation (Completed — commit `1bf23df`)
+
+- Formerly accepted and late-canceled bookings retain post-departure review eligibility and are protected from hard deletion.
+- Trips with historical participation cannot have route or schedule altered after departure or late cancellation, nor can they be hard deleted.
+- Driver and passenger accounts with departed historical participation are protected from deletion until review periods conclude.
+- Normal editing of unmatched drafts and cancellation before departure remain unaffected.
+
+### Phase 7: Native presentation and configuration delivery (Completed)
+
+- Navigation configurations (`/configurations/ios_v1.json`, `/configurations/android_v1.json`) mandate revalidation (`Cache-Control: public, no-cache, must-revalidate` with `ETag` and `Last-Modified`) via `Middleware::NativeConfigurationCacheControl`, avoiding the 1-year static file cache while preserving far-future caching for digest-stamped assets.
+- Profiles on Hotwire Native visibly identify their owner by name (`profile-name` / `data-profile-name` excluded from `main h1` screen-reader hiding), ensuring users with no active listings still have visible ownership.
+- Controller and system tests verify production-equivalent cache headers, conditional revalidation (`304 Not Modified`), and visible native profile presentation.
+
+### Phase 8: Native apps and device acceptance (Future work)
+
+- Build the iOS/Android shells using the shared Rails screens and navigation contract below. Add bridge components only for an implemented native control and JSON endpoints only for a real native consumer.
+- Prove sign in → search → request → accept → chat on devices, then complete the device checks in the verification section before a native beta. Add push delivery as a separate step once platform credentials and its account/device lifecycle are ready.
+
+
 ## Navigation contract
 
 | Tab | Start path | Authentication |
@@ -34,13 +65,48 @@ The full web navbar/footer are hidden in native mode. Compact HTML navigation ke
 
 Use the existing signed, persistent session-ID cookie and server-side `Session` records. HTTPS cookies are Secure and HttpOnly. Destroying a session disconnects its live connections; channels also check that the session still exists before transmitting. The generic Turbo channel rejects subscriptions, so new realtime features must use an explicitly authorized application channel.
 
-## Native implementation next
+## Native implementation next (Phase 8 Roadmap)
 
-Start with the existing web screens and platform navigators/tab controllers. Prove sign in → search → request → accept → chat on both devices before adding native screens.
+### Prerequisites
 
-Add a bridge component only for a specific need, such as a native submit button. It should activate the existing HTML form so Rails validation, CSRF, and authorization remain shared. Hide an HTML control only when that component is supported by the installed client, and clean up native controls when their HTML component disconnects. Existing importmaps and Stimulus can support the web bridge library when the first component is implemented; no bundler change is needed now.
+1. **Tooling & SDKs:**
+   - **iOS:** macOS with Xcode 15+, targeting iOS 17+, using the Swift Package Manager dependency `hotwire-native-ios` (Turbo Navigator).
+   - **Android:** Android Studio Hedgehog+, targeting Android API 26+ (minSdk 26, targetSdk 34+), using Gradle dependency `dev.hotwire:core`.
+2. **Platform Accounts & Credentials:**
+   - Apple Developer Account with APNs Auth Key (`.p8`), App ID with Associated Domains (Universal Links) and Push Notifications capability.
+   - Google Cloud / Firebase console project with FCM v1 credentials and `google-services.json` (Android App Links assetlinks).
+3. **Application Endpoints Prepared in Rails:**
+   - Remote path configuration delivered at `/configurations/ios_v1.json` and `/configurations/android_v1.json` with mandatory revalidation (`public, no-cache, must-revalidate`).
+   - Secure persistent cookie authentication, CSRF handling via Turbo, and Turbo cache exemption on authenticated screens.
 
-Introduce JSON endpoints only for actual native consumers, such as device-token registration or a native map. Push notifications will need APNs/FCM credentials, contextual permission requests, token rotation, account/logout cleanup, delivery-status handling, and authenticated deep links. Reuse Pasabaya's existing notification records and jobs rather than replacing them wholesale. Keep CSRF protection on cookie-authenticated writes and verify native HTTP cookie handling separately for each platform.
+### Step-by-Step Implementation Steps
+
+1. **Create Native App Shells:**
+   - Generate empty native projects in their own repositories or dedicated directories (`ios/` and `android/`).
+   - Embed `public/configurations/ios_v1.json` (iOS bundle resource) and `public/configurations/android_v1.json` (Android raw asset) as initial offline fallback configurations.
+   - Configure Hotwire to load remote path configuration on app launch from `https://<domain>/configurations/{platform}_v1.json`.
+2. **Implement Platform Tab Navigation:**
+   - Explicitly read `settings.tabs` from the loaded path configuration.
+   - Construct native root tab bar controller with 4 tabs:
+     - Search (`/rides`)
+     - My Trips (`/trips`)
+     - Hubs (`/communities`)
+     - Account (`/settings/profile`)
+   - For Android, register `hotwire://fragment/web` as the default destination and provide custom fragment factories for modals.
+3. **Verify Core User Flows & Session State:**
+   - Walk through: Launch app → Search rides → Sign in → Request seat → Accept booking → Open trip chat.
+   - Ensure cookies persist across app process kill and restart.
+   - Ensure signing out cleans up navigation state and history in all tabs, preventing stale cached Turbo snapshots.
+4. **Implement Hotwire Native Bridge Components (As Needed):**
+   - When a native UI control is required (e.g. native navigation bar "Post" button or native modal dismiss), add `@hotwired/hotwire-native-bridge` to the Rails frontend via importmap.
+   - Build lightweight Stimulus bridge controllers connecting HTML form buttons to native toolbar items without duplicating Rails validations or CSRF tokens.
+5. **Push Notifications & Device Registration:**
+   - Implement Rails device registration endpoint: `POST /devices` (storing `token`, `platform`, `user_id`, `last_used_at`).
+   - Add push notification dispatch service using APNs HTTP/2 client and FCM v1 API, triggering on `Notification` and `ChatMessage` creation.
+   - Wire notification payload deep links (e.g., `pasabaya://rides/123?tab=chat`) to open the corresponding tab and navigate to the conversation or booking modal.
+6. **Device Acceptance & Beta Sign-off:**
+   - Complete the physical device verification checklist below on physical iOS and Android hardware across slow 3G/offline connections, camera/photo uploads, and background resumes.
+
 
 ## Verification
 
