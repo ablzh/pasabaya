@@ -219,6 +219,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_03_180000) do
     t.integer "gender", default: 0, null: false
     t.string "last_name"
     t.string "password_digest", null: false
+    t.datetime "registration_accepted_at"
+    t.string "registration_policy_version"
     t.string "unconfirmed_email"
     t.datetime "updated_at", null: false
     t.index ["deleted_at"], name: "index_users_on_deleted_at"
