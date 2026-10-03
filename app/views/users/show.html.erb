@@ -47,6 +47,8 @@
                        variant: :primary,
                        size: :sm,
                        target: "_blank") %>
+          <% else %>
+            <span class="text-xs text-neutral-500">Facebook profile not linked</span>
           <% end %>
 
           <% if Current.user == @user %>
