@@ -71,11 +71,13 @@
 
   <% navbar.with_item(label: "Search", href: ride_posts_path, mobile_hidden: true) %>
   <% navbar.with_item(label: "Hubs", href: communities_path, mobile_hidden: true) %>
+  <% navbar.with_item(label: "Chats", href: chats_path, mobile_hidden: true) if authenticated? %>
   <% navbar.with_item(label: safe_join([tag.span("Post", class: "sm:hidden"), tag.span("Add a ride", class: "hidden sm:inline")]), href: new_ride_post_path, classes: "whitespace-nowrap") %>
 
   <% navbar.with_dropdown_content(id: "mobile-menu-content", width: "w-[calc(100vw-2rem)]") do %>
     <%= link_to "Search", ride_posts_path, class: "block rounded-lg p-3 hover:bg-neutral-100 dark:hover:bg-neutral-700" %>
     <%= link_to "Hubs", communities_path, class: "block rounded-lg p-3 hover:bg-neutral-100 dark:hover:bg-neutral-700" %>
+    <%= link_to "Chats", chats_path, class: "block rounded-lg p-3 hover:bg-neutral-100 dark:hover:bg-neutral-700" if authenticated? %>
   <% end %>
 
   <% navbar.with_actions do %>
