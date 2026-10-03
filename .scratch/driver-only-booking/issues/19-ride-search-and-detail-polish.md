@@ -4,7 +4,7 @@
 
 **Blocked by:** None (can start immediately).
 
-**Status:** ready-for-agent
+**Status:** in-progress
 
 - [ ] Allow the ride-board subtitle to use its header container width without the previous narrow desktop limit.
 - [ ] Align origin/destination/date labels at the top of the search grid and show Leave blank to see all upcoming rides on this route below the optional date field.
@@ -16,3 +16,8 @@
 - [ ] Add the smallest relevant behavior or regression test for code changes, covering this ticket's user-visible behavior and important failure boundary. Do not require a browser test for changes with no browser behavior.
 - [ ] Run bin/ci before declaring the implementation complete; report any check that could not run rather than calling the gate green.
 
+
+
+## Implementation evidence
+
+Implementation commit 388f223 integrated; 33 request tests pass. Serialized full CI verification pending.

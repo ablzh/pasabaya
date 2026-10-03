@@ -4,7 +4,7 @@
 
 **Blocked by:** None (can start immediately).
 
-**Status:** ready-for-agent
+**Status:** in-progress
 
 - [ ] Passenger-request ride posts, their search tabs and offering/requesting card badges are removed from the user experience; driver offers remain searchable and bookable.
 - [ ] Forms, accepted parameters, validations, database rules, sample data and product documentation consistently support driver offers only.
@@ -14,3 +14,8 @@
 - [ ] Add the smallest relevant behavior or regression test for code changes, covering this ticket's user-visible behavior and important failure boundary. Do not require a browser test for changes with no browser behavior.
 - [ ] Run bin/ci before declaring the implementation complete; report any check that could not run rather than calling the gate green.
 
+
+
+## Implementation evidence
+
+Isolated worker implementing and verifying ticket 01.
