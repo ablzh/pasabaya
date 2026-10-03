@@ -152,12 +152,12 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_03_180001) do
     t.integer "community_id"
     t.datetime "created_at", null: false
     t.datetime "departure_time"
-    t.integer "destination_id", null: false
+    t.integer "destination_id"
     t.datetime "expected_arrival_at"
     t.boolean "is_free_ride", default: false, null: false
     t.boolean "ladies_only", default: false, null: false
     t.text "notes"
-    t.integer "origin_id", null: false
+    t.integer "origin_id"
     t.integer "post_type", default: 0, null: false
     t.integer "remaining_seats"
     t.integer "seats", null: false
