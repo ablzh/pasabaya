@@ -3,6 +3,7 @@
 require "test_helper"
 
 class ChatMessageTest < ActiveSupport::TestCase
+  include ActionCable::TestHelper
   setup do
     @ride = ride_posts(:one)
     @driver = @ride.user

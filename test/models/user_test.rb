@@ -12,12 +12,38 @@ class UserTest < ActiveSupport::TestCase
   end
 
   # 2. Testing validations (negative path)
-  test "invalid without facebook_profile_url" do
+  test "valid without facebook_profile_url" do
     user = users(:one)
     user.facebook_profile_url = nil
+    assert user.valid?
 
+    user.facebook_profile_url = ""
+    assert user.valid?
+    assert_nil user.facebook_profile_url
+  end
+
+  test "normalizes and trims whitespace from facebook_profile_url" do
+    user = users(:one)
+    user.facebook_profile_url = "   https://facebook.com/trimmed   "
+    assert_equal "https://facebook.com/trimmed", user.facebook_profile_url
+    assert user.valid?
+  end
+
+  test "unchanged legacy invalid facebook_profile_url does not block other user updates" do
+    user = users(:one)
+    user.update_columns(facebook_profile_url: "http://legacy.facebook.com/invalid:8080")
+
+    user.reload
+    assert_equal "http://legacy.facebook.com/invalid:8080", user.facebook_profile_url
+    assert_not user.safe_facebook_profile_url?
+
+    user.first_name = "UpdatedJuan"
+    assert user.valid?
+    assert user.save
+
+    user.facebook_profile_url = "https://evil.example.com/bad"
     assert_not user.valid?
-    assert_includes user.errors[:facebook_profile_url], "can't be blank"
+    assert_includes user.errors[:facebook_profile_url], "must be an HTTPS Facebook profile URL"
   end
 
   # 3. Testing validations (positive path)
