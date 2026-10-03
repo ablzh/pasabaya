@@ -31,7 +31,7 @@ In creating Pasabaya.app, I was inspired by **The One Person Framework** philoso
 
 ## Core Features
 
-- **Community Ride Board:** Drivers can offer carpools; passengers can post ride requests.
+- **Community Ride Board:** Drivers offer carpools; passengers request seats on driver offers.
 - **Route Discovery:** Browse and search rides between Philippine regions, provinces, and cities (e.g., Metro Manila ↔ Baguio, Quezon City ↔ Manila).
 - **Direct Social Connection:** Facebook profile links for users to review; no in-app financial transactions or commission fees. Profile ownership is not independently verified.
 - **Modern Interface:** Encapsulated UI built with ViewComponents, Tailwind CSS 4, Heroicons, and native dark mode support.
@@ -117,7 +117,7 @@ The seed script (`db/seeds.rb`) populates Philippine regions, provinces, and cit
 | Persona | Email | Password | Seeded Activity |
 | :--- | :--- | :--- | :--- |
 | **Driver** | `driver@example.com` | `password` | 2 active ride offers (Manila → QC, Manila → Baguio) |
-| **Passenger** | `passenger@example.com` | `password` | 1 active ride request (QC → Manila) |
+| **Passenger** | `passenger@example.com` | `password` | Passenger account for requesting seats |
 | **Admin** | `admin@example.com` | `password` | Administrative privileges |
 
 ---
