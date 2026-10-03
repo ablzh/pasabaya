@@ -10,12 +10,11 @@ class RidePostsController < ApplicationController
 
   # GET /ride_posts or /ride_posts.json
   def index
-    if params.key?(:post_type) || params.key?(:origin_id) || params.key?(:destination_id) || params.key?(:community_id) || params.key?(:ladies_only) || params.key?(:departure_date)
+    if params.key?(:origin_id) || params.key?(:destination_id) || params.key?(:community_id) || params.key?(:ladies_only) || params.key?(:departure_date)
       @ride_posts = RidePost.active.upcoming
                             .visible_to(Current.user)
-                            .includes(:origin, :destination, :user, :community)
+                            .includes(:origin, :destination, :community, user: { avatar_attachment: :blob })
                             .order(departure_time: :asc)
-                            .filter_by_post_type(params[:post_type])
                             .filter_by_origin(params[:origin_id])
                             .filter_by_destination(params[:destination_id])
                             .filter_by_community(params[:community_id])
@@ -145,7 +144,7 @@ class RidePostsController < ApplicationController
   # Only allow a list of trusted parameters through.
   def ride_post_params
     params.expect(ride_post: [
-      :post_type, :origin_id, :destination_id, :departure_time, :expected_arrival_at,
+      :origin_id, :destination_id, :departure_time, :expected_arrival_at,
       :seats, :notes,
       :ladies_only, :visibility, :community_id
     ])
@@ -193,7 +192,7 @@ class RidePostsController < ApplicationController
     title_text = "Ride from #{@ride_post.origin.name} to #{@ride_post.destination.name}"
     desc_text = "#{@ride_post.user.first_name} is #{@ride_post.post_type} a ride. " \
       "Departure: #{formatted_time}. " \
-      "#{@ride_post.requesting? ? 'Seats needed' : 'Total seats'}: #{@ride_post.seats}. " \
+      "Total seats: #{@ride_post.seats}. " \
       "View profiles before traveling. Seat requests need driver approval; accepted participants coordinate in private in-app chat."
 
     canonical_url = ride_post_url(@ride_post)
@@ -221,7 +220,6 @@ class RidePostsController < ApplicationController
         redirect_to route_rides_path(
                       origin_slug: origin.slug,
                       destination_slug: destination.slug,
-                      post_type: params[:post_type].presence,
                       departure_date: params[:departure_date].presence,
                       community_id: params[:community_id].presence,
                       ladies_only: params[:ladies_only].presence

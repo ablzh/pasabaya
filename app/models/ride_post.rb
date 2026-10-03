@@ -13,7 +13,7 @@ class RidePost < ApplicationRecord
 
   before_destroy :check_destruction_allowed, prepend: true
 
-  enum :post_type, { offering: 0, requesting: 1 }
+  enum :post_type, { offering: 0 }, default: :offering, validate: true
   enum :status, { active: 0, fulfilled: 1, canceled: 2, completed: 3, draft: 4 }
   enum :visibility, { public_ride: 0, hub_only: 1 }, default: :public_ride
 
@@ -39,7 +39,6 @@ class RidePost < ApplicationRecord
   after_save_commit :schedule_trip_audit, if: :should_schedule_audit?
 
   scope :publicly_visible, -> { public_ride.where(ladies_only: false) }
-  scope :filter_by_post_type, ->(type) { where(post_type: type) if type.present? }
   scope :filter_by_origin, ->(origin_id) { where(origin_id: origin_id) if origin_id.present? }
   scope :filter_by_destination, ->(destination_id) { where(destination_id: destination_id)  if destination_id.present? }
   scope :filter_by_community, ->(comm_id) { where(community_id: comm_id) if comm_id.present? }
