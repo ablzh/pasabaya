@@ -1,33 +1,11 @@
 <%# app/views/ride_posts/_search_form.html.erb %>
 <% grouped_locations = local_assigns[:grouped_locations] || Location.grouped_by_region %>
-<% has_active_filters = params[:origin_id].present? || params[:destination_id].present? || params[:post_type].present? || params[:departure_date].present? || params[:community_id].present? %>
+<% has_active_filters = params[:origin_id].present? || params[:destination_id].present? || params[:departure_date].present? || params[:community_id].present? %>
 
 <div class="bg-white dark:bg-neutral-900 p-4 sm:p-6 rounded-3xl border border-neutral-100 dark:border-white/5 shadow-xs mb-10" data-controller="swap-inputs" data-search-panel>
   <%= form_with url: ride_posts_path, method: :get, class: "space-y-4 text-left" do |form| %>
 
-    <%# 1. Top Bar: Segmented Ride Intent Switcher + Reset Link %>
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-neutral-100 dark:border-neutral-800">
-      <div class="inline-flex items-center p-1 rounded-2xl bg-neutral-100 dark:bg-neutral-800/80 border border-neutral-200/50 dark:border-neutral-700/50 w-full sm:w-auto">
-        <label class="flex-1 sm:flex-initial text-center cursor-pointer">
-          <%= form.radio_button :post_type, "", checked: params[:post_type].blank?, class: "sr-only peer" %>
-          <span class="block py-1.5 px-2 sm:px-3.5 text-xs font-semibold rounded-xl text-neutral-600 dark:text-neutral-400 peer-checked:bg-white peer-checked:text-neutral-900 peer-checked:shadow-xs dark:peer-checked:bg-neutral-900 dark:peer-checked:text-white transition">
-            All Rides
-          </span>
-        </label>
-        <label class="flex-1 sm:flex-initial text-center cursor-pointer">
-          <%= form.radio_button :post_type, "offering", checked: params[:post_type] == "offering", class: "sr-only peer" %>
-          <span class="block py-1.5 px-2 sm:px-3.5 text-xs font-semibold rounded-xl text-neutral-600 dark:text-neutral-400 peer-checked:bg-white peer-checked:text-neutral-900 peer-checked:shadow-xs dark:peer-checked:bg-neutral-900 dark:peer-checked:text-white transition">
-            Available Drivers
-          </span>
-        </label>
-        <label class="flex-1 sm:flex-initial text-center cursor-pointer">
-          <%= form.radio_button :post_type, "requesting", checked: params[:post_type] == "requesting", class: "sr-only peer" %>
-          <span class="block py-1.5 px-2 sm:px-3.5 text-xs font-semibold rounded-xl text-neutral-600 dark:text-neutral-400 peer-checked:bg-white peer-checked:text-neutral-900 peer-checked:shadow-xs dark:peer-checked:bg-neutral-900 dark:peer-checked:text-white transition">
-            Passenger Requests
-          </span>
-        </label>
-      </div>
-
+    <div class="flex justify-end">
       <% if has_active_filters %>
         <%= link_to ride_posts_path, class: "inline-flex items-center gap-1.5 text-xs font-medium text-neutral-500 hover:text-red-600 dark:hover:text-red-400 transition-colors self-end sm:self-auto" do %>
           <svg class="size-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">

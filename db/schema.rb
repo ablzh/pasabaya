@@ -158,9 +158,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_03_170002) do
     t.boolean "ladies_only", default: false, null: false
     t.text "notes"
     t.integer "origin_id", null: false
-    t.integer "post_type"
+    t.integer "post_type", default: 0, null: false
     t.integer "remaining_seats"
-    t.integer "seats"
+    t.integer "seats", null: false
     t.boolean "share_tolls", default: false, null: false
     t.boolean "split_gas", default: false, null: false
     t.integer "status", default: 0, null: false
@@ -172,7 +172,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_03_170002) do
     t.index ["origin_id"], name: "index_ride_posts_on_origin_id"
     t.index ["user_id"], name: "index_ride_posts_on_user_id"
     t.check_constraint "NOT (is_free_ride = 1 AND (share_tolls = 1 OR split_gas = 1))", name: "check_ride_posts_cost_sharing"
-    t.check_constraint "post_type != 0 OR remaining_seats IS NULL OR (remaining_seats >= 0 AND remaining_seats <= seats)", name: "check_ride_posts_offering_inventory"
+    t.check_constraint "post_type = 0", name: "check_ride_posts_driver_offers_only"
+    t.check_constraint "remaining_seats IS NULL OR (remaining_seats >= 0 AND remaining_seats <= seats)", name: "check_ride_posts_offering_inventory"
     t.check_constraint "seats > 0", name: "check_ride_posts_seats_positive"
     t.check_constraint "visibility != 1 OR community_id IS NOT NULL", name: "check_ride_posts_hub_only_requires_community"
   end

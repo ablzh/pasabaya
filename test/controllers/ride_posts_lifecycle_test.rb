@@ -52,25 +52,19 @@ class RidePostsLifecycleTest < ActionDispatch::IntegrationTest
     end
   end
 
-  test "request detail and cards describe seats needed with correct pluralization" do
-    ride = ride_posts(:two)
+  test "forms and search expose driver offers without passenger intent tabs or badges" do
+    ride = ride_posts(:one)
     sign_in_as(ride.user)
-    ride.update_columns(departure_time: nil)
+    get new_ride_post_url
+    assert_select "select[name='ride_post[post_type]']", count: 0
+    assert_select "label[for='ride_post_seats']", text: "Seats available"
+    get ride_posts_url(origin_id: ride.origin_id)
+    assert_select "input[name='post_type']", count: 0
+    assert_select "#ride_post_#{ride.id}", count: 1
+    assert_select "#ride_post_#{ride.id} span", text: /offering|requesting/, count: 0
     get ride_post_url(ride)
-    assert_select "p", text: "Seats needed"
-    assert_select "p", text: "Looking for a driver"
-    assert_select "p", text: /Posting a request does not reserve a seat/
-    assert_select "p", text: "Canceling closes this request for a driver."
-    assert_select "a", text: "Review Trip / Report No-Show", count: 0
-    [ 1, 2 ].each do |seats|
-      ride.update_columns(seats: seats)
-      get ride_posts_url(post_type: "requesting")
-      assert_select "#ride_post_#{ride.id} span", text: "#{seats} #{seats == 1 ? 'seat' : 'seats'} needed"
-    end
-    get edit_ride_post_url(ride)
-    assert_select "label[for='ride_post_departure_time']", text: "Preferred Departure (optional)"
-    assert_select "label[for='ride_post_expected_arrival_at']", text: "Preferred Arrival (optional)"
-    assert_select "label[for='ride_post_seats']", text: "Seats needed"
+    assert_select "span", text: /offering|requesting/, count: 0
+    assert_select "h2", text: "Seat Requests & Confirmed Passengers"
   end
 
   test "settings passwords have unique IDs and associated labels without changing parameter names" do
@@ -115,7 +109,7 @@ class RidePostsLifecycleTest < ActionDispatch::IntegrationTest
       assert_select "span", text: /Split Gas/, count: 0
       assert_select "div", text: /Users arrange any expense sharing among themselves/
 
-      get ride_posts_url(post_type: "offering")
+      get ride_posts_url(origin_id: "")
       assert_response :success
       assert_select "#ride_post_#{ride.id}", count: 1
       assert_select "span", text: /Libreng Sakay/, count: 0

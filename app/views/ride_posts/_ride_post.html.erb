@@ -46,11 +46,6 @@
       <%# Top Row: Badge + Badges + Seats %>
       <div class="flex justify-between items-start mb-3 gap-2">
         <div class="flex flex-wrap items-center gap-1.5">
-          <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider
-            <%= ride_post.offering? ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400' : 'bg-sky-100 text-sky-700 dark:bg-sky-500/10 dark:text-sky-400' %>">
-            <%= ride_post.post_type %>
-          </span>
-
           <% if ride_post.draft? || ride_post.canceled? || ride_post.completed? %>
             <span class="text-[10px] font-bold uppercase tracking-wider text-neutral-500"><%= ride_post.status.humanize %></span>
           <% end %>
@@ -75,11 +70,11 @@
         </div>
 
         <div class="flex items-center text-neutral-500 shrink-0">
-          <% if ride_post.offering? && ride_post.remaining_seats.present? %>
+          <% if ride_post.remaining_seats.present? %>
             <span class="text-xs font-bold text-neutral-900 dark:text-white"><%= ride_post.remaining_seats %>/<%= ride_post.seats %></span>
             <span class="text-[10px] ml-1 uppercase">left</span>
           <% else %>
-            <span class="text-xs font-bold text-neutral-900 dark:text-white"><%= pluralize(ride_post.seats, "seat") %> needed</span>
+            <span class="text-xs font-bold text-neutral-900 dark:text-white"><%= pluralize(ride_post.seats, "seat") %> planned</span>
           <% end %>
         </div>
       </div>

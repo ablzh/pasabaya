@@ -28,10 +28,6 @@ class ResponsiveFlowsTest < ApplicationSystemTestCase
       assert_fits
       visit new_ride_post_path
       assert_selector "#ride_post_origin_id-ts-control"
-      select "Requesting", from: "Ride Intent"
-      assert_selector "label", text: "Seats needed", exact_text: true
-      assert_fits
-      select "Offering", from: "Ride Intent"
       assert_selector "label", text: "Seats available", exact_text: true
       assert_text "save a private draft"
       visit ride_post_path(offer)

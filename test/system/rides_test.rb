@@ -17,12 +17,10 @@ class RidesTest < ApplicationSystemTestCase
     click_link "Search"
     assert_current_path ride_posts_path
 
-    find("label", text: "Available Drivers").click
     click_button "Search Rides"
 
-    # Assert search results show the matching ride and not the requesting ride
+    # Assert search results show the matching ride and allow opening a driver offer
     assert_selector "#ride_posts article, #ride_posts [id^='ride_post_']", text: "Manila → Makati"
-    assert_no_text "Looking for a ride back home."
     assert_text "Heading to Manila early morning."
 
     # 2. Open a result
@@ -38,8 +36,6 @@ class RidesTest < ApplicationSystemTestCase
     # 3. Create a ride while signed in
     click_on "Add a ride"
     assert_current_path new_ride_post_path
-
-    select "Offering", from: "Ride Intent"
 
     find("#ride_post_origin_id-ts-control").click
     find(".ts-dropdown .option", text: "Makati").click

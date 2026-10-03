@@ -1,6 +1,42 @@
 require "test_helper"
 
 class RidePostTest < ActiveSupport::TestCase
+  test "passenger ride posts are invalid while driver offers remain supported" do
+    ride = ride_posts(:one).dup
+    ride.post_type = :requesting
+    assert_not ride.valid?
+    assert_includes ride.errors[:post_type], "is not included in the list"
+  end
+
+  test "database rejects passenger post intent even when model validation is bypassed" do
+    assert_raises(ActiveRecord::StatementInvalid) { ride_posts(:one).update_columns(post_type: 1) }
+  end
+
+  test "sold out offers preserve positive capacity" do
+    ride = ride_posts(:one)
+    ride.remaining_seats = 0
+    assert ride.save
+    assert ride.full?
+    assert_not ride.bookable?
+  end
+
+  [ -1, 4 ].each do |inventory|
+    test "remaining inventory #{inventory} is rejected by the model and database" do
+      ride = ride_posts(:one)
+      ride.remaining_seats = inventory
+      assert_not ride.valid?
+      assert_raises(ActiveRecord::StatementInvalid) { ride.update_columns(remaining_seats: inventory) }
+    end
+  end
+
+  test "total offered seats must remain positive and present" do
+    ride = ride_posts(:one)
+    ride.seats = 0
+    assert_not ride.valid?
+    assert_raises(ActiveRecord::StatementInvalid) { ride.update_columns(seats: 0) }
+    assert_raises(ActiveRecord::NotNullViolation) { ride.update_columns(seats: nil) }
+  end
+
   test "invalid if departure time is in the past on creation or schedule change" do
     ride_post = ride_posts(:one)
     ride_post.departure_time = 1.hour.ago
