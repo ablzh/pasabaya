@@ -18,7 +18,7 @@
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
       <div>
         <h1 class="text-3xl sm:text-4xl font-extrabold text-neutral-900 dark:text-white tracking-tight">
-          <%= @ride_post.origin.name %> <span class="text-neutral-400 font-normal">&rarr;</span> <%= @ride_post.destination.name %>
+          <%= (@ride_post.origin&.name || "Choose origin") %> <span class="text-neutral-400 font-normal">&rarr;</span> <%= (@ride_post.destination&.name || "Choose destination") %>
         </h1>
         <div class="mt-2.5 flex flex-wrap items-center gap-2">
           <% if @ride_post.ladies_only? %>
@@ -128,7 +128,7 @@
         <div class="bg-white dark:bg-neutral-900 p-5 sm:p-6 rounded-2xl border border-neutral-100 dark:border-white/5 shadow-xs">
           <p class="text-[10px] font-bold text-neutral-400 uppercase tracking-widest mb-1">Status</p>
           <p class="text-base sm:text-lg font-bold text-neutral-900 dark:text-white capitalize">
-            <%= @ride_post.status %>
+            <%= @ride_post.completed? ? "Past" : @ride_post.status %>
           </p>
           <p class="text-xs sm:text-sm text-neutral-500 font-medium">
             <%= ride_availability_text(@ride_post) %>
@@ -380,7 +380,7 @@
                   Trip Coordination Chat
                 </h2>
                 <p class="text-xs text-neutral-500 mt-0.5">
-                  <%= @ride_post.origin.name %> &rarr; <%= @ride_post.destination.name %> &bull; <%= pluralize(@ride_post.participants.count, "participant") %>
+                  <%= (@ride_post.origin&.name || "Choose origin") %> &rarr; <%= (@ride_post.destination&.name || "Choose destination") %> &bull; <%= pluralize(@ride_post.participants.count, "participant") %>
                 </p>
               </div>
             </div>

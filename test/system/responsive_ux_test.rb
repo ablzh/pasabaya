@@ -15,13 +15,13 @@ class ResponsiveUxTest < ApplicationSystemTestCase
     select "Community / Closed Hub Only", from: "Visibility"
     page.execute_script("window.formRenders = 0; document.addEventListener('turbo:render', () => window.formRenders++)")
     2.times do
-      submit_and_wait("Save Post")
+      submit_and_wait("Publish ride")
       assert_text "Community can't be blank"
       assert_routes
       reopen_routes
     end
     select "Public (Everyone)", from: "Visibility"
-    click_button "Save Post"
+    click_button "Publish ride"
     assert_text "Ride post was successfully created."
     ride = RidePost.order(:created_at).last
     assert_equal locations(:one).id, ride.origin_id
@@ -130,13 +130,13 @@ class ResponsiveUxTest < ApplicationSystemTestCase
     choose_city("ride_post_destination_id", "Makati")
     fill_in "Seats available", with: 1
     select "Community / Closed Hub Only", from: "Visibility"
-    click_button "Save Post"
+    click_button "Publish ride"
     assert_selector "#error_explanation"
     assert_selector "label", text: "Departure Time (required to publish a ride offer)", exact_text: true
     assert_routes
     select "Public (Everyone)", from: "Visibility"
-    click_button "Save Post"
-    assert_text "Ride offer saved as a private draft."
+    click_button "Save draft"
+    assert_text "Ride saved as a private draft."
     assert_text "Unpublished — edit to publish"
     assert_no_link "Review Trip / Report No-Show"
   end
