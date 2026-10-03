@@ -17,7 +17,7 @@
     </div>
 
     <%# Routes stay stacked at every width; date and action form one group. %>
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-end">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
       <div class="grid grid-cols-[minmax(0,1fr)_2.5rem] gap-x-3 gap-y-4 items-center">
         <%# Origin Select %>
         <div class="col-start-1 min-w-0">
@@ -79,6 +79,7 @@
                                 min: Date.current.to_s,
                                 class: "w-full rounded-xl border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-base sm:text-sm text-neutral-900 dark:text-white focus:ring-blue-500 focus:border-blue-500 py-2.5 px-3" %>
           <% end %>
+          <p class="mt-2 text-xs text-neutral-500">Leave blank to see all upcoming rides on this route</p>
         </div>
 
         <%# Submit Button %>

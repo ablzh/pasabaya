@@ -1,4 +1,10 @@
 class User < ApplicationRecord
+  REGISTRATION_POLICY_VERSION = "2026-10-03".freeze
+
+  attr_accessor :registration_acceptance
+
+  validate :registration_attestation, on: :registration
+
   has_secure_password
   has_many :sessions, dependent: :destroy
   has_many :ride_posts, dependent: :destroy
@@ -130,6 +136,12 @@ class User < ApplicationRecord
 
 
   private
+
+  def registration_attestation
+    unless registration_acceptance == "1"
+      errors.add(:base, "You must be at least 18 years old and agree to the Terms of Service and Privacy Policy to register.")
+    end
+  end
 
   def reject_updates_after_deletion
     if User.lock.find(id).deleted?

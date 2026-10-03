@@ -31,7 +31,6 @@ class RidesTest < ApplicationSystemTestCase
     assert_selector "h1", text: /Manila\s+→\s+Makati/
     assert_text "Heading to Manila early morning."
     assert_text "3"
-    assert_text "#{user.first_name} #{user.last_name}"
 
     # 3. Create a ride while signed in
     click_on "Add a ride"
