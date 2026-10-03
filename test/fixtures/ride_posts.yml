@@ -14,10 +14,12 @@ one:
 
 two:
   user: two
-  post_type: requesting
+  post_type: offering
   origin: two
   destination: one
   departure_time: <%= 2.days.from_now.to_fs(:db) %>
+  expected_arrival_at: <%= (2.days.from_now + 2.hours).to_fs(:db) %>
+  remaining_seats: 1
   seats: 1
-  notes: Looking for a ride back home.
+  notes: Offering a ride back home.
   status: active

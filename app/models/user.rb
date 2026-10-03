@@ -13,6 +13,21 @@ class User < ApplicationRecord
   has_many :received_notifications, class_name: "Notification", foreign_key: :recipient_id, dependent: :destroy, inverse_of: :recipient
   has_many :acted_notifications, class_name: "Notification", foreign_key: :actor_id, dependent: :nullify, inverse_of: :actor
   has_many :chat_messages, dependent: :destroy
+
+  def mark_all_notifications_as_read!
+    snapshot_id = received_notifications.maximum(:id)
+    return unless snapshot_id
+
+    received_notifications.unread.where("id <= ?", snapshot_id).update_all(read_at: Time.current, updated_at: Time.current)
+    Turbo::StreamsChannel.broadcast_update_to(
+      [ self, :notifications ], target: "notifications_list",
+      partial: "notifications/list", locals: { notifications: received_notifications.includes(:actor).recent.limit(50) }
+    )
+    Turbo::StreamsChannel.broadcast_update_to(
+      [ self, :notifications ], targets: "[data-notification-count]",
+      partial: "notifications/count", locals: { count: received_notifications.unread.count }
+    )
+  end
   has_many :community_memberships, dependent: :destroy
   has_many :communities, through: :community_memberships
   has_many :reported_trip_reviews, class_name: "TripReview", foreign_key: :reporter_id, dependent: :restrict_with_error, inverse_of: :reporter

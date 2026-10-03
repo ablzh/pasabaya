@@ -216,30 +216,17 @@ if manila && quezon_city
     notes: "I travel daily for work. Clean car, non-smokers preferred. Meetup at Taft Avenue."
   )
 
-  # 2. Driver offers a confirmed dated ride (departure in 3 days)
-  driver.ride_posts.find_or_create_by!(
-    origin: manila,
-    destination: baguio || quezon_city,
-    post_type: :offering,
-    seats: 3,
-    remaining_seats: 3,
-    status: :active,
-    departure_time: Time.current + 3.days,
-    expected_arrival_at: Time.current + 3.days + 5.hours,
-    split_gas: true,
-    notes: "Weekend trip to Baguio! Sharing fuel costs. Max 1 bag per person."
-  )
-
-  # 3. Passenger requests a ride for tomorrow
-  passenger.ride_posts.find_or_create_by!(
-    origin: quezon_city,
-    destination: manila,
-    post_type: :requesting,
-    seats: 1,
-    status: :active,
-    departure_time: Time.current + 1.day,
-    notes: "Looking for a ride tomorrow morning. Willing to split toll and gas fees."
-  )
+  # 2. A stable lookup keeps repeated seeds from creating dated duplicates.
+  driver.ride_posts.find_or_create_by!(notes: "Weekend trip to Baguio! Sharing fuel costs. Max 1 bag per person.") do |ride|
+    ride.origin = manila
+    ride.destination = baguio || quezon_city
+    ride.seats = 3
+    ride.remaining_seats = 3
+    ride.status = :active
+    ride.departure_time = 3.days.from_now
+    ride.expected_arrival_at = ride.departure_time + 5.hours
+    ride.split_gas = true
+  end
 
   puts "Ride posts seeded successfully!"
 else

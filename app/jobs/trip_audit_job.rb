@@ -9,8 +9,8 @@ class TripAuditJob < ApplicationJob
     ride_post.with_lock do
       return if ride_post.canceled? || ride_post.draft? || !ride_post.offering?
 
-      arrival_time = ride_post.expected_arrival_at || ride_post.departure_time
-      return unless arrival_time.present? && Time.current >= arrival_time + 2.hours
+      completion_time = ride_post.automatic_completion_at
+      return unless completion_time.present? && Time.current >= completion_time
 
       ride_post.update!(status: :completed) unless ride_post.completed?
       ride_post.bookings.pending.update_all(status: Booking.statuses[:expired], updated_at: Time.current)
