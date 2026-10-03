@@ -77,11 +77,11 @@
                    label: "Facebook Profile URL",
                    name: :facebook_profile_url,
                    id: form.field_id(:facebook_profile_url),
-                   required: true,
-                   helper_text: "Required. Other members will use this to view your profile and contact you.",
+                   required: false,
+                   helper_text: "Optional. Other members can view this link to learn more about you. A supplied link does not verify identity.",
                    error: @user.errors[:facebook_profile_url].first
         )) do %>
-          <%= form.url_field :facebook_profile_url, required: true, placeholder: "https://facebook.com/username", class: "w-full rounded-xl border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-base sm:text-sm focus:ring-blue-500 focus:border-blue-500 py-3 px-4" %>
+          <%= form.url_field :facebook_profile_url, placeholder: "https://facebook.com/username", class: "w-full rounded-xl border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-base sm:text-sm focus:ring-blue-500 focus:border-blue-500 py-3 px-4" %>
         <% end %>
 
         <%= render(Forms::Component.new(

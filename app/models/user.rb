@@ -38,10 +38,9 @@ class User < ApplicationRecord
   validates :first_name, presence: true
   validates :last_name, presence: true
 
-  # Ensure the Facebook link is always provided
-  validates :facebook_profile_url, presence: true
+  normalizes :facebook_profile_url, with: ->(url) { url.to_s.strip.presence }
 
-  validate :acceptable_facebook_profile_url
+  validate :acceptable_facebook_profile_url, if: -> { new_record? || will_save_change_to_facebook_profile_url? }
 
   attr_readonly :admin
 
@@ -52,6 +51,8 @@ class User < ApplicationRecord
   end
 
   def safe_facebook_profile_url?
+    return false if facebook_profile_url.blank?
+
     uri = URI.parse(facebook_profile_url.to_s)
     uri.is_a?(URI::HTTPS) && %w[facebook.com www.facebook.com m.facebook.com].include?(uri.host&.downcase) &&
       uri.userinfo.nil? && uri.port == 443 && uri.path.present? && uri.path != "/"

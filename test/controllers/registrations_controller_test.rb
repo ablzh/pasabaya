@@ -26,6 +26,43 @@ class RegistrationsControllerTest < ActionDispatch::IntegrationTest
     assert_equal "Welcome to Pasabaya! Your account was successfully created.", flash[:notice]
   end
 
+  test "should create user without facebook_profile_url" do
+    assert_difference("User.count", 1) do
+      post sign_up_url, params: {
+        user: {
+          first_name: "Bea",
+          last_name: "Alonzo",
+          email_address: "bea@example.com",
+          facebook_profile_url: "",
+          password: "password123",
+          password_confirmation: "password123"
+        }
+      }
+    end
+
+    assert_redirected_to root_url
+    user = User.find_by(email_address: "bea@example.com")
+    assert_nil user.facebook_profile_url
+  end
+
+  test "should reject signup with unsafe facebook_profile_url" do
+    assert_no_difference("User.count") do
+      post sign_up_url, params: {
+        user: {
+          first_name: "Bea",
+          last_name: "Alonzo",
+          email_address: "bea_unsafe@example.com",
+          facebook_profile_url: "http://evil.com/phishing",
+          password: "password123",
+          password_confirmation: "password123"
+        }
+      }
+    end
+
+    assert_response :unprocessable_content
+    assert_select "p", text: /must be an HTTPS Facebook profile URL/
+  end
+
   test "should not create user and render errors on validation failure" do
     assert_no_difference("User.count") do
       post sign_up_url, params: {

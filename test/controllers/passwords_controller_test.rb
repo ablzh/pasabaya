@@ -51,6 +51,20 @@ class PasswordsControllerTest < ActionDispatch::IntegrationTest
     assert_notice "Password has been reset"
   end
 
+  test "update succeeds with unchanged legacy invalid facebook_profile_url" do
+    @user.update_columns(facebook_profile_url: "http://legacy.facebook.com/outdated:8080")
+    token = @user.password_reset_token
+
+    assert_changes -> { @user.reload.password_digest } do
+      put password_path(token), params: { password: "new_password_123", password_confirmation: "new_password_123" }
+      assert_response :see_other
+      assert_redirected_to new_session_path
+    end
+
+    follow_redirect!
+    assert_notice "Password has been reset"
+  end
+
   test "update with non matching passwords" do
     token = @user.password_reset_token
     assert_no_changes -> { @user.reload.password_digest } do
