@@ -21,7 +21,7 @@ production:
     queue: default
     schedule: every day at 3am
   sweep_trip_audits:
-    command: "RidePost.where('expected_arrival_at < ? AND departure_time > ?', 2.hours.ago, 7.days.ago).where(status: [:active, :fulfilled, :completed]).find_each { |r| TripAuditJob.perform_later(r.id) }"
+    class: TripAuditRecoveryJob
     schedule: every hour at minute 30
   retry_undelivered_notifications:
     class: NotificationRecoveryJob

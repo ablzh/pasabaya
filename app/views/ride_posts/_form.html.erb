@@ -1,5 +1,5 @@
 <% grouped_locations = local_assigns[:grouped_locations] || Location.grouped_by_region %>
-<%= form_with(model: ride_post, class: "w-full space-y-6", data: { controller: "ride-intent", action: "change->ride-intent#update turbo:render@document->ride-intent#update" }) do |form| %>
+<%= form_with(model: ride_post, class: "w-full space-y-6") do |form| %>
   <% if ride_post.errors.any? %>
     <div id="error_explanation" class="bg-red-50 dark:bg-red-900/10 text-red-600 px-4 py-3 font-medium rounded-xl mt-3 mb-6 border border-red-100 dark:border-red-900/20">
       <h2 class="text-sm font-bold uppercase tracking-wider mb-2"><%= pluralize(ride_post.errors.count, "error") %> prohibited this post from being saved:</h2>
@@ -12,19 +12,7 @@
   <% end %>
 
   <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-    <!-- Post Type (Enum) -->
-    <%= render(Forms::Component.new(
-      label: "Ride Intent",
-      name: :post_type,
-      id: form.field_id(:post_type),
-      classes: "col-span-full",
-      error: ride_post.errors[:post_type].first
-    )) do %>
-      <%= form.select :post_type, RidePost.post_types.keys.map { |pt| [pt.titleize, pt] }, {}, 
-          class: "block w-full rounded-xl border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-base sm:text-sm text-neutral-900 dark:text-white focus:ring-blue-500 focus:border-blue-500 transition-all py-3 px-4" %>
-    <% end %>
-
-    <p class="col-span-full text-sm text-neutral-500" data-ride-intent-target="instructions"></p>
+    <p class="col-span-full text-sm text-neutral-500">Offer seats as a driver. Add departure and arrival times to publish; otherwise save a private draft.</p>
 
     <!-- Origin Location -->
     <%= render(Forms::Component.new(
@@ -58,7 +46,7 @@
 
     <!-- Departure Time -->
     <%= render(Forms::Component.new(
-      label: ride_post.requesting? ? "Preferred Departure (optional)" : "Departure Time (required to publish a ride offer)",
+      label: "Departure Time (required to publish a ride offer)",
       name: :departure_time,
       id: form.field_id(:departure_time),
       error: ride_post.errors[:departure_time].first
@@ -70,7 +58,7 @@
 
     <!-- Expected Arrival Time -->
     <%= render(Forms::Component.new(
-      label: ride_post.requesting? ? "Preferred Arrival (optional)" : "Expected Arrival Time (required for ride offers)",
+      label: "Expected Arrival Time (optional)",
       name: :expected_arrival_at,
       id: form.field_id(:expected_arrival_at),
       error: ride_post.errors[:expected_arrival_at].first
@@ -157,11 +145,13 @@
   </div>
 
   <!-- Form Action -->
-  <div class="flex items-center gap-6 pt-6 border-t border-neutral-100 dark:border-white/5">
-    <%= render Buttons::Component.new(
-               text: ride_post.new_record? ? "Save Post" : "Save Changes",
-               type: "submit",
-               size: :lg) %>
+  <div class="flex flex-wrap items-center gap-3 pt-6 border-t border-neutral-100 dark:border-white/5">
+    <% if ride_post.new_record? || ride_post.draft? %>
+      <%= form.button "Save draft", name: "intent", value: "draft", class: "rounded-xl border px-6 py-3" %>
+      <%= form.button "Publish ride", name: "intent", value: "publish", class: "rounded-xl bg-blue-600 text-white px-6 py-3" %>
+    <% else %>
+      <%= form.button "Save Changes", class: "rounded-xl bg-blue-600 text-white px-6 py-3" %>
+    <% end %>
 
     <%= yield %>
   </div>

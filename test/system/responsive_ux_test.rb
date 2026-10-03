@@ -15,13 +15,13 @@ class ResponsiveUxTest < ApplicationSystemTestCase
     select "Community / Closed Hub Only", from: "Visibility"
     page.execute_script("window.formRenders = 0; document.addEventListener('turbo:render', () => window.formRenders++)")
     2.times do
-      submit_and_wait("Save Post")
+      submit_and_wait("Publish ride")
       assert_text "Community can't be blank"
       assert_routes
       reopen_routes
     end
     select "Public (Everyone)", from: "Visibility"
-    click_button "Save Post"
+    click_button "Publish ride"
     assert_text "Ride post was successfully created."
     ride = RidePost.order(:created_at).last
     assert_equal locations(:one).id, ride.origin_id
@@ -92,12 +92,11 @@ class ResponsiveUxTest < ApplicationSystemTestCase
     end
   end
 
-  test "search submits swapped route intent and date then resets filters" do
+  test "search submits swapped route and date then resets filters" do
     visit ride_posts_path
     choose_city("origin_id", "Makati")
     choose_city("destination_id", "Manila")
     click_button "Swap Origin and Destination"
-    find("label", text: "Available Drivers").click
     fill_in "Date", with: Date.tomorrow.to_s
     click_button "Search Rides"
     assert_selector "#ride_post_#{ride_posts(:one).id}"
@@ -115,7 +114,7 @@ class ResponsiveUxTest < ApplicationSystemTestCase
     assert_equal "", find("#departure_date").value
   end
 
-  test "settings labels focus their own inputs and request mode recovers after errors" do
+  test "settings labels focus their own inputs and driver form recovers after errors" do
     sign_in
     visit settings_profile_path
     %w[email_change password_change].each do |namespace|
@@ -125,22 +124,20 @@ class ResponsiveUxTest < ApplicationSystemTestCase
       assert_equal "Current password *", find("##{id}")["aria-label"] || page.evaluate_script("document.querySelector('label[for=#{id}]').textContent.trim().replace(/\\s+/g, ' ')")
     end
     visit new_ride_post_path
-    select "Requesting", from: "Ride Intent"
-    assert_selector "label", text: "Seats needed", exact_text: true
-    assert_text "Leave preferred times blank"
+    assert_selector "label", text: "Seats available", exact_text: true
+    assert_text "Offer seats as a driver"
     choose_city("ride_post_origin_id", "Manila")
     choose_city("ride_post_destination_id", "Makati")
-    fill_in "Seats needed", with: 1
+    fill_in "Seats available", with: 1
     select "Community / Closed Hub Only", from: "Visibility"
-    click_button "Save Post"
+    click_button "Publish ride"
     assert_selector "#error_explanation"
-    assert_selector "label", text: "Preferred Departure (optional)", exact_text: true
+    assert_selector "label", text: "Departure Time (required to publish a ride offer)", exact_text: true
     assert_routes
     select "Public (Everyone)", from: "Visibility"
-    click_button "Save Post"
-    assert_text "Ride post was successfully created."
-    assert_text "Looking for a driver"
-    assert_text "Seats needed"
+    click_button "Save draft"
+    assert_text "Ride saved as a private draft."
+    assert_text "Unpublished — edit to publish"
     assert_no_link "Review Trip / Report No-Show"
   end
 
