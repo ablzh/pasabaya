@@ -152,7 +152,7 @@
   </div>
 
   <!-- Form Action -->
-  <div class="flex items-center gap-6 pt-6 border-t border-neutral-100 dark:border-white/5">
+  <div class="flex flex-wrap items-center gap-3 pt-6 border-t border-neutral-100 dark:border-white/5">
     <% if ride_post.new_record? || ride_post.draft? %>
       <%= form.button "Save draft", name: "intent", value: "draft", class: "rounded-xl border px-6 py-3" %>
       <%= form.button "Publish ride", name: "intent", value: "publish", class: "rounded-xl bg-blue-600 text-white px-6 py-3" %>

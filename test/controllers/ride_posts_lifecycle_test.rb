@@ -50,6 +50,7 @@ class RidePostsLifecycleTest < ActionDispatch::IntegrationTest
       sign_in_as(ride.user)
       get ride_post_url(ride)
       assert_select "p", text: wording
+      assert_select "p", text: "Past", count: status == :completed ? 1 : 0
       assert_select "a", text: "Review Trip / Report No-Show", count: 0
       if status == :draft
         assert_select "a", text: "Edit Post"
