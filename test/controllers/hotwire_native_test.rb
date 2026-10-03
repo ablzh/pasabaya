@@ -8,6 +8,7 @@ class HotwireNativeTest < ActionDispatch::IntegrationTest
       get "/configurations/#{platform}_v1.json"
       assert_response :success
       assert_equal "application/json", response.media_type
+      assert_equal "public, no-cache, must-revalidate", response.headers["Cache-Control"]
       config = response.parsed_body
       assert_equal %w[/rides /trips /communities /settings/profile], config["settings"]["tabs"].pluck("path")
 
@@ -19,6 +20,70 @@ class HotwireNativeTest < ActionDispatch::IntegrationTest
       assert_equal "default", properties_for(config, "/rides/1?tab=chat")["context"]
       assert_equal "hotwire://fragment/web", properties_for(config, "/trips")["uri"] if platform == "android"
     end
+  end
+
+  test "configuration endpoints mandate revalidation while asset caching remains far-future" do
+    get "/configurations/ios_v1.json"
+    assert_response :success
+    assert_equal "public, no-cache, must-revalidate", response.headers["Cache-Control"]
+    assert response.headers["Last-Modified"].present?
+    assert response.headers["ETag"].present?
+
+    get "/configurations/android_v1.json"
+    assert_response :success
+    assert_equal "public, no-cache, must-revalidate", response.headers["Cache-Control"]
+
+    # Verify static assets inherit configured server caching rather than revalidation
+    get "/icon.png"
+    assert_response :success
+    assert_equal Rails.application.config.public_file_server.headers["cache-control"], response.headers["Cache-Control"]
+  end
+
+  test "production-equivalent configuration requests use mandatory revalidation while asset caching remains far-future" do
+    prod_handler = ActionDispatch::FileHandler.new(
+      Rails.public_path.to_s,
+      headers: { "cache-control" => "public, max-age=#{1.year.to_i}" }
+    )
+    middleware = Middleware::NativeConfigurationCacheControl.new(prod_handler)
+    session = ActionDispatch::Integration::Session.new(middleware)
+
+    session.get "/configurations/ios_v1.json"
+    assert_equal 200, session.response.status
+    assert_equal "public, no-cache, must-revalidate", session.response.headers["Cache-Control"]
+
+    session.get "/icon.png"
+    assert_equal 200, session.response.status
+    assert_equal "public, max-age=#{1.year.to_i}", session.response.headers["Cache-Control"]
+  end
+
+  test "revised rules can be fetched at the same versioned URL via conditional revalidation" do
+    get "/configurations/ios_v1.json"
+    assert_response :success
+    last_modified = response.headers["Last-Modified"]
+    etag = response.headers["ETag"]
+
+    # Conditional GET with If-Modified-Since returns 304 Not Modified
+    get "/configurations/ios_v1.json", headers: { "HTTP_IF_MODIFIED_SINCE" => last_modified }
+    assert_response :not_modified
+    assert_equal "public, no-cache, must-revalidate", response.headers["Cache-Control"]
+
+    # Conditional GET with If-None-Match returns 304 Not Modified
+    get "/configurations/ios_v1.json", headers: { "HTTP_IF_NONE_MATCH" => etag }
+    assert_response :not_modified
+    assert_equal "public, no-cache, must-revalidate", response.headers["Cache-Control"]
+  end
+
+  test "native profile visibly identifies owner with full name even with no active posts" do
+    user = users(:two)
+    user.ride_posts.destroy_all
+    sign_in_as(users(:one))
+
+    get user_url(user), headers: NATIVE_HEADERS
+    assert_response :success
+    assert_select "title", text: "Profile"
+    assert_select "h1[data-profile-name]", text: "#{user.first_name} #{user.last_name}"
+    assert_select "h1.profile-name", text: "#{user.first_name} #{user.last_name}"
+    assert_select "div", text: /No active ride offers or requests listed at the moment/
   end
 
   test "native screens have one short title and preserve fallback actions" do
