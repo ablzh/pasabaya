@@ -69,7 +69,7 @@ class RidePostsControllerTest < ActionDispatch::IntegrationTest
     assert_select "#ride_post_#{ride.id}", count: 0
   end
   test "submitted passenger intent cannot create a passenger ride post" do
-    post ride_posts_url, params: { ride_post: {
+    post ride_posts_url, params: { intent: "publish", ride_post: {
       post_type: "requesting", origin_id: @ride_post.origin_id, destination_id: @ride_post.destination_id,
       seats: 2, departure_time: 1.day.from_now, expected_arrival_at: 1.day.from_now + 2.hours
     } }
