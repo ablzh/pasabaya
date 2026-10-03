@@ -1,6 +1,24 @@
 require "test_helper"
 
 class RidePostsControllerTest < ActionDispatch::IntegrationTest
+  test "owner sees their trip notes without their own driver introduction" do
+    ride = ride_posts(:one)
+    sign_in_as(ride.user)
+    get ride_post_url(ride)
+    assert_select "h2", text: "Your Trip Notes"
+    assert_select "h3", text: /#{ride.user.first_name} #{ride.user.last_name}/, count: 0
+    sign_in_as(users(:two))
+    get ride_post_url(ride)
+    assert_select "h2", text: "Driver's Notes"
+    assert_select "h3", text: /#{ride.user.first_name} #{ride.user.last_name}/
+  end
+
+  test "missing ride redirects old links to board with useful notice" do
+    get ride_post_url("999999-no-longer-here")
+    assert_redirected_to ride_posts_url
+    assert_equal "The trip is no longer available", flash[:alert]
+  end
+
   test "canonical ride redirect retains chat and response format" do
     ride = ride_posts(:one)
     get ride_post_url(ride.id, tab: "chat")
