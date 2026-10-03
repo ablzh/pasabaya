@@ -85,6 +85,7 @@ class ChatsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "latest message refreshes preview and moves conversation to top" do
+    ride_posts(:two).destroy!
     other = @ride.dup
     other.save!
     Booking.create!(ride_post: other, passenger: @passenger, status: :accepted)
