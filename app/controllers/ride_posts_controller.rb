@@ -64,16 +64,11 @@ class RidePostsController < ApplicationController
   # POST /ride_posts or /ride_posts.json
   def create
     @ride_post = Current.user.ride_posts.build(ride_post_params)
-    if @ride_post.offering?
-      @ride_post.remaining_seats ||= @ride_post.seats
-      if @ride_post.departure_time.blank? || @ride_post.expected_arrival_at.blank?
-        @ride_post.status = :draft
-      end
-    end
+    @ride_post.status = params[:intent] == "publish" ? :active : :draft if @ride_post.offering?
 
     respond_to do |format|
       if @ride_post.save
-        notice = @ride_post.draft? ? "Ride offer saved as a private draft. Add departure and arrival times to publish it." : "Ride post was successfully created."
+        notice = @ride_post.draft? ? "Ride saved as a private draft. Choose Publish ride when ready." : "Ride post was successfully created."
         format.html { redirect_to @ride_post, notice: notice, status: :see_other }
         format.json { render :show, status: :created, location: @ride_post }
       else
@@ -86,9 +81,9 @@ class RidePostsController < ApplicationController
   # PATCH/PUT /ride_posts/1 or /ride_posts/1.json
   def update
     @ride_post.assign_attributes(ride_post_params)
-    if @ride_post.offering? && @ride_post.draft? && @ride_post.departure_time.present? && @ride_post.expected_arrival_at.present?
-      @ride_post.status = :active
-      @ride_post.remaining_seats ||= @ride_post.seats
+    if @ride_post.offering?
+      @ride_post.status = :active if params[:intent] == "publish" && @ride_post.draft?
+      @ride_post.status = :draft if params[:intent] == "draft" && !@ride_post.published?
     end
 
     respond_to do |format|
@@ -190,7 +185,7 @@ class RidePostsController < ApplicationController
                        @ride_post.departure_time.strftime("%A, %b %d at %I:%M %p")
     end
 
-    title_text = "Ride from #{@ride_post.origin.name} to #{@ride_post.destination.name}"
+    title_text = "Ride from #{(@ride_post.origin&.name || "Choose origin")} to #{(@ride_post.destination&.name || "Choose destination")}"
     desc_text = "#{@ride_post.user.first_name} is #{@ride_post.post_type} a ride. " \
       "Departure: #{formatted_time}. " \
       "#{@ride_post.requesting? ? 'Seats needed' : 'Total seats'}: #{@ride_post.seats}. " \

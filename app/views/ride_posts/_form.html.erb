@@ -70,7 +70,7 @@
 
     <!-- Expected Arrival Time -->
     <%= render(Forms::Component.new(
-      label: ride_post.requesting? ? "Preferred Arrival (optional)" : "Expected Arrival Time (required for ride offers)",
+      label: ride_post.requesting? ? "Preferred Arrival (optional)" : "Expected Arrival Time (optional)",
       name: :expected_arrival_at,
       id: form.field_id(:expected_arrival_at),
       error: ride_post.errors[:expected_arrival_at].first
@@ -153,10 +153,12 @@
 
   <!-- Form Action -->
   <div class="flex items-center gap-6 pt-6 border-t border-neutral-100 dark:border-white/5">
-    <%= render Buttons::Component.new(
-               text: ride_post.new_record? ? "Save Post" : "Save Changes",
-               type: "submit",
-               size: :lg) %>
+    <% if ride_post.new_record? || ride_post.draft? %>
+      <%= form.button "Save draft", name: "intent", value: "draft", class: "rounded-xl border px-6 py-3" %>
+      <%= form.button "Publish ride", name: "intent", value: "publish", class: "rounded-xl bg-blue-600 text-white px-6 py-3" %>
+    <% else %>
+      <%= form.button "Save Changes", class: "rounded-xl bg-blue-600 text-white px-6 py-3" %>
+    <% end %>
 
     <%= yield %>
   </div>
