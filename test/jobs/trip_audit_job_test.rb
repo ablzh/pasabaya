@@ -23,6 +23,47 @@ class TripAuditJobTest < ActiveJob::TestCase
     @booking = Booking.create!(ride_post: @ride_post, passenger: @passenger, status: :accepted)
   end
 
+  test "recovery handles overdue rides without arrival but excludes drafts and canceled rides" do
+    @ride_post.update_columns(departure_time: 25.hours.ago, expected_arrival_at: nil)
+    draft = ride_posts(:one)
+    draft.update_columns(status: RidePost.statuses[:draft], departure_time: 25.hours.ago, expected_arrival_at: nil)
+    canceled = ride_posts(:two)
+    canceled.update_columns(status: RidePost.statuses[:canceled], departure_time: 25.hours.ago, expected_arrival_at: nil)
+    clear_enqueued_jobs
+    assert_enqueued_with(job: TripAuditJob, args: [ @ride_post.id ]) { TripAuditRecoveryJob.perform_now }
+    perform_enqueued_jobs(only: TripAuditJob)
+    assert @ride_post.reload.completed?
+    assert draft.reload.draft?
+    assert canceled.reload.canceled?
+    assert_no_difference -> { Notification.where(event_name: "review.requested").count } do
+      # Separate job executions each have their own query scan in production.
+      Prosopite.finish
+      Prosopite.scan
+      TripAuditRecoveryJob.perform_now
+      perform_enqueued_jobs(only: TripAuditJob)
+    end
+  end
+
+  test "completion never precedes booking cutoff even with inconsistent legacy arrival" do
+    @ride_post.update_columns(departure_time: 1.hour.from_now, expected_arrival_at: 4.hours.ago)
+    TripAuditJob.perform_now(@ride_post.id)
+    assert @ride_post.reload.published?
+    assert_equal @ride_post.departure_time, @ride_post.automatic_completion_at
+  end
+
+  test "without arrival completion waits until departure plus 24 hours and schedules the same deadline" do
+    ride = ride_posts(:one)
+    ride.expected_arrival_at = nil
+    assert_enqueued_with(job: TripAuditJob, at: ride.departure_time + 24.hours) { ride.save! }
+    ride.update_columns(departure_time: 23.hours.ago.change(usec: 0))
+    TripAuditJob.perform_now(ride.id)
+    assert ride.reload.active?
+    travel_to ride.departure_time + 24.hours do
+      TripAuditJob.perform_now(ride.id)
+      assert ride.reload.completed?
+    end
+  end
+
   test "skips execution if expected arrival time has not passed plus 2 hours" do
     assert_no_difference -> { Notification.where(event_name: "review.requested").count } do
       TripAuditJob.perform_now(@ride_post.id)
