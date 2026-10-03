@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_03_180001) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_03_180011) do
   create_table "account_deletion_tombstones", force: :cascade do |t|
     t.string "anonymized_email", null: false
     t.bigint "avatar_blob_id"
@@ -145,6 +145,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_03_180001) do
     t.index ["actor_id"], name: "index_notifications_on_actor_id"
     t.index ["delivery_key"], name: "index_notifications_on_delivery_key", unique: true
     t.index ["notifiable_type", "notifiable_id"], name: "index_notifications_on_notifiable"
+    t.index ["recipient_id", "created_at"], name: "index_notifications_on_recipient_id_and_created_at"
     t.index ["recipient_id", "read_at"], name: "index_notifications_on_recipient_id_and_read_at"
   end
 
