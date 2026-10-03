@@ -78,15 +78,15 @@
       <% end %>
 
 
-      <%= render Switch::Component.new(
-        label: safe_join([
-          "I accept the ",
-          link_to("Terms of Service", terms_path, class: "text-blue-600 dark:text-blue-400 hover:underline font-semibold", onclick: "event.stopPropagation()"),
-          " and ",
-          link_to("Privacy Policy", privacy_path, class: "text-blue-600 dark:text-blue-400 hover:underline font-semibold", onclick: "event.stopPropagation()")
-        ]),
-        name: "accept_terms",
-        required: true) %>
+      <div class="flex items-start gap-3">
+        <%= form.check_box :registration_acceptance, required: true, class: "mt-1 rounded border-neutral-300 text-blue-600 focus:ring-blue-500" %>
+        <%= form.label :registration_acceptance, class: "text-sm text-neutral-700 dark:text-neutral-300" do %>
+          I confirm that I am at least 18 years old and agree to the
+          <%= link_to "Terms of Service", terms_path, class: "text-blue-600 dark:text-blue-400 hover:underline font-semibold" %>
+          and
+          <%= link_to "Privacy Policy", privacy_path, class: "text-blue-600 dark:text-blue-400 hover:underline font-semibold" %>
+        <% end %>
+      </div>
 
       <div class="pt-4">
         <%= render Buttons::Component.new(text: "Create Account & Log In", type: "submit", size: :lg, full_width: true) %>

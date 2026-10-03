@@ -8,7 +8,9 @@ class RegistrationsController < ApplicationController
 
   def create
     @user = User.new(registration_params)
-    if @user.save
+    @user.registration_accepted_at = Time.current
+    @user.registration_policy_version = User::REGISTRATION_POLICY_VERSION
+    if @user.save(context: :registration)
       # Log the user in immediately after creating their account
       unless start_new_session_for @user
         redirect_to new_session_path, alert: "This account has been deleted.", status: :see_other
@@ -30,6 +32,6 @@ class RegistrationsController < ApplicationController
   end
 
   def registration_params
-    params.expect(user: [ :first_name, :last_name, :facebook_profile_url, :email_address, :password, :password_confirmation ])
+    params.expect(user: [ :first_name, :last_name, :facebook_profile_url, :email_address, :password, :password_confirmation, :registration_acceptance ])
   end
 end
