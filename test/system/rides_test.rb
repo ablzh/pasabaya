@@ -44,7 +44,7 @@ class RidesTest < ApplicationSystemTestCase
     find("#ride_post_destination_id-ts-control").click
     find(".ts-dropdown .option", text: "Manila").click
 
-    fill_in "Seats", with: 4
+    fill_in "Available passenger seats", with: 4
     fill_in "Details & Preferences", with: "Carpooling together tomorrow morning, 4 seats open."
 
     click_button "Save draft"

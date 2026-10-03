@@ -9,7 +9,7 @@ class ResponsiveUxTest < ApplicationSystemTestCase
     visit new_ride_post_path
     choose_city("ride_post_origin_id", "Manila")
     choose_city("ride_post_destination_id", "Makati")
-    fill_in "Seats available", with: 1
+    fill_in "Available passenger seats", with: 1
     fill_in "Departure Time", with: 3.days.from_now.strftime("%Y-%m-%dT09:00")
     fill_in "Expected Arrival Time", with: 3.days.from_now.strftime("%Y-%m-%dT12:00")
     select "Community / Closed Hub Only", from: "Visibility"
@@ -124,11 +124,11 @@ class ResponsiveUxTest < ApplicationSystemTestCase
       assert_equal "Current password *", find("##{id}")["aria-label"] || page.evaluate_script("document.querySelector('label[for=#{id}]').textContent.trim().replace(/\\s+/g, ' ')")
     end
     visit new_ride_post_path
-    assert_selector "label", text: "Seats available", exact_text: true
+    assert_selector "label", text: "Available passenger seats", exact_text: true
     assert_text "Offer seats as a driver"
     choose_city("ride_post_origin_id", "Manila")
     choose_city("ride_post_destination_id", "Makati")
-    fill_in "Seats available", with: 1
+    fill_in "Available passenger seats", with: 1
     select "Community / Closed Hub Only", from: "Visibility"
     click_button "Publish ride"
     assert_selector "#error_explanation"
