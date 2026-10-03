@@ -311,16 +311,7 @@
                 </p>
               </div>
 
-              <div class="flex items-center gap-2 self-center sm:self-start">
-                <% if @ride_post.user.safe_facebook_profile_url? %>
-                  <%= render Buttons::Component.new(
-                             text: Current.user.present? ? "Facebook Profile" : "Login to View Profile",
-                             href: Current.user.present? ? @ride_post.user.facebook_profile_url : new_session_path(return_to: request.path),
-                             variant: :secondary,
-                             size: :xs,
-                             target: Current.user.present? ? "_blank" : nil) %>
-                <% end %>
-              </div>
+
             </div>
 
             <div class="mt-3 flex flex-wrap items-center justify-center sm:justify-start gap-1.5">
