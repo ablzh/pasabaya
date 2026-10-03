@@ -10,12 +10,11 @@ class RidePostsController < ApplicationController
 
   # GET /ride_posts or /ride_posts.json
   def index
-    if params.key?(:post_type) || params.key?(:origin_id) || params.key?(:destination_id) || params.key?(:community_id) || params.key?(:ladies_only) || params.key?(:departure_date)
+    if params.key?(:origin_id) || params.key?(:destination_id) || params.key?(:community_id) || params.key?(:ladies_only) || params.key?(:departure_date)
       @ride_posts = RidePost.active.upcoming
                             .visible_to(Current.user)
-                            .includes(:origin, :destination, :user, :community)
+                            .includes(:origin, :destination, :community, user: { avatar_attachment: :blob })
                             .order(departure_time: :asc)
-                            .filter_by_post_type(params[:post_type])
                             .filter_by_origin(params[:origin_id])
                             .filter_by_destination(params[:destination_id])
                             .filter_by_community(params[:community_id])
@@ -64,16 +63,11 @@ class RidePostsController < ApplicationController
   # POST /ride_posts or /ride_posts.json
   def create
     @ride_post = Current.user.ride_posts.build(ride_post_params)
-    if @ride_post.offering?
-      @ride_post.remaining_seats ||= @ride_post.seats
-      if @ride_post.departure_time.blank? || @ride_post.expected_arrival_at.blank?
-        @ride_post.status = :draft
-      end
-    end
+    @ride_post.status = params[:intent] == "publish" ? :active : :draft if @ride_post.offering?
 
     respond_to do |format|
       if @ride_post.save
-        notice = @ride_post.draft? ? "Ride offer saved as a private draft. Add departure and arrival times to publish it." : "Ride post was successfully created."
+        notice = @ride_post.draft? ? "Ride saved as a private draft. Choose Publish ride when ready." : "Ride post was successfully created."
         format.html { redirect_to @ride_post, notice: notice, status: :see_other }
         format.json { render :show, status: :created, location: @ride_post }
       else
@@ -86,9 +80,8 @@ class RidePostsController < ApplicationController
   # PATCH/PUT /ride_posts/1 or /ride_posts/1.json
   def update
     @ride_post.assign_attributes(ride_post_params)
-    if @ride_post.offering? && @ride_post.draft? && @ride_post.departure_time.present? && @ride_post.expected_arrival_at.present?
-      @ride_post.status = :active
-      @ride_post.remaining_seats ||= @ride_post.seats
+    if @ride_post.offering?
+      @ride_post.status = :active if params[:intent] == "publish" && @ride_post.draft?
     end
 
     respond_to do |format|
@@ -146,7 +139,7 @@ class RidePostsController < ApplicationController
   # Only allow a list of trusted parameters through.
   def ride_post_params
     params.expect(ride_post: [
-      :post_type, :origin_id, :destination_id, :departure_time, :expected_arrival_at,
+      :origin_id, :destination_id, :departure_time, :expected_arrival_at,
       :seats, :notes,
       :ladies_only, :visibility, :community_id
     ])
@@ -191,10 +184,10 @@ class RidePostsController < ApplicationController
                        @ride_post.departure_time.strftime("%A, %b %d at %I:%M %p")
     end
 
-    title_text = "Ride from #{@ride_post.origin.name} to #{@ride_post.destination.name}"
+    title_text = "Ride from #{(@ride_post.origin&.name || "Choose origin")} to #{(@ride_post.destination&.name || "Choose destination")}"
     desc_text = "#{@ride_post.user.first_name} is #{@ride_post.post_type} a ride. " \
       "Departure: #{formatted_time}. " \
-      "#{@ride_post.requesting? ? 'Seats needed' : 'Total seats'}: #{@ride_post.seats}. " \
+      "Total seats: #{@ride_post.seats}. " \
       "View profiles before traveling. Seat requests need driver approval; accepted participants coordinate in private in-app chat."
 
     canonical_url = ride_post_url(@ride_post)
@@ -222,7 +215,6 @@ class RidePostsController < ApplicationController
         redirect_to route_rides_path(
                       origin_slug: origin.slug,
                       destination_slug: destination.slug,
-                      post_type: params[:post_type].presence,
                       departure_date: params[:departure_date].presence,
                       community_id: params[:community_id].presence,
                       ladies_only: params[:ladies_only].presence
