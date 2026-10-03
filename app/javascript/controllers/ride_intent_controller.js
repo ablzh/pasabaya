@@ -11,7 +11,7 @@ export default class extends Controller {
     const requesting = this.element.elements.namedItem("ride_post[post_type]").value === "requesting";
     const labels = {
       departure_time: requesting ? "Preferred Departure (optional)" : "Departure Time (required to publish a ride offer)",
-      expected_arrival_at: requesting ? "Preferred Arrival (optional)" : "Expected Arrival Time (required for ride offers)",
+      expected_arrival_at: requesting ? "Preferred Arrival (optional)" : "Expected Arrival Time (optional)",
       seats: requesting ? "Seats needed" : "Seats available"
     };
     for (const [field, label] of Object.entries(labels)) {
@@ -19,6 +19,6 @@ export default class extends Controller {
     }
     this.instructionsTarget.textContent = requesting
       ? "Tell drivers how many seats you need. Leave preferred times blank for a flexible request. View profiles to discuss a ride; this post does not reserve a seat."
-      : "Offer seats on your trip. Add departure and arrival times to publish; otherwise save a private draft. Passengers request seats for your approval.";
+      : "Offer seats on your trip. Choose Save draft to save a private draft, or Publish ride. Publishing needs a future departure; arrival is optional. Passengers request seats for your approval.";
   }
 }

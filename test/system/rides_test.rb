@@ -50,13 +50,21 @@ class RidesTest < ApplicationSystemTestCase
     fill_in "Seats", with: 4
     fill_in "Details & Preferences", with: "Carpooling together tomorrow morning, 4 seats open."
 
-    click_button "Save Post"
+    click_button "Save draft"
 
     # Assert user-visible outcomes of creation
-    assert_text "Ride offer saved as a private draft."
+    assert_text "Ride saved as a private draft."
     assert_selector "h1", text: /Makati\s+→\s+Manila/
     assert_text "4"
     assert_text "Carpooling together tomorrow morning, 4 seats open."
     assert_link "Edit"
+    click_link "Edit Post"
+    fill_in "Departure Time", with: 3.days.from_now.strftime("%Y-%m-%dT09:00")
+    click_button "Save draft"
+    assert_text "Unpublished — edit to publish"
+    click_link "Edit Post"
+    assert_field "Expected Arrival Time (optional)", with: ""
+    click_button "Publish ride"
+    assert_text "Accepting requests"
   end
 end

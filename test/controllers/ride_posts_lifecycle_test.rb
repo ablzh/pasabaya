@@ -1,12 +1,46 @@
 require "test_helper"
 
 class RidePostsLifecycleTest < ActionDispatch::IntegrationTest
+  test "empty drafts stay private and failed publish cannot make them bookable" do
+    sign_in_as(users(:one))
+    post ride_posts_url, params: { ride_post: { post_type: "offering", notes: "Planning" }, intent: "draft" }
+    assert_response :see_other
+    ride = users(:one).ride_posts.order(:id).last
+    follow_redirect!
+    assert_response :success
+    assert_select "button[name='intent'][value='publish']", count: 0
+    patch ride_post_url(ride), params: { ride_post: { notes: "Still planning" }, intent: "publish" }
+    assert_response :unprocessable_content
+    assert ride.reload.draft?
+    sign_out
+    get ride_post_url(ride)
+    assert_response :redirect
+  end
+
+  test "draft editing never publishes and an explicit publish permits optional arrival" do
+    sign_in_as(users(:one))
+    attributes = { post_type: "offering", seats: 3, origin_id: ride_posts(:one).origin_id, destination_id: ride_posts(:one).destination_id, departure_time: 1.day.from_now }
+    post ride_posts_url, params: { ride_post: attributes, intent: "draft" }
+    assert_response :see_other
+    ride = users(:one).ride_posts.order(:id).last
+    assert ride.draft?
+    patch ride_post_url(ride), params: { ride_post: attributes }
+    assert_response :see_other
+    assert ride.reload.draft?
+    patch ride_post_url(ride), params: { ride_post: attributes, intent: "publish" }
+    assert_response :see_other
+    assert ride.reload.bookable?
+    assert_nil ride.expected_arrival_at
+    get edit_ride_post_url(ride)
+    assert_select "label[for='ride_post_expected_arrival_at']", text: "Expected Arrival Time (optional)"
+  end
+
   test "availability follows lifecycle before capacity and guest login only promises bookable seats" do
     ride = ride_posts(:one)
     cases = [
       [ :draft, nil, 3, "Unpublished — edit to publish" ],
       [ :canceled, 1.day.from_now, 0, "Canceled — bookings closed" ],
-      [ :completed, 1.day.ago, 0, "Trip completed — bookings closed" ],
+      [ :completed, 1.day.ago, 0, "Past — bookings closed" ],
       [ :active, 1.hour.ago, 0, "Departed — bookings closed" ],
       [ :fulfilled, 1.day.from_now, 0, "Fully booked" ],
       [ :active, 1.day.from_now, 3, "Accepting requests" ]

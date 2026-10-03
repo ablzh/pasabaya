@@ -1,6 +1,32 @@
 require "test_helper"
 
 class RidePostTest < ActiveSupport::TestCase
+  test "publishing requires distinct route future exact departure and available passenger seats" do
+    ride = RidePost.new(user: users(:one), origin_id: ride_posts(:one).origin_id,
+                        destination_id: ride_posts(:one).origin_id, post_type: :offering,
+                        status: :active, seats: 3, remaining_seats: 0, departure_time: 1.hour.ago)
+    assert_not ride.valid?
+    assert ride.errors[:destination].present?
+    assert ride.errors[:departure_time].present?
+    assert ride.errors[:remaining_seats].present?
+    ride.destination_id = ride_posts(:one).destination_id
+    ride.departure_time = 1.day.from_now
+    ride.remaining_seats = 3
+    assert ride.valid?, ride.errors.full_messages.to_sentence
+  end
+
+  test "an incomplete private draft can be saved but cannot publish without route departure and seats" do
+    ride = RidePost.new(user: users(:one), post_type: :offering, status: :draft)
+    assert ride.save, ride.errors.full_messages.to_sentence
+    assert_not ride.bookable?
+    ride.status = :active
+    assert_not ride.save
+    assert ride.errors[:origin].present?
+    assert ride.errors[:destination].present?
+    assert ride.errors[:departure_time].present?
+    assert ride.errors[:seats].present?
+  end
+
   test "invalid if departure time is in the past on creation or schedule change" do
     ride_post = ride_posts(:one)
     ride_post.departure_time = 1.hour.ago

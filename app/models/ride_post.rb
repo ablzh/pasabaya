@@ -1,8 +1,8 @@
 class RidePost < ApplicationRecord
   belongs_to :user
 
-  belongs_to :origin, class_name: "Location"
-  belongs_to :destination, class_name: "Location"
+  belongs_to :origin, class_name: "Location", optional: true
+  belongs_to :destination, class_name: "Location", optional: true
   belongs_to :community, optional: true
 
   has_many :bookings, dependent: :destroy
@@ -18,7 +18,9 @@ class RidePost < ApplicationRecord
   enum :visibility, { public_ride: 0, hub_only: 1 }, default: :public_ride
 
   validate :departure_time_cannot_be_in_the_past
-  validates :seats, presence: true, numericality: { greater_than: 0 }
+  validates :seats, numericality: { greater_than: 0 }, allow_nil: true
+  validates :origin, :destination, :seats, presence: true, unless: :draft?
+  validate :route_must_have_distinct_locations, unless: :draft?
   validates :post_type, presence: true
   validates :status, presence: true
   validates :visibility, presence: true
@@ -123,6 +125,16 @@ class RidePost < ApplicationRecord
 
   def published?
     active? || fulfilled?
+  end
+
+  def booking_cutoff_at
+    departure_time
+  end
+
+  def automatic_completion_at
+    return unless booking_cutoff_at
+
+    expected_arrival_at ? [ expected_arrival_at + 2.hours, booking_cutoff_at ].max : booking_cutoff_at + 24.hours
   end
 
   def bookable?
@@ -265,11 +277,11 @@ class RidePost < ApplicationRecord
   end
 
   def should_schedule_audit?
-    offering? && published? && expected_arrival_at.present? && (saved_change_to_expected_arrival_at? || saved_change_to_status?)
+    offering? && published? && automatic_completion_at.present? && (saved_change_to_expected_arrival_at? || saved_change_to_departure_time? || saved_change_to_status?)
   end
 
   def schedule_trip_audit
-    TripAuditJob.set(wait_until: expected_arrival_at + 2.hours).perform_later(id)
+    TripAuditJob.set(wait_until: automatic_completion_at).perform_later(id)
   end
 
   def publishing?
@@ -282,7 +294,12 @@ class RidePost < ApplicationRecord
     end
   end
 
+  def route_must_have_distinct_locations
+    errors.add(:destination, "must differ from origin") if origin_id.present? && origin_id == destination_id
+  end
+
   def departure_time_cannot_be_in_the_past
+    return if draft?
     return unless departure_time.present?
     return unless new_record? || will_save_change_to_departure_time?
 
@@ -292,17 +309,15 @@ class RidePost < ApplicationRecord
   end
 
   def bookable_offering_requirements
-    if departure_time.blank?
+    if departure_time.blank? || (publishing? && departure_time <= Time.current)
       errors.add(:departure_time, "is required for published ride offers")
     end
 
-    if expected_arrival_at.blank?
-      errors.add(:expected_arrival_at, "is required for published ride offers")
-    elsif departure_time.present? && expected_arrival_at <= departure_time
+    if expected_arrival_at.present? && departure_time.present? && expected_arrival_at <= departure_time
       errors.add(:expected_arrival_at, "must be after departure time")
     end
 
-    if remaining_seats.nil?
+    if remaining_seats.nil? || (publishing? && active? && remaining_seats <= 0)
       errors.add(:remaining_seats, "must be confirmed for published ride offers")
     end
 
