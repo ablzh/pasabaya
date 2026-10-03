@@ -18,7 +18,7 @@ class RidePost < ApplicationRecord
   enum :visibility, { public_ride: 0, hub_only: 1 }, default: :public_ride
 
   validate :departure_time_cannot_be_in_the_past
-  validates :seats, numericality: { greater_than: 0 }, allow_nil: true
+  validates :seats, numericality: { only_integer: true, greater_than: 0 }, allow_nil: true
   validates :origin, :destination, :seats, presence: true, unless: :draft?
   validate :route_must_have_distinct_locations, unless: :draft?
   validates :post_type, presence: true
