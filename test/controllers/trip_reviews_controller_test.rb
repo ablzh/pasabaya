@@ -124,10 +124,10 @@ class TripReviewsControllerTest < ActionDispatch::IntegrationTest
   ensure
     NoShowIncident.define_singleton_method(:find_or_create_by!, original) if original
   end
-  test "draft undated request and empty departed offer cannot open or submit reviews" do
+  test "draft undated ride and empty departed offer cannot open or submit reviews" do
     sign_in_as(@driver)
     [ { status: :draft, departure_time: nil },
-      { status: :active, post_type: :requesting, departure_time: nil },
+      { status: :active, post_type: :offering, departure_time: nil },
       { status: :active, post_type: :offering, departure_time: 2.hours.ago } ].each do |attributes|
       @ride_post.update_columns(attributes)
       @booking.update_columns(status: Booking.statuses[:pending])

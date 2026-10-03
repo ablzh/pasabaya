@@ -1,5 +1,8 @@
-<div id="<%= dom_id(notification) %>" class="notification p-4 flex items-center justify-between gap-4 transition-colors hover:bg-neutral-50 dark:hover:bg-neutral-800/50 <%= 'bg-blue-50/30 dark:bg-blue-950/10' unless notification.read? %>">
+<div data-unread-notification="<%= !notification.read? %>" id="<%= dom_id(notification) %>" class="notification p-4 flex items-center justify-between gap-4 transition-colors hover:bg-neutral-50 dark:hover:bg-neutral-800/50 <%= 'bg-blue-50/30 dark:bg-blue-950/10' unless notification.read? %>">
   <div class="flex items-start gap-3">
+    <% unless notification.read? %>
+      <span class="mt-3 size-2.5 shrink-0 rounded-full bg-blue-600" aria-label="Unread notification"></span>
+    <% end %>
     <div class="mt-0.5">
       <% case notification.event_name %>
       <% when "booking.requested" %>
@@ -15,7 +18,7 @@
       <% end %>
     </div>
     <div>
-      <p class="text-sm text-neutral-900 dark:text-white font-medium">
+      <p class="text-sm text-neutral-900 dark:text-white <%= notification.read? ? "font-medium" : "font-bold" %>">
         <% case notification.event_name %>
         <% when "booking.requested" %>
           <%= notification.actor&.first_name || "A passenger" %> requested a seat on your ride.

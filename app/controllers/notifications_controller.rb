@@ -8,6 +8,11 @@ class NotificationsController < ApplicationController
     @notifications = Current.user.received_notifications.includes(:actor).recent.limit(50)
   end
 
+  def mark_all_as_read
+    Current.user.mark_all_notifications_as_read!
+    redirect_to notifications_path, status: :see_other
+  end
+
   # GET /notifications/:id
   def show
     @notification = Current.user.received_notifications.find(params[:id])
