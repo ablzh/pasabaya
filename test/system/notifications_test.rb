@@ -1,6 +1,21 @@
 require "application_system_test_case"
 
 class NotificationsSystemTest < ApplicationSystemTestCase
+  test "mark all read updates an open notification list and every count" do
+    user = users(:one)
+    visit new_session_path
+    fill_in "Email Address", with: user.email_address
+    fill_in "Password", with: "password"
+    click_button "Sign in"
+    assert_current_path root_path
+    visit notifications_path
+    assert_selector "turbo-cable-stream-source[connected]", visible: :all
+    assert_selector "[data-unread-notification='true']"
+    user.mark_all_notifications_as_read!
+    assert_no_selector "[data-unread-notification='true']"
+    assert_no_selector "[data-notification-count] span", visible: :all
+  end
+
   test "first streamed notification replaces the empty state and updates unread badges" do
     user = users(:one)
     user.received_notifications.destroy_all
