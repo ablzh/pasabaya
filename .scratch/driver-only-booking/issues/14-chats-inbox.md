@@ -4,7 +4,7 @@
 
 **Blocked by:** None (can start immediately).
 
-**Status:** ready-for-agent
+**Status:** in-progress
 
 - [ ] A dedicated chats destination lists conversations the current user is authorized to access.
 - [ ] Each entry shows the trip route, latest-message preview and timestamp, with a clear link into the discussion and sensible latest-activity ordering.
@@ -16,3 +16,8 @@
 - [ ] Add the smallest relevant behavior or regression test for code changes, covering this ticket's user-visible behavior and important failure boundary. Do not require a browser test for changes with no browser behavior.
 - [ ] Run bin/ci before declaring the implementation complete; report any check that could not run rather than calling the gate green.
 
+
+
+## Implementation evidence
+
+Isolated worker assigned after verifying integration base; no blockers.

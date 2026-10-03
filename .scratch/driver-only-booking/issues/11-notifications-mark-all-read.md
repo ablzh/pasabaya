@@ -4,7 +4,7 @@
 
 **Blocked by:** None (can start immediately).
 
-**Status:** ready-for-agent
+**Status:** in-progress
 
 - [ ] Unread entries have a distinct vibrant blue dot, bold title and sufficient contrast, rather than relying on a faint background alone.
 - [ ] Add the recipient/creation composite index for the notification listing while retaining indexes needed for unread counts. Do not promise a hardware-independent sub-millisecond query time.
@@ -16,3 +16,8 @@
 - [ ] Add the smallest relevant behavior or regression test for code changes, covering this ticket's user-visible behavior and important failure boundary. Do not require a browser test for changes with no browser behavior.
 - [ ] Run bin/ci before declaring the implementation complete; report any check that could not run rather than calling the gate green.
 
+
+
+## Implementation evidence
+
+Isolated implementation started from d2c24db; snapshot and recipient isolation tests passing.
