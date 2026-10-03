@@ -1,6 +1,21 @@
 require "test_helper"
 
 class RidePostsLifecycleTest < ActionDispatch::IntegrationTest
+  test "draft intent cannot reopen a canceled or completed ride" do
+    ride = ride_posts(:one)
+    sign_in_as(ride.user)
+
+    ride.update_columns(status: RidePost.statuses[:canceled])
+    patch ride_post_url(ride), params: { ride_post: { notes: "Canceled plans" }, intent: "draft" }
+    assert_response :see_other
+    assert ride.reload.canceled?
+
+    ride.update_columns(status: RidePost.statuses[:completed])
+    patch ride_post_url(ride), params: { ride_post: { notes: "Completed plans" }, intent: "draft" }
+    assert_response :see_other
+    assert ride.reload.completed?
+  end
+
   test "empty drafts stay private and failed publish cannot make them bookable" do
     sign_in_as(users(:one))
     post ride_posts_url, params: { ride_post: { post_type: "offering", notes: "Planning" }, intent: "draft" }

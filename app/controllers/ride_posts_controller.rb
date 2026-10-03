@@ -83,7 +83,6 @@ class RidePostsController < ApplicationController
     @ride_post.assign_attributes(ride_post_params)
     if @ride_post.offering?
       @ride_post.status = :active if params[:intent] == "publish" && @ride_post.draft?
-      @ride_post.status = :draft if params[:intent] == "draft" && !@ride_post.published?
     end
 
     respond_to do |format|
