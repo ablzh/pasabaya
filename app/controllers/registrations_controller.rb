@@ -10,7 +10,10 @@ class RegistrationsController < ApplicationController
     @user = User.new(registration_params)
     if @user.save
       # Log the user in immediately after creating their account
-      start_new_session_for @user
+      unless start_new_session_for @user
+        redirect_to new_session_path, alert: "This account has been deleted.", status: :see_other
+        return
+      end
       UserMailer.welcome(@user).deliver_later
       redirect_to root_path, notice: "Welcome to Pasabaya! Your account was successfully created.", status: :see_other
     else

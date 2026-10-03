@@ -3,12 +3,11 @@ class Settings::UsersController < Settings::BaseController
     @user = Current.user
 
     if @user.authenticate(params[:password_challenge])
-      if @user.destroy
-        Subscriber.find_by(email: @user.email_address)&.destroy
+      if Users::AnonymizeService.call(@user)
         terminate_session
         redirect_to root_path, notice: "Your account has been deleted.", status: :see_other
       else
-        redirect_to settings_profile_path, alert: @user.errors.full_messages.to_sentence.presence || "Account could not be deleted.", status: :see_other
+        redirect_to settings_profile_path, alert: "Account could not be deleted at this time. Please contact privacy@pasabaya.app.", status: :see_other
       end
     else
       redirect_to settings_profile_path, alert: "Incorrect password. Account was not deleted.", status: :see_other

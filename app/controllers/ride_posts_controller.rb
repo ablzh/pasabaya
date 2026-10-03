@@ -146,7 +146,7 @@ class RidePostsController < ApplicationController
   def ride_post_params
     params.expect(ride_post: [
       :post_type, :origin_id, :destination_id, :departure_time, :expected_arrival_at,
-      :seats, :notes, :is_free_ride, :share_tolls, :split_gas,
+      :seats, :notes,
       :ladies_only, :visibility, :community_id
     ])
   end

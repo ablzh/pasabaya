@@ -10,7 +10,19 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_02_130000) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_03_170002) do
+  create_table "account_deletion_tombstones", force: :cascade do |t|
+    t.string "anonymized_email", null: false
+    t.bigint "avatar_blob_id"
+    t.string "avatar_key"
+    t.string "avatar_service_name"
+    t.datetime "created_at", null: false
+    t.datetime "deleted_at", null: false
+    t.datetime "updated_at", null: false
+    t.integer "user_id", null: false
+    t.index ["user_id"], name: "index_account_deletion_tombstones_on_user_id", unique: true
+  end
+
   create_table "active_storage_attachments", force: :cascade do |t|
     t.bigint "blob_id", null: false
     t.datetime "created_at", null: false
@@ -200,6 +212,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_02_130000) do
     t.datetime "banned_at"
     t.datetime "booking_freeze_until"
     t.datetime "created_at", null: false
+    t.datetime "deleted_at"
     t.string "email_address", null: false
     t.string "facebook_profile_url"
     t.string "first_name"
@@ -208,6 +221,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_02_130000) do
     t.string "password_digest", null: false
     t.string "unconfirmed_email"
     t.datetime "updated_at", null: false
+    t.index ["deleted_at"], name: "index_users_on_deleted_at"
     t.index ["email_address"], name: "index_users_on_email_address", unique: true
   end
 

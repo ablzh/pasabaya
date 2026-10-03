@@ -14,37 +14,48 @@ class Settings::UsersControllerTest < ActionDispatch::IntegrationTest
     sign_in_as(@user)
   end
 
-  test "deletes account with valid password when unconstrained" do
-    assert_difference("User.count", -1) do
+  test "anonymizes account with valid password when unconstrained" do
+    assert_no_difference("User.count") do
       delete settings_user_url, params: { password_challenge: "password" }
     end
 
     assert_redirected_to root_url
     assert_equal "Your account has been deleted.", flash[:notice]
     assert_empty cookies[:session_id]
+
+    @user.reload
+    assert @user.deleted?
+    assert_equal "Deleted", @user.first_name
+    assert_equal "User", @user.last_name
+    assert_nil @user.facebook_profile_url
   end
 
-  test "fails to delete account and preserves session when user has trip reviews" do
+  test "anonymizes account with valid password even when user has trip reviews" do
     driver = users(:one)
     ride = ride_posts(:one)
     Booking.create!(ride_post: ride, passenger: @user, status: :accepted)
     ride.update_columns(departure_time: 2.hours.ago, expected_arrival_at: 1.hour.ago)
 
-    TripReview.create!(
+    review = TripReview.create!(
       ride_post: ride,
       reporter: @user,
       reported_user: driver,
-      outcome: :completed
+      outcome: :completed,
+      notes: "Trip went smoothly."
     )
 
     assert_no_difference("User.count") do
       delete settings_user_url, params: { password_challenge: "password" }
     end
 
-    assert_redirected_to settings_profile_url
-    assert_response :see_other
-    assert_match /Cannot delete record because dependent reported trip reviews exist/, flash[:alert]
-    assert_not_empty cookies[:session_id]
+    assert_redirected_to root_url
+    assert_equal "Your account has been deleted.", flash[:notice]
+    assert_empty cookies[:session_id]
+
+    @user.reload
+    assert @user.deleted?
+    assert TripReview.exists?(review.id)
+    assert_nil review.reload.notes
   end
 
   test "fails with incorrect password" do
@@ -55,9 +66,10 @@ class Settings::UsersControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to settings_profile_url
     assert_response :see_other
     assert_equal "Incorrect password. Account was not deleted.", flash[:alert]
+    assert_not @user.reload.deleted?
   end
 
-  test "fails to delete account when driver has departed ride with historical participation" do
+  test "anonymizes account when driver has departed ride with historical participation" do
     ride = ride_posts(:one)
     booking = bookings(:one)
     ride.update_columns(user_id: @user.id, departure_time: 2.hours.ago, expected_arrival_at: 1.hour.ago)
@@ -67,14 +79,15 @@ class Settings::UsersControllerTest < ActionDispatch::IntegrationTest
       delete settings_user_url, params: { password_challenge: "password" }
     end
 
-    assert_redirected_to settings_profile_url
-    assert_match /Cannot delete account with departed rides that retain historical participation/, flash[:alert]
-    assert_not_empty cookies[:session_id]
-    assert User.exists?(@user.id)
+    assert_redirected_to root_url
+    assert_equal "Your account has been deleted.", flash[:notice]
+    assert_empty cookies[:session_id]
+
+    assert @user.reload.deleted?
     assert RidePost.exists?(ride.id)
   end
 
-  test "fails to delete account when passenger has historical participation on departed ride" do
+  test "anonymizes account when passenger has historical participation on departed ride" do
     ride = ride_posts(:one)
     booking = bookings(:one)
     booking.update_columns(passenger_id: @user.id, status: Booking.statuses[:accepted], accepted_at: 3.hours.ago)
@@ -84,9 +97,22 @@ class Settings::UsersControllerTest < ActionDispatch::IntegrationTest
       delete settings_user_url, params: { password_challenge: "password" }
     end
 
-    assert_redirected_to settings_profile_url
-    assert_match /Cannot delete account with historical trip participation/, flash[:alert]
-    assert_not_empty cookies[:session_id]
-    assert User.exists?(@user.id)
+    assert_redirected_to root_url
+    assert_equal "Your account has been deleted.", flash[:notice]
+    assert_empty cookies[:session_id]
+
+    assert @user.reload.deleted?
+    assert Booking.exists?(booking.id)
+  end
+
+  test "subsequent requests using session of deleted user are rejected and terminate session" do
+    assert_not_nil cookies[:session_id]
+
+    Users::AnonymizeService.call(@user)
+
+    get settings_profile_url
+
+    assert_redirected_to new_session_path
+    assert_empty cookies[:session_id]
   end
 end

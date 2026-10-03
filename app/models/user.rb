@@ -15,7 +15,7 @@ class User < ApplicationRecord
   has_many :adjudicated_incidents, class_name: "NoShowIncident", foreign_key: :reviewer_id, dependent: :nullify, inverse_of: :reviewer
 
   before_destroy :cancel_active_commitments, prepend: true
-  before_destroy :check_destruction_allowed, prepend: true
+  before_update :reject_updates_after_deletion
   after_update_commit :withdraw_ineligible_participation, if: :saved_change_to_gender?
 
   enum :gender, { unspecified: 0, female: 1, male: 2, non_binary: 3 }, default: :unspecified
@@ -34,6 +34,7 @@ class User < ApplicationRecord
 
   # Ensure email is present, unique, and validly formatted
   validates :email_address, presence: true, uniqueness: true, format: { with: URI::MailTo::EMAIL_REGEXP }
+  validate :reject_reserved_internal_domains, on: :create
 
   # Ensure names are always provided and not blank
   validates :first_name, presence: true
@@ -46,6 +47,10 @@ class User < ApplicationRecord
   attr_readonly :admin
 
   validates :gender, presence: true
+
+  def deleted?
+    deleted_at.present?
+  end
 
   def initials
     "#{first_name&.first}#{last_name&.first}".upcase
@@ -66,11 +71,11 @@ class User < ApplicationRecord
   end
 
   def eligible_for_booking?
-    banned_at.blank? && !booking_frozen?
+    banned_at.blank? && !booking_frozen? && !deleted?
   end
 
   def eligible_for_offering?
-    banned_at.blank? && !booking_frozen?
+    banned_at.blank? && !booking_frozen? && !deleted?
   end
 
   def verified_community_memberships
@@ -118,11 +123,28 @@ class User < ApplicationRecord
 
   # 4. Confirmation method
   def confirm_email
+    return false if deleted? || unconfirmed_email.blank?
+
     update(email_address: unconfirmed_email, unconfirmed_email: nil)
   end
 
 
   private
+
+  def reject_updates_after_deletion
+    if User.lock.find(id).deleted?
+      errors.add(:base, "This account has been deleted.")
+      throw :abort
+    end
+  end
+
+  def reject_reserved_internal_domains
+    return if email_address.blank?
+
+    if email_address.downcase.end_with?("@deleted.pasabaya.app")
+      errors.add(:email_address, "is reserved and cannot be registered")
+    end
+  end
 
   def acceptable_facebook_profile_url
     if facebook_profile_url.present? && !safe_facebook_profile_url?
@@ -148,20 +170,6 @@ class User < ApplicationRecord
   def unconfirmed_email_uniqueness
     if unconfirmed_email.present? && User.exists?(email_address: unconfirmed_email)
       errors.add(:unconfirmed_email, "is already taken")
-    end
-  end
-
-  def check_destruction_allowed
-    return if reported_trip_reviews.exists? || received_trip_reviews.exists?
-
-    if ride_posts.any?(&:historical_reviewable_participation?)
-      errors.add(:base, "Cannot delete account with departed rides that retain historical participation.")
-      throw :abort
-    end
-
-    if bookings.any?(&:historical_reviewable?)
-      errors.add(:base, "Cannot delete account with historical trip participation.")
-      throw :abort
     end
   end
 

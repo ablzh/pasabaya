@@ -89,11 +89,38 @@ class RidePostsLifecycleTest < ActionDispatch::IntegrationTest
     get root_url
     assert_select "p", text: /request a seat, and wait for the driver to approve it/
     assert_select "p", text: /private in-app trip chat/
-    assert_select "p", text: /voluntary sharing of fuel and toll expenses/
+    assert_select "p", text: /expense sharing among themselves/
     assert_select "p", text: /do not verify identity/
     get ride_post_url(ride_posts(:one))
     assert_select "meta[name='description']" do |meta|
       assert_match /driver approval.*private in-app chat/, meta.first["content"]
+    end
+  end
+
+  test "cost sharing controls and badges are removed from forms, ride pages, and card listings" do
+    ride = ride_posts(:one)
+    sign_in_as(users(:one))
+    get new_ride_post_url
+    assert_response :success
+    assert_select "input[name='ride_post[is_free_ride]']", count: 0
+    assert_select "input[name='ride_post[share_tolls]']", count: 0
+    assert_select "input[name='ride_post[split_gas]']", count: 0
+
+    [ true, false ].each do |free_ride|
+      ride.update_columns(is_free_ride: free_ride, share_tolls: !free_ride, split_gas: !free_ride)
+      get ride_post_url(ride)
+      assert_response :success
+      assert_select "span", text: /Libreng Sakay/, count: 0
+      assert_select "span", text: /Share Tolls/, count: 0
+      assert_select "span", text: /Split Gas/, count: 0
+      assert_select "div", text: /Users arrange any expense sharing among themselves/
+
+      get ride_posts_url(post_type: "offering")
+      assert_response :success
+      assert_select "#ride_post_#{ride.id}", count: 1
+      assert_select "span", text: /Libreng Sakay/, count: 0
+      assert_select "span", text: /Tolls/, count: 0
+      assert_select "span", text: /Gas/, count: 0
     end
   end
 end

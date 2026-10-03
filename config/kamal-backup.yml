@@ -15,6 +15,7 @@ databases:
     path: /rails/storage/production_cable.sqlite3
 paths:
   - /rails/storage
+  - /rails/deletion_registry
 restic:
   repository:
     secret: RESTIC_REPOSITORY

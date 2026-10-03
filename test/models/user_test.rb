@@ -136,7 +136,7 @@ class UserTest < ActiveSupport::TestCase
     booking = Booking.create!(ride_post: ride, passenger: passenger, status: :accepted)
     ride.update!(remaining_seats: initial_remaining - 1)
 
-    passenger.destroy!
+    Users::AnonymizeService.call(passenger)
     assert_equal initial_remaining, ride.reload.remaining_seats
   end
 
@@ -153,7 +153,7 @@ class UserTest < ActiveSupport::TestCase
     ride = ride_posts(:one)
     Booking.create!(ride_post: ride, passenger: passenger, status: :accepted)
 
-    passenger.destroy!
+    Users::AnonymizeService.call(passenger)
 
     notif = driver.received_notifications.find_by(event_name: "booking.canceled")
     assert_not_nil notif
@@ -186,7 +186,7 @@ class UserTest < ActiveSupport::TestCase
     )
     Booking.create!(ride_post: ride, passenger: passenger, status: :accepted)
 
-    driver.destroy!
+    Users::AnonymizeService.call(driver)
 
     notif = passenger.received_notifications.find_by(event_name: "ride.canceled")
     assert_not_nil notif
@@ -194,6 +194,17 @@ class UserTest < ActiveSupport::TestCase
       NotificationDeliveryJob.perform_now(notif.id)
     end
     assert notif.reload.delivered?
+  end
+
+  test "rejects registration with reserved internal domain" do
+    user = User.new(
+      first_name: "Test",
+      last_name: "Reserved",
+      email_address: "attacker@deleted.pasabaya.app",
+      password: "password123"
+    )
+    assert_not user.valid?
+    assert_includes user.errors[:email_address], "is reserved and cannot be registered"
   end
 
   test "active_trips_count tallies active driver rides and accepted passenger bookings" do

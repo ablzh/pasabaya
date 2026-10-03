@@ -46,6 +46,7 @@ env:
     SOLID_QUEUE_IN_PUMA: true
     TZ: "Asia/Manila"
     RAILS_ENV: "production"
+    ACCOUNT_DELETION_REGISTRY_PATH: "/rails/deletion_registry/accounts.jsonl"
 
 # Aliases are triggered with "bin/kamal <alias>". You can overwrite arguments on invocation:
 # "bin/kamal logs -r job" will tail logs from the first server in the job section.
@@ -59,6 +60,7 @@ aliases:
 # Recommended to change this to a mounted volume path that is backed up off server.
 volumes:
   - "pasabaya_storage:/rails/storage"
+  - "pasabaya_deletion_registry:/rails/deletion_registry"
   - "/etc/timezone:/etc/timezone:ro"
   - "/usr/share/zoneinfo/Asia/Manila:/etc/localtime:ro"
 
@@ -136,4 +138,5 @@ accessories:
         - AWS_SECRET_ACCESS_KEY
     volumes:
       - "pasabaya_storage:/rails/storage"
+      - "pasabaya_deletion_registry:/rails/deletion_registry:ro"
       - "pasabaya_backup_state:/var/lib/kamal-backup"
