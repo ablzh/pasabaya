@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_03_170002) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_03_171000) do
   create_table "account_deletion_tombstones", force: :cascade do |t|
     t.string "anonymized_email", null: false
     t.bigint "avatar_blob_id"
@@ -219,6 +219,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_03_170002) do
     t.integer "gender", default: 0, null: false
     t.string "last_name"
     t.string "password_digest", null: false
+    t.datetime "registration_accepted_at"
+    t.string "registration_policy_version"
     t.string "unconfirmed_email"
     t.datetime "updated_at", null: false
     t.index ["deleted_at"], name: "index_users_on_deleted_at"
