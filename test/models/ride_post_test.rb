@@ -157,6 +157,73 @@ class RidePostTest < ActiveSupport::TestCase
     assert_includes ride.errors[:base], "Cannot delete a ride with trip reviews or incident history."
   end
 
+  test "departed ride with historical participation cannot be deleted or have route/schedule edited after cancellation" do
+    ride = ride_posts(:one)
+    booking = bookings(:one)
+    booking.update_columns(status: Booking.statuses[:accepted], accepted_at: 3.hours.ago)
+    ride.update_columns(departure_time: 2.hours.ago, expected_arrival_at: 1.hour.ago)
+
+    # Cancel whole trip post-departure
+    RidePosts::CancelService.call(ride, actor: ride.user)
+    assert ride.reload.canceled?
+    assert booking.reload.canceled?
+
+    # Verify review eligibility is retained for both driver and passenger
+    assert ride.reviewable_by?(ride.user)
+    assert ride.reviewable_by?(booking.passenger)
+
+    # Route changes must fail
+    other_location = locations(:one)
+    ride.destination = other_location
+    assert_not ride.save
+    assert_includes ride.errors[:base], "Cannot modify route, schedule, capacity, or audience for trips with historical participation"
+
+    # Schedule changes to move trip to the future must fail
+    ride.reload
+    ride.departure_time = 1.day.from_now
+    assert_not ride.save
+    assert_includes ride.errors[:base], "Cannot modify route, schedule, capacity, or audience for trips with historical participation"
+
+    # Hard deletion must fail and preserve records
+    ride.reload
+    assert_no_difference "RidePost.count" do
+      assert_not ride.destroy
+    end
+    assert_includes ride.errors[:base], "Cannot delete a departed ride with historical participation. Trip records must be preserved for review eligibility."
+
+    # Booking must still exist and be intact
+    assert Booking.exists?(booking.id)
+    assert booking.reload.historical_reviewable?
+  end
+
+  test "unmatched drafts and pre-departure canceled rides retain normal edit and delete behavior" do
+    draft = RidePost.create!(
+      user: users(:one),
+      origin: locations(:one),
+      destination: locations(:two),
+      seats: 3,
+      post_type: :offering,
+      status: :draft
+    )
+    assert draft.destroy
+
+    # Pre-departure canceled ride without historical participation
+    future_ride = RidePost.create!(
+      user: users(:one),
+      origin: locations(:one),
+      destination: locations(:two),
+      seats: 3,
+      departure_time: 2.days.from_now,
+      expected_arrival_at: 2.days.from_now + 3.hours,
+      remaining_seats: 3,
+      post_type: :offering,
+      status: :active
+    )
+    RidePosts::CancelService.call(future_ride, actor: users(:one))
+    assert future_ride.reload.canceled?
+    assert future_ride.destroy
+  end
+
   test "filter_by_departure_date returns rides departing on target day" do
     target_date = 2.days.from_now.to_date
     ride_matching = ride_posts(:one)

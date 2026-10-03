@@ -20,6 +20,7 @@ class Booking < ApplicationRecord
   validate :validate_audience_eligibility, on: :create
 
   before_save :record_acceptance, if: -> { accepted? && accepted_at.blank? }
+  before_destroy :check_destruction_allowed, prepend: true
 
   scope :active, -> { where(status: [ :pending, :accepted ]) }
   scope :pending, -> { where(status: :pending) }
@@ -31,7 +32,21 @@ class Booking < ApplicationRecord
     pending? || accepted?
   end
 
+  def historical_reviewable?
+    dep_time = ride_post&.departure_time
+    return false if dep_time.blank? || dep_time > Time.current
+
+    accepted? || (canceled? && accepted_at.present? && accepted_at <= dep_time && canceled_at.present? && canceled_at >= dep_time)
+  end
+
   private
+
+  def check_destruction_allowed
+    if historical_reviewable?
+      errors.add(:base, "Cannot delete booking with historical participation. Records must be preserved for review eligibility.")
+      throw :abort
+    end
+  end
 
   def record_acceptance
     self.accepted_at = decided_at || Time.current

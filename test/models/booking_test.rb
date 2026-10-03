@@ -34,4 +34,28 @@ class BookingTest < ActiveSupport::TestCase
 
     assert_not duplicate.save
   end
+
+  test "cannot hard delete booking that retains historical review eligibility" do
+    ride = ride_posts(:one)
+    booking = bookings(:one)
+    booking.update_columns(status: Booking.statuses[:accepted], accepted_at: 3.hours.ago)
+    ride.update_columns(departure_time: 2.hours.ago, expected_arrival_at: 1.hour.ago)
+
+    assert booking.historical_reviewable?
+    assert_no_difference "Booking.count" do
+      assert_not booking.destroy
+    end
+    assert_includes booking.errors[:base], "Cannot delete booking with historical participation. Records must be preserved for review eligibility."
+
+    # Also after late cancellation
+    booking.update_columns(status: Booking.statuses[:canceled], canceled_at: 1.hour.ago)
+    assert booking.historical_reviewable?
+    assert_not booking.destroy
+  end
+
+  test "can delete booking without historical participation" do
+    booking = bookings(:one)
+    assert_not booking.historical_reviewable?
+    assert booking.destroy
+  end
 end
