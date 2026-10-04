@@ -4,15 +4,21 @@
 
 **Blocked by:** None (can start immediately).
 
-**Status:** ready-for-agent
+**Status:** done
 
-- [ ] Retain only University of the Philippines, using institutional email domain up.edu.ph. Do not claim that this domain alone verifies Diliman campus affiliation.
-- [ ] Remove unwanted locally created hubs, including commercial and test hubs, and their disposable local-only associated data safely. This is authorized local cleanup, not a blanket production-data deletion.
-- [ ] Seed replay recreates the intended UP hub without duplicate hubs or reintroducing removed organizations.
-- [ ] Show: Pasabaya is an independent community platform and is not officially affiliated with, endorsed by, or partnered with any listed university or institution. Hubs are community-led spaces verified via institutional email domains.
-- [ ] Request a Community Hub opens the existing Pasabaya Facebook support page and explains that users should send the institution name and email domain.
-- [ ] Keep UP institutional-email verification working, and never silently turn an existing restricted ride into a public ride during cleanup.
-- [ ] No hub request submission system or retirement workflow is required for these disposable local hubs.
-- [ ] Add the smallest relevant behavior or regression test for code changes, covering this ticket's user-visible behavior and important failure boundary. Do not require a browser test for changes with no browser behavior.
-- [ ] Run bin/ci before declaring the implementation complete; report any check that could not run rather than calling the gate green.
+- [x] Retain only University of the Philippines, using institutional email domain up.edu.ph. Do not claim that this domain alone verifies Diliman campus affiliation.
+- [x] Remove unwanted locally created hubs, including commercial and test hubs, and their disposable local-only associated data safely. This is authorized local cleanup, not a blanket production-data deletion.
+- [x] Seed replay recreates the intended UP hub without duplicate hubs or reintroducing removed organizations.
+- [x] Show: Pasabaya is an independent community platform and is not officially affiliated with, endorsed by, or partnered with any listed university or institution. Hubs are community-led spaces verified via institutional email domains.
+- [x] Request a Community Hub opens the existing Pasabaya Facebook support page and explains that users should send the institution name and email domain.
+- [x] Keep UP institutional-email verification working, and never silently turn an existing restricted ride into a public ride during cleanup.
+- [x] No hub request submission system or retirement workflow is required for these disposable local hubs.
+- [x] Add the smallest relevant behavior or regression test for code changes, covering this ticket's user-visible behavior and important failure boundary. Do not require a browser test for changes with no browser behavior.
+- [x] Run bin/ci before declaring the implementation complete; report any check that could not run rather than calling the gate green.
 
+
+
+
+## Implementation evidence
+
+Retained only University of the Philippines with up.edu.ph domain, added cleanup migration and seed replay, added platform independence disclaimer and Facebook community request CTA, handled up-diliman legacy redirect, and verified all tests with clean bin/ci.
