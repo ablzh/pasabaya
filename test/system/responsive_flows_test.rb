@@ -16,6 +16,8 @@ class ResponsiveFlowsTest < ApplicationSystemTestCase
 
     offer = ride_posts(:one)
     offer.update_columns(expected_arrival_at: offer.departure_time + 1.day)
+    bookings(:one).update_columns(status: Booking.statuses[:accepted])
+    offer.chat_messages.create!(user: users(:two), body: "See you at pickup")
     cities = Location.all.index_by(&:name)
     draft = users(:one).ride_posts.create!(post_type: :offering, status: :draft,
                                           origin: cities.fetch("Manila"), destination: cities.fetch("Makati"), seats: 2)
@@ -92,20 +94,24 @@ class ResponsiveFlowsTest < ApplicationSystemTestCase
   end
 
   def check_navigation(width, authenticated:)
-    if width < 640
-      assert_link "Post"
-      page.execute_script('document.querySelector("button[aria-label=\"Navigation menu\"]").focus()')
-      page.driver.browser.keyboard.type(:Enter)
-      assert_selector '#mobile-menu-content[data-state="open"]'
-      within("#mobile-menu-content") do
-        assert_link "Search"
-        assert_link "Hubs"
+    within("nav.web-navigation") do
+      assert_no_selector "button[aria-label='Navigation menu']"
+      assert_link "Search", href: ride_posts_path
+      assert_link(width < 640 ? "Post" : "Add a ride", href: new_ride_post_path)
+      if authenticated
+        assert_link "Chats", href: chats_path
+        assert_selector "a[href='#{chats_path}'] [data-chat-unread-count] span", text: "1"
+      else
+        assert_no_link "Chats", href: chats_path
       end
-      assert_menu_fits("#mobile-menu-content")
-      page.driver.browser.keyboard.type(:Escape)
-      assert_selector '#mobile-menu-content[data-state="closed"]', visible: :all
-    else
-      assert_link "Add a ride"
+      if width < 640
+        assert_no_link "Hubs"
+      else
+        assert_link "Hubs", href: communities_path
+      end
+    end
+    if !authenticated && width < 640
+      within("footer") { assert_link "Hubs", href: communities_path }
     end
     if authenticated
       assert_selector "[data-notification-count] span"
@@ -113,6 +119,15 @@ class ResponsiveFlowsTest < ApplicationSystemTestCase
       page.driver.browser.keyboard.type(:Enter)
       assert_selector '#profile-content[data-state="open"]'
       assert_menu_fits("#profile-content")
+      within("#profile-content") do
+        if width < 640
+          assert_link "Hubs", href: communities_path
+        else
+          assert_no_link "Hubs"
+        end
+        assert_no_link "Search"
+        assert_no_link "Chats"
+      end
       page.driver.browser.keyboard.type(:Escape)
     end
     assert_equal 32, page.evaluate_script("document.querySelector('nav img').getBoundingClientRect().width")

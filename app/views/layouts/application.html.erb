@@ -62,14 +62,14 @@
 
 <body class="bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100 flex flex-col min-h-dvh">
 
-<%= render(Navbar::Component.new(classes: "mx-auto web-navigation", show_mobile_menu: true)) do |navbar| %>
+<%= render(Navbar::Component.new(classes: "mx-auto web-navigation", show_mobile_menu: false)) do |navbar| %>
   <% navbar.with_logo do %>
-    <%= link_to root_path, class: "flex shrink-0 items-center mr-2 ml-2 select-none no-underline" do %>
+    <%= link_to root_path, class: "flex shrink-0 items-center mx-1 sm:mx-2 select-none no-underline" do %>
       <%= image_tag "/icon.svg", size: "32x32", class: "h-8 w-8 shrink-0 object-contain", alt: "Pasabaya Logo" %>
     <% end %>
   <% end %>
 
-  <% navbar.with_item(label: "Search", href: ride_posts_path, mobile_hidden: true) %>
+  <% navbar.with_item(label: "Search", href: ride_posts_path) %>
   <% navbar.with_item(label: "Hubs", href: communities_path, mobile_hidden: true) %>
   <% if authenticated? %>
     <% chats_label = safe_join([
@@ -85,27 +85,9 @@
            ])
          end
        ]) %>
-    <% navbar.with_item(label: chats_label, href: chats_path, mobile_hidden: true) %>
+    <% navbar.with_item(label: chats_label, href: chats_path) %>
   <% end %>
   <% navbar.with_item(label: safe_join([tag.span("Post", class: "sm:hidden"), tag.span("Add a ride", class: "hidden sm:inline")]), href: new_ride_post_path, classes: "whitespace-nowrap") %>
-
-  <% navbar.with_dropdown_content(id: "mobile-menu-content", width: "w-[calc(100vw-2rem)]") do %>
-    <%= link_to "Search", ride_posts_path, class: "block rounded-lg p-3 hover:bg-neutral-100 dark:hover:bg-neutral-700" %>
-    <%= link_to "Hubs", communities_path, class: "block rounded-lg p-3 hover:bg-neutral-100 dark:hover:bg-neutral-700" %>
-    <% if authenticated? %>
-      <%= link_to chats_path, class: "flex items-center justify-between rounded-lg p-3 hover:bg-neutral-100 dark:hover:bg-neutral-700" do %>
-        <span class="inline-flex items-center gap-2">
-          <svg class="size-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 01-2.555-.337A5.972 5.972 0 015.41 20.97a.75.75 0 01-1.154-.755c.106-.777.37-1.503.766-2.148A7.776 7.776 0 013 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25z" />
-          </svg>
-          <span>Chats</span>
-        </span>
-        <span data-chat-unread-count class="unread-chats-badge inline-flex items-center">
-          <%= render "chats/unread_badge", count: current_unread_chats_count %>
-        </span>
-      <% end %>
-    <% end %>
-  <% end %>
 
   <% navbar.with_actions do %>
     <% if authenticated? %>
@@ -161,6 +143,8 @@
         </span>
       <% end %>
 
+      <%= link_to "Hubs", communities_path, class: "block rounded-lg p-2 text-sm font-medium sm:hidden no-underline hover:bg-neutral-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-600 dark:hover:bg-neutral-700 dark:focus-visible:outline-neutral-200" %>
+
       <div class="border-t border-neutral-200 dark:border-neutral-700"></div>
 
       <%= link_to session_path, data: { turbo_method: :delete }, class: "flex items-center gap-2 rounded-lg p-2 no-underline hover:bg-neutral-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-600 dark:hover:bg-neutral-700 dark:focus-visible:outline-neutral-200" do %>
@@ -210,6 +194,9 @@
 
       <div class="flex flex-col items-center md:items-end gap-3">
         <div class="flex gap-4">
+          <% unless authenticated? %>
+            <%= link_to "Hubs", communities_path, class: "text-xs text-neutral-400 hover:text-indigo-600 dark:hover:text-indigo-400 sm:hidden" %>
+          <% end %>
           <%= link_to "Privacy", privacy_path, class: "text-xs text-neutral-400 hover:text-indigo-600 dark:hover:text-indigo-400" %>
           <%= link_to "Terms", terms_path, class: "text-xs text-neutral-400 hover:text-indigo-600 dark:hover:text-indigo-400" %>
         </div>

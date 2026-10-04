@@ -35,7 +35,7 @@ module Navbar
       end
 
       def link_classes
-        "block rounded-md px-3 py-2 text-sm font-medium text-neutral-700 no-underline select-none " \
+        "block rounded-md px-2 sm:px-3 py-2 text-sm font-medium text-neutral-700 no-underline select-none " \
           "hover:bg-neutral-100 dark:text-neutral-300 dark:hover:bg-neutral-700 " \
           "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-600 dark:focus-visible:outline-neutral-200"
       end

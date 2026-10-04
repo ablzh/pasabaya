@@ -22,15 +22,11 @@
         </h1>
         <div class="mt-2.5 flex flex-wrap items-center gap-2">
           <% if @ride_post.ladies_only? %>
-            <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-300">
-              Ladies Only
-            </span>
+            <%= render Badge::Component.new(text: "Ladies Only", variant: :rose, size: :md, pill: true) %>
           <% end %>
 
           <% if @ride_post.hub_only? && @ride_post.community %>
-            <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold bg-purple-50 text-purple-700 dark:bg-purple-950/40 dark:text-purple-300">
-              <%= @ride_post.community.name %> Hub Only
-            </span>
+            <%= render Badge::Component.new(text: "#{@ride_post.community.name} Hub Only", variant: :purple, size: :md, pill: true) %>
           <% end %>
 
           <span class="text-xs text-neutral-500 dark:text-neutral-400 ml-1">

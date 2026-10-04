@@ -31,6 +31,8 @@ module ApplicationHelper
   # because Tailwind's JIT compiler needs to see complete class names in the code.
 
   def user_avatar(user, classes: "w-10 h-10")
+    return if user.blank?
+
     base_classes = "rounded-full object-cover flex items-center justify-center font-medium bg-neutral-200 text-neutral-600 #{classes}"
     if user.avatar.attached?
       # Uses the optimized :thumb variant we defined in the model!

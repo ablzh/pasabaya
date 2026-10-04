@@ -14,15 +14,13 @@
 
         <div class="flex flex-wrap gap-2 items-center justify-center sm:justify-start pt-1">
           <% @user.verified_communities.each do |comm| %>
-            <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800">
+            <%= render Badge::Component.new(variant: :green, size: :md, pill: true, classes: "gap-1.5") do %>
               <svg class="size-3" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12c0 1.268-.63 2.39-1.593 3.068a3.745 3.745 0 01-1.043 3.296 3.745 3.745 0 01-3.296 1.043A3.745 3.745 0 0112 21c-1.268 0-2.39-.63-3.068-1.593a3.746 3.746 0 01-3.296-1.043 3.745 3.745 0 01-1.043-3.296A3.745 3.745 0 013 12c0-1.268.63-2.39 1.593-3.068a3.745 3.745 0 011.043-3.296 3.746 3.746 0 013.296-1.043A3.746 3.746 0 0112 3c1.268 0 2.39.63 3.068 1.593a3.746 3.746 0 013.296 1.043 3.746 3.746 0 011.043 3.296A3.745 3.745 0 0121 12z" /></svg>
               <%= comm.name %>
-            </span>
+            <% end %>
           <% end %>
           <% if @user.female? %>
-            <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-pink-100 text-pink-800 dark:bg-pink-950/60 dark:text-pink-300 border border-pink-300 dark:border-pink-800">
-              Female Profile
-            </span>
+            <%= render Badge::Component.new(text: "Female Profile", variant: :pink, size: :md, pill: true) %>
           <% end %>
         </div>
 
@@ -96,28 +94,18 @@
                   <div class="flex items-start justify-between gap-3">
                     <div>
                       <div class="flex items-center gap-2">
-                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold uppercase tracking-wider
-                          <% case booking.status %>
-                          <% when 'accepted' %>
-                            bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800
-                          <% when 'pending' %>
-                            bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-300 dark:border-amber-800
-                          <% when 'declined' %>
-                            bg-neutral-100 text-neutral-600 dark:bg-neutral-800 dark:text-neutral-400 border border-neutral-200 dark:border-neutral-700
-                          <% when 'canceled' %>
-                            bg-red-100 text-red-700 dark:bg-red-950/60 dark:text-red-300 border border-red-200 dark:border-red-800
-                          <% else %>
-                            bg-neutral-100 text-neutral-700 dark:bg-neutral-800 dark:text-neutral-300
-                          <% end %>">
-                          <% case booking.status %>
-                          <% when 'accepted' %>
-                            Confirmed Seat
-                          <% when 'pending' %>
-                            Pending Driver
-                          <% else %>
-                            <%= booking.status.humanize %>
-                          <% end %>
-                        </span>
+                        <% booking_variant = case booking.status
+                           when 'accepted' then :green
+                           when 'pending' then :yellow
+                           when 'canceled' then :red
+                           else :neutral
+                           end %>
+                        <% booking_label = case booking.status
+                           when 'accepted' then "Confirmed Seat"
+                           when 'pending' then "Pending Driver"
+                           else booking.status.humanize
+                           end %>
+                        <%= render Badge::Component.new(text: booking_label, variant: booking_variant, size: :sm, pill: true, uppercase: true) %>
                       </div>
                       <h3 class="text-lg font-bold text-neutral-900 dark:text-white mt-1.5">
                         <%= link_to ride_post_path(ride), class: "hover:underline focus:outline-none" do %>

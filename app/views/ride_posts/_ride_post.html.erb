@@ -49,21 +49,15 @@
           <% end %>
 
           <% if ride_post.full? %>
-            <span class="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider bg-neutral-200 text-neutral-700 dark:bg-neutral-800 dark:text-neutral-300">
-              Full
-            </span>
+            <%= render Badge::Component.new(text: "Full", variant: :neutral, size: :sm, pill: true, uppercase: true) %>
           <% end %>
 
           <% if ride_post.ladies_only? %>
-            <span class="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-300">
-              Ladies Only
-            </span>
+            <%= render Badge::Component.new(text: "Ladies Only", variant: :rose, size: :sm, pill: true) %>
           <% end %>
 
           <% if ride_post.hub_only? && ride_post.community %>
-            <span class="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold bg-purple-50 text-purple-700 dark:bg-purple-950/40 dark:text-purple-300">
-              <%= ride_post.community.name %> Hub
-            </span>
+            <%= render Badge::Component.new(text: "#{ride_post.community.name} Hub", variant: :purple, size: :sm, pill: true) %>
           <% end %>
         </div>
 
