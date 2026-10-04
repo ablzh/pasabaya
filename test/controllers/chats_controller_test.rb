@@ -140,5 +140,4 @@ class ChatsControllerTest < ActionDispatch::IntegrationTest
     ActiveSupport::Notifications.subscribed(subscriber, "sql.active_record") { get chats_url }
     count
   end
-
 end

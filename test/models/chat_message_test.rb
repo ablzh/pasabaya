@@ -103,5 +103,4 @@ class ChatMessageTest < ActiveSupport::TestCase
     assert_includes payload, 'action=\"refresh\"'
     assert_not_includes payload, "Private meeting details"
   end
-
 end
