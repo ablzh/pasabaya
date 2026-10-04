@@ -153,40 +153,19 @@ passenger = seeded_users.find { |u| u.email_address == "passenger@example.com" }
 # === 4.5 CREATE CURATED COMMUNITIES ===
 puts "\nSeeding Curated Communities..."
 
-accenture = Community.find_or_create_by!(slug: "accenture-ph") do |c|
-  c.name = "Accenture Philippines"
-  c.domain = "accenture.com"
-  c.hub_type = :company
+# Retain only University of the Philippines, removing unwanted local hubs safely
+Community.where.not(domain: "up.edu.ph").find_each do |c|
+  c.ride_posts.destroy_all
+  c.route_subscriptions.destroy_all
+  c.community_memberships.destroy_all
+  c.destroy!
 end
 
-up = Community.find_or_create_by!(slug: "up-diliman") do |c|
-  c.name = "University of the Philippines Diliman"
-  c.domain = "up.edu.ph"
-  c.hub_type = :campus
-end
-
-Community.find_or_create_by!(slug: "ateneo-de-manila") do |c|
-  c.name = "Ateneo de Manila University"
-  c.domain = "ateneo.edu"
-  c.hub_type = :campus
-end
-
-Community.find_or_create_by!(slug: "jpmorgan-chase-ph") do |c|
-  c.name = "JPMorgan Chase & Co. PH"
-  c.domain = "jpmorgan.com"
-  c.hub_type = :company
-end
-
-# Seed verified memberships
-CommunityMembership.find_or_create_by!(user: driver, community: accenture) do |m|
-  m.institutional_email = "driver.juan@accenture.com"
-  m.verified_at = Time.current
-end
-
-CommunityMembership.find_or_create_by!(user: passenger, community: accenture) do |m|
-  m.institutional_email = "passenger.maria@accenture.com"
-  m.verified_at = Time.current
-end
+up = Community.find_or_initialize_by(domain: "up.edu.ph")
+up.name = "University of the Philippines"
+up.slug = "university-of-the-philippines"
+up.hub_type = :campus
+up.save!
 
 CommunityMembership.find_or_create_by!(user: passenger, community: up) do |m|
   m.institutional_email = "maria.clara@up.edu.ph"

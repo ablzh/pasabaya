@@ -23,6 +23,24 @@ class CommunityMembershipTest < ActiveSupport::TestCase
     assert membership.valid?
   end
 
+  test "UP institutional email verification allows up.edu.ph and rejects other domains" do
+    up_community = communities(:two)
+    membership = CommunityMembership.new(
+      user: @user,
+      community: up_community,
+      institutional_email: "student@up.edu.ph"
+    )
+    assert membership.valid?
+
+    mismatched = CommunityMembership.new(
+      user: @user,
+      community: up_community,
+      institutional_email: "student@updiliman.edu.ph"
+    )
+    assert_not mismatched.valid?
+    assert_includes mismatched.errors[:institutional_email], "must match the community domain (@up.edu.ph)"
+  end
+
   test "rejects institutional email with mismatched domain" do
     membership = CommunityMembership.new(
       user: @user,
