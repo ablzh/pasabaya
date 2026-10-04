@@ -38,6 +38,15 @@ RidePost:
     NumericalityConstraintChecker:
       enabled: false
 
+RouteSubscription:
+  # Location subscriptions associations are retained when locations exist; prevent cascade deletes on shared locations
+  destination:
+    MissingDependentDestroyChecker:
+      enabled: false
+  origin:
+    MissingDependentDestroyChecker:
+      enabled: false
+
 Subscriber:
   # Existing columns without database NOT NULL constraints; model validates presence
   name:

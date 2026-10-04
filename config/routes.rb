@@ -20,6 +20,8 @@ Rails.application.routes.draw do
     end
   end
 
+  resources :route_subscriptions, only: [ :create, :destroy ]
+
   resources :notifications, only: [ :index, :show ] do
     collection do
       patch :mark_all_as_read

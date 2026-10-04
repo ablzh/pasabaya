@@ -13,6 +13,8 @@
       A booking on your ride has been <strong>canceled</strong>.
     <% when "ride.canceled" %>
       An upcoming ride you booked has been <strong>canceled</strong> by the driver.
+    <% when "route.alert" %>
+      A driver just published a matching ride for your route alert!
     <% when "incident.resolved" %>
       A decision has been reached regarding your reported incident on Pasabaya.
     <% else %>
@@ -21,8 +23,14 @@
   </p>
 
   <p style="margin-top: 30px;">
-    <a href="<%= root_url %>" style="display: inline-block; padding: 10px 20px; background-color: #2563eb; color: #ffffff; text-decoration: none; border-radius: 6px; font-weight: bold;">
-      Open Pasabaya
-    </a>
+    <% if @notifiable.is_a?(RidePost) %>
+      <a href="<%= ride_post_url(@notifiable) %>" style="display: inline-block; padding: 10px 20px; background-color: #2563eb; color: #ffffff; text-decoration: none; border-radius: 6px; font-weight: bold;">
+        View Ride Details
+      </a>
+    <% else %>
+      <a href="<%= root_url %>" style="display: inline-block; padding: 10px 20px; background-color: #2563eb; color: #ffffff; text-decoration: none; border-radius: 6px; font-weight: bold;">
+        Open Pasabaya
+      </a>
+    <% end %>
   </p>
 </div>

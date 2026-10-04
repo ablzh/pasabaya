@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_03_180020) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_03_180030) do
   create_table "account_deletion_tombstones", force: :cascade do |t|
     t.string "anonymized_email", null: false
     t.bigint "avatar_blob_id"
@@ -184,6 +184,25 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_03_180020) do
     t.check_constraint "visibility != 1 OR community_id IS NOT NULL", name: "check_ride_posts_hub_only_requires_community"
   end
 
+  create_table "route_subscriptions", force: :cascade do |t|
+    t.integer "community_id"
+    t.datetime "consumed_at"
+    t.datetime "created_at", null: false
+    t.date "departure_date"
+    t.integer "destination_id", null: false
+    t.boolean "ladies_only", default: false, null: false
+    t.integer "origin_id", null: false
+    t.integer "ride_post_id"
+    t.integer "status", default: 0, null: false
+    t.datetime "updated_at", null: false
+    t.integer "user_id", null: false
+    t.index ["community_id"], name: "index_route_subscriptions_on_community_id"
+    t.index ["destination_id"], name: "index_route_subscriptions_on_destination_id"
+    t.index ["origin_id", "destination_id", "status"], name: "idx_on_origin_id_destination_id_status_f127ae68fc"
+    t.index ["ride_post_id"], name: "index_route_subscriptions_on_ride_post_id"
+    t.index ["user_id", "origin_id", "destination_id", "departure_date", "community_id", "ladies_only", "status"], name: "index_route_subscriptions_uniqueness", unique: true
+  end
+
   create_table "sessions", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "ip_address"
@@ -253,6 +272,11 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_03_180020) do
   add_foreign_key "ride_posts", "locations", column: "destination_id"
   add_foreign_key "ride_posts", "locations", column: "origin_id"
   add_foreign_key "ride_posts", "users"
+  add_foreign_key "route_subscriptions", "communities", on_delete: :nullify
+  add_foreign_key "route_subscriptions", "locations", column: "destination_id"
+  add_foreign_key "route_subscriptions", "locations", column: "origin_id"
+  add_foreign_key "route_subscriptions", "ride_posts", on_delete: :nullify
+  add_foreign_key "route_subscriptions", "users"
   add_foreign_key "sessions", "users"
   add_foreign_key "trip_reviews", "ride_posts"
   add_foreign_key "trip_reviews", "users", column: "reported_user_id"

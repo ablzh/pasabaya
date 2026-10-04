@@ -117,6 +117,9 @@ module Users
       # Remove institutional community memberships
       user.community_memberships.destroy_all
 
+      # Remove route alert subscriptions
+      user.route_subscriptions.destroy_all
+
       # Remove newsletter / waitlist subscriptions
       Subscriber.where(email: [ orig_email, orig_unconfirmed ].compact).destroy_all
     end

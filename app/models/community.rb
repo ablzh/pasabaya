@@ -2,6 +2,7 @@ class Community < ApplicationRecord
   has_many :community_memberships, dependent: :destroy
   has_many :users, through: :community_memberships
   has_many :ride_posts, dependent: :nullify
+  has_many :route_subscriptions, dependent: :nullify
 
   enum :hub_type, { company: 0, campus: 1, other: 2 }, default: :company
 

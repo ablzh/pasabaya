@@ -342,4 +342,28 @@ class RidePostsControllerTest < ActionDispatch::IntegrationTest
       departure_date: target_date
     )
   end
+
+  test "empty route search shows notify action for signed in user" do
+    post session_url, params: { email_address: users(:two).email_address, password: "password" }
+
+    empty_origin = Location.create!(name: "Empty Origin", location_type: :city)
+    empty_dest = Location.create!(name: "Empty Dest", location_type: :city)
+
+    get route_rides_url(origin_slug: empty_origin.slug, destination_slug: empty_dest.slug)
+    assert_response :success
+    assert_select "h3", text: "No rides found for this route yet"
+    assert_select "input[type=submit][value='Notify me when a driver posts this route']"
+  end
+
+  test "empty route search shows sign-in and sign-up with preserved search context for guest" do
+    sign_out
+    empty_origin = Location.create!(name: "Empty Origin 2", location_type: :city)
+    empty_dest = Location.create!(name: "Empty Dest 2", location_type: :city)
+
+    get route_rides_url(origin_slug: empty_origin.slug, destination_slug: empty_dest.slug)
+    assert_response :success
+    assert_select "h3", text: "No rides found for this route yet"
+    assert_select "a", text: "Sign in to get notified"
+    assert_select "a", text: "Create an account"
+  end
 end

@@ -19,6 +19,8 @@ class NotificationMailer < ApplicationMailer
                 "A booking was canceled on Pasabaya"
     when "ride.canceled"
                 "Your upcoming ride has been canceled on Pasabaya"
+    when "route.alert"
+                "New ride offer matching your route alert on Pasabaya"
     when "incident.resolved"
                 "Update on your reported incident on Pasabaya"
     else
