@@ -4,7 +4,7 @@
 
 **Blocked by:** None (can start immediately).
 
-**Status:** ready-for-agent
+**Status:** in-progress
 
 - [ ] Remove the standalone notification bell from the top bar and display the unread notification badge on the avatar with accessible notification-count information.
 - [ ] The profile dropdown contains Profile, Settings, Notifications with unread count, and Sign out.
@@ -16,3 +16,8 @@
 - [ ] Add the smallest relevant behavior or regression test for code changes, covering this ticket's user-visible behavior and important failure boundary. Do not require a browser test for changes with no browser behavior.
 - [ ] Run bin/ci before declaring the implementation complete; report any check that could not run rather than calling the gate green.
 
+
+
+## Implementation evidence
+
+Resumed from integration 802a582 in isolated worktree; navbar behavior under TDD.
