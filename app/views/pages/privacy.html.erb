@@ -29,7 +29,7 @@
         <ul class="list-disc pl-5 space-y-2">
           <li><strong>Account Information:</strong> First name, last name, email address, password hash (encrypted via bcrypt; we never store plain-text passwords), and pending email confirmation tokens.</li>
           <li><strong>Profile Information:</strong> Optional user avatar image (stored securely via ActiveStorage; maximum 5 MB in JPEG, PNG, or WEBP formats), optional HTTPS Facebook profile link (provided voluntarily to help peers view your profile; a supplied link does not verify identity), and self-declared gender (unspecified, female, male, or non-binary, used exclusively to operate optional Ladies Only ride filters).</li>
-          <li><strong>Trip Information:</strong> Origin city, destination city, departure date and time, estimated arrival time, number of available or requested seats, visibility preference (public ride vs. institutional community hub), and optional trip coordination notes.</li>
+          <li><strong>Trip Information:</strong> Origin city, destination city, departure date and approximate choice or exact time, optional estimated arrival time, number of available passenger seats, visibility preference (public ride vs. institutional community hub), and optional trip coordination notes.</li>
           <li><strong>Trip Communications:</strong> In-app trip coordination chat messages, including message content, sender ID, recipient IDs, and delivery timestamps.</li>
           <li><strong>Safety, Reputation &amp; Incident Records:</strong> Post-trip reviews, ratings, reported outcome categories (e.g., completed, passenger no-show, driver no-show), no-show incident allegations, decision reasons, and moderation action logs.</li>
           <li><strong>Community Hub Verification:</strong> Institutional email addresses submitted to verify membership in university or workplace closed carpool hubs, along with cryptographic verification tokens and membership expiry dates.</li>
@@ -42,7 +42,7 @@
         <p>We process your personal information under the following statutory grounds recognized by RA 10173:</p>
         <ul class="list-disc pl-5 space-y-2">
           <li><strong>Consent:</strong> Provided when you voluntarily register an account, upload an optional avatar, provide an optional social profile link, or join an institutional community hub.</li>
-          <li><strong>Contractual Necessity:</strong> To fulfill our role as a matching platform, including publishing your ride offers or requests, processing seat bookings, enabling driver approval workflows, and delivering transactional in-app notifications and transactional emails (via SMTP) regarding trip status changes.</li>
+          <li><strong>Contractual Necessity:</strong> To fulfill our role as a matching platform, including publishing driver ride offers, processing passenger seat requests and bookings, enabling driver approval workflows, and delivering transactional in-app notifications and transactional emails (via SMTP) regarding trip status changes.</li>
           <li><strong>Legitimate Interests:</strong> To maintain platform security, investigate reports of misconduct, enforce no-show accountability rules, prevent suspended or banned users from re-registering, and defend against fraudulent or abusive behavior.</li>
         </ul>
         <p class="font-semibold text-neutral-900 dark:text-white">
@@ -54,9 +54,9 @@
         <h2 class="text-xl font-bold text-neutral-900 dark:text-white">4. Information Sharing &amp; Public Visibility</h2>
         <p>Information visibility on Pasabaya is segmented based on role and authentication status:</p>
         <ul class="list-disc pl-5 space-y-2">
-          <li><strong>Public Visitors (Unauthenticated Guests):</strong> Anyone visiting Pasabaya can view public ride listings, including origin, destination, schedules, seat counts, trip notes, and the driver or requester's <strong>first name, last name, and profile avatar</strong>.</li>
+          <li><strong>Public Visitors (Unauthenticated Guests):</strong> Anyone visiting Pasabaya can view public driver ride offers, including origin, destination, schedules, seat counts, trip notes, and the driver's <strong>first name, last name, and profile avatar</strong>.</li>
           <li><strong>Registered &amp; Logged-In Members:</strong> Logged-in users can view the above information plus verified community badges, female profile badges, and optional Facebook profile URLs (if provided by the user).</li>
-          <li><strong>Confirmed Trip Participants Only:</strong> In-app coordination chat messages are strictly private to the driver and accepted, confirmed passengers of that specific trip. Public visitors, pending requesters, and declined users cannot access trip chat.</li>
+          <li><strong>Confirmed Trip Participants Only:</strong> In-app coordination chat messages are strictly private to the driver and accepted, confirmed passengers of that specific trip, including previously confirmed passengers retained for coordination after trip cancellation. Public visitors, pending requesters, and declined users cannot access trip chat. Bans, account deletion, and loss of required hub access revoke chat access.</li>
         </ul>
       </section>
 
@@ -74,7 +74,7 @@
               <li>Comply with valid court orders, subpoenas, or legal processes issued under Philippine law, including the <strong>Cybercrime Prevention Act of 2012 (RA 10175)</strong> and RA 10173.</li>
             </ol>
           </li>
-          <li><strong>Strict Write Lock &amp; Automated Purge:</strong> Trip messaging closes to read-only status exactly 24 hours after the booking cutoff. Authorized trip participants may read chat history for an additional 30 days following messaging closure. All messages in a trip conversation share this retention deadline; upon reaching the history deadline, the conversation and its messages are scheduled for permanent deletion from the live database via automated background jobs. Real-time WebSocket delivery buffers expire within 24 hours.</li>
+          <li><strong>Messaging Closure &amp; Automated Purge:</strong> For an ordinary trip, messaging closes to read-only status 24 hours after the booking cutoff. If a trip is canceled while messaging is open, messaging closes 24 hours after cancellation. Cancellation does not reopen closed messaging or unavailable history. Authorized trip participants may read chat history for another 30 days after messaging closes. All messages in a conversation share this deadline. At the history deadline, the conversation and its messages become inaccessible and are scheduled for permanent deletion from the live database via background jobs. Real-time WebSocket delivery buffers expire within 24 hours.</li>
           <li><strong>Sensitive Financial Data Warning:</strong> Users must never share bank account numbers, GCash or Maya PINs, credit card details, one-time passwords (OTPs), or government identity cards in chat. Pasabaya disclaims all liability for losses resulting from voluntary disclosure of financial credentials between users.</li>
         </ul>
       </section>
@@ -105,7 +105,7 @@
             </ul>
           </li>
           <li><strong>Retained De-Identified Safety Records:</strong> To maintain community trust, prevent abusive individuals from evading no-show strikes, and ensure review integrity, objective historical safety records (such as completed trip records, verified no-show strike counts, and trip outcome classifications) are retained in de-identified format linked only to an anonymous "Deleted User" record.</li>
-          <li><strong>Conversation-Wide Chat Retention:</strong> All messages within a trip coordination chat share a single conversation-wide retention timeline. Messaging closes 24 hours after the booking cutoff, after which the conversation remains accessible in read-only mode for 30 days. At that scheduled live-database deletion deadline, the conversation is permanently deleted from the live database. Live database deletion does not instantly erase disaster recovery backup snapshots, which are retained on a separate snapshot schedule and scrubbed upon restoration.</li>
+          <li><strong>Conversation-Wide Chat Retention:</strong> All messages in a trip coordination chat share the messaging and history deadlines described above. At the history deadline, the conversation becomes inaccessible and is scheduled for permanent deletion from the live database. Queue delays may postpone physical deletion; the deadline does not promise instantaneous erasure. Live database deletion does not instantly erase disaster recovery backup snapshots, which are retained on a separate snapshot schedule and scrubbed upon restoration.</li>
           <li><strong>Disaster Recovery Backups &amp; Restoration Scrubbing:</strong> Restic backups are encrypted and stored on S3-compatible cloud storage. We retain the latest seven backups, seven daily, four weekly, six monthly, and two yearly snapshots; backup copies can therefore retain personal data beyond 30 days. Litestream also maintains database replicas for recovery. Before a restored database serves public traffic, expired data is scrubbed and account deletions are reapplied from a separate persistent deletion registry. Restoration is stopped if that registry is unavailable or an account cannot be anonymized.</li>
         </ul>
       </section>

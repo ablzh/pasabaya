@@ -182,6 +182,8 @@ export default class extends Controller {
         "Accept": "application/json"
       },
       body: formData
+    }).then((response) => {
+      if (!response.ok) this.lastMarkedMessageId = 0
     }).catch(() => {
       this.lastMarkedMessageId = 0
     })

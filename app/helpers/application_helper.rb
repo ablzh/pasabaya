@@ -1,4 +1,8 @@
 module ApplicationHelper
+  def current_unread_chats_count
+    @current_unread_chats_count ||= Current.user.unread_chats_count
+  end
+
   def native_page_title
     case controller_path
     when "ride_posts"

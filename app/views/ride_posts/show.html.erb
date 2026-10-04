@@ -10,8 +10,8 @@
 
     <% if @ride_post.draft? && Current.user == @ride_post.user %>
       <div class="mb-6 p-4 rounded-2xl bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/40 text-amber-800 dark:text-amber-300">
-        <p class="font-bold text-sm">Action Required: Reconfirm Your Ride Offer</p>
-        <p class="text-xs mt-1">This offer is currently in private draft. Please edit and confirm your departure time, expected arrival time, and seat capacity to publish it for bookings.</p>
+        <p class="font-bold text-sm">Private Draft</p>
+        <p class="text-xs mt-1">Edit this draft to confirm your route, departure date, approximate choice or exact time, and passenger seats. Expected arrival is optional. Choose Publish ride when ready to accept bookings.</p>
       </div>
     <% end %>
 

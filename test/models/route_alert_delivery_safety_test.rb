@@ -134,6 +134,24 @@ class RouteAlertDeliverySafetyTest < ActiveSupport::TestCase
     assert @notification.reload.delivered?
   end
 
+  test "retrying a realtime transport failure does not resend a successfully delivered email" do
+    outage = ->(*) { raise IOError, "Temporary realtime transport failure" }
+    assert_emails(1) do
+      with_stubbed_method(ActionCable.server, :broadcast, outage) do
+        assert_raises(IOError) { @notification.deliver! }
+      end
+    end
+    assert @notification.reload.failed?
+
+    assert_enqueued_with(job: NotificationDeliveryJob, args: [ @notification.id ]) { NotificationRecoveryJob.perform_now }
+    stream = Turbo::StreamsChannel.send(:stream_name_from, [ @passenger, :notifications ])
+    assert_no_emails do
+      assert_broadcasts(stream, 3) { NotificationDeliveryJob.perform_now(@notification.id) }
+    end
+    assert @notification.reload.delivered?
+    assert_no_emails { NotificationDeliveryJob.perform_now(@notification.id) }
+  end
+
   test "queued delivery rechecks passenger eligibility" do
     @passenger.update_columns(booking_freeze_until: 1.day.from_now)
     assert_no_emails { @notification.deliver! }
