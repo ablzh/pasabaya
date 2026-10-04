@@ -4,7 +4,7 @@
 
 **Blocked by:** [02: Explicit publishing with optional arrival](02-explicit-publishing-optional-arrival.md).
 
-**Status:** ready-for-agent
+**Status:** in-progress
 
 - [ ] Every newly published ride requires a departure date and one choice: Morning, Afternoon, Evening, Night, Exact Time or Flexible. Approximate choices do not fabricate a confirmed exact departure timestamp.
 - [ ] Use SVG Heroicons, not emoji. Display hints are Morning 06:00–12:00, Afternoon 12:00–17:00, Evening 17:00–21:00, Night 21:00–midnight, and Flexible any time on the selected date. Exact Time exposes a precise time picker, including midnight–06:00.
@@ -18,3 +18,8 @@
 - [ ] Add the smallest relevant behavior or regression test for code changes, covering this ticket's user-visible behavior and important failure boundary. Do not require a browser test for changes with no browser behavior.
 - [ ] Run bin/ci before declaring the implementation complete; report any check that could not run rather than calling the gate green.
 
+
+
+## Implementation evidence
+
+Started implementation of approximate departures
