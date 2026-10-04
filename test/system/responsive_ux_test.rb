@@ -10,7 +10,9 @@ class ResponsiveUxTest < ApplicationSystemTestCase
     choose_city("ride_post_origin_id", "Manila")
     choose_city("ride_post_destination_id", "Makati")
     fill_in "Available passenger seats", with: 1
-    fill_in "Departure Time", with: 3.days.from_now.strftime("%Y-%m-%dT09:00")
+    fill_in "Departure Date", with: 3.days.from_now.to_date
+    choose "Exact Time"
+    fill_in "Departure Time", with: "09:00"
     fill_in "Expected Arrival Time", with: 3.days.from_now.strftime("%Y-%m-%dT12:00")
     select "Community / Closed Hub Only", from: "Visibility"
     page.execute_script("window.formRenders = 0; document.addEventListener('turbo:render', () => window.formRenders++)")
@@ -132,7 +134,7 @@ class ResponsiveUxTest < ApplicationSystemTestCase
     select "Community / Closed Hub Only", from: "Visibility"
     click_button "Publish ride"
     assert_selector "#error_explanation"
-    assert_selector "label", text: "Departure Time (required to publish a ride offer)", exact_text: true
+    assert_selector "label", text: "Departure Date", exact_text: true
     assert_routes
     select "Public (Everyone)", from: "Visibility"
     click_button "Save draft"

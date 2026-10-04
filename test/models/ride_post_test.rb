@@ -282,4 +282,132 @@ class RidePostTest < ActiveSupport::TestCase
     assert_includes results, ride_matching
     assert_not_includes results, ride_other
   end
+
+  test "approximate departure sets booking cutoff to end of day in Asia/Manila and keeps departure_time nil" do
+    ride = RidePost.create!(
+      user: users(:one),
+      origin: locations(:one),
+      destination: locations(:two),
+      seats: 3,
+      post_type: :offering,
+      departure_date: Date.current + 2.days,
+      departure_choice: :morning,
+      status: :active
+    )
+
+    assert_nil ride.departure_time
+    assert_equal (Date.current + 2.days).in_time_zone("Asia/Manila").end_of_day, ride.booking_cutoff_at
+    assert_equal ride.booking_cutoff_at + 24.hours, ride.automatic_completion_at
+    assert ride.bookable?
+  end
+
+  test "approximate ride requests and acceptance remain open on departure date even after named period passed" do
+    target_date = Date.current
+    ride = RidePost.create!(
+      user: users(:one),
+      origin: locations(:one),
+      destination: locations(:two),
+      seats: 3,
+      post_type: :offering,
+      departure_date: target_date,
+      departure_choice: :morning,
+      status: :active
+    )
+
+    # 2:00 PM is after morning (06:00-12:00), but on the departure date
+    travel_to target_date.in_time_zone("Asia/Manila").change(hour: 14, min: 0) do
+      assert ride.bookable?
+      booking = Booking.create!(ride_post: ride, passenger: users(:two), status: :pending)
+      assert booking.persisted?
+      assert_nothing_raised do
+        Bookings::AcceptService.call(booking, actor: users(:one))
+      end
+      assert booking.reload.accepted?
+    end
+  end
+
+  test "exact time booking closes at specified departure time" do
+    departure = 2.hours.from_now
+    ride = RidePost.create!(
+      user: users(:one),
+      origin: locations(:one),
+      destination: locations(:two),
+      seats: 3,
+      post_type: :offering,
+      departure_date: departure.to_date,
+      departure_choice: :exact_time,
+      departure_time: departure,
+      status: :active
+    )
+
+    assert_equal departure, ride.booking_cutoff_at
+    assert ride.bookable?
+
+    travel_to departure + 1.minute do
+      assert_not ride.bookable?
+    end
+  end
+
+  test "locked schedule attributes cannot be edited when accepted bookings exist" do
+    ride = RidePost.create!(
+      user: users(:one),
+      origin: locations(:one),
+      destination: locations(:two),
+      seats: 3,
+      post_type: :offering,
+      departure_date: Date.current + 2.days,
+      departure_choice: :afternoon,
+      status: :active
+    )
+    Booking.create!(ride_post: ride, passenger: users(:two), status: :accepted)
+
+    ride.departure_choice = :evening
+    assert_not ride.valid?
+    assert_includes ride.errors[:base], "Cannot modify route, schedule, capacity, or audience while accepted bookings exist"
+
+    ride.reload
+    ride.departure_date = Date.current + 3.days
+    assert_not ride.valid?
+    assert_includes ride.errors[:base], "Cannot modify route, schedule, capacity, or audience while accepted bookings exist"
+  end
+
+  test "review eligibility for approximate vs exact departure" do
+    target_date = Date.current
+    approx_ride = RidePost.create!(
+      user: users(:one),
+      origin: locations(:one),
+      destination: locations(:two),
+      seats: 3,
+      post_type: :offering,
+      departure_date: target_date,
+      departure_choice: :morning,
+      status: :active
+    )
+
+    exact_time = target_date.in_time_zone("Asia/Manila").change(hour: 10, min: 0)
+    exact_ride = RidePost.create!(
+      user: users(:one),
+      origin: locations(:one),
+      destination: locations(:two),
+      seats: 3,
+      post_type: :offering,
+      departure_date: target_date,
+      departure_choice: :exact_time,
+      departure_time: exact_time,
+      status: :active
+    )
+
+    # During the departure date at 14:00:
+    travel_to target_date.in_time_zone("Asia/Manila").change(hour: 14, min: 0) do
+      # Exact ride departed at 10:00 -> reviewable!
+      assert exact_ride.reviewable_trip?
+      # Approximate ride is still within the departure date -> NOT reviewable until date ends!
+      assert_not approx_ride.reviewable_trip?
+    end
+
+    # The next day at 00:01:
+    travel_to (target_date + 1.day).in_time_zone("Asia/Manila").change(hour: 0, min: 1) do
+      assert approx_ride.reviewable_trip?
+    end
+  end
 end

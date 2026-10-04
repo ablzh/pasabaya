@@ -51,7 +51,7 @@ module Bookings
           raise InvalidStateError, "Only pending bookings can be accepted (current: #{b.status})"
         end
 
-        if ride.departure_time.blank? || ride.departure_time <= Time.current
+        if ride.booking_cutoff_at.blank? || ride.booking_cutoff_at <= Time.current
           raise InvalidStateError, "Cannot accept bookings for rides in the past"
         end
 

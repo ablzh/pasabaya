@@ -33,10 +33,10 @@ class Booking < ApplicationRecord
   end
 
   def historical_reviewable?
-    dep_time = ride_post&.departure_time
-    return false if dep_time.blank? || dep_time > Time.current
+    cutoff = ride_post&.booking_cutoff_at
+    return false if cutoff.blank? || cutoff > Time.current
 
-    accepted? || (canceled? && accepted_at.present? && accepted_at <= dep_time && canceled_at.present? && canceled_at >= dep_time)
+    accepted? || (canceled? && accepted_at.present? && accepted_at <= cutoff && canceled_at.present? && canceled_at >= cutoff)
   end
 
   private

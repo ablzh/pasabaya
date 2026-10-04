@@ -46,7 +46,7 @@ class TripReview < ApplicationRecord
   def trip_must_have_departed
     return unless ride_post
 
-    if ride_post.departure_time.present? && Time.current < ride_post.departure_time
+    if ride_post.booking_cutoff_at.present? && Time.current < ride_post.booking_cutoff_at
       errors.add(:base, "Reviews and no-show reports cannot be submitted before trip departure")
     elsif !ride_post.reviewable_trip?
       errors.add(:base, "Reviews require a departed ride offer")

@@ -141,5 +141,50 @@ module Bookings
       assert_match(/Driver is no longer eligible/, error.message)
       assert @booking.reload.pending?
     end
+
+    test "allows acceptance on departure date for approximate ride even after morning period" do
+      target_date = Date.current
+      ride = RidePost.create!(
+        user: @driver,
+        origin: locations(:one),
+        destination: locations(:two),
+        post_type: :offering,
+        seats: 3,
+        departure_date: target_date,
+        departure_choice: :morning,
+        status: :active
+      )
+      booking = Booking.create!(ride_post: ride, passenger: @passenger, status: :pending)
+
+      travel_to target_date.in_time_zone("Asia/Manila").change(hour: 16, min: 0) do
+        assert_nothing_raised do
+          AcceptService.call(booking, actor: @driver)
+        end
+        assert booking.reload.accepted?
+      end
+    end
+
+    test "rejects acceptance for approximate ride once departure date has ended" do
+      target_date = Date.current
+      ride = RidePost.create!(
+        user: @driver,
+        origin: locations(:one),
+        destination: locations(:two),
+        post_type: :offering,
+        seats: 3,
+        departure_date: target_date,
+        departure_choice: :morning,
+        status: :active
+      )
+      booking = Booking.create!(ride_post: ride, passenger: @passenger, status: :pending)
+
+      travel_to (target_date + 1.day).in_time_zone("Asia/Manila").change(hour: 0, min: 1) do
+        error = assert_raises(AcceptService::InvalidStateError) do
+          AcceptService.call(booking, actor: @driver)
+        end
+        assert_match(/Cannot accept bookings for rides in the past/, error.message)
+        assert booking.reload.pending?
+      end
+    end
   end
 end

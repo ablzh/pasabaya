@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_03_180011) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_03_180020) do
   create_table "account_deletion_tombstones", force: :cascade do |t|
     t.string "anonymized_email", null: false
     t.bigint "avatar_blob_id"
@@ -152,6 +152,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_03_180011) do
   create_table "ride_posts", force: :cascade do |t|
     t.integer "community_id"
     t.datetime "created_at", null: false
+    t.integer "departure_choice"
+    t.date "departure_date"
     t.datetime "departure_time"
     t.integer "destination_id"
     t.datetime "expected_arrival_at"
@@ -169,6 +171,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_03_180011) do
     t.integer "user_id", null: false
     t.integer "visibility", default: 0, null: false
     t.index ["community_id"], name: "index_ride_posts_on_community_id"
+    t.index ["departure_date", "departure_choice"], name: "index_ride_posts_on_departure_date_and_departure_choice"
     t.index ["destination_id"], name: "index_ride_posts_on_destination_id"
     t.index ["origin_id"], name: "index_ride_posts_on_origin_id"
     t.index ["user_id"], name: "index_ride_posts_on_user_id"
@@ -176,6 +179,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_03_180011) do
     t.check_constraint "post_type = 0", name: "check_ride_posts_driver_offers_only"
     t.check_constraint "remaining_seats IS NULL OR (remaining_seats >= 0 AND remaining_seats <= seats)", name: "check_ride_posts_offering_inventory"
     t.check_constraint "seats > 0", name: "check_ride_posts_seats_positive"
+    t.check_constraint "status = 4 OR (departure_date IS NOT NULL AND departure_choice IS NOT NULL)", name: "check_ride_posts_departure_presence"
     t.check_constraint "status = 4 OR seats IS NOT NULL", name: "check_ride_posts_seats_presence"
     t.check_constraint "visibility != 1 OR community_id IS NOT NULL", name: "check_ride_posts_hub_only_requires_community"
   end

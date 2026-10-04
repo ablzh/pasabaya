@@ -98,11 +98,24 @@
       <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
         <div class="bg-white dark:bg-neutral-900 p-5 sm:p-6 rounded-2xl border border-neutral-100 dark:border-white/5 shadow-xs">
           <p class="text-[10px] font-bold text-neutral-400 uppercase tracking-widest mb-1">Departure</p>
-          <% if @ride_post.regular? %>
+          <% if @ride_post.departure_date.present? %>
             <p class="text-base sm:text-lg font-bold text-neutral-900 dark:text-white">
-              Regular / Flexible
+              <%= @ride_post.departure_date.strftime("%a, %b %d, %Y") %>
             </p>
-          <% else %>
+            <% if @ride_post.exact_time? && @ride_post.departure_time.present? %>
+              <p class="text-sm text-blue-600 dark:text-blue-400 font-semibold"><%= @ride_post.departure_time.strftime("%I:%M %p") %></p>
+            <% elsif @ride_post.departure_choice.present? %>
+              <p class="text-sm text-blue-600 dark:text-blue-400 font-semibold">
+                <%= @ride_post.departure_choice_human %>
+                <% if RidePost::DEPARTURE_CHOICE_HINTS[@ride_post.departure_choice] && @ride_post.departure_choice != "flexible" %>
+                  <span class="text-xs font-normal text-neutral-500 dark:text-neutral-400">(<%= RidePost::DEPARTURE_CHOICE_HINTS[@ride_post.departure_choice] %>)</span>
+                <% end %>
+              </p>
+            <% end %>
+            <% if @ride_post.expected_arrival_at.present? %>
+              <p class="text-xs text-neutral-400 mt-1">Arrival: <%= @ride_post.expected_arrival_at.strftime("%a, %b %d, %Y • %I:%M %p %Z") %></p>
+            <% end %>
+          <% elsif @ride_post.departure_time.present? %>
             <p class="text-base sm:text-lg font-bold text-neutral-900 dark:text-white">
               <%= @ride_post.departure_time.strftime("%a, %b %d, %Y") %>
             </p>
@@ -110,13 +123,17 @@
             <% if @ride_post.expected_arrival_at.present? %>
               <p class="text-xs text-neutral-400 mt-1">Arrival: <%= @ride_post.expected_arrival_at.strftime("%a, %b %d, %Y • %I:%M %p %Z") %></p>
             <% end %>
+          <% else %>
+            <p class="text-base sm:text-lg font-bold text-neutral-900 dark:text-white">
+              Regular / Flexible
+            </p>
           <% end %>
         </div>
 
         <div class="bg-white dark:bg-neutral-900 p-5 sm:p-6 rounded-2xl border border-neutral-100 dark:border-white/5 shadow-xs">
           <p class="text-[10px] font-bold text-neutral-400 uppercase tracking-widest mb-1">Capacity</p>
           <p class="text-base sm:text-lg font-bold text-neutral-900 dark:text-white">
-            <% if @ride_post.offering? && @ride_post.published? && @ride_post.departure_time&.future? && @ride_post.remaining_seats.present? %>
+            <% if @ride_post.offering? && @ride_post.published? && @ride_post.booking_cutoff_at&.future? && @ride_post.remaining_seats.present? %>
               <%= @ride_post.remaining_seats %> / <%= @ride_post.seats %>
             <% else %>
               <%= @ride_post.seats %>

@@ -56,7 +56,9 @@ class RidesTest < ApplicationSystemTestCase
     assert_text "Carpooling together tomorrow morning, 4 seats open."
     assert_link "Edit"
     click_link "Edit Post"
-    fill_in "Departure Time", with: 3.days.from_now.strftime("%Y-%m-%dT09:00")
+    fill_in "Departure Date", with: 3.days.from_now.to_date
+    choose "Exact Time"
+    fill_in "Departure Time", with: "09:00"
     click_button "Save draft"
     assert_text "Unpublished — edit to publish"
     click_link "Edit Post"

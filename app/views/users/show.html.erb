@@ -135,7 +135,7 @@
                     </div>
                     <div class="flex items-center gap-2">
                       <span class="font-medium text-neutral-800 dark:text-neutral-200">Departure:</span>
-                      <span><%= ride.departure_time ? ride.departure_time.strftime("%a, %b %d • %I:%M %p") : "Regular / Flexible Schedule" %></span>
+                      <span><%= ride.departure_display %></span>
                     </div>
                   </div>
                 </div>
