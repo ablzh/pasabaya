@@ -40,23 +40,30 @@ class ChatMessageTest < ActiveSupport::TestCase
 
     msg = @ride.chat_messages.build(user: @driver, body: "Thanks for the ride!")
     assert_not msg.valid?
-    assert_includes msg.errors[:base], "Chat writes are closed 24 hours after trip departure"
+    assert_includes msg.errors[:base], "Chat writes are closed 24 hours after the booking cutoff"
   end
 
-  test "purge_expired! removes messages older than 30 days" do
+  test "purge_expired! removes all messages in expired conversations and preserves retained conversations" do
     @booking.update_columns(status: Booking.statuses[:accepted])
 
-    old_msg = @ride.chat_messages.create!(user: @driver, body: "Old message")
-    old_msg.update_columns(created_at: 35.days.ago)
+    expired_old_msg = @ride.chat_messages.create!(user: @driver, body: "Expired old message")
+    expired_recent_msg = @ride.chat_messages.create!(user: @driver, body: "Expired recent message")
+    # Expired ride: cutoff was 35 days ago (history unavailable after 31 days)
+    @ride.update_columns(departure_time: 35.days.ago, expected_arrival_at: 34.days.ago)
 
-    recent_msg = @ride.chat_messages.create!(user: @driver, body: "Recent message")
+    # Retained ride: cutoff was 2 days ago (history retained for 29 more days)
+    retained_ride = ride_posts(:two)
+    Booking.create!(ride_post: retained_ride, passenger: users(:one), status: :accepted)
+    retained_msg = retained_ride.chat_messages.create!(user: retained_ride.user, body: "Retained message")
+    retained_ride.update_columns(departure_time: 2.days.ago, expected_arrival_at: 1.day.ago)
 
-    assert_difference("ChatMessage.count", -1) do
-      ChatMessage.purge_expired!(30.days.ago)
+    assert_difference("ChatMessage.count", -2) do
+      ChatMessage.purge_expired!
     end
 
-    assert_not ChatMessage.exists?(old_msg.id)
-    assert ChatMessage.exists?(recent_msg.id)
+    assert_not ChatMessage.exists?(expired_old_msg.id)
+    assert_not ChatMessage.exists?(expired_recent_msg.id)
+    assert ChatMessage.exists?(retained_msg.id)
   end
 
   test "creating a chat message broadcasts toast to participants" do

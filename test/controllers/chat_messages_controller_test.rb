@@ -45,4 +45,36 @@ class ChatMessagesControllerTest < ActionDispatch::IntegrationTest
 
     assert_redirected_to new_session_url
   end
+
+  test "cannot post message after messaging deadline and form reflects expiry" do
+    @booking.update_columns(status: Booking.statuses[:accepted])
+    @ride.update_columns(departure_time: 25.hours.ago, expected_arrival_at: 24.hours.ago)
+    sign_in_as(@passenger)
+
+    assert_no_difference "ChatMessage.count" do
+      post ride_post_chat_messages_url(@ride), params: {
+        chat_message: { body: "Late message" }
+      }, as: :turbo_stream
+    end
+
+    assert_response :unprocessable_content
+    assert_includes response.body, "Messaging for this trip has closed."
+    assert_includes response.body, "Philippine time (UTC+8)"
+    assert_includes response.body, "Chat writes are closed 24 hours after the booking cutoff"
+  end
+
+  test "cannot post message when chat is expired and redirects with alert" do
+    @booking.update_columns(status: Booking.statuses[:accepted])
+    @ride.update_columns(departure_time: 35.days.ago, expected_arrival_at: 34.days.ago)
+    sign_in_as(@passenger)
+
+    assert_no_difference "ChatMessage.count" do
+      post ride_post_chat_messages_url(@ride), params: {
+        chat_message: { body: "Expired message" }
+      }
+    end
+
+    assert_redirected_to ride_post_url(@ride)
+    assert_equal "Chat history for this trip is no longer available.", flash[:alert]
+  end
 end

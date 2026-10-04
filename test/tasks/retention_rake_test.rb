@@ -17,26 +17,29 @@ class RetentionRakeTest < ActiveSupport::TestCase
     Rake.application = @original_rake
   end
 
-  test "retention:scrub purges chat messages older than 30 days and revokes expired memberships" do
+  test "retention:scrub purges chat messages from expired conversations and revokes expired memberships" do
     ride = ride_posts(:one)
     booking = bookings(:one)
     booking.update_columns(status: Booking.statuses[:accepted])
-
     old_msg = ride.chat_messages.create!(user: ride.user, body: "Old message")
-    old_msg.update_columns(created_at: 31.days.ago)
-
     recent_msg = ride.chat_messages.create!(user: ride.user, body: "Recent message")
-    recent_msg.update_columns(created_at: 1.day.ago)
+    ride.update_columns(departure_time: 35.days.ago, expected_arrival_at: 34.days.ago)
+
+    retained_ride = ride_posts(:two)
+    Booking.create!(ride_post: retained_ride, passenger: users(:one), status: :accepted)
+    retained_msg = retained_ride.chat_messages.create!(user: retained_ride.user, body: "Retained message")
+    retained_ride.update_columns(departure_time: 2.days.ago, expected_arrival_at: 1.day.ago)
 
     membership = community_memberships(:one)
     membership.update_columns(verified_at: 1.month.ago, expires_at: 1.day.ago, revoked_at: nil)
 
-    assert_difference("ChatMessage.count", -1) do
+    assert_difference("ChatMessage.count", -2) do
       Rake::Task["retention:scrub"].invoke
     end
 
     assert_not ChatMessage.exists?(old_msg.id)
-    assert ChatMessage.exists?(recent_msg.id)
+    assert_not ChatMessage.exists?(recent_msg.id)
+    assert ChatMessage.exists?(retained_msg.id)
     assert membership.reload.revoked_at.present?
   end
 

@@ -3,8 +3,7 @@
 class PurgeOldChatMessagesJob < ApplicationJob
   queue_as :default
 
-  def perform(older_than_days = 30)
-    cutoff = older_than_days.to_i.days.ago
-    ChatMessage.where("created_at < ?", cutoff).destroy_all
+  def perform(*_args)
+    ChatMessage.purge_expired!
   end
 end

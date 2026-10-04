@@ -15,8 +15,14 @@ class ChatMessage < ApplicationRecord
 
   scope :recent_first, -> { order(created_at: :asc) }
 
-  def self.purge_expired!(older_than = 30.days.ago)
-    where("created_at < ?", older_than).destroy_all
+  def self.purge_expired!(*_args)
+    expired_ride_ids = []
+    RidePost.joins(:chat_messages).distinct.find_each do |ride|
+      expired_ride_ids << ride.id if ride.chat_expired?
+    end
+    return [] if expired_ride_ids.empty?
+
+    where(ride_post_id: expired_ride_ids).destroy_all
   end
 
   private
@@ -73,7 +79,7 @@ class ChatMessage < ApplicationRecord
     return unless ride_post
 
     unless ride_post.chat_writable?
-      errors.add(:base, "Chat writes are closed 24 hours after trip departure")
+      errors.add(:base, "Chat writes are closed 24 hours after the booking cutoff")
     end
   end
 end

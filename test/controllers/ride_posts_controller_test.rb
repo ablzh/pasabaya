@@ -308,6 +308,30 @@ class RidePostsControllerTest < ActionDispatch::IntegrationTest
     assert_select "div[data-controller*='trip-view']"
     assert_select "button[data-tab-name='chat']"
     assert_select "div[data-trip-view-target='chatPane']"
+    assert_select "div", text: /Messaging closes:/
+    assert_select "div", text: /Scheduled live-database deletion:/
+    assert_select "time", text: /Philippine time \(UTC\+8\)/
+  end
+
+  test "expired chat tab direct navigation redirects to details with alert" do
+    @ride_post.update_columns(departure_time: 35.days.ago, expected_arrival_at: 34.days.ago)
+
+    get ride_post_url(@ride_post, tab: "chat")
+
+    assert_redirected_to ride_post_url(@ride_post)
+    assert_equal "Chat history for this trip is no longer available.", flash[:alert]
+    follow_redirect!
+    assert_select "button[data-tab-name='chat']", 0
+    assert_select "div[data-trip-view-target='chatPane']", 0
+  end
+
+  test "expired chat tab json request returns gone" do
+    @ride_post.update_columns(departure_time: 35.days.ago, expected_arrival_at: 34.days.ago)
+
+    get ride_post_url(@ride_post, tab: "chat", format: :json)
+
+    assert_response :gone
+    assert_equal "Chat history is no longer available", response.parsed_body["error"]
   end
 
   test "unauthorized viewer does not see chat tab on show" do

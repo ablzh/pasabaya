@@ -34,7 +34,8 @@ class ChatMessagesController < ApplicationController
 
   def authorize_participant
     unless @ride_post.user_authorized_for_chat?(Current.user)
-      redirect_to @ride_post, alert: "Only the driver and confirmed passengers can access trip chat."
+      alert_text = @ride_post.chat_expired? ? "Chat history for this trip is no longer available." : "Only the driver and confirmed passengers can access trip chat."
+      redirect_to @ride_post, alert: alert_text
     end
   end
 

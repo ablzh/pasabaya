@@ -8,5 +8,7 @@ class TripAuditRecoveryJob < ApplicationJob
       Bookings::ExpireService.call(ride) if ride.booking_cutoff_at && ride.booking_cutoff_at <= Time.current
       TripAuditJob.perform_later(ride.id) if ride.automatic_completion_at && ride.automatic_completion_at <= Time.current
     end
+
+    ChatMessage.purge_expired!
   end
 end

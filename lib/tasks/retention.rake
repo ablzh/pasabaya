@@ -9,10 +9,10 @@ namespace :retention do
     end
   end
 
-  desc "Scrub expired data (chat messages > 30 days, expired memberships) and re-apply account deletions after database snapshot restoration"
+  desc "Scrub expired data (expired chat conversations, expired memberships) and re-apply account deletions after database snapshot restoration"
   task scrub: :environment do
-    count = ChatMessage.purge_expired!(30.days.ago).count
-    puts "Retention scrub complete. Purged #{count} chat messages older than 30 days."
+    count = ChatMessage.purge_expired!.count
+    puts "Retention scrub complete. Purged #{count} chat messages from expired conversations."
 
     CommunityMembership.revoke_expired!
     puts "Revoked expired community memberships."
