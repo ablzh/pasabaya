@@ -17,6 +17,9 @@ class NotificationsController < ApplicationController
   def show
     @notification = Current.user.received_notifications.find(params[:id])
     @notification.mark_as_read!
+    unless @notification.route_alert_available?
+      return redirect_to ride_posts_path, notice: "The trip is no longer available.", status: :see_other
+    end
 
     case @notification.notifiable
     when Booking

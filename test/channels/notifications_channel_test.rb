@@ -7,6 +7,17 @@ class NotificationsChannelTest < ActionCable::Channel::TestCase
     stub_connection current_user: @user, current_session: @session
   end
 
+  test "queued route alert HTML is not transmitted after recipient loses hub access" do
+    ride = ride_posts(:one)
+    ride.update_columns(visibility: RidePost.visibilities[:hub_only], community_id: communities(:two).id)
+    notification = Notification.create!(recipient: @user, notifiable: ride, event_name: "route.alert", delivery_key: "queued-private-route")
+    subscribe signed_stream_name: Turbo::StreamsChannel.signed_stream_name([ @user, :notifications ])
+    assert subscription.confirmed?
+
+    subscription.deliver_or_reject(%(<turbo-stream action="append"><template><div data-route-alert-id="#{notification.id}">Private route</div></template></turbo-stream>))
+    assert_empty transmissions
+  end
+
   test "only subscribes to the authenticated user's notifications" do
     subscribe signed_stream_name: Turbo::StreamsChannel.signed_stream_name([ @user, :notifications ])
     assert subscription.confirmed?

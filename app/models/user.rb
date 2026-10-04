@@ -21,8 +21,7 @@ class User < ApplicationRecord
     return 0 if rides.empty?
 
     read_states = chat_read_states.where(ride_post_id: rides.map(&:id)).index_by(&:ride_post_id)
-    latest_messages = ChatMessage.where(ride_post_id: rides.map(&:id))
-                                 .where("chat_messages.id = (SELECT latest.id FROM chat_messages latest WHERE latest.ride_post_id = chat_messages.ride_post_id ORDER BY latest.created_at DESC, latest.id DESC LIMIT 1)")
+    latest_messages = ChatMessage.latest_for_rides(rides.map(&:id))
                                  .index_by(&:ride_post_id)
 
     rides.count do |ride|

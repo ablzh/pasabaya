@@ -8,6 +8,7 @@ class ChatRetentionJob < ApplicationJob
     return unless ride
     return unless ride.chat_expired?
 
+    ride.chat_read_states.destroy_all
     ride.chat_messages.destroy_all
   end
 end

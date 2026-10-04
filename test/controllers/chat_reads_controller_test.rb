@@ -11,6 +11,19 @@ class ChatReadsControllerTest < ActionDispatch::IntegrationTest
     @message = @ride.chat_messages.create!(user: @driver, body: "Pickup at 8:00 AM")
   end
 
+  test "foreign and nonexistent message markers cannot suppress unread conversations" do
+    other = ride_posts(:two)
+    Booking.create!(ride_post: other, passenger: @driver, status: :accepted)
+    foreign = other.chat_messages.create!(user: @passenger, body: "Other trip")
+    sign_in_as(@passenger)
+    [ foreign.id, @message.id + 1_000_000, "#{@message.id}abc" ].each do |id|
+      post ride_post_chat_reads_path(@ride), params: { last_message_id: id }
+      assert_response :unprocessable_content
+      assert_equal 1, @passenger.unread_chats_count
+      assert_nil @passenger.chat_read_states.find_by(ride_post: @ride)
+    end
+  end
+
   test "authorized participant marks conversation read" do
     sign_in_as(@passenger)
     assert_equal 1, @passenger.unread_chats_count

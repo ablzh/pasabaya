@@ -1,4 +1,5 @@
-<div data-unread-notification="<%= !notification.read? %>" id="<%= dom_id(notification) %>" class="notification p-4 flex items-center justify-between gap-4 transition-colors hover:bg-neutral-50 dark:hover:bg-neutral-800/50 <%= 'bg-blue-50/30 dark:bg-blue-950/10' unless notification.read? %>">
+<% if notification.route_alert_available? %>
+<div data-route-alert-id="<%= notification.id if notification.event_name == 'route.alert' %>" data-unread-notification="<%= !notification.read? %>" id="<%= dom_id(notification) %>" class="notification p-4 flex items-center justify-between gap-4 transition-colors hover:bg-neutral-50 dark:hover:bg-neutral-800/50 <%= 'bg-blue-50/30 dark:bg-blue-950/10' unless notification.read? %>">
   <div class="flex items-start gap-3">
     <% unless notification.read? %>
       <span class="mt-3 size-2.5 shrink-0 rounded-full bg-blue-600" aria-label="Unread notification"></span>
@@ -34,7 +35,7 @@
           Your seat request expired without confirmation
         <% when "route.alert" %>
           <% if notification.notifiable.is_a?(RidePost) %>
-            A driver posted a matching ride from <%= notification.notifiable.origin&.name %> to <%= notification.notifiable.destination&.name %>.
+            A driver posted a matching ride from <%= notification_route_label(notification.notifiable) %>.
           <% else %>
             A driver posted a ride matching your route alert.
           <% end %>
@@ -55,3 +56,4 @@
     <%= link_to "View", notification_path(notification), class: "text-xs font-semibold px-3 py-1.5 rounded-lg bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 dark:hover:bg-neutral-700 text-neutral-700 dark:text-neutral-300 transition-colors" %>
   </div>
 </div>
+<% end %>
