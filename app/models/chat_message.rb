@@ -9,7 +9,6 @@ class ChatMessage < ApplicationRecord
   validate :participant_must_be_authorized, on: :create
   validate :chat_must_not_be_closed, on: :create
 
-  after_create_commit :update_author_read_state
   after_create_commit :broadcast_to_ride_chat
   after_create_commit :notify_participants
 
@@ -39,17 +38,13 @@ class ChatMessage < ApplicationRecord
                         locals: { chat_message: self }
   end
 
-  def update_author_read_state
-    ChatReadState.mark_read!(user: user, ride_post: ride_post, message_id: id)
-  end
-
   def notify_participants
     ride_post.participants.find_each do |recipient|
       next unless ride_post.user_authorized_for_chat?(recipient)
 
-      next if recipient.id == user_id
-
       Turbo::StreamsChannel.broadcast_refresh_to([ recipient, :chats ])
+
+      next if recipient.id == user_id
 
       broadcast_toast_to(recipient)
       ChatReadState.broadcast_unread_count_for(recipient)

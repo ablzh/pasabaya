@@ -17,17 +17,13 @@ class User < ApplicationRecord
   has_many :route_subscriptions, dependent: :destroy
 
   def unread_chats_count
-    rides = authorized_chat_rides
-    return 0 if rides.empty?
+    unread_chat_ride_ids.size
+  end
 
-    read_states = chat_read_states.where(ride_post_id: rides.map(&:id)).index_by(&:ride_post_id)
-    latest_messages = ChatMessage.latest_for_rides(rides.map(&:id))
-                                 .index_by(&:ride_post_id)
-
-    rides.count do |ride|
-      latest = latest_messages[ride.id]
-      latest.present? && latest.user_id != id && latest.id > (read_states[ride.id]&.last_read_message_id || 0)
-    end
+  def unread_chat_ride_ids(rides: authorized_chat_rides)
+    ChatMessage.where(ride_post_id: rides.map(&:id)).where.not(user_id: id)
+               .where("chat_messages.id > COALESCE((SELECT last_read_message_id FROM chat_read_states WHERE chat_read_states.ride_post_id = chat_messages.ride_post_id AND chat_read_states.user_id = ?), 0)", id)
+               .distinct.pluck(:ride_post_id)
   end
 
   def authorized_chat_rides(includes: [ :origin, :destination, :bookings ])

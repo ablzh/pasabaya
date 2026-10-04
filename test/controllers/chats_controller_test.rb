@@ -8,6 +8,17 @@ class ChatsControllerTest < ActionDispatch::IntegrationTest
     bookings(:one).update_columns(status: Booking.statuses[:accepted])
   end
 
+  test "incomplete drafts are excluded from the owner's conversations" do
+    draft = @driver.ride_posts.create!(status: :draft)
+    sign_in_as(@driver)
+
+    get chats_url
+
+    assert_response :success
+    assert_select "a[href=?]", ride_post_path(draft, tab: "chat"), count: 0
+    assert_select "a[href=?]", ride_post_path(@ride, tab: "chat"), count: 1
+  end
+
   test "participant sees route latest preview and discussion link" do
     @ride.chat_messages.create!(user: @driver, body: "Meet beside the library")
     sign_in_as(@passenger)
@@ -83,6 +94,22 @@ class ChatsControllerTest < ActionDispatch::IntegrationTest
     assert_select "a[href=?]", ride_post_path(@ride, tab: "chat") do
       assert_select "span", text: "Unread", count: 0
     end
+  end
+
+  test "sending a reply preserves unseen incoming messages until the latest message is read" do
+    @ride.chat_messages.create!(user: @driver, body: "Unseen pickup change")
+    sign_in_as(@passenger)
+
+    post ride_post_chat_messages_url(@ride), params: { chat_message: { body: "Reply from older history" } }
+
+    assert_equal 1, @passenger.unread_chats_count
+    get chats_url
+    assert_select "a[href=?][data-conversation-unread='true']", ride_post_path(@ride, tab: "chat") do
+      assert_select "p", text: "Reply from older history"
+    end
+
+    ChatReadState.mark_read!(user: @passenger, ride_post: @ride, message_id: @ride.chat_messages.last.id)
+    assert_equal 0, @passenger.unread_chats_count
   end
 
   test "inbox and direct navigation hide previews when participation or audience access is lost" do

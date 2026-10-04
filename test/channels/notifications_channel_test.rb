@@ -7,6 +7,47 @@ class NotificationsChannelTest < ActionCable::Channel::TestCase
     stub_connection current_user: @user, current_session: @session
   end
 
+  test "queued chat previews recheck access before delivery" do
+    ride = ride_posts(:one)
+    bookings(:one).update_columns(status: Booking.statuses[:accepted], accepted_at: 1.hour.ago)
+    ride.update_columns(visibility: RidePost.visibilities[:hub_only], community_id: communities(:one).id)
+    subscribe signed_stream_name: Turbo::StreamsChannel.signed_stream_name([ @user, :notifications ])
+    payload = %(<turbo-stream action="append"><template><div data-ride-id="#{ride.id}">Private pickup</div></template></turbo-stream>)
+
+    subscription.deliver_or_reject(payload)
+    assert_equal 1, transmissions.size
+    community_memberships(:one).update_columns(revoked_at: Time.current)
+    subscription.deliver_or_reject(payload)
+    assert_equal 1, transmissions.size, "revoked hub access must suppress a queued preview"
+
+    community_memberships(:one).update_columns(revoked_at: nil)
+    travel_to ride.chat_history_unavailable_at do
+      subscription.deliver_or_reject(payload)
+      assert_equal 1, transmissions.size, "expired history must suppress a queued preview"
+    end
+  end
+
+  test "queued chat previews are suppressed after participation is lost or the ride is removed" do
+    passenger = users(:two)
+    session = passenger.sessions.create!
+    stub_connection current_user: passenger, current_session: session
+    ride = ride_posts(:one)
+    booking = bookings(:one)
+    booking.update_columns(status: Booking.statuses[:accepted], accepted_at: 1.hour.ago)
+    subscribe signed_stream_name: Turbo::StreamsChannel.signed_stream_name([ passenger, :notifications ])
+    payload = %(<turbo-stream action="append"><template><div data-ride-id="#{ride.id}">Private pickup</div></template></turbo-stream>)
+
+    subscription.deliver_or_reject(payload)
+    assert_equal 1, transmissions.size
+    booking.update_columns(status: Booking.statuses[:canceled])
+    subscription.deliver_or_reject(payload)
+    assert_equal 1, transmissions.size
+
+    ride.destroy!
+    subscription.deliver_or_reject(payload)
+    assert_equal 1, transmissions.size
+  end
+
   test "queued route alert HTML is not transmitted after recipient loses hub access" do
     ride = ride_posts(:one)
     ride.update_columns(visibility: RidePost.visibilities[:hub_only], community_id: communities(:two).id)
