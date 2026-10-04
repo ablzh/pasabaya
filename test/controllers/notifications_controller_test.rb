@@ -6,6 +6,22 @@ class NotificationsControllerTest < ActionDispatch::IntegrationTest
     @notification = notifications(:one)
   end
 
+  test "avatar contains the accessible notification badge and a compact profile menu" do
+    sign_in_as(@user)
+    get root_url
+    assert_select "nav > div > ul a[href='#{notifications_path}']", count: 0
+    assert_select "button[aria-label='Account menu'][aria-describedby='account-notification-count'] [data-notification-count] span[aria-label='1 unread notification']", text: "1"
+    assert_select "#profile-content a", count: 4
+    { "Profile" => user_path(@user), "Settings" => settings_profile_path,
+      "Notifications" => notifications_path, "Sign out" => session_path }.each do |label, path|
+      assert_select "#profile-content a[href='#{path}']", text: /#{label}/
+    end
+    assert_select "#profile-content a[href='#{trips_path}']", count: 0
+    assert_select "#profile-content a[href='#{communities_path}']", count: 0
+    assert_select "nav a[href='#{communities_path}']"
+    assert_select "nav a[href='#{chats_path}']"
+  end
+
   test "authenticated user can view their notifications" do
     sign_in_as(@user)
 
