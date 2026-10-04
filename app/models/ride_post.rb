@@ -44,6 +44,7 @@ class RidePost < ApplicationRecord
   validates :origin, :destination, :seats, presence: true, unless: :draft?
   validate :route_must_have_distinct_locations, unless: :draft?
   validates :post_type, presence: true
+  validates :notes, length: { maximum: 300 }, if: -> { new_record? || will_save_change_to_notes? }
   validates :status, presence: true
   validates :visibility, presence: true
   validates :remaining_seats, numericality: { greater_than_or_equal_to: 0, less_than_or_equal_to: :seats }, allow_nil: true
