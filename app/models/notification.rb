@@ -69,30 +69,39 @@ class Notification < ApplicationRecord
     end
   end
 
+  def route_alert_available?
+    return true unless event_name == "route.alert"
+
+    ride = notifiable
+    ride.is_a?(RidePost) && ride.bookable? && ride.driver_eligible? && ride.authorized_for_booking?(recipient)
+  end
+
   def deliver!
-    reload
-    return if delivered?
+    with_lock do
+      return if delivered?
+      return unless route_alert_available?
 
-    if EMAIL_EVENTS.include?(event_name) && recipient&.email_address.present?
-      NotificationMailer.with(notification: self).event_notification.deliver_now
+      if EMAIL_EVENTS.include?(event_name) && recipient&.email_address.present?
+        NotificationMailer.with(notification: self).event_notification.deliver_now
+      end
+
+      Turbo::StreamsChannel.broadcast_prepend_to(
+        [ recipient, :notifications ],
+        target: "notifications_list",
+        partial: "notifications/notification",
+        locals: { notification: self }
+      )
+
+      Turbo::StreamsChannel.broadcast_append_to(
+        [ recipient, :notifications ],
+        target: "toast-container",
+        partial: "notifications/toast",
+        locals: { notification: self }
+      )
+
+      update!(delivery_status: :delivered, delivered_at: Time.current)
+      broadcast_unread_count
     end
-
-    Turbo::StreamsChannel.broadcast_prepend_to(
-      [ recipient, :notifications ],
-      target: "notifications_list",
-      partial: "notifications/notification",
-      locals: { notification: self }
-    )
-
-    Turbo::StreamsChannel.broadcast_append_to(
-      [ recipient, :notifications ],
-      target: "toast-container",
-      partial: "notifications/toast",
-      locals: { notification: self }
-    )
-
-    update!(delivery_status: :delivered, delivered_at: Time.current)
-    broadcast_unread_count
 
   rescue StandardError => e
     if persisted?

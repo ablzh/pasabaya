@@ -11,6 +11,7 @@ module RouteSubscriptions
     end
 
     def call
+      ride_post.reload if ride_post&.persisted?
       return unless ride_post&.offering? && ride_post.published? && ride_post.bookable?
 
       candidates = RouteSubscription.active.where(
@@ -32,6 +33,7 @@ module RouteSubscriptions
     def fulfill_subscription(subscription)
       ActiveRecord::Base.transaction do
         sub = RouteSubscription.lock.find_by(id: subscription.id)
+        ride_post.reload
         return unless sub && sub.active? && sub.matches?(ride_post)
 
         sub.update!(status: :fulfilled, consumed_at: Time.current, ride_post: ride_post)

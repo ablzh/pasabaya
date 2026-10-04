@@ -19,10 +19,19 @@ class NotificationsChannel < ApplicationCable::Channel
 
   def deliver_or_reject(data)
     if active_session? && User.where(id: current_user.id, banned_at: nil).exists?
-      transmit data
+      transmit data if route_alerts_available?(data)
     else
       stop_all_streams
       reject
     end
+  end
+  private
+
+  def route_alerts_available?(data)
+    ids = Nokogiri::HTML.fragment(data.to_s).css("[data-route-alert-id]").filter_map { |node| node["data-route-alert-id"].presence }
+    return true if ids.empty?
+
+    alerts = current_user.received_notifications.where(id: ids)
+    alerts.size == ids.uniq.size && alerts.all?(&:route_alert_available?)
   end
 end
