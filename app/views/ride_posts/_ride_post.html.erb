@@ -2,30 +2,24 @@
 <% card_footer = capture do %>
   <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
     <%# Left side: User Info %>
-    <%= link_to user_path(ride_post.user), class: "flex items-center group" do %>
-      <%= user_avatar(ride_post.user, classes: "h-9 w-9 text-xs transition-opacity group-hover:opacity-80") %>
+    <div class="flex items-center">
+      <%= user_avatar(ride_post.user, classes: "h-9 w-9 text-xs") %>
       <div class="ml-2">
-        <p class="text-sm font-semibold text-neutral-900 dark:text-white leading-none group-hover:underline">
+        <p class="text-sm font-semibold text-neutral-900 dark:text-white leading-none">
           <%= ride_post.user.first_name %> <%= ride_post.user.last_name %>
         </p>
         <p class="text-[10px] text-neutral-500 mt-1">
           Posted <%= time_ago_in_words(ride_post.created_at) %> ago
         </p>
       </div>
-    <% end %>
+    </div>
 
     <%# Right side: Actions %>
     <div class="flex flex-wrap items-center gap-2">
-      <%= render Buttons::Component.new(
-                 text: "Show",
-                 href: ride_post_path(ride_post),
-                 variant: :secondary,
-                 size: :xs,
-                 pill: true) %>
-
       <% if Current.user == ride_post.user %>
         <%= render Buttons::Component.new(
                    text: "Edit",
+                   classes: "relative z-20",
                    href: edit_ride_post_path(ride_post),
                    variant: :secondary,
                    size: :xs,
@@ -41,8 +35,12 @@
   <%= render(Card::Component.new(
              divide: true,
              hoverable: true,
+             classes: "relative h-full flex flex-col [&>div:last-child]:mt-auto",
              padding: :sm)) do |card| %>
     <% card.with_body do %>
+      <%= link_to ride_post_path(ride_post), class: "absolute inset-0 z-10 rounded-xl focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-blue-600", aria: { label: "View ride: #{ride_post.origin&.name || 'Choose origin'} to #{ride_post.destination&.name || 'Choose destination'}" } do %>
+        <span class="sr-only">View ride details</span>
+      <% end %>
       <%# Top Row: Badge + Badges + Seats %>
       <div class="flex justify-between items-start mb-3 gap-2">
         <div class="flex flex-wrap items-center gap-1.5">
@@ -105,8 +103,8 @@
       <%# Notes: Controlled height with line-clamp %>
       <% if ride_post.notes.present? %>
         <div class="mt-3 pt-3 border-t border-neutral-100 dark:border-white/5">
-          <p class="text-sm text-neutral-600 dark:text-neutral-400 line-clamp-3 leading-relaxed">
-            <%= ride_post.notes %>
+          <p class="text-sm text-neutral-600 dark:text-neutral-400 line-clamp-2 leading-relaxed">
+            <%= ride_post.notes.truncate(110) %>
           </p>
         </div>
       <% end %>
