@@ -4,7 +4,7 @@
 
 **Blocked by:** [03: Book rides with approximate departures](03-approximate-departure-booking.md).
 
-**Status:** done
+**Status:** in progress
 
 - [x] Pending seat requests expire at the ride's booking cutoff for both exact and approximate departures, rather than waiting for automatic trip completion.
 - [x] The passenger receives the message Your seat request expired without confirmation through the existing notification flow.

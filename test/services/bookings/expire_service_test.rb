@@ -131,7 +131,7 @@ module Bookings
       end
     end
 
-    test "acceptance after cutoff fails and cannot race with expiry" do
+    test "acceptance after cutoff fails and expiry can finish the request" do
       departure = 1.hour.from_now
       ride = RidePost.create!(
         user: @driver,

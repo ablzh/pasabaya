@@ -2,7 +2,8 @@
 
 class RetainOnlyUpCommunity < ActiveRecord::Migration[8.1]
   def up
-    Community.cleanup_disposable_local_hubs!
+    # Destruction uses associations introduced later in this migration series.
+    # Defer local cleanup to CleanupLocalHubsAfterBookingSchema.
 
     # Ensure University of the Philippines has canonical name and slug
     up_community = Community.find_by(domain: "up.edu.ph")

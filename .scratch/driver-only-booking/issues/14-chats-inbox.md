@@ -4,9 +4,9 @@
 
 **Blocked by:** None (can start immediately).
 
-**Status:** done
+**Status:** in progress
 
-- [x] A dedicated chats destination lists conversations the current user is authorized to access.
+- [ ] A dedicated chats destination lists conversations the current user is authorized to access.
 - [x] Each entry shows the trip route, latest-message preview and timestamp, with a clear link into the discussion and sensible latest-activity ordering.
 - [x] Include currently accessible read-only conversations with an appropriate state label; honor the applicable cancellation and retention rules as those rules evolve.
 - [x] Provide a useful empty state for members with no conversations.
