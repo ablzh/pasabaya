@@ -12,8 +12,18 @@ class NotificationsChannelTest < ActionCable::Channel::TestCase
     assert subscription.confirmed?
   end
 
+  test "subscribes to authenticated user's chats stream" do
+    subscribe signed_stream_name: Turbo::StreamsChannel.signed_stream_name([ @user, :chats ])
+    assert subscription.confirmed?
+  end
+
   test "rejects another user's signed notification stream" do
     subscribe signed_stream_name: Turbo::StreamsChannel.signed_stream_name([ users(:two), :notifications ])
+    assert subscription.rejected?
+  end
+
+  test "rejects another user's signed chats stream" do
+    subscribe signed_stream_name: Turbo::StreamsChannel.signed_stream_name([ users(:two), :chats ])
     assert subscription.rejected?
   end
 

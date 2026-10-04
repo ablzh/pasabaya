@@ -56,6 +56,35 @@ class ChatsControllerTest < ActionDispatch::IntegrationTest
     assert_select "a[href=?]", chats_path, text: "Chats"
   end
 
+  test "signed-in navigation shows svg icon and unread conversation count badge" do
+    @ride.chat_messages.create!(user: @driver, body: "Attention needed")
+    sign_in_as(@passenger)
+    get root_url
+
+    assert_select "a[href=?]", chats_path do
+      assert_select "svg"
+      assert_select "span[data-chat-unread-count]", text: /1/
+    end
+  end
+
+  test "inbox identifies unread conversations and clears indicator when read" do
+    msg = @ride.chat_messages.create!(user: @driver, body: "Important pickup change")
+    sign_in_as(@passenger)
+
+    get chats_url
+    assert_select "a[href=?][data-conversation-unread='true']", ride_post_path(@ride, tab: "chat") do
+      assert_select "span", text: "Unread"
+    end
+
+    ChatReadState.mark_read!(user: @passenger, ride_post: @ride, message_id: msg.id)
+
+    get chats_url
+    assert_select "a[href=?][data-conversation-unread='false']", ride_post_path(@ride, tab: "chat")
+    assert_select "a[href=?]", ride_post_path(@ride, tab: "chat") do
+      assert_select "span", text: "Unread", count: 0
+    end
+  end
+
   test "inbox and direct navigation hide previews when participation or audience access is lost" do
     @ride.chat_messages.create!(user: @driver, body: "Private rendezvous")
     sign_in_as(@passenger)

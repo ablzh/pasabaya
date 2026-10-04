@@ -13,7 +13,31 @@ class User < ApplicationRecord
   has_many :received_notifications, class_name: "Notification", foreign_key: :recipient_id, dependent: :destroy, inverse_of: :recipient
   has_many :acted_notifications, class_name: "Notification", foreign_key: :actor_id, dependent: :nullify, inverse_of: :actor
   has_many :chat_messages, dependent: :destroy
+  has_many :chat_read_states, dependent: :destroy
   has_many :route_subscriptions, dependent: :destroy
+
+  def unread_chats_count
+    rides = authorized_chat_rides
+    return 0 if rides.empty?
+
+    read_states = chat_read_states.where(ride_post_id: rides.map(&:id)).index_by(&:ride_post_id)
+    latest_messages = ChatMessage.where(ride_post_id: rides.map(&:id))
+                                 .where("chat_messages.id = (SELECT latest.id FROM chat_messages latest WHERE latest.ride_post_id = chat_messages.ride_post_id ORDER BY latest.created_at DESC, latest.id DESC LIMIT 1)")
+                                 .index_by(&:ride_post_id)
+
+    rides.count do |ride|
+      latest = latest_messages[ride.id]
+      latest.present? && latest.user_id != id && latest.id > (read_states[ride.id]&.last_read_message_id || 0)
+    end
+  end
+
+  def authorized_chat_rides(includes: [ :origin, :destination, :bookings ])
+    verified_ids = verified_community_ids
+    candidate_bookings = bookings.where("status = ? OR (status = ? AND accepted_at IS NOT NULL)", Booking.statuses[:accepted], Booking.statuses[:canceled])
+    candidates = RidePost.where(user: self).or(RidePost.where(id: candidate_bookings.select(:ride_post_id)))
+                         .includes(includes)
+    candidates.select { |ride| ride.user_authorized_for_chat?(self, verified_community_ids: verified_ids) }
+  end
 
   def mark_all_notifications_as_read!
     snapshot_id = received_notifications.maximum(:id)

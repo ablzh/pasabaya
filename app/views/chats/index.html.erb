@@ -1,5 +1,5 @@
 <% content_for :title, "Chats" %>
-<%= turbo_stream_from [Current.user, :chats] %>
+<%= turbo_stream_from [Current.user, :chats], channel: NotificationsChannel %>
 <div class="max-w-2xl mx-auto my-8 px-4 sm:px-0">
   <h1 class="text-2xl font-bold text-neutral-900 dark:text-white mb-6">Chats</h1>
   <% if @rides.empty? %>
@@ -11,9 +11,18 @@
   <div class="divide-y divide-neutral-100 dark:divide-neutral-800 rounded-3xl border border-neutral-200 dark:border-neutral-800 overflow-hidden">
     <% @rides.each do |ride| %>
       <% message = @latest_messages[ride.id] %>
-      <%= link_to ride_post_path(ride, tab: "chat"), class: "block p-5 hover:bg-neutral-50 dark:hover:bg-neutral-800 focus-visible:outline-2 focus-visible:outline-blue-600" do %>
+      <% read_state = @read_states[ride.id] %>
+      <% is_unread = message.present? && message.user_id != Current.user.id && message.id > (read_state&.last_read_message_id || 0) %>
+      <%= link_to ride_post_path(ride, tab: "chat"),
+                  data: { conversation_unread: is_unread },
+                  class: "block p-5 hover:bg-neutral-50 dark:hover:bg-neutral-800 focus-visible:outline-2 focus-visible:outline-blue-600 #{'bg-blue-50/20 dark:bg-blue-950/10' if is_unread}" do %>
         <div class="flex items-center justify-between gap-2">
-          <h2 class="font-semibold text-neutral-900 dark:text-white"><%= ride.origin.name %> → <%= ride.destination.name %></h2>
+          <div class="flex items-center gap-2">
+            <h2 class="font-semibold text-neutral-900 dark:text-white"><%= ride.origin.name %> → <%= ride.destination.name %></h2>
+            <% if is_unread %>
+              <span class="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-blue-100 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300">Unread</span>
+            <% end %>
+          </div>
           <% if ride.canceled? %>
             <span class="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-red-50 text-red-700 dark:bg-red-950/40 dark:text-red-300">Canceled</span>
           <% end %>

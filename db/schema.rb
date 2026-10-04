@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_03_180050) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_03_180060) do
   create_table "account_deletion_tombstones", force: :cascade do |t|
     t.string "anonymized_email", null: false
     t.bigint "avatar_blob_id"
@@ -76,6 +76,17 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_03_180050) do
     t.integer "user_id", null: false
     t.index ["ride_post_id", "created_at"], name: "index_chat_messages_on_ride_post_id_and_created_at"
     t.index ["user_id"], name: "index_chat_messages_on_user_id"
+  end
+
+  create_table "chat_read_states", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.integer "last_read_message_id", default: 0, null: false
+    t.integer "ride_post_id", null: false
+    t.datetime "updated_at", null: false
+    t.integer "user_id", null: false
+    t.index ["ride_post_id"], name: "index_chat_read_states_on_ride_post_id"
+    t.index ["user_id", "ride_post_id"], name: "index_chat_read_states_on_user_id_and_ride_post_id", unique: true
+    t.check_constraint "last_read_message_id >= 0", name: "check_chat_read_states_last_read_message_id_non_negative"
   end
 
   create_table "communities", force: :cascade do |t|
@@ -261,6 +272,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_03_180050) do
   add_foreign_key "bookings", "users", column: "passenger_id"
   add_foreign_key "chat_messages", "ride_posts"
   add_foreign_key "chat_messages", "users"
+  add_foreign_key "chat_read_states", "ride_posts", on_delete: :cascade
+  add_foreign_key "chat_read_states", "users", on_delete: :cascade
   add_foreign_key "community_memberships", "communities"
   add_foreign_key "community_memberships", "users"
   add_foreign_key "locations", "locations", column: "parent_id"
