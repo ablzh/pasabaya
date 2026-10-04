@@ -89,4 +89,18 @@ class ChatMessageTest < ActiveSupport::TestCase
       @ride.chat_messages.create!(user: @driver, body: "Private chat")
     end
   end
+  test "new messages refresh participant inboxes without broadcasting private previews" do
+    @booking.update_columns(status: Booking.statuses[:accepted])
+    stream = Turbo::StreamsChannel.send(:stream_name_from, [ @passenger, :chats ])
+    driver_stream = Turbo::StreamsChannel.send(:stream_name_from, [ @driver, :chats ])
+
+    assert_broadcasts(stream, 1) do
+      assert_broadcasts(driver_stream, 1) do
+        @ride.chat_messages.create!(user: @driver, body: "Private meeting details")
+      end
+    end
+    payload = broadcasts(stream).last
+    assert_includes payload, 'action=\"refresh\"'
+    assert_not_includes payload, "Private meeting details"
+  end
 end

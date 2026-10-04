@@ -144,7 +144,7 @@ class RidePost < ApplicationRecord
     offering? && (fulfilled? || remaining_seats.to_i <= 0)
   end
 
-  def authorized_viewer?(viewer)
+  def authorized_viewer?(viewer, verified_community_ids: nil)
     return viewer.present? && user_id == viewer.id if draft?
 
     return false if viewer.blank? && (hub_only? || ladies_only?)
@@ -157,7 +157,7 @@ class RidePost < ApplicationRecord
     end
 
     if hub_only?
-      return false unless viewer.verified_member_of?(community_id)
+      return false unless verified_community_ids ? verified_community_ids.include?(community_id) : viewer.verified_member_of?(community_id)
     end
 
     true
@@ -180,22 +180,23 @@ class RidePost < ApplicationRecord
   end
 
   def chat_unlocked?
-    bookings.accepted.exists?
+    bookings.loaded? ? bookings.any?(&:accepted?) : bookings.accepted.exists?
   end
 
   def chat_writable?
     !canceled? && chat_unlocked? && (departure_time.blank? || Time.current <= departure_time + 24.hours)
   end
 
-  def user_authorized_for_chat?(u)
+  def user_authorized_for_chat?(u, verified_community_ids: nil)
     return false unless u
     return false if canceled?
-    return false unless authorized_viewer?(u)
+    return false unless authorized_viewer?(u, verified_community_ids: verified_community_ids)
 
     if user_id == u.id
       u.banned_at.blank? && !u.deleted?
     else
-      bookings.accepted.exists?(passenger_id: u.id) && u.banned_at.blank? && !u.deleted?
+      accepted = bookings.loaded? ? bookings.any? { |booking| booking.accepted? && booking.passenger_id == u.id } : bookings.accepted.exists?(passenger_id: u.id)
+      accepted && u.banned_at.blank? && !u.deleted?
     end
   end
 

@@ -13,6 +13,7 @@ module ApplicationHelper
     when "registrations" then "Sign up"
     when "passwords" then "Reset Password"
     when "notifications" then "Notifications"
+    when "chats" then "Chats"
     when "communities" then @community&.name || "Hubs"
     when "settings/profiles", "settings/emails", "settings/passwords", "settings/users" then "Account"
     when "trip_reviews" then "Trip Feedback"
