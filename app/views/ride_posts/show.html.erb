@@ -1,6 +1,6 @@
 <div class="max-w-4xl mx-auto my-8 px-4 sm:px-6" data-current-ride-id="<%= @ride_post.id %>">
   <%# Header Section %>
-  <div class="mb-6">
+  <div class="ride-detail-header mb-6">
     <%= link_to ride_posts_path, class: "text-sm text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300 inline-flex items-center gap-1.5 mb-4 font-medium transition-colors" do %>
       <svg class="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
@@ -385,19 +385,17 @@
       <div id="trip-chat-pane" data-trip-view-target="chatPane" class="hidden" role="tabpanel" aria-labelledby="trip-chat-tab">
         <div class="trip-chat bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-3xl shadow-sm overflow-hidden flex flex-col" data-controller="chat-scroll" data-chat-scroll-current-user-id-value="<%= Current.user.id %>" data-chat-scroll-read-url-value="<%= ride_post_chat_reads_path(@ride_post) %>">
           <%# Chat Header %>
-          <div class="px-5 py-4 border-b border-neutral-100 dark:border-neutral-800 flex items-center justify-between bg-neutral-50/60 dark:bg-neutral-800/40">
-            <div class="flex items-center gap-3">
-              <div class="p-2 rounded-xl bg-blue-100 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 shrink-0">
-                <svg class="size-4.5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 01-2.555-.337A5.972 5.972 0 015.41 20.97a.75.75 0 01-1.154-.755c.106-.777.37-1.503.766-2.148A7.776 7.776 0 013 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25z" />
-                </svg>
-              </div>
-              <div>
-                <h2 class="text-sm sm:text-base font-bold text-neutral-900 dark:text-white leading-tight">
-                  Trip Coordination Chat
+          <div class="chat-header px-3 py-3 sm:px-5 sm:py-4 border-b border-neutral-100 dark:border-neutral-800 flex items-center justify-between bg-neutral-50/60 dark:bg-neutral-800/40">
+            <div class="flex items-center gap-3 min-w-0 flex-1">
+              <button type="button" aria-label="Back to trip" data-action="trip-view#showDetails" class="md:hidden shrink-0 p-2 rounded-xl text-neutral-700 dark:text-neutral-200 focus-visible:outline-2">
+                <span aria-hidden="true">&larr;</span>
+              </button>
+              <div class="min-w-0">
+                <h2 class="truncate text-sm sm:text-base font-bold text-neutral-900 dark:text-white leading-tight">
+                  <%= @ride_post.origin&.name || "Choose origin" %> &rarr; <%= @ride_post.destination&.name || "Choose destination" %>
                 </h2>
-                <p class="text-xs text-neutral-500 mt-0.5">
-                  <%= (@ride_post.origin&.name || "Choose origin") %> &rarr; <%= (@ride_post.destination&.name || "Choose destination") %> &bull; <%= pluralize(@ride_post.participants.count, "participant") %>
+                <p class="truncate text-xs text-neutral-500 mt-0.5">
+                  Driver: <%= @ride_post.user.first_name %> <%= @ride_post.user.last_name %> &bull; <%= pluralize(@ride_post.participants.count, "participant") %>
                 </p>
               </div>
             </div>
@@ -422,7 +420,7 @@
           </div>
 
           <% if @ride_post.chat_messaging_closes_at.present? && @ride_post.chat_history_unavailable_at.present? %>
-            <div class="px-5 py-3 border-b border-neutral-100 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-800/30 text-xs text-neutral-600 dark:text-neutral-300">
+            <div class="chat-deadlines px-3 sm:px-5 py-3 border-b border-neutral-100 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-800/30 text-xs text-neutral-600 dark:text-neutral-300">
               <% if @ride_post.canceled? %>
                 <div class="mb-2 p-2.5 rounded-xl bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-900/40 text-red-700 dark:text-red-400 font-medium">
                   Trip canceled &bull;
