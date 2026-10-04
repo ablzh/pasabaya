@@ -1,4 +1,5 @@
 Rails.application.routes.draw do
+  resources :chats, only: [ :index ]
   resources :users, only: [ :show ]
   get "trips", to: "users#trips", as: :trips
   get "rides/from-:origin_slug-to-:destination_slug", to: "ride_posts#index", as: :route_rides

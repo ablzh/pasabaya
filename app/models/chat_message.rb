@@ -11,6 +11,7 @@ class ChatMessage < ApplicationRecord
 
   after_create_commit :broadcast_to_ride_chat
   after_create_commit :broadcast_toast_to_participants
+  after_create_commit :refresh_participant_inboxes
 
   scope :recent_first, -> { order(created_at: :asc) }
 
@@ -51,6 +52,14 @@ class ChatMessage < ApplicationRecord
     end
   end
 
+
+  def refresh_participant_inboxes
+    ride_post.participants.find_each do |recipient|
+      next unless ride_post.user_authorized_for_chat?(recipient)
+
+      Turbo::StreamsChannel.broadcast_refresh_to([ recipient, :chats ])
+    end
+  end
 
   def participant_must_be_authorized
     return unless ride_post && user_id
