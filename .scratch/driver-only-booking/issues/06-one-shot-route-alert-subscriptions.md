@@ -4,7 +4,7 @@
 
 **Blocked by:** [03: Book rides with approximate departures](03-approximate-departure-booking.md).
 
-**Status:** done
+**Status:** in-progress
 
 - [x] A signed-in user's empty route search shows No rides found for this route yet and a Notify me when a driver posts this route action.
 - [x] A guest sees the searched origin and destination plus a sign-in/create-account action that preserves the search context.
@@ -20,6 +20,7 @@
 
 
 
+
 ## Implementation evidence
 
-Implemented RouteSubscription model, controller, route alert matcher service, background job, empty search alert prompt, notification event/mailer, and tests. Verified clean bin/ci.
+Final review found missing delivery-time eligibility/audience recheck; regression fix underway.

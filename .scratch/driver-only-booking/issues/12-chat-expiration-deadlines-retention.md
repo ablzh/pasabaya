@@ -4,7 +4,7 @@
 
 **Blocked by:** [03: Book rides with approximate departures](03-approximate-departure-booking.md).
 
-**Status:** done
+**Status:** in-progress
 
 - [x] For an ordinary trip, messaging closes 24 hours after the booking cutoff, regardless of earlier automatic completion. Reading remains available for another 30 days to authorized participants.
 - [x] Show separate full-date deadlines for messaging closure and history unavailability/scheduled deletion, explicitly labeled Philippine time (UTC+8).
@@ -21,6 +21,7 @@
 
 
 
+
 ## Implementation evidence
 
-Added chat expiration deadlines (chat_messaging_closes_at 24h after booking cutoff, chat_history_unavailable_at 30 days later) and conversation-wide retention. Updated RidePost#chat_writable?, chat_readable?, chat_expired?, user_authorized_for_chat? to enforce read-only and expiration boundaries. Displayed separate full-date deadlines in Philippine time (UTC+8) and distinct closure/deletion messaging notices in show and form views. Implemented ChatRetentionJob, updated PurgeOldChatMessagesJob, TripAuditRecoveryJob, and retention:scrub for conversation-wide purging. Updated privacy policy sections 5 and 7. Added unit, controller, and job tests. Full bin/ci passed (372 Rails tests, 17 system tests).
+Final review found exact-deadline access and scheduled purge boundary gap; regression fix underway.

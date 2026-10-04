@@ -4,7 +4,7 @@
 
 **Blocked by:** [06: Subscribe to newly published matching rides](06-one-shot-route-alert-subscriptions.md).
 
-**Status:** done
+**Status:** in-progress
 
 - [x] Restoring available seats on a previously full ride can trigger a matching active subscription.
 - [x] Changing a ride's route or other matching criteria can trigger a subscription that the ride newly satisfies.
@@ -18,6 +18,7 @@
 
 
 
+
 ## Implementation evidence
 
-Implemented reopened seat and route/criteria change alert triggers in RidePost, covered with regression tests in CancelServiceTest and MatchServiceTest. Verified full clean bin/ci.
+Final review found inherited delivery-time access gap; regression fix underway.

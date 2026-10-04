@@ -4,7 +4,7 @@
 
 **Blocked by:** None (can start immediately).
 
-**Status:** done
+**Status:** in-progress
 
 - [x] Retain only University of the Philippines, using institutional email domain up.edu.ph. Do not claim that this domain alone verifies Diliman campus affiliation.
 - [x] Remove unwanted locally created hubs, including commercial and test hubs, and their disposable local-only associated data safely. This is authorized local cleanup, not a blanket production-data deletion.
@@ -19,6 +19,7 @@
 
 
 
+
 ## Implementation evidence
 
-Retained only University of the Philippines with up.edu.ph domain, added cleanup migration and seed replay, added platform independence disclaimer and Facebook community request CTA, handled up-diliman legacy redirect, and verified all tests with clean bin/ci.
+Final review found cleanup migration and seeds need production protection; regression fix underway.
