@@ -7,6 +7,7 @@ Rails.application.routes.draw do
     member do
       patch :cancel
       patch :publish
+      patch :close_requests
     end
     resources :bookings, only: [ :create ]
     resources :chat_messages, only: [ :create ]

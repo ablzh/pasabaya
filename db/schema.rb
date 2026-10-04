@@ -177,6 +177,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_04_000900) do
     t.integer "origin_id"
     t.integer "post_type", default: 0, null: false
     t.integer "remaining_seats"
+    t.datetime "requests_closed_at"
     t.integer "seats"
     t.boolean "share_tolls", default: false, null: false
     t.boolean "split_gas", default: false, null: false

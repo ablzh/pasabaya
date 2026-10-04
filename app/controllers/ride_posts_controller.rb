@@ -1,7 +1,7 @@
 class RidePostsController < ApplicationController
   before_action :require_authentication, except: %i[ index show ]
   before_action :set_ride_post, only: :show
-  before_action :set_user_ride_post, only: %i[ edit update destroy cancel publish ]
+  before_action :set_user_ride_post, only: %i[ edit update destroy cancel publish close_requests ]
   before_action :resume_session, only: [ :index, :show ]
   before_action :set_grouped_locations, only: %i[ index new edit create update ]
   before_action :resolve_route_slugs, only: :index
@@ -133,6 +133,13 @@ class RidePostsController < ApplicationController
     else
       redirect_to user_path(Current.user), alert: @ride_post.errors.full_messages.to_sentence, status: :see_other
     end
+  end
+
+  def close_requests
+    RidePosts::CloseRequestsService.call(@ride_post, actor: Current.user)
+    redirect_to @ride_post, notice: "Seat requests closed. Confirmed passengers and trip chat are unchanged.", status: :see_other
+  rescue RidePosts::CloseRequestsService::Error => e
+    redirect_to @ride_post, alert: e.message, status: :see_other
   end
 
   # DELETE /ride_posts/1 or /ride_posts/1.json
