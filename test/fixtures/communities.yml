@@ -5,7 +5,7 @@ one:
   hub_type: 0
 
 two:
-  name: UP Diliman
-  slug: up-diliman
+  name: University of the Philippines
+  slug: university-of-the-philippines
   domain: up.edu.ph
   hub_type: 1
