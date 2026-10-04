@@ -4,9 +4,9 @@
 
 **Blocked by:** None (can start immediately).
 
-**Status:** in progress
+**Status:** done
 
-- [ ] A dedicated chats destination lists conversations the current user is authorized to access.
+- [x] A dedicated chats destination lists conversations the current user is authorized to access.
 - [x] Each entry shows the trip route, latest-message preview and timestamp, with a clear link into the discussion and sensible latest-activity ordering.
 - [x] Include currently accessible read-only conversations with an appropriate state label; honor the applicable cancellation and retention rules as those rules evolve.
 - [x] Provide a useful empty state for members with no conversations.
@@ -25,3 +25,9 @@
 Added /chats inbox endpoint, latest-message preview with batched authorization and community IDs to prevent N+1 queries, Turbo refresh broadcasts for participant inboxes without disclosing private preview content in broadcasts, normal and native navigation links to Chats, and regression coverage for permissions revocation, ordering, and query stability. Passing full bin/ci with 323 Rails tests and 17 system tests.
 
 Final integrated review and bin/ci passed at code commit 9c27ee66e6e2742cc536bb60ac5f96e21a9c946f: 424 Rails tests/2026 assertions and 31 system tests/2067 assertions; zero failures, errors or skips. Setup, Ruby style, templates, database consistency, ArchSpec, gem/importmap audits, Brakeman and seed replant all passed. No blocked automated checks. All 178 acceptance criteria are preserved verbatim.
+
+### Audit follow-up — 2026-10-04
+
+Incomplete drafts cannot crash the inbox. Inbox unread state checks unseen incoming messages even when the newest message is the user's own reply. Chat sending renders the saved message directly before a cable subscription is ready.
+
+Integrated code: `a131b2173b02a6cff1973bfd655cd75ffb650d6d`. Full `bin/ci`: 450 Rails tests / 2188 assertions and 32 system tests / 2082 assertions, no failures, errors or skips. Spec and Standards re-reviews have no remaining actionable findings. Historical TDD execution cannot be independently verified; new behavior fixes have recorded red/green evidence.

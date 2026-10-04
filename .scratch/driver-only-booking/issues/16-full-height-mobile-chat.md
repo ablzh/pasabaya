@@ -25,3 +25,9 @@
 Feature bc953d9; ready tip a694647 integrated at 8f5c586. Worker full bin/ci passed: 402 Rails tests/1904 assertions and 23 system tests/1992 assertions, all other checks passed. Combined integration 17c4c73 mobile/chat/unread/navbar/card/ride system checks passed 11 tests/155 assertions. Physical iOS keyboard/device safe-area behavior was not exercised; synthetic visualViewport/orientation and CSS safe-area coverage passed. Final all-ticket CI and review tracked separately.
 
 Final integrated review and bin/ci passed at code commit 9c27ee66e6e2742cc536bb60ac5f96e21a9c946f: 424 Rails tests/2026 assertions and 31 system tests/2067 assertions; zero failures, errors or skips. Setup, Ruby style, templates, database consistency, ArchSpec, gem/importmap audits, Brakeman and seed replant all passed. No blocked automated checks. All 178 acceptance criteria are preserved verbatim. Physical iOS keyboard/device safe-area testing remains unverified; synthetic viewport/orientation/safe-area and browser regressions passed.
+
+### Audit follow-up — 2026-10-04
+
+Full system CI passes, including viewport/orientation and simulated keyboard behavior. Physical iOS keyboard and device safe-area behavior has not been verified.
+
+Integrated code: `a131b2173b02a6cff1973bfd655cd75ffb650d6d`. Full `bin/ci`: 450 Rails tests / 2188 assertions and 32 system tests / 2082 assertions, no failures, errors or skips. Spec and Standards re-reviews have no remaining actionable findings. Historical TDD execution cannot be independently verified; new behavior fixes have recorded red/green evidence.

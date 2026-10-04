@@ -25,3 +25,9 @@
 Review fix 105f79a preserves reopened-seat/route-change one-shot matching with current driver eligibility and guarded delivery inherited from ticket06.
 
 Final integrated review and bin/ci passed at code commit 9c27ee66e6e2742cc536bb60ac5f96e21a9c946f: 424 Rails tests/2026 assertions and 31 system tests/2067 assertions; zero failures, errors or skips. Setup, Ruby style, templates, database consistency, ArchSpec, gem/importmap audits, Brakeman and seed replant all passed. No blocked automated checks. All 178 acceptance criteria are preserved verbatim.
+
+### Audit follow-up — 2026-10-04
+
+Closed seat requests remain ineligible after inventory changes. Existing reopening/edit route-alert regressions pass with saved-filter and active-booking checks.
+
+Integrated code: `a131b2173b02a6cff1973bfd655cd75ffb650d6d`. Full `bin/ci`: 450 Rails tests / 2188 assertions and 32 system tests / 2082 assertions, no failures, errors or skips. Spec and Standards re-reviews have no remaining actionable findings. Historical TDD execution cannot be independently verified; new behavior fixes have recorded red/green evidence.

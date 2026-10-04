@@ -4,7 +4,7 @@
 
 **Blocked by:** [03: Book rides with approximate departures](03-approximate-departure-booking.md).
 
-**Status:** in progress
+**Status:** done
 
 - [x] Pending seat requests expire at the ride's booking cutoff for both exact and approximate departures, rather than waiting for automatic trip completion.
 - [x] The passenger receives the message Your seat request expired without confirmation through the existing notification flow.
@@ -24,3 +24,9 @@
 Implemented pending seat request expiry at booking cutoff for exact and approximate departures with Bookings::ExpireService, scheduled BookingCutoffJob, TripAuditRecoveryJob sweep, and on-demand expiry guards in show actions. Passenger receives 'Your seat request expired without confirmation' notification with unique delivery keys preventing duplicates. Preserved inventory and existing cancellation flows, passing full bin/ci (338 Rails tests, 17 system tests).
 
 Final integrated review and bin/ci passed at code commit 9c27ee66e6e2742cc536bb60ac5f96e21a9c946f: 424 Rails tests/2026 assertions and 31 system tests/2067 assertions; zero failures, errors or skips. Setup, Ruby style, templates, database consistency, ArchSpec, gem/importmap audits, Brakeman and seed replant all passed. No blocked automated checks. All 178 acceptance criteria are preserved verbatim.
+
+### Audit follow-up — 2026-10-04
+
+Manual closure and cutoff expiry share one RidePost predicate. Three concurrent workers on separate database connections verify acceptance cannot confirm an elapsed exact/approximate departure and duplicate expiry creates one notice.
+
+Integrated code: `a131b2173b02a6cff1973bfd655cd75ffb650d6d`. Full `bin/ci`: 450 Rails tests / 2188 assertions and 32 system tests / 2082 assertions, no failures, errors or skips. Spec and Standards re-reviews have no remaining actionable findings. Historical TDD execution cannot be independently verified; new behavior fixes have recorded red/green evidence.

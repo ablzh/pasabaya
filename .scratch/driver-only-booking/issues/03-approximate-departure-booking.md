@@ -4,13 +4,13 @@
 
 **Blocked by:** [02: Explicit publishing with optional arrival](02-explicit-publishing-optional-arrival.md).
 
-**Status:** in progress
+**Status:** done
 
 - [x] Every newly published ride requires a departure date and one choice: Morning, Afternoon, Evening, Night, Exact Time or Flexible. Approximate choices do not fabricate a confirmed exact departure timestamp.
 - [x] Use SVG Heroicons, not emoji. Display hints are Morning 06:00–12:00, Afternoon 12:00–17:00, Evening 17:00–21:00, Night 21:00–midnight, and Flexible any time on the selected date. Exact Time exposes a precise time picker, including midnight–06:00.
 - [x] Approximate choices are descriptive hints: requests and driver acceptance remain open until midnight ending the selected date in Asia/Manila, even if the named period has passed. Exact-time booking closes at the specified departure.
-- [ ] Drivers can close requests earlier. Past dates and elapsed exact departures cannot be newly published or booked, and the server enforces boundaries even when a browser remains open.
-- [ ] Cards, details, search dates, upcoming/history classification and completion scheduling consistently use the selected Philippine date and the agreed booking cutoff. Preserve existing exact-time rides.
+- [x] Drivers can close requests earlier. Past dates and elapsed exact departures cannot be newly published or booked, and the server enforces boundaries even when a browser remains open.
+- [x] Cards, details, search dates, upcoming/history classification and completion scheduling consistently use the selected Philippine date and the agreed booking cutoff. Preserve existing exact-time rides.
 - [x] After an accepted booking, the departure date and selected approximate choice or exact time are locked. Coordinate within the published choice in chat; moving outside it requires cancellation and a new offer.
 - [x] Private trip feedback and no-show reporting become eligible after the selected date ends for approximate rides and after departure for exact-time rides. Preserve participant eligibility and existing manual incident decisions; pending allegations do not create penalties.
 - [x] Extend the automatic completion policy from ticket 02 to approximate departures, with no completion before booking cutoff and the no-arrival fallback of cutoff plus 24 hours.
@@ -27,3 +27,9 @@
 Implemented approximate departure choices (morning, afternoon, evening, night, exact_time, flexible) and departure date with Heroicons, booking cutoff at midnight Manila time for approximate choices and departure time for exact departures. Locked schedule attributes on accepted bookings, updated review and completion eligibility, and passed full bin/ci (330 Rails tests, 17 system tests).
 
 Final integrated review and bin/ci passed at code commit 9c27ee66e6e2742cc536bb60ac5f96e21a9c946f: 424 Rails tests/2026 assertions and 31 system tests/2067 assertions; zero failures, errors or skips. Setup, Ruby style, templates, database consistency, ArchSpec, gem/importmap audits, Brakeman and seed replant all passed. No blocked automated checks. All 178 acceptance criteria are preserved verbatim.
+
+### Audit follow-up — 2026-10-04
+
+Search uses the selected Philippine date. Historical and corrective migrations use UTC+8 without changing exact departure timestamps. Drivers can close requests early while keeping confirmed passengers, inventory and chat. Request, migration and browser regressions pass. Redundant past-date validators were removed as maintenance; Rails already deduplicated their public errors.
+
+Integrated code: `a131b2173b02a6cff1973bfd655cd75ffb650d6d`. Full `bin/ci`: 450 Rails tests / 2188 assertions and 32 system tests / 2082 assertions, no failures, errors or skips. Spec and Standards re-reviews have no remaining actionable findings. Historical TDD execution cannot be independently verified; new behavior fixes have recorded red/green evidence.
