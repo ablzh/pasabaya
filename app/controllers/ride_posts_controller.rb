@@ -1,7 +1,7 @@
 class RidePostsController < ApplicationController
   before_action :require_authentication, except: %i[ index show ]
   before_action :set_ride_post, only: :show
-  before_action :set_user_ride_post, only: %i[ edit update destroy cancel ]
+  before_action :set_user_ride_post, only: %i[ edit update destroy cancel publish ]
   before_action :resume_session, only: [ :index, :show ]
   before_action :set_grouped_locations, only: %i[ index new edit create update ]
   before_action :resolve_route_slugs, only: :index
@@ -115,6 +115,23 @@ class RidePostsController < ApplicationController
         format.html { render :edit, status: :unprocessable_content }
         format.json { render json: @ride_post.errors, status: :unprocessable_content }
       end
+    end
+  end
+
+  def publish
+    published = @ride_post.with_lock do
+      if @ride_post.draft?
+        @ride_post.status = :active
+        @ride_post.save
+      else
+        @ride_post.errors.add(:base, "Only a private draft can be published.")
+        false
+      end
+    end
+    if published
+      redirect_to user_path(Current.user), notice: "Ride published.", status: :see_other
+    else
+      redirect_to user_path(Current.user), alert: @ride_post.errors.full_messages.to_sentence, status: :see_other
     end
   end
 
