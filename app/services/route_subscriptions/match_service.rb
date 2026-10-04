@@ -43,6 +43,7 @@ module RouteSubscriptions
           n.recipient = sub.user
           n.actor = ride_post.user
           n.notifiable = ride_post
+          n.route_subscription = sub
           n.event_name = "route.alert"
           n.delivery_status = :pending
         end

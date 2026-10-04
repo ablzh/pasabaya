@@ -75,6 +75,22 @@ module RouteSubscriptions
       end
     end
 
+    test "resubscribing to the same dated hub search records another one shot event safely" do
+      hub = communities(:two)
+      CommunityMembership.create!(user: @driver, community: hub, institutional_email: "driver@up.edu.ph", verified_at: Time.current)
+      ride = RidePost.create!(user: @driver, origin: @origin, destination: @destination, seats: 3,
+                             departure_date: Date.current + 2, departure_choice: :morning,
+                             visibility: :hub_only, community: hub, status: :active)
+      filters = { user: @subscriber, origin: @origin, destination: @destination, departure_date: ride.departure_date, community: hub }
+      first = RouteSubscription.create!(filters)
+      MatchService.call(ride)
+      second = RouteSubscription.create!(filters)
+
+      assert_difference("Notification.count", 1) { MatchService.call(ride) }
+      assert_equal [ "fulfilled", "fulfilled" ], RouteSubscription.where(id: [ first.id, second.id ]).pluck(:status)
+      assert_no_difference("Notification.count") { MatchService.call(ride) }
+    end
+
     test "rechecks audience access before notifying" do
       male_subscriber = users(:one)
       female_driver = users(:two)
