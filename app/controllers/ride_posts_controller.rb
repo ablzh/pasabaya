@@ -43,6 +43,10 @@ class RidePostsController < ApplicationController
       return # Use return to stop execution after redirecting
     end
 
+    if @ride_post.booking_cutoff_at.present? && Time.current >= @ride_post.booking_cutoff_at && @ride_post.bookings.pending.exists?
+      Bookings::ExpireService.call(@ride_post)
+    end
+
     setup_show_meta_tags
     @chat_messages = @ride_post.chat_messages.includes(user: { avatar_attachment: :blob }).order(created_at: :desc, id: :desc).limit(100).to_a.reverse if @ride_post.user_authorized_for_chat?(Current.user)
   end

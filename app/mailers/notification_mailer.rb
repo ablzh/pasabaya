@@ -13,6 +13,8 @@ class NotificationMailer < ApplicationMailer
                 "New seat request on Pasabaya"
     when "booking.accepted"
                 "Your seat request has been confirmed on Pasabaya"
+    when "booking.expired"
+                "Your seat request expired on Pasabaya"
     when "booking.canceled"
                 "A booking was canceled on Pasabaya"
     when "ride.canceled"
