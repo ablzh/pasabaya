@@ -142,6 +142,20 @@ class ChatsControllerTest < ActionDispatch::IntegrationTest
     assert_not_includes response.body, "Old chat before expiry"
   end
 
+  test "inbox displays canceled trip with revised deadlines and preserves coordination access" do
+    @ride.chat_messages.create!(user: @driver, body: "Trip update")
+    RidePosts::CancelService.call(@ride, actor: @driver)
+    sign_in_as(@passenger)
+
+    get chats_url
+
+    assert_response :success
+    assert_select "a[href=?]", ride_post_path(@ride, tab: "chat") do
+      assert_select "span", text: "Canceled"
+      assert_select "span", text: /Open for coordination until.*Philippine time \(UTC\+8\)/
+    end
+  end
+
   private
 
   def inbox_query_count

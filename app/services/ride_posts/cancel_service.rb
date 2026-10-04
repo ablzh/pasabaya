@@ -47,20 +47,31 @@ module RidePosts
         raise InvalidStateError, "Completed trips cannot be canceled" if ride.completed?
 
         now = Time.current
-        ride.update!(status: :canceled)
+        ride.update!(status: :canceled, canceled_at: ride.canceled_at || now)
 
-        ride.bookings.active.find_each do |b|
+        active_bookings = ride.bookings.active.includes(:passenger).to_a
+        keys = active_bookings.map { |b| "ride_canceled:#{ride.id}:booking:#{b.id}" }
+        existing_keys = Notification.where(delivery_key: keys).pluck(:delivery_key).to_set
+
+        active_bookings.each do |b|
           b.update!(status: :canceled, canceled_at: now, canceled_by: actor,
                     accepted_at: b.accepted_at || (b.accepted? ? b.decided_at || b.created_at : nil))
 
           delivery_key = "ride_canceled:#{ride.id}:booking:#{b.id}"
-          Notification.find_or_create_by!(delivery_key: delivery_key) do |n|
-            n.recipient = b.passenger
-            n.actor = actor
-            n.notifiable = ride
-            n.event_name = "ride.canceled"
-            n.delivery_status = :pending
-          end
+          next if existing_keys.include?(delivery_key)
+
+          Notification.create!(
+            delivery_key: delivery_key,
+            recipient: b.passenger,
+            actor: actor,
+            notifiable: ride,
+            event_name: "ride.canceled",
+            delivery_status: :pending
+          )
+        end
+
+        ride.participants.find_each do |recipient|
+          Turbo::StreamsChannel.broadcast_refresh_to([ recipient, :chats ])
         end
 
         ride

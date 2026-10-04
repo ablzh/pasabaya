@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_03_180040) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_03_180050) do
   create_table "account_deletion_tombstones", force: :cascade do |t|
     t.string "anonymized_email", null: false
     t.bigint "avatar_blob_id"
@@ -150,6 +150,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_03_180040) do
   end
 
   create_table "ride_posts", force: :cascade do |t|
+    t.datetime "canceled_at"
     t.integer "community_id"
     t.datetime "created_at", null: false
     t.integer "departure_choice"

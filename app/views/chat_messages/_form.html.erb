@@ -30,7 +30,7 @@
         </div>
       <% end %>
       <p class="font-medium text-neutral-700 dark:text-neutral-300">
-        Messaging for this trip has closed.
+        <%= ride_post.canceled? ? "Trip canceled & messaging has closed." : "Messaging for this trip has closed." %>
       </p>
       <p>
         Sending new messages is disabled. You can still read chat history until scheduled live-database deletion

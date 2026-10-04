@@ -313,6 +313,20 @@ class RidePostsControllerTest < ActionDispatch::IntegrationTest
     assert_select "time", text: /Philippine time \(UTC\+8\)/
   end
 
+  test "authorized participant on canceled trip sees cancellation banner and revised deadlines" do
+    bookings(:one).update_columns(status: Booking.statuses[:accepted])
+    RidePosts::CancelService.call(@ride_post, actor: @ride_post.user)
+
+    get ride_post_url(@ride_post, tab: "chat")
+
+    assert_response :success
+    assert_select "button[data-tab-name='chat']"
+    assert_select "span", text: /Coordination/
+    assert_select "div", text: /Trip canceled/
+    assert_select "div", text: /Coordination messaging remains open for 24 hours/
+    assert_select "p", text: /Sending messages disabled 24 hours after trip cancellation/
+  end
+
   test "expired chat tab direct navigation redirects to details with alert" do
     @ride_post.update_columns(departure_time: 35.days.ago, expected_arrival_at: 34.days.ago)
 

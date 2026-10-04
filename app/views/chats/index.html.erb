@@ -12,8 +12,23 @@
     <% @rides.each do |ride| %>
       <% message = @latest_messages[ride.id] %>
       <%= link_to ride_post_path(ride, tab: "chat"), class: "block p-5 hover:bg-neutral-50 dark:hover:bg-neutral-800 focus-visible:outline-2 focus-visible:outline-blue-600" do %>
-        <h2 class="font-semibold text-neutral-900 dark:text-white"><%= ride.origin.name %> → <%= ride.destination.name %></h2>
-        <span class="inline-block mt-1 text-xs text-neutral-600 dark:text-neutral-400"><%= ride.chat_writable? ? "Open for messages" : (ride.chat_unlocked? ? "Read-only" : "Waiting for confirmed passengers") %></span>
+        <div class="flex items-center justify-between gap-2">
+          <h2 class="font-semibold text-neutral-900 dark:text-white"><%= ride.origin.name %> → <%= ride.destination.name %></h2>
+          <% if ride.canceled? %>
+            <span class="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-red-50 text-red-700 dark:bg-red-950/40 dark:text-red-300">Canceled</span>
+          <% end %>
+        </div>
+        <span class="inline-block mt-1 text-xs text-neutral-600 dark:text-neutral-400">
+          <% if ride.canceled? %>
+            <% if ride.chat_writable? %>
+              Canceled • Open for coordination until <%= ride.chat_messaging_closes_at.in_time_zone("Asia/Manila").strftime("%b %d, %Y at %I:%M %p") %> Philippine time (UTC+8)
+            <% else %>
+              Canceled • Read-only until <%= ride.chat_history_unavailable_at.in_time_zone("Asia/Manila").strftime("%b %d, %Y at %I:%M %p") %> Philippine time (UTC+8)
+            <% end %>
+          <% else %>
+            <%= ride.chat_writable? ? "Open for messages" : (ride.chat_unlocked? ? "Read-only" : "Waiting for confirmed passengers") %>
+          <% end %>
+        </span>
         <p class="text-sm text-neutral-600 dark:text-neutral-400 mt-2"><%= message&.body&.truncate(110) || "No messages yet. Coordinate your trip here." %></p>
         <% timestamp = message&.created_at || ride.created_at %>
         <time datetime="<%= timestamp.iso8601 %>" class="block text-xs text-neutral-500 mt-2"><%= timestamp.in_time_zone("Asia/Manila").strftime("%b %d, %Y at %I:%M %p") %> Philippine time (UTC+8)</time>
