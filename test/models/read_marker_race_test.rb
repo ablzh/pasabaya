@@ -28,12 +28,23 @@ class ReadMarkerRaceTest < ActiveSupport::TestCase
     assert_equal @newer.id, state.reload.last_read_message_id
   end
 
-  test "author message updates reading progress and unread badge on other devices" do
+  test "author reply preserves unseen messages until explicit reading updates the badge on other devices" do
     @ride.chat_messages.create!(user: @passenger, body: "Question")
     assert_equal 1, @driver.unread_chats_count
     stream = Turbo::StreamsChannel.send(:stream_name_from, [ @driver, :notifications ])
+    chats_stream = Turbo::StreamsChannel.send(:stream_name_from, [ @driver, :chats ])
+    answer = nil
+    assert_broadcasts(chats_stream, 1) do
+      assert_broadcasts(stream, 0) do
+        answer = @ride.chat_messages.create!(user: @driver, body: "Answer")
+      end
+    end
+    assert_equal 1, @driver.unread_chats_count
+
+    ChatReadState.mark_read!(user: @driver, ride_post: @ride, message_id: @newer.id)
+    assert_equal 1, @driver.unread_chats_count, "reading older history must preserve the unseen question"
     assert_broadcasts(stream, 1) do
-      @ride.chat_messages.create!(user: @driver, body: "Answer")
+      assert ChatReadState.mark_read!(user: @driver, ride_post: @ride, message_id: answer.id)
     end
     assert_equal 0, @driver.unread_chats_count
     assert_includes broadcasts(stream).last, "data-chat"
