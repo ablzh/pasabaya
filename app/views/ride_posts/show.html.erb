@@ -383,7 +383,7 @@
     <%# PANE 2: LIVE COORDINATION CHAT %>
     <% if can_chat %>
       <div id="trip-chat-pane" data-trip-view-target="chatPane" class="hidden" role="tabpanel" aria-labelledby="trip-chat-tab">
-        <div class="trip-chat bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-3xl shadow-sm overflow-hidden flex flex-col" data-controller="chat-scroll" data-chat-scroll-current-user-id-value="<%= Current.user.id %>">
+        <div class="trip-chat bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-3xl shadow-sm overflow-hidden flex flex-col" data-controller="chat-scroll" data-chat-scroll-current-user-id-value="<%= Current.user.id %>" data-chat-scroll-read-url-value="<%= ride_post_chat_reads_path(@ride_post) %>">
           <%# Chat Header %>
           <div class="px-5 py-4 border-b border-neutral-100 dark:border-neutral-800 flex items-center justify-between bg-neutral-50/60 dark:bg-neutral-800/40">
             <div class="flex items-center gap-3">

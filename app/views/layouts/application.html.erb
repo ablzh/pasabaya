@@ -71,13 +71,40 @@
 
   <% navbar.with_item(label: "Search", href: ride_posts_path, mobile_hidden: true) %>
   <% navbar.with_item(label: "Hubs", href: communities_path, mobile_hidden: true) %>
-  <% navbar.with_item(label: "Chats", href: chats_path, mobile_hidden: true) if authenticated? %>
+  <% if authenticated? %>
+    <% chats_label = safe_join([
+         tag.span(class: "inline-flex items-center gap-1.5") do
+           safe_join([
+             tag.svg(class: "size-4 shrink-0", fill: "none", viewBox: "0 0 24 24", stroke_width: "1.5", stroke: "currentColor") do
+               tag.path(stroke_linecap: "round", stroke_linejoin: "round", d: "M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 01-2.555-.337A5.972 5.972 0 015.41 20.97a.75.75 0 01-1.154-.755c.106-.777.37-1.503.766-2.148A7.776 7.776 0 013 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25z")
+             end,
+             tag.span("Chats"),
+             tag.span(data: { chat_unread_count: true }, class: "unread-chats-badge inline-flex items-center") do
+               render("chats/unread_badge", count: Current.user.unread_chats_count)
+             end
+           ])
+         end
+       ]) %>
+    <% navbar.with_item(label: chats_label, href: chats_path, mobile_hidden: true) %>
+  <% end %>
   <% navbar.with_item(label: safe_join([tag.span("Post", class: "sm:hidden"), tag.span("Add a ride", class: "hidden sm:inline")]), href: new_ride_post_path, classes: "whitespace-nowrap") %>
 
   <% navbar.with_dropdown_content(id: "mobile-menu-content", width: "w-[calc(100vw-2rem)]") do %>
     <%= link_to "Search", ride_posts_path, class: "block rounded-lg p-3 hover:bg-neutral-100 dark:hover:bg-neutral-700" %>
     <%= link_to "Hubs", communities_path, class: "block rounded-lg p-3 hover:bg-neutral-100 dark:hover:bg-neutral-700" %>
-    <%= link_to "Chats", chats_path, class: "block rounded-lg p-3 hover:bg-neutral-100 dark:hover:bg-neutral-700" if authenticated? %>
+    <% if authenticated? %>
+      <%= link_to chats_path, class: "flex items-center justify-between rounded-lg p-3 hover:bg-neutral-100 dark:hover:bg-neutral-700" do %>
+        <span class="inline-flex items-center gap-2">
+          <svg class="size-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 01-2.555-.337A5.972 5.972 0 015.41 20.97a.75.75 0 01-1.154-.755c.106-.777.37-1.503.766-2.148A7.776 7.776 0 013 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25z" />
+          </svg>
+          <span>Chats</span>
+        </span>
+        <span data-chat-unread-count class="unread-chats-badge inline-flex items-center">
+          <%= render "chats/unread_badge", count: Current.user.unread_chats_count %>
+        </span>
+      <% end %>
+    <% end %>
   <% end %>
 
   <% navbar.with_actions do %>

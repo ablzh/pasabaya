@@ -8,6 +8,7 @@ class RidePost < ApplicationRecord
   has_many :bookings, dependent: :destroy
   has_many :notifications, as: :notifiable
   has_many :chat_messages, dependent: :destroy
+  has_many :chat_read_states, dependent: :destroy
   has_many :trip_reviews, dependent: :restrict_with_error
   has_many :no_show_incidents, dependent: :restrict_with_error
   has_many :route_subscriptions, dependent: :nullify

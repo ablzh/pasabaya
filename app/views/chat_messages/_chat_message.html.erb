@@ -1,6 +1,6 @@
 <% is_driver = chat_message.user_id == chat_message.ride_post.user_id %>
 
-<div id="<%= dom_id chat_message %>" class="chat-message flex items-end gap-2.5 justify-start" data-chat-scroll-target="message" data-sender-id="<%= chat_message.user_id %>">
+<div id="<%= dom_id chat_message %>" class="chat-message flex items-end gap-2.5 justify-start" data-chat-scroll-target="message" data-sender-id="<%= chat_message.user_id %>" data-message-id="<%= chat_message.id %>">
   <div class="chat-message-avatar"><%= user_avatar(chat_message.user, classes: "size-7 text-[10px] shrink-0 mb-1") %></div>
 
   <div class="chat-message-content flex flex-col items-start max-w-[85%] sm:max-w-[75%]">

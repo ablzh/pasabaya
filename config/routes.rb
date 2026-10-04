@@ -9,6 +9,7 @@ Rails.application.routes.draw do
     end
     resources :bookings, only: [ :create ]
     resources :chat_messages, only: [ :create ]
+    resources :chat_reads, only: [ :create ]
     resources :reviews, only: [ :new, :create ], controller: "trip_reviews"
   end
 

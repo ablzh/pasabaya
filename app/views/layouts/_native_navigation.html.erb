@@ -2,7 +2,15 @@
   <%= link_to "Search", ride_posts_path %>
   <% if authenticated? %>
     <%= link_to "My Trips", trips_path %>
-    <%= link_to "Chats", chats_path %>
+    <%= link_to chats_path, class: "inline-flex items-center gap-1.5" do %>
+      <svg class="size-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 01-2.555-.337A5.972 5.972 0 015.41 20.97a.75.75 0 01-1.154-.755c.106-.777.37-1.503.766-2.148A7.776 7.776 0 013 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25z" />
+      </svg>
+      <span>Chats</span>
+      <span data-chat-unread-count class="unread-chats-badge inline-flex items-center">
+        <%= render "chats/unread_badge", count: Current.user.unread_chats_count %>
+      </span>
+    <% end %>
     <%= link_to "Hubs", communities_path %>
     <%= link_to "Account", settings_profile_path %>
     <%= link_to "Post a Ride", new_ride_post_path %>

@@ -4,7 +4,11 @@ class NotificationsChannel < ApplicationCable::Channel
 
   def subscribed
     stream_name = verified_stream_name_from_params
-    if active_session? && stream_name == self.class.send(:stream_name_from, [ current_user, :notifications ])
+    allowed_streams = [
+      self.class.send(:stream_name_from, [ current_user, :notifications ]),
+      self.class.send(:stream_name_from, [ current_user, :chats ])
+    ]
+    if active_session? && allowed_streams.include?(stream_name)
       stream_from stream_name, coder: ActiveSupport::JSON do |data|
         deliver_or_reject(data)
       end
