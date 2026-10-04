@@ -79,7 +79,11 @@ class ChatMessage < ApplicationRecord
     return unless ride_post
 
     unless ride_post.chat_writable?
-      errors.add(:base, "Chat writes are closed 24 hours after the booking cutoff")
+      if ride_post.canceled?
+        errors.add(:base, "Chat writes are closed 24 hours after trip cancellation")
+      else
+        errors.add(:base, "Chat writes are closed 24 hours after the booking cutoff")
+      end
     end
   end
 end

@@ -84,9 +84,10 @@ class TripReviewsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "passenger can review after the driver cancels a departed trip without retaining chat access" do
-    @booking.update_columns(accepted_at: 3.hours.ago)
-    @ride_post.update_columns(departure_time: 2.hours.ago, expected_arrival_at: 1.hour.ago)
+    @booking.update_columns(accepted_at: 35.days.ago)
+    @ride_post.update_columns(departure_time: 35.days.ago, expected_arrival_at: 34.days.ago)
     RidePosts::CancelService.call(@ride_post, actor: @driver)
+    @ride_post.update_columns(canceled_at: 35.days.ago)
 
     assert_not @ride_post.reload.user_authorized_for_chat?(@passenger)
     sign_in_as(@passenger)

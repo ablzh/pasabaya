@@ -216,14 +216,36 @@ class RidePost < ApplicationRecord
     true
   end
 
+  def previously_accepted_bookings
+    if canceled?
+      c_time = canceled_at || updated_at
+      if bookings.loaded?
+        bookings.select { |b| b.accepted_at.present? && (b.canceled_at.nil? || b.canceled_at >= c_time) }
+      else
+        bookings.where.not(accepted_at: nil).where("canceled_at IS NULL OR canceled_at >= ?", c_time)
+      end
+    else
+      if bookings.loaded?
+        bookings.select(&:accepted?)
+      else
+        bookings.accepted
+      end
+    end
+  end
+
   def chat_unlocked?
-    bookings.loaded? ? bookings.any?(&:accepted?) : bookings.accepted.exists?
+    previously_accepted_bookings.any?
   end
 
   def chat_messaging_closes_at
     return unless booking_cutoff_at
 
-    booking_cutoff_at + 24.hours
+    ordinary_close = booking_cutoff_at + 24.hours
+    if canceled? && canceled_at.present?
+      [ ordinary_close, canceled_at + 24.hours ].min
+    else
+      ordinary_close
+    end
   end
 
   def chat_history_unavailable_at
@@ -233,7 +255,7 @@ class RidePost < ApplicationRecord
   end
 
   def chat_writable?
-    !canceled? && chat_unlocked? && chat_messaging_closes_at.present? && Time.current <= chat_messaging_closes_at
+    chat_unlocked? && chat_messaging_closes_at.present? && Time.current <= chat_messaging_closes_at
   end
 
   def chat_readable?
@@ -246,20 +268,19 @@ class RidePost < ApplicationRecord
 
   def user_authorized_for_chat?(u, verified_community_ids: nil)
     return false unless u
-    return false if canceled?
     return false if chat_expired?
     return false unless authorized_viewer?(u, verified_community_ids: verified_community_ids)
 
     if user_id == u.id
       u.banned_at.blank? && !u.deleted?
     else
-      accepted = bookings.loaded? ? bookings.any? { |booking| booking.accepted? && booking.passenger_id == u.id } : bookings.accepted.exists?(passenger_id: u.id)
+      accepted = previously_accepted_bookings.any? { |booking| booking.passenger_id == u.id }
       accepted && u.banned_at.blank? && !u.deleted?
     end
   end
 
   def participants
-    User.where(id: [ user_id ] + bookings.accepted.pluck(:passenger_id))
+    User.where(id: [ user_id ] + previously_accepted_bookings.map(&:passenger_id))
   end
 
   def participant?(u)
@@ -414,7 +435,7 @@ class RidePost < ApplicationRecord
   end
 
   def should_schedule_chat_retention?
-    offering? && published? && chat_history_unavailable_at.present? && (saved_change_to_departure_time? || saved_change_to_departure_date? || saved_change_to_departure_choice? || saved_change_to_status?)
+    offering? && (published? || canceled?) && chat_history_unavailable_at.present? && (saved_change_to_departure_time? || saved_change_to_departure_date? || saved_change_to_departure_choice? || saved_change_to_status? || saved_change_to_canceled_at?)
   end
 
   def schedule_chat_retention

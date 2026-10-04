@@ -403,10 +403,15 @@
             </div>
 
             <div class="flex items-center gap-2">
+              <% if @ride_post.canceled? %>
+                <span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-red-100 text-red-700 dark:bg-red-950/60 dark:text-red-300">
+                  Canceled
+                </span>
+              <% end %>
               <% if @ride_post.chat_writable? %>
                 <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300">
                   <span class="size-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                  Live
+                  <%= @ride_post.canceled? ? "Coordination" : "Live" %>
                 </span>
               <% else %>
                 <span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-neutral-100 text-neutral-600 dark:bg-neutral-800 dark:text-neutral-400">
@@ -418,13 +423,25 @@
 
           <% if @ride_post.chat_messaging_closes_at.present? && @ride_post.chat_history_unavailable_at.present? %>
             <div class="px-5 py-3 border-b border-neutral-100 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-800/30 text-xs text-neutral-600 dark:text-neutral-300">
+              <% if @ride_post.canceled? %>
+                <div class="mb-2 p-2.5 rounded-xl bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-900/40 text-red-700 dark:text-red-400 font-medium">
+                  Trip canceled &bull;
+                  <% if @ride_post.chat_writable? %>
+                    Coordination messaging remains open for 24 hours following cancellation.
+                  <% else %>
+                    Messaging is closed. Chat history remains readable until scheduled deletion.
+                  <% end %>
+                </div>
+              <% end %>
               <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 <div>
                   <span class="font-semibold text-neutral-900 dark:text-white">Messaging closes:</span>
                   <time datetime="<%= @ride_post.chat_messaging_closes_at.iso8601 %>">
                     <%= @ride_post.chat_messaging_closes_at.in_time_zone("Asia/Manila").strftime("%B %d, %Y at %I:%M %p") %> Philippine time (UTC+8)
                   </time>
-                  <p class="text-[11px] text-neutral-500 mt-0.5">Sending new messages is disabled 24 hours after booking cutoff.</p>
+                  <p class="text-[11px] text-neutral-500 mt-0.5">
+                    <%= @ride_post.canceled? ? "Sending messages disabled 24 hours after trip cancellation." : "Sending new messages is disabled 24 hours after booking cutoff." %>
+                  </p>
                 </div>
                 <div>
                   <span class="font-semibold text-neutral-900 dark:text-white">Scheduled live-database deletion:</span>

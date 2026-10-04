@@ -2,7 +2,8 @@ class ChatsController < ApplicationController
   def index
     user = Current.user
     verified_ids = user.verified_community_ids
-    candidates = RidePost.where(user: user).or(RidePost.where(id: user.bookings.accepted.select(:ride_post_id)))
+    candidate_bookings = user.bookings.where("status = ? OR (status = ? AND accepted_at IS NOT NULL)", Booking.statuses[:accepted], Booking.statuses[:canceled])
+    candidates = RidePost.where(user: user).or(RidePost.where(id: candidate_bookings.select(:ride_post_id)))
                          .includes(:origin, :destination, :bookings)
     @rides = candidates.select { |ride| ride.user_authorized_for_chat?(user, verified_community_ids: verified_ids) }
     @latest_messages = ChatMessage.where(ride_post_id: @rides.map(&:id))

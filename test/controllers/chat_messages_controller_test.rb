@@ -77,4 +77,36 @@ class ChatMessagesControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to ride_post_url(@ride)
     assert_equal "Chat history for this trip is no longer available.", flash[:alert]
   end
+
+  test "confirmed passenger can post message on canceled trip during coordination window" do
+    @booking.update_columns(status: Booking.statuses[:accepted])
+    RidePosts::CancelService.call(@ride, actor: @driver)
+    sign_in_as(@passenger)
+
+    assert_difference -> { @ride.chat_messages.count } => 1 do
+      post ride_post_chat_messages_url(@ride), params: {
+        chat_message: { body: "Can we still share a taxi?" }
+      }
+    end
+
+    assert_redirected_to ride_post_url(@ride, tab: "chat")
+    assert_equal "Can we still share a taxi?", @ride.chat_messages.last.body
+  end
+
+  test "cannot post message 24 hours after cancellation" do
+    @booking.update_columns(status: Booking.statuses[:accepted])
+    RidePosts::CancelService.call(@ride, actor: @driver)
+    @ride.update_columns(canceled_at: 25.hours.ago)
+    sign_in_as(@passenger)
+
+    assert_no_difference "ChatMessage.count" do
+      post ride_post_chat_messages_url(@ride), params: {
+        chat_message: { body: "Too late" }
+      }, as: :turbo_stream
+    end
+
+    assert_response :unprocessable_content
+    assert_includes response.body, "Trip canceled &amp; messaging has closed."
+    assert_includes response.body, "Chat writes are closed 24 hours after trip cancellation"
+  end
 end
