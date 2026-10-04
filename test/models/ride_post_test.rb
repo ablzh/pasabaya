@@ -372,7 +372,7 @@ class RidePostTest < ActiveSupport::TestCase
   end
 
   test "review eligibility for approximate vs exact departure" do
-    target_date = Date.current
+    target_date = Date.tomorrow
     approx_ride = RidePost.create!(
       user: users(:one),
       origin: locations(:one),
