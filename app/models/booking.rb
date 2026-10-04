@@ -27,6 +27,7 @@ class Booking < ApplicationRecord
   scope :accepted, -> { where(status: :accepted) }
   scope :declined, -> { where(status: :declined) }
   scope :canceled, -> { where(status: :canceled) }
+  scope :expired, -> { where(status: :expired) }
 
   def active?
     pending? || accepted?

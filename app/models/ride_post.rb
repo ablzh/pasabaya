@@ -60,6 +60,7 @@ class RidePost < ApplicationRecord
   before_validation :preload_locations, if: -> { origin_id.present? && destination_id.present? }
 
   after_save_commit :schedule_trip_audit, if: :should_schedule_audit?
+  after_save_commit :schedule_booking_cutoff, if: :should_schedule_cutoff?
 
   scope :publicly_visible, -> { public_ride.where(ladies_only: false) }
   scope :filter_by_origin, ->(origin_id) { where(origin_id: origin_id) if origin_id.present? }
@@ -377,6 +378,14 @@ class RidePost < ApplicationRecord
 
   def schedule_trip_audit
     TripAuditJob.set(wait_until: automatic_completion_at).perform_later(id)
+  end
+
+  def should_schedule_cutoff?
+    offering? && published? && booking_cutoff_at.present? && (saved_change_to_departure_time? || saved_change_to_departure_date? || saved_change_to_departure_choice? || saved_change_to_status?)
+  end
+
+  def schedule_booking_cutoff
+    BookingCutoffJob.set(wait_until: booking_cutoff_at).perform_later(id)
   end
 
   def publishing?

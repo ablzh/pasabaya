@@ -40,6 +40,8 @@ class Notification < ApplicationRecord
       "Your seat request has been confirmed!"
     when "booking.declined"
       "Your seat request was declined by the driver."
+    when "booking.expired"
+      "Your seat request expired without confirmation"
     when "booking.canceled"
       "#{actor&.first_name || 'A user'} canceled their seat booking."
     when "ride.canceled"
@@ -57,7 +59,7 @@ class Notification < ApplicationRecord
     case event_name
     when "booking.accepted"
       "success"
-    when "booking.canceled", "ride.canceled", "booking.declined"
+    when "booking.canceled", "ride.canceled", "booking.declined", "booking.expired"
       "warning"
     else
       "info"

@@ -20,6 +20,10 @@ class BookingsController < ApplicationController
         n.event_name = "booking.requested"
         n.delivery_status = :pending
       end
+
+      if @ride_post.booking_cutoff_at.present? && @ride_post.booking_cutoff_at > Time.current
+        BookingCutoffJob.set(wait_until: @ride_post.booking_cutoff_at).perform_later(@ride_post.id)
+      end
     end
 
     redirect_to @ride_post, notice: "Seat requested! The driver has been notified.", status: :see_other

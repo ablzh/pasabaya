@@ -19,6 +19,9 @@ class UsersController < ApplicationController
     @ride_posts = @ride_posts.active.upcoming.visible_to(Current.user) unless Current.user == @user
 
     if authenticated? && Current.user == @user
+      @user.bookings.pending.includes(:ride_post).find_each do |b|
+        Bookings::ExpireService.call(b) if b.ride_post&.booking_cutoff_at && Time.current >= b.ride_post.booking_cutoff_at
+      end
       @passenger_bookings = @user.bookings.includes(ride_post: [ :origin, :destination, user: { avatar_attachment: :blob } ]).order(created_at: :desc)
     end
   end

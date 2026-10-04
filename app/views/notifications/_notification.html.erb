@@ -11,6 +11,8 @@
         <span class="inline-flex items-center justify-center size-8 rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300 text-xs font-bold">CONF</span>
       <% when "booking.declined" %>
         <span class="inline-flex items-center justify-center size-8 rounded-full bg-neutral-200 text-neutral-700 dark:bg-neutral-700 dark:text-neutral-300 text-xs font-bold">DEC</span>
+      <% when "booking.expired" %>
+        <span class="inline-flex items-center justify-center size-8 rounded-full bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300 text-xs font-bold">EXP</span>
       <% when "booking.canceled", "ride.canceled" %>
         <span class="inline-flex items-center justify-center size-8 rounded-full bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300 text-xs font-bold">CAN</span>
       <% else %>
@@ -26,6 +28,8 @@
           Your seat request has been confirmed!
         <% when "booking.declined" %>
           Your seat request was declined by the driver.
+        <% when "booking.expired" %>
+          Your seat request expired without confirmation
         <% when "booking.canceled" %>
           <%= notification.actor&.first_name || "A user" %> canceled their seat booking.
         <% when "ride.canceled" %>

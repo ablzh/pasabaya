@@ -13,7 +13,7 @@ class TripAuditJob < ApplicationJob
       return unless completion_time.present? && Time.current >= completion_time
 
       ride_post.update!(status: :completed) unless ride_post.completed?
-      ride_post.bookings.pending.update_all(status: Booking.statuses[:expired], updated_at: Time.current)
+      Bookings::ExpireService.call(ride_post)
 
       participants = ride_post.review_participants
       participant_keys = participants.map { |p| "review_requested:#{ride_post.id}:#{p.id}" }
