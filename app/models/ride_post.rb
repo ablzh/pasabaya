@@ -66,6 +66,7 @@ class RidePost < ApplicationRecord
   after_save_commit :schedule_booking_cutoff, if: :should_schedule_cutoff?
   after_save_commit :schedule_route_alert, if: :should_schedule_route_alert?
   after_save_commit :schedule_chat_retention, if: :should_schedule_chat_retention?
+  after_update_commit :refresh_chat_after_cancellation, if: :saved_change_to_canceled_at?
 
   scope :publicly_visible, -> { public_ride.where(ladies_only: false) }
   scope :filter_by_origin, ->(origin_id) { where(origin_id: origin_id) if origin_id.present? }
@@ -160,13 +161,7 @@ class RidePost < ApplicationRecord
   end
 
   def booking_cutoff_at
-    if exact_time?
-      departure_time
-    elsif departure_date.present?
-      departure_date.in_time_zone("Asia/Manila").end_of_day
-    elsif departure_time.present?
-      departure_time
-    end
+    departure_cutoff(departure_time, departure_date, departure_choice)
   end
 
   def automatic_completion_at
@@ -244,7 +239,7 @@ class RidePost < ApplicationRecord
 
     ordinary_close = booking_cutoff_at + 24.hours
     if canceled? && canceled_at.present?
-      [ ordinary_close, canceled_at + 24.hours ].min
+      canceled_at < ordinary_close ? canceled_at + 24.hours : ordinary_close
     else
       ordinary_close
     end
@@ -257,7 +252,7 @@ class RidePost < ApplicationRecord
   end
 
   def chat_writable?
-    chat_unlocked? && chat_messaging_closes_at.present? && Time.current <= chat_messaging_closes_at
+    chat_unlocked? && chat_messaging_closes_at.present? && Time.current < chat_messaging_closes_at
   end
 
   def chat_readable?
@@ -265,12 +260,13 @@ class RidePost < ApplicationRecord
   end
 
   def chat_expired?
-    chat_history_unavailable_at.present? && Time.current > chat_history_unavailable_at
+    chat_history_unavailable_at.present? && Time.current >= chat_history_unavailable_at
   end
 
   def user_authorized_for_chat?(u, verified_community_ids: nil)
     return false unless u
     return false if chat_expired?
+    return false if hub_only? && !(verified_community_ids ? verified_community_ids.include?(community_id) : u.verified_member_of?(community_id))
     return false unless authorized_viewer?(u, verified_community_ids: verified_community_ids)
 
     if user_id == u.id
@@ -326,17 +322,7 @@ class RidePost < ApplicationRecord
   end
 
   def booking_cutoff_at_was
-    dep_time = departure_time_was || departure_time
-    dep_choice = departure_choice_was || departure_choice
-    dep_date = departure_date_was || departure_date
-
-    if dep_choice == "exact_time" || (dep_choice.is_a?(Integer) && dep_choice == 4)
-      dep_time
-    elsif dep_date.present?
-      dep_date.in_time_zone("Asia/Manila").end_of_day
-    else
-      dep_time
-    end
+    departure_cutoff(departure_time_was, departure_date_was, departure_choice_was)
   end
 
   def departure_choice_human
@@ -368,6 +354,17 @@ class RidePost < ApplicationRecord
   end
 
   private
+
+  def refresh_chat_after_cancellation
+    Turbo::StreamsChannel.broadcast_refresh_to([ self, :chat ])
+  end
+
+  def departure_cutoff(time, date, choice)
+    return time if choice == "exact_time"
+    return date.in_time_zone("Asia/Manila").end_of_day if date.present?
+
+    time
+  end
 
   def check_destruction_allowed
     if trip_reviews.exists? || no_show_incidents.exists?

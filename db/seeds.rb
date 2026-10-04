@@ -153,13 +153,8 @@ passenger = seeded_users.find { |u| u.email_address == "passenger@example.com" }
 # === 4.5 CREATE CURATED COMMUNITIES ===
 puts "\nSeeding Curated Communities..."
 
-# Retain only University of the Philippines, removing unwanted local hubs safely
-Community.where.not(domain: "up.edu.ph").find_each do |c|
-  c.ride_posts.destroy_all
-  c.route_subscriptions.destroy_all
-  c.community_memberships.destroy_all
-  c.destroy!
-end
+# Only disposable local environments authorize destructive hub cleanup.
+Community.cleanup_disposable_local_hubs!
 
 up = Community.find_or_initialize_by(domain: "up.edu.ph")
 up.name = "University of the Philippines"

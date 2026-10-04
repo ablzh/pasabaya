@@ -8,6 +8,8 @@ export default class extends Controller {
   }
 
   connect() {
+    this.boundRestoreTab = () => this.switchTab(this.selectedTab || this.defaultTabValue)
+    document.addEventListener("turbo:morph", this.boundRestoreTab)
     const urlParams = new URLSearchParams(window.location.search)
     const tabParam = urlParams.get("tab")
     const hash = window.location.hash
@@ -17,6 +19,10 @@ export default class extends Controller {
     } else {
       this.switchTab(this.defaultTabValue)
     }
+  }
+
+  disconnect() {
+    document.removeEventListener("turbo:morph", this.boundRestoreTab)
   }
 
   showDetails(e) {
@@ -46,6 +52,7 @@ export default class extends Controller {
   switchTab(tab) {
     if (tab === "chat" && !this.hasChatPaneTarget) tab = "details"
     this.activeTabValue = tab
+    this.selectedTab = tab
 
     if (this.hasDetailsPaneTarget) {
       if (tab === "details") {

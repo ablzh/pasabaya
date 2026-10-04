@@ -383,7 +383,7 @@
     <%# PANE 2: LIVE COORDINATION CHAT %>
     <% if can_chat %>
       <div id="trip-chat-pane" data-trip-view-target="chatPane" class="hidden" role="tabpanel" aria-labelledby="trip-chat-tab">
-        <div class="trip-chat bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-3xl shadow-sm overflow-hidden flex flex-col" data-controller="chat-scroll" data-chat-scroll-current-user-id-value="<%= Current.user.id %>" data-chat-scroll-read-url-value="<%= ride_post_chat_reads_path(@ride_post) %>">
+        <div class="trip-chat bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-3xl shadow-sm overflow-hidden flex flex-col" data-controller="chat-scroll" data-chat-scroll-messaging-closes-at-value="<%= @ride_post.chat_messaging_closes_at&.iso8601(6) %>" data-chat-scroll-history-unavailable-at-value="<%= @ride_post.chat_history_unavailable_at&.iso8601(6) %>" data-chat-scroll-writable-value="<%= @ride_post.chat_writable? %>" data-chat-scroll-current-user-id-value="<%= Current.user.id %>" data-chat-scroll-read-url-value="<%= ride_post_chat_reads_path(@ride_post) %>">
           <%# Chat Header %>
           <div class="chat-header px-3 py-3 sm:px-5 sm:py-4 border-b border-neutral-100 dark:border-neutral-800 flex items-center justify-between bg-neutral-50/60 dark:bg-neutral-800/40">
             <div class="flex items-center gap-3 min-w-0 flex-1">
@@ -407,7 +407,7 @@
                 </span>
               <% end %>
               <% if @ride_post.chat_writable? %>
-                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300">
+                <span data-chat-scroll-target="status" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300">
                   <span class="size-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
                   <%= @ride_post.canceled? ? "Coordination" : "Live" %>
                 </span>
@@ -422,7 +422,7 @@
           <% if @ride_post.chat_messaging_closes_at.present? && @ride_post.chat_history_unavailable_at.present? %>
             <div class="chat-deadlines px-3 sm:px-5 py-3 border-b border-neutral-100 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-800/30 text-xs text-neutral-600 dark:text-neutral-300">
               <% if @ride_post.canceled? %>
-                <div class="mb-2 p-2.5 rounded-xl bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-900/40 text-red-700 dark:text-red-400 font-medium">
+                <div data-chat-scroll-target="coordinationNotice" class="mb-2 p-2.5 rounded-xl bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-900/40 text-red-700 dark:text-red-400 font-medium">
                   Trip canceled &bull;
                   <% if @ride_post.chat_writable? %>
                     Coordination messaging remains open for 24 hours following cancellation.

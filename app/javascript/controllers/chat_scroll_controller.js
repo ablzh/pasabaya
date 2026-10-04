@@ -1,10 +1,13 @@
 import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
-  static targets = ["messages", "input", "message"]
+  static targets = ["messages", "input", "message", "status", "coordinationNotice"]
   static values = {
     currentUserId: Number,
-    readUrl: String
+    readUrl: String,
+    messagingClosesAt: String,
+    historyUnavailableAt: String,
+    writable: Boolean
   }
 
   initialize() {
@@ -13,6 +16,7 @@ export default class extends Controller {
     this.followLatest = true
     this.boundOnResize = this.onResize.bind(this)
     this.lastMarkedMessageId = 0
+    this.boundCheckDeadlines = this.checkDeadlines.bind(this)
   }
 
   messageTargetConnected(message) {
@@ -25,6 +29,7 @@ export default class extends Controller {
 
   connect() {
     this.updateViewport()
+    this.checkDeadlines()
     this.scrollToBottom()
     if (this.hasMessagesTarget) {
       this.messagesTarget.addEventListener("scroll", this.boundOnScroll, { passive: true })
@@ -37,6 +42,8 @@ export default class extends Controller {
       this.observer.observe(this.messagesTarget, { childList: true, subtree: true })
     }
 
+    document.addEventListener("visibilitychange", this.boundCheckDeadlines)
+    window.addEventListener("focus", this.boundCheckDeadlines)
     document.addEventListener("visibilitychange", this.boundCheckAndMarkRead)
     window.addEventListener("focus", this.boundCheckAndMarkRead)
     window.addEventListener("resize", this.boundOnResize)
@@ -55,11 +62,49 @@ export default class extends Controller {
     if (this.hasMessagesTarget) {
       this.messagesTarget.removeEventListener("scroll", this.boundOnScroll)
     }
+    clearTimeout(this.deadlineTimer)
+    document.removeEventListener("visibilitychange", this.boundCheckDeadlines)
+    window.removeEventListener("focus", this.boundCheckDeadlines)
     document.removeEventListener("visibilitychange", this.boundCheckAndMarkRead)
     window.removeEventListener("focus", this.boundCheckAndMarkRead)
     window.removeEventListener("resize", this.boundOnResize)
     window.visualViewport?.removeEventListener("resize", this.boundOnResize)
     window.visualViewport?.removeEventListener("scroll", this.boundOnResize)
+  }
+
+  messagingClosesAtValueChanged() {
+    if (this.element.isConnected) this.checkDeadlines()
+  }
+
+  historyUnavailableAtValueChanged() {
+    if (this.element.isConnected) this.checkDeadlines()
+  }
+
+  checkDeadlines() {
+    clearTimeout(this.deadlineTimer)
+    const now = Date.now()
+    const history = Date.parse(this.historyUnavailableAtValue)
+    const messaging = Date.parse(this.messagingClosesAtValue)
+    if (Number.isFinite(history) && now >= history) {
+      this.element.replaceChildren()
+      this.element.textContent = "Chat history for this trip is no longer available."
+      window.Turbo.visit(window.location.href, { action: "replace" })
+      return
+    }
+    if (this.writableValue && Number.isFinite(messaging) && now >= messaging) {
+      this.writableValue = false
+      const composer = this.element.querySelector("#chat_message_form")
+      if (composer) composer.textContent = "Messaging for this trip has closed. You can still read history until scheduled live-database deletion."
+      if (this.hasStatusTarget) {
+        this.statusTarget.textContent = "Read-only"
+        this.statusTarget.className = "px-2.5 py-1 rounded-full text-xs font-semibold bg-neutral-100 text-neutral-600 dark:bg-neutral-800 dark:text-neutral-400"
+      }
+      if (this.hasCoordinationNoticeTarget) this.coordinationNoticeTarget.textContent = "Trip canceled. Messaging is closed. Chat history remains readable until scheduled deletion."
+      this.checkDeadlines()
+      return
+    }
+    const next = [history, this.writableValue ? messaging : NaN].filter(time => Number.isFinite(time) && time > now)
+    if (next.length) this.deadlineTimer = setTimeout(this.boundCheckDeadlines, Math.min(Math.min(...next) - now + 1, 2147483647))
   }
 
   updateViewport() {
