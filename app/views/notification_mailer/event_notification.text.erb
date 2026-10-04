@@ -9,10 +9,16 @@ Great news! Your seat request has been confirmed by the driver.
 A booking on your ride has been canceled.
 <% when "ride.canceled" %>
 An upcoming ride you booked has been canceled by the driver.
+<% when "route.alert" %>
+A driver just published a matching ride for your route alert!
 <% when "incident.resolved" %>
 A decision has been reached regarding your reported incident on Pasabaya.
 <% else %>
 You have a new update regarding your trip on Pasabaya.
 <% end %>
 
+<% if @notifiable.is_a?(RidePost) %>
+Check the ride details here: <%= ride_post_url(@notifiable) %>
+<% else %>
 Visit Pasabaya to check the latest updates: <%= root_url %>
+<% end %>

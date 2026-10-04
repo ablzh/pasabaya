@@ -13,6 +13,7 @@ class User < ApplicationRecord
   has_many :received_notifications, class_name: "Notification", foreign_key: :recipient_id, dependent: :destroy, inverse_of: :recipient
   has_many :acted_notifications, class_name: "Notification", foreign_key: :actor_id, dependent: :nullify, inverse_of: :actor
   has_many :chat_messages, dependent: :destroy
+  has_many :route_subscriptions, dependent: :destroy
 
   def mark_all_notifications_as_read!
     snapshot_id = received_notifications.maximum(:id)

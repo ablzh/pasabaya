@@ -21,7 +21,18 @@ class RidePostsController < ApplicationController
                             .filter_by_ladies_only(params[:ladies_only])
                             .filter_by_departure_date(params[:departure_date])
 
-      setup_route_meta_tags if @origin && @destination
+      if @origin && @destination
+        setup_route_meta_tags
+        if authenticated?
+          @existing_route_subscription = Current.user.route_subscriptions.active.find_by(
+            origin_id: @origin.id,
+            destination_id: @destination.id,
+            departure_date: params[:departure_date].presence,
+            community_id: params[:community_id].presence,
+            ladies_only: ActiveModel::Type::Boolean.new.cast(params[:ladies_only]) || false
+          )
+        end
+      end
     else
       @ride_posts = RidePost.none
       @popular_routes = RidePost.popular_routes

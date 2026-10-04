@@ -22,6 +22,7 @@ class Notification < ApplicationRecord
     booking.canceled
     ride.canceled
     incident.resolved
+    route.alert
   ].freeze
 
   def mark_as_read!
@@ -42,6 +43,8 @@ class Notification < ApplicationRecord
       "Your seat request was declined by the driver."
     when "booking.expired"
       "Your seat request expired without confirmation"
+    when "route.alert"
+      "A driver posted a matching ride for your route alert!"
     when "booking.canceled"
       "#{actor&.first_name || 'A user'} canceled their seat booking."
     when "ride.canceled"
@@ -57,7 +60,7 @@ class Notification < ApplicationRecord
 
   def toast_type
     case event_name
-    when "booking.accepted"
+    when "booking.accepted", "route.alert"
       "success"
     when "booking.canceled", "ride.canceled", "booking.declined", "booking.expired"
       "warning"

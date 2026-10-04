@@ -10,6 +10,7 @@ class RidePost < ApplicationRecord
   has_many :chat_messages, dependent: :destroy
   has_many :trip_reviews, dependent: :restrict_with_error
   has_many :no_show_incidents, dependent: :restrict_with_error
+  has_many :route_subscriptions, dependent: :nullify
 
   before_destroy :check_destruction_allowed, prepend: true
 
@@ -61,6 +62,7 @@ class RidePost < ApplicationRecord
 
   after_save_commit :schedule_trip_audit, if: :should_schedule_audit?
   after_save_commit :schedule_booking_cutoff, if: :should_schedule_cutoff?
+  after_save_commit :schedule_route_alert, if: :should_schedule_route_alert?
 
   scope :publicly_visible, -> { public_ride.where(ladies_only: false) }
   scope :filter_by_origin, ->(origin_id) { where(origin_id: origin_id) if origin_id.present? }
@@ -386,6 +388,14 @@ class RidePost < ApplicationRecord
 
   def schedule_booking_cutoff
     BookingCutoffJob.set(wait_until: booking_cutoff_at).perform_later(id)
+  end
+
+  def should_schedule_route_alert?
+    offering? && published? && bookable? && (previously_new_record? || saved_change_to_status?)
+  end
+
+  def schedule_route_alert
+    RouteAlertJob.perform_later(id)
   end
 
   def publishing?
