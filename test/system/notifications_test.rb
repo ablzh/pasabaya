@@ -33,7 +33,8 @@ class NotificationsSystemTest < ApplicationSystemTestCase
     notification.deliver!
     assert_selector "#notifications_list .notification", text: "Your seat request has been confirmed!"
     assert_no_text "No notifications yet."
-    assert_selector "[data-notification-count] span", text: "1"
+    assert_selector "button[aria-label='Account menu'] [data-notification-count] span[aria-label='1 unread notification']", text: "1"
+    assert_selector "#profile-content [data-notification-count] span[aria-label='1 unread notification']", text: "1", visible: :all
 
     notification.mark_as_read!
     assert_no_selector "[data-notification-count] span", visible: :all
