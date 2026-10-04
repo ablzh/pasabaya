@@ -83,7 +83,7 @@ class HotwireNativeTest < ActionDispatch::IntegrationTest
     assert_select "title", text: "Profile"
     assert_select "h1[data-profile-name]", text: "#{user.first_name} #{user.last_name}"
     assert_select "h1.profile-name", text: "#{user.first_name} #{user.last_name}"
-    assert_select "div", text: /No active ride offers or requests listed at the moment/
+    assert_select "div", text: /No upcoming driver offers listed at the moment/
   end
 
   test "native screens have one short title and preserve fallback actions" do
