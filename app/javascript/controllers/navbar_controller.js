@@ -9,14 +9,24 @@ export default class extends Controller {
 
     this.boundClickOutside = this.handleClickOutside.bind(this);
     this.boundKeydown = this.handleKeydown.bind(this);
+    this.boundFocusOutside = (event) => {
+      if (!this.element.contains(event.target)) this.close();
+    };
+    this.boundResize = () => {
+      if (this.activeTrigger) this.positionViewport(this.activeTrigger);
+    };
 
     document.addEventListener("click", this.boundClickOutside);
     document.addEventListener("keydown", this.boundKeydown);
+    document.addEventListener("focusin", this.boundFocusOutside);
+    window.addEventListener("resize", this.boundResize);
   }
 
   disconnect() {
     document.removeEventListener("click", this.boundClickOutside);
     document.removeEventListener("keydown", this.boundKeydown);
+    document.removeEventListener("focusin", this.boundFocusOutside);
+    window.removeEventListener("resize", this.boundResize);
     this.close();
   }
 
@@ -53,7 +63,8 @@ export default class extends Controller {
     }
   }
 
-  close() {
+  close(restoreFocus = false) {
+    if (restoreFocus) this.activeTrigger?.focus();
     if (this.activeTrigger) {
       this.activeTrigger.dataset.state = "closed";
       this.activeTrigger.setAttribute("aria-expanded", "false");
@@ -103,9 +114,21 @@ export default class extends Controller {
   }
 
   handleKeydown(event) {
-    if (event.key === "Escape") {
-      this.close();
+    if (event.key === "Escape" && this.activeTrigger) {
+      event.preventDefault();
+      this.close(true);
+      return;
     }
+    if (!this.activeContent?.contains(event.target)) return;
+    if (!["ArrowDown", "ArrowUp", "Home", "End"].includes(event.key)) return;
+
+    event.preventDefault();
+    const links = Array.from(this.activeContent.querySelectorAll("a[href], button:not([disabled])"));
+    const index = links.indexOf(document.activeElement);
+    let next = event.key === "ArrowUp" ? index - 1 : index + 1;
+    if (event.key === "Home") next = 0;
+    if (event.key === "End") next = links.length - 1;
+    links[(next + links.length) % links.length]?.focus();
   }
 
   // Stubs for optional template-registered events
@@ -114,6 +137,12 @@ export default class extends Controller {
   handlePointerLeave() {}
   cancelClose() {}
   handleTriggerKeydown(event) {
-    if (event.key === "Escape") this.close();
+    if (!["ArrowDown", "ArrowUp"].includes(event.key)) return;
+    event.preventDefault();
+    event.stopPropagation();
+    this.open(event.currentTarget, event.currentTarget.dataset.contentId);
+    const links = this.activeContent?.querySelectorAll("a[href], button:not([disabled])");
+    const index = event.key === "ArrowUp" ? links.length - 1 : 0;
+    links?.[index]?.focus();
   }
 }
