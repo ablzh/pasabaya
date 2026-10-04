@@ -37,6 +37,7 @@ class RouteSubscription < ApplicationRecord
     return false if expired_by_date?
     return false unless ride.offering? && ride.published? && ride.bookable? && ride.driver_eligible?
     return false if ride.user_id == user_id
+    return false if ride.bookings.active.exists?(passenger_id: user_id)
     return false unless ride.origin_id == origin_id && ride.destination_id == destination_id
 
     if departure_date.present?

@@ -75,6 +75,23 @@ module RouteSubscriptions
       end
     end
 
+    test "a matching ride skips an existing active booking and becomes eligible after cancellation" do
+      ride = ride_posts(:one)
+      booking = bookings(:one)
+      subscription = RouteSubscription.create!(user: @subscriber, origin_id: ride.origin_id, destination_id: ride.destination_id)
+
+      assert_no_difference("Notification.count") { MatchService.call(ride) }
+      assert subscription.reload.active?
+
+      Bookings::AcceptService.call(booking, actor: @driver)
+      assert_no_difference("Notification.count") { MatchService.call(ride) }
+      assert subscription.reload.active?
+
+      Bookings::CancelService.call(booking, actor: @subscriber)
+      assert_difference("Notification.count", 1) { MatchService.call(ride) }
+      assert subscription.reload.fulfilled?
+    end
+
     test "resubscribing to the same dated hub search records another one shot event safely" do
       hub = communities(:two)
       CommunityMembership.create!(user: @driver, community: hub, institutional_email: "driver@up.edu.ph", verified_at: Time.current)
