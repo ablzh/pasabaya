@@ -4,7 +4,7 @@
 
 **Blocked by:** [03: Book rides with approximate departures](03-approximate-departure-booking.md).
 
-**Status:** ready-for-agent
+**Status:** in-progress
 
 - [ ] The owner sees active rides as full cards, including full upcoming offers. Departed rides still awaiting automatic completion remain distinguishable from completed history.
 - [ ] Show drafts only to the owner in a compact management section with explicit Publish and Delete actions; incomplete drafts display actionable publish validation.
@@ -16,3 +16,8 @@
 - [ ] Add the smallest relevant behavior or regression test for code changes, covering this ticket's user-visible behavior and important failure boundary. Do not require a browser test for changes with no browser behavior.
 - [ ] Run bin/ci before declaring the implementation complete; report any check that could not run rather than calling the gate green.
 
+
+
+## Implementation evidence
+
+Blocker 03 complete; resumed from integration 802a582 in isolated worktree.

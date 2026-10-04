@@ -4,7 +4,7 @@
 
 **Blocked by:** None (can start immediately).
 
-**Status:** ready-for-agent
+**Status:** in-progress
 
 - [ ] Mobile chat detail uses a 100dvh layout and hides global headers and footers while the discussion is open.
 - [ ] The compact header includes a back action, trip route and relevant participant/driver context.
@@ -16,3 +16,8 @@
 - [ ] Add the smallest relevant behavior or regression test for code changes, covering this ticket's user-visible behavior and important failure boundary. Do not require a browser test for changes with no browser behavior.
 - [ ] Run bin/ci before declaring the implementation complete; report any check that could not run rather than calling the gate green.
 
+
+
+## Implementation evidence
+
+Resumed from integration 802a582 in isolated worktree; relevant browser behavior under TDD.
