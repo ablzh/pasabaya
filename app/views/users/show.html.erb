@@ -164,15 +164,34 @@
         <% end %>
       </div>
     <% else %>
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+      <div id="profile-active-rides" class="grid grid-cols-1 md:grid-cols-2 gap-8">
         <% if @ride_posts.any? %>
           <%= render @ride_posts %>
         <% else %>
           <div class="col-span-full py-12 text-center text-neutral-500 bg-neutral-50 dark:bg-neutral-800/50 rounded-2xl border border-dashed border-neutral-200 dark:border-neutral-700">
-            No active ride offers or requests listed at the moment.
+            No upcoming driver offers listed at the moment.
           </div>
         <% end %>
       </div>
+      <% if Current.user == @user %>
+        <section id="profile-drafts" class="mt-8 space-y-3">
+          <h2 class="text-xl font-bold text-neutral-900 dark:text-white">Drafts</h2>
+          <p class="text-sm text-neutral-500">Only you can see drafts. Add a route, future departure and passenger seats before publishing.</p>
+          <%= render partial: "users/managed_trip", collection: @draft_ride_posts, as: :ride, locals: { state: "Draft" } %>
+          <% if @draft_ride_posts.empty? %><p class="text-sm text-neutral-500">No saved drafts.</p><% end %>
+        </section>
+        <section id="profile-departed-rides" class="mt-8 space-y-3">
+          <h2 class="text-xl font-bold text-neutral-900 dark:text-white">Departed rides</h2>
+          <p class="text-sm text-neutral-500">Booking has closed. These rides are awaiting automatic completion.</p>
+          <%= render partial: "users/managed_trip", collection: @departed_ride_posts, as: :ride, locals: { state: "Departed" } %>
+          <% if @departed_ride_posts.empty? %><p class="text-sm text-neutral-500">No rides awaiting completion.</p><% end %>
+        </section>
+        <section id="profile-history" class="mt-8 space-y-3">
+          <h2 class="text-xl font-bold text-neutral-900 dark:text-white">Past and canceled rides</h2>
+          <%= render partial: "users/managed_trip", collection: @past_ride_posts, as: :ride, locals: { state: "History" } %>
+          <% if @past_ride_posts.empty? %><p class="text-sm text-neutral-500">No past or canceled rides.</p><% end %>
+        </section>
+      <% end %>
     <% end %>
   </div>
 </div>

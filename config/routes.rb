@@ -6,6 +6,7 @@ Rails.application.routes.draw do
   resources :ride_posts, path: "rides" do
     member do
       patch :cancel
+      patch :publish
     end
     resources :bookings, only: [ :create ]
     resources :chat_messages, only: [ :create ]
