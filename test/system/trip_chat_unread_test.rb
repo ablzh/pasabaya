@@ -71,9 +71,12 @@ class TripChatUnreadTest < ApplicationSystemTestCase
     sign_in(@passenger)
     assert_selector "[data-chat-unread-count]", text: "1"
 
-    # Simulate background tab by overriding document.visibilityState
+    # Set visibility before page scripts run so opening the chat cannot mark it read.
+    visibility_script = page.driver.browser.page.command(
+      "Page.addScriptToEvaluateOnNewDocument",
+      source: "Object.defineProperty(document, 'visibilityState', { value: 'hidden', writable: true, configurable: true });"
+    ).fetch("identifier")
     visit ride_post_path(@ride, tab: "chat")
-    page.execute_script("Object.defineProperty(document, 'visibilityState', { value: 'hidden', writable: true, configurable: true }); document.dispatchEvent(new Event('visibilitychange'));")
 
     # Add another message while backgrounded
     @ride.chat_messages.create!(user: @driver, body: "Message while backgrounded")
@@ -107,6 +110,11 @@ class TripChatUnreadTest < ApplicationSystemTestCase
     # Now conversation becomes read
     assert_no_selector "[data-chat-unread-count] span"
     assert_equal 0, @passenger.reload.unread_chats_count
+  ensure
+    if visibility_script
+      page.driver.browser.page.command("Page.removeScriptToEvaluateOnNewDocument", identifier: visibility_script)
+      page.execute_script("delete document.visibilityState; document.dispatchEvent(new Event('visibilitychange'));")
+    end
   end
 
   private
