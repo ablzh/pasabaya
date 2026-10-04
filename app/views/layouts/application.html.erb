@@ -111,10 +111,10 @@
     <% if authenticated? %>
       <!-- Profile Dropdown Trigger -->
       <li class="ml-0.5">
-        <button type="button" data-navbar-target="trigger" data-content-id="profile-content" aria-label="Account menu" aria-controls="profile-content" aria-expanded="false" data-align="end" data-action="click->navbar#toggleMenu pointerenter->navbar#handlePointerEnter pointermove->navbar#handlePointerMove pointerleave->navbar#handlePointerLeave keydown->navbar#handleTriggerKeydown" data-state="closed" class="group flex items-center gap-2 rounded-md px-2 py-2 text-sm font-medium text-neutral-700 select-none hover:bg-neutral-100 dark:text-neutral-300 dark:hover:bg-neutral-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-600 dark:focus-visible:outline-neutral-200">
+        <button type="button" data-navbar-target="trigger" data-content-id="profile-content" aria-label="Account menu" aria-describedby="account-notification-count" aria-controls="profile-content" aria-expanded="false" data-align="end" data-action="click->navbar#toggleMenu pointerenter->navbar#handlePointerEnter pointermove->navbar#handlePointerMove pointerleave->navbar#handlePointerLeave keydown->navbar#handleTriggerKeydown" data-state="closed" class="group flex items-center gap-2 rounded-md px-2 py-2 text-sm font-medium text-neutral-700 select-none hover:bg-neutral-100 dark:text-neutral-300 dark:hover:bg-neutral-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-600 dark:focus-visible:outline-neutral-200">
           <span class="relative">
           <%= user_avatar Current.user, classes: "flex items-center justify-center size-6 rounded-full bg-gradient-to-br from-red-400 to-red-600 text-white text-xs font-semibold" %>
-            <span data-notification-count class="absolute -top-2 -right-2" aria-live="polite">
+            <span id="account-notification-count" data-notification-count class="absolute -top-2 -right-2" aria-live="polite">
               <%= render "notifications/count", count: Current.user.received_notifications.unread.count %>
             </span>
           </span>
