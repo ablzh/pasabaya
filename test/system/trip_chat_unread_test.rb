@@ -117,6 +117,36 @@ class TripChatUnreadTest < ApplicationSystemTestCase
     end
   end
 
+  test "a temporarily unavailable read endpoint can recover without a new message or page reload" do
+    @ride.chat_messages.create!(user: @driver, body: "Please meet at the main gate")
+    sign_in(@passenger)
+    visit ride_post_path(@ride)
+    read_path = ride_post_chat_reads_path(@ride)
+    page.execute_script(<<~JS, read_path)
+      const readPath = arguments[0];
+      window.originalReadFetch = window.fetch;
+      window.readEndpointUnavailable = true;
+      window.fetch = function(input, options) {
+        if (new URL(input, window.location.href).pathname === readPath && window.readEndpointUnavailable) {
+          document.documentElement.dataset.readRequestFailed = 'true';
+          return Promise.resolve(new Response('', { status: 503 }));
+        }
+        return window.originalReadFetch.call(this, input, options);
+      };
+    JS
+
+    find("#trip-chat-tab").click
+    assert_selector "html[data-read-request-failed='true']", visible: :all
+    assert_selector "[data-chat-unread-count]", text: "1"
+    assert_equal 1, @passenger.reload.unread_chats_count
+
+    page.execute_script("window.readEndpointUnavailable = false; window.dispatchEvent(new Event('focus'));")
+    assert_no_selector "[data-chat-unread-count] span"
+    assert_equal 0, @passenger.reload.unread_chats_count
+  ensure
+    page.execute_script("if (window.originalReadFetch) { window.fetch = window.originalReadFetch; delete window.originalReadFetch; } delete window.readEndpointUnavailable; delete document.documentElement.dataset.readRequestFailed;")
+  end
+
   private
 
   def sign_in(user)

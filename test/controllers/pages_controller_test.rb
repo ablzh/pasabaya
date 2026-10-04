@@ -37,6 +37,9 @@ class PagesControllerTest < ActionDispatch::IntegrationTest
     assert_select "li", text: /six monthly, and two yearly snapshots/
     assert_select "li", text: /separate persistent deletion registry/
     assert_select "li", text: /up to 30 days/, count: 0
+    assert_select "li", text: /At the history deadline.*inaccessible.*scheduled for permanent deletion/
+    assert_select "li", text: /Queue delays.*physical deletion/
+    assert_select "li", text: /canceled while messaging is open.*24 hours after cancellation/
   end
 
   test "should get terms with warning banner and protective clauses" do

@@ -407,7 +407,12 @@ class RidePost < ApplicationRecord
   def sync_departure_fields
     if exact_time?
       if exact_departure_time.present? && departure_date.present?
-        parsed = Time.zone.parse("#{departure_date} #{exact_departure_time}")
+        unless exact_departure_time.to_s.match?(/\A(?:[01]\d|2[0-3]):[0-5]\d(?::[0-5]\d)?\z/)
+          errors.add(:departure_time, "must be a valid time (HH:MM)")
+          return
+        end
+
+        parsed = Time.zone.local(departure_date.year, departure_date.month, departure_date.day, *exact_departure_time.split(":").map(&:to_i))
         self.departure_time = parsed if departure_time != parsed
       elsif departure_date.blank? && departure_time.present?
         self.departure_date = departure_time.in_time_zone("Asia/Manila").to_date

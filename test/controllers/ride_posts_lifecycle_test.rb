@@ -39,6 +39,8 @@ class RidePostsLifecycleTest < ActionDispatch::IntegrationTest
     assert_response :see_other
     ride = users(:one).ride_posts.order(:id).last
     assert ride.draft?
+    get ride_post_url(ride)
+    assert_select "p", text: /Expected arrival is optional/
     patch ride_post_url(ride), params: { ride_post: attributes }
     assert_response :see_other
     assert ride.reload.draft?
@@ -48,6 +50,7 @@ class RidePostsLifecycleTest < ActionDispatch::IntegrationTest
     assert_nil ride.expected_arrival_at
     get edit_ride_post_url(ride)
     assert_select "label[for='ride_post_expected_arrival_at']", text: "Expected Arrival Time (optional)"
+    assert_select "p", text: /Expected arrival is optional/
   end
 
   test "availability follows lifecycle before capacity and guest login only promises bookable seats" do

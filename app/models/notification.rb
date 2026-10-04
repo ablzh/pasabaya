@@ -81,31 +81,33 @@ class Notification < ApplicationRecord
   end
 
   def deliver!
-    with_lock do
-      return if delivered?
-      return unless route_alert_available?
+    # NotificationDeliveryJob serializes delivery per notification through Solid Queue.
+    # Keep transport calls outside SQLite write transactions.
+    reload
+    return if delivered?
+    return unless route_alert_available?
 
-      if EMAIL_EVENTS.include?(event_name) && recipient&.email_address.present?
-        NotificationMailer.with(notification: self).event_notification.deliver_now
-      end
-
-      Turbo::StreamsChannel.broadcast_prepend_to(
-        [ recipient, :notifications ],
-        target: "notifications_list",
-        partial: "notifications/notification",
-        locals: { notification: self }
-      )
-
-      Turbo::StreamsChannel.broadcast_append_to(
-        [ recipient, :notifications ],
-        target: "toast-container",
-        partial: "notifications/toast",
-        locals: { notification: self }
-      )
-
-      update!(delivery_status: :delivered, delivered_at: Time.current)
-      broadcast_unread_count
+    if EMAIL_EVENTS.include?(event_name) && recipient&.email_address.present? && email_delivered_at.nil?
+      NotificationMailer.with(notification: self).event_notification.deliver_now
+      update!(email_delivered_at: Time.current)
     end
+
+    Turbo::StreamsChannel.broadcast_prepend_to(
+      [ recipient, :notifications ],
+      target: "notifications_list",
+      partial: "notifications/notification",
+      locals: { notification: self }
+    )
+
+    Turbo::StreamsChannel.broadcast_append_to(
+      [ recipient, :notifications ],
+      target: "toast-container",
+      partial: "notifications/toast",
+      locals: { notification: self }
+    )
+
+    broadcast_unread_count
+    update!(delivery_status: :delivered, delivered_at: Time.current)
 
   rescue StandardError => e
     if persisted?

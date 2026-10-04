@@ -8,7 +8,7 @@
       </svg>
       <span>Chats</span>
       <span data-chat-unread-count class="unread-chats-badge inline-flex items-center">
-        <%= render "chats/unread_badge", count: Current.user.unread_chats_count %>
+        <%= render "chats/unread_badge", count: current_unread_chats_count %>
       </span>
     <% end %>
     <%= link_to "Hubs", communities_path %>

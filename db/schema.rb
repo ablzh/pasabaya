@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_04_000900) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_04_180000) do
   create_table "account_deletion_tombstones", force: :cascade do |t|
     t.string "anonymized_email", null: false
     t.bigint "avatar_blob_id"
@@ -147,6 +147,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_04_000900) do
     t.datetime "delivered_at"
     t.string "delivery_key", null: false
     t.integer "delivery_status", default: 0, null: false
+    t.datetime "email_delivered_at"
     t.string "event_name", null: false
     t.integer "notifiable_id", null: false
     t.string "notifiable_type", null: false

@@ -20,17 +20,22 @@ class User < ApplicationRecord
     unread_chat_ride_ids.size
   end
 
-  def unread_chat_ride_ids(rides: authorized_chat_rides)
-    ChatMessage.where(ride_post_id: rides.map(&:id)).where.not(user_id: id)
-               .where("chat_messages.id > COALESCE((SELECT last_read_message_id FROM chat_read_states WHERE chat_read_states.ride_post_id = chat_messages.ride_post_id AND chat_read_states.user_id = ?), 0)", id)
-               .distinct.pluck(:ride_post_id)
+  def unread_chat_ride_ids(rides: nil)
+    unread_messages = ChatMessage.where.not(user_id: id)
+                                 .where("chat_messages.id > COALESCE((SELECT last_read_message_id FROM chat_read_states WHERE chat_read_states.ride_post_id = chat_messages.ride_post_id AND chat_read_states.user_id = ?), 0)", id)
+    if rides
+      unread_messages.where(ride_post_id: rides.map(&:id)).distinct.pluck(:ride_post_id)
+    else
+      authorized_chat_rides(includes: [ :bookings ], ride_ids: unread_messages.select(:ride_post_id)).map(&:id)
+    end
   end
 
-  def authorized_chat_rides(includes: [ :origin, :destination, :bookings ])
+  def authorized_chat_rides(includes: [ :origin, :destination, :bookings ], ride_ids: nil)
     verified_ids = verified_community_ids
     candidate_bookings = bookings.where("status = ? OR (status = ? AND accepted_at IS NOT NULL)", Booking.statuses[:accepted], Booking.statuses[:canceled])
     candidates = RidePost.where(user: self).or(RidePost.where(id: candidate_bookings.select(:ride_post_id)))
                          .includes(includes)
+    candidates = candidates.where(id: ride_ids) if ride_ids
     candidates.select { |ride| ride.user_authorized_for_chat?(self, verified_community_ids: verified_ids) }
   end
 

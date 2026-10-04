@@ -80,7 +80,7 @@
              end,
              tag.span("Chats"),
              tag.span(data: { chat_unread_count: true }, class: "unread-chats-badge inline-flex items-center") do
-               render("chats/unread_badge", count: Current.user.unread_chats_count)
+               render("chats/unread_badge", count: current_unread_chats_count)
              end
            ])
          end
@@ -101,7 +101,7 @@
           <span>Chats</span>
         </span>
         <span data-chat-unread-count class="unread-chats-badge inline-flex items-center">
-          <%= render "chats/unread_badge", count: Current.user.unread_chats_count %>
+          <%= render "chats/unread_badge", count: current_unread_chats_count %>
         </span>
       <% end %>
     <% end %>
