@@ -16,7 +16,27 @@ class RidePost < ApplicationRecord
   enum :post_type, { offering: 0 }, default: :offering, validate: true
   enum :status, { active: 0, fulfilled: 1, canceled: 2, completed: 3, draft: 4 }
   enum :visibility, { public_ride: 0, hub_only: 1 }, default: :public_ride
+  enum :departure_choice, {
+    morning: 0,
+    afternoon: 1,
+    evening: 2,
+    night: 3,
+    exact_time: 4,
+    flexible: 5
+  }
 
+  DEPARTURE_CHOICE_HINTS = {
+    "morning" => "06:00–12:00",
+    "afternoon" => "12:00–17:00",
+    "evening" => "17:00–21:00",
+    "night" => "21:00–midnight",
+    "exact_time" => "Exact time",
+    "flexible" => "Any time on the selected date"
+  }.freeze
+
+  attr_accessor :exact_departure_time
+
+  validate :departure_date_cannot_be_in_the_past
   validate :departure_time_cannot_be_in_the_past
   validates :seats, numericality: { only_integer: true, greater_than: 0 }, allow_nil: true
   validates :origin, :destination, :seats, presence: true, unless: :draft?
@@ -34,6 +54,7 @@ class RidePost < ApplicationRecord
   validate :bookable_offering_requirements, if: -> { offering? && !draft? && !canceled? && !completed? }
   validate :lock_attributes_when_accepted_bookings_exist, on: :update
 
+  before_validation :sync_departure_fields
   before_validation :initialize_remaining_seats, on: :create
   before_validation :sync_remaining_seats_with_capacity, on: :update
   before_validation :preload_locations, if: -> { origin_id.present? && destination_id.present? }
@@ -49,7 +70,11 @@ class RidePost < ApplicationRecord
     if date_str.present?
       begin
         d = Date.parse(date_str.to_s)
-        where(departure_time: d.beginning_of_day..d.end_of_day).or(where(departure_time: nil))
+        where(
+          "(ride_posts.departure_time IS NOT NULL AND DATE(ride_posts.departure_time) = :date) OR " \
+          "(ride_posts.departure_time IS NULL AND ride_posts.departure_date = :date)",
+          date: d.to_s
+        )
       rescue ArgumentError, TypeError
         all
       end
@@ -84,7 +109,9 @@ class RidePost < ApplicationRecord
 
   scope :regular, -> { where(departure_time: nil) }
   scope :specific, -> { where.not(departure_time: nil) }
-  scope :upcoming, -> { where("departure_time > ? OR departure_time IS NULL", Time.current) }
+  scope :upcoming, -> {
+    where("ride_posts.departure_time > ? OR (ride_posts.departure_time IS NULL AND (ride_posts.departure_date >= ? OR ride_posts.departure_date IS NULL))", Time.current, Date.current)
+  }
 
   def regular?
     departure_time.nil?
@@ -127,7 +154,13 @@ class RidePost < ApplicationRecord
   end
 
   def booking_cutoff_at
-    departure_time
+    if exact_time?
+      departure_time
+    elsif departure_date.present?
+      departure_date.in_time_zone("Asia/Manila").end_of_day
+    elsif departure_time.present?
+      departure_time
+    end
   end
 
   def automatic_completion_at
@@ -137,7 +170,7 @@ class RidePost < ApplicationRecord
   end
 
   def bookable?
-    offering? && active? && remaining_seats.to_i > 0 && departure_time.present? && departure_time > Time.current
+    offering? && active? && remaining_seats.to_i > 0 && booking_cutoff_at.present? && booking_cutoff_at > Time.current
   end
 
   def full?
@@ -184,7 +217,7 @@ class RidePost < ApplicationRecord
   end
 
   def chat_writable?
-    !canceled? && chat_unlocked? && (departure_time.blank? || Time.current <= departure_time + 24.hours)
+    !canceled? && chat_unlocked? && (booking_cutoff_at.blank? || Time.current <= booking_cutoff_at + 24.hours)
   end
 
   def user_authorized_for_chat?(u, verified_community_ids: nil)
@@ -211,7 +244,7 @@ class RidePost < ApplicationRecord
   end
 
   def reviewable_trip?
-    offering? && !draft? && departure_time.present? && departure_time <= Time.current
+    offering? && !draft? && booking_cutoff_at.present? && booking_cutoff_at <= Time.current
   end
 
   def reviewable_by?(reviewer)
@@ -220,27 +253,70 @@ class RidePost < ApplicationRecord
 
   def review_participants
     participant_bookings = bookings.accepted
-    if departure_time.present?
-      late_cancellations = bookings.canceled.where("accepted_at <= ? AND canceled_at >= ?", departure_time, departure_time)
+    cutoff = booking_cutoff_at
+    if cutoff.present?
+      late_cancellations = bookings.canceled.where("accepted_at <= ? AND canceled_at >= ?", cutoff, cutoff)
       participant_bookings = participant_bookings.or(late_cancellations)
     end
     User.where(id: user_id).or(User.where(id: participant_bookings.select(:passenger_id)))
   end
 
   def historical_reviewable_bookings
-    dep_time = departure_time_was || departure_time
-    return bookings.none if dep_time.blank?
+    cutoff = booking_cutoff_at_was || booking_cutoff_at
+    return bookings.none if cutoff.blank?
 
     accepted_bookings = bookings.accepted
-    late_cancellations = bookings.canceled.where("accepted_at <= ? AND canceled_at >= ?", dep_time, dep_time)
+    late_cancellations = bookings.canceled.where("accepted_at <= ? AND canceled_at >= ?", cutoff, cutoff)
     accepted_bookings.or(late_cancellations)
   end
 
   def historical_reviewable_participation?
-    dep_time = departure_time_was || departure_time
-    return false if dep_time.blank? || dep_time > Time.current
+    cutoff = booking_cutoff_at_was || booking_cutoff_at
+    return false if cutoff.blank? || cutoff > Time.current
 
     historical_reviewable_bookings.exists?
+  end
+
+  def booking_cutoff_at_was
+    dep_time = departure_time_was || departure_time
+    dep_choice = departure_choice_was || departure_choice
+    dep_date = departure_date_was || departure_date
+
+    if dep_choice == "exact_time" || (dep_choice.is_a?(Integer) && dep_choice == 4)
+      dep_time
+    elsif dep_date.present?
+      dep_date.in_time_zone("Asia/Manila").end_of_day
+    else
+      dep_time
+    end
+  end
+
+  def departure_choice_human
+    return "Exact Time" if exact_time?
+    return departure_choice.humanize if departure_choice.present?
+
+    "Flexible"
+  end
+
+  def departure_display
+    if departure_date.present?
+      if exact_time? && departure_time.present?
+        departure_time.strftime("%a, %b %d • %I:%M %p")
+      elsif departure_choice.present?
+        hint = DEPARTURE_CHOICE_HINTS[departure_choice]
+        if hint && departure_choice != "flexible"
+          "#{departure_date.strftime('%a, %b %d')} • #{departure_choice.humanize} (#{hint})"
+        else
+          "#{departure_date.strftime('%a, %b %d')} • #{departure_choice.humanize}"
+        end
+      else
+        departure_date.strftime("%a, %b %d")
+      end
+    elsif departure_time.present?
+      departure_time.strftime("%a, %b %d • %I:%M %p")
+    else
+      "Regular / Flexible Schedule"
+    end
   end
 
   private
@@ -276,8 +352,27 @@ class RidePost < ApplicationRecord
     end
   end
 
+  def sync_departure_fields
+    if exact_time?
+      if exact_departure_time.present? && departure_date.present?
+        parsed = Time.zone.parse("#{departure_date} #{exact_departure_time}")
+        self.departure_time = parsed if departure_time != parsed
+      elsif departure_date.blank? && departure_time.present?
+        self.departure_date = departure_time.in_time_zone("Asia/Manila").to_date
+      elsif will_save_change_to_departure_time? && exact_departure_time.blank? && departure_time.present?
+        target_date = departure_time.in_time_zone("Asia/Manila").to_date
+        self.departure_date = target_date if departure_date != target_date
+      end
+    elsif departure_time.present? && departure_choice.blank?
+      self.departure_choice = :exact_time
+      self.departure_date = departure_time.in_time_zone("Asia/Manila").to_date if departure_date.blank?
+    elsif departure_choice.present? && !exact_time?
+      self.departure_time = nil if departure_time.present?
+    end
+  end
+
   def should_schedule_audit?
-    offering? && published? && automatic_completion_at.present? && (saved_change_to_expected_arrival_at? || saved_change_to_departure_time? || saved_change_to_status?)
+    offering? && published? && automatic_completion_at.present? && (saved_change_to_expected_arrival_at? || saved_change_to_departure_time? || saved_change_to_departure_date? || saved_change_to_departure_choice? || saved_change_to_status?)
   end
 
   def schedule_trip_audit
@@ -298,23 +393,51 @@ class RidePost < ApplicationRecord
     errors.add(:destination, "must differ from origin") if origin_id.present? && origin_id == destination_id
   end
 
+  def departure_date_cannot_be_in_the_past
+    return if draft? || exact_time?
+    return unless departure_date.present?
+    return unless new_record? || publishing? || will_save_change_to_departure_date?
+
+    if departure_date < Date.current
+      errors.add(:departure_date, "can't be in the past")
+    end
+  end
+
   def departure_time_cannot_be_in_the_past
     return if draft?
-    return unless departure_time.present?
-    return unless new_record? || will_save_change_to_departure_time?
+    return unless exact_time? && departure_time.present?
+    return unless new_record? || publishing? || will_save_change_to_departure_time?
 
-    if departure_time < Time.current
+    if departure_time <= Time.current
       errors.add(:departure_time, "can't be in the past")
     end
   end
 
   def bookable_offering_requirements
-    if departure_time.blank? || (publishing? && departure_time <= Time.current)
-      errors.add(:departure_time, "is required for published ride offers")
+    if departure_date.blank?
+      errors.add(:departure_date, "is required for published ride offers")
     end
 
-    if expected_arrival_at.present? && departure_time.present? && expected_arrival_at <= departure_time
-      errors.add(:expected_arrival_at, "must be after departure time")
+    if departure_choice.blank?
+      errors.add(:departure_choice, "is required for published ride offers")
+    end
+
+    if departure_time.blank? && (departure_choice.blank? || exact_time?)
+      errors.add(:departure_time, "is required for published ride offers")
+    elsif exact_time? && publishing? && departure_time <= Time.current
+      errors.add(:departure_time, "can't be in the past")
+    end
+
+    if !exact_time? && publishing? && departure_date.present? && departure_date < Date.current
+      errors.add(:departure_date, "can't be in the past")
+    end
+
+    if expected_arrival_at.present?
+      if exact_time? && departure_time.present? && expected_arrival_at <= departure_time
+        errors.add(:expected_arrival_at, "must be after departure time")
+      elsif !exact_time? && departure_date.present? && expected_arrival_at < departure_date.in_time_zone("Asia/Manila").beginning_of_day
+        errors.add(:expected_arrival_at, "must be on or after departure date")
+      end
     end
 
     if remaining_seats.nil? || (publishing? && active? && remaining_seats <= 0)
@@ -331,7 +454,7 @@ class RidePost < ApplicationRecord
     has_historical = historical_reviewable_participation?
     return unless has_accepted || has_historical
 
-    locked_fields = %w[origin_id destination_id departure_time expected_arrival_at seats post_type visibility ladies_only community_id]
+    locked_fields = %w[origin_id destination_id departure_date departure_choice departure_time expected_arrival_at seats post_type visibility ladies_only community_id]
     changed_locked_fields = (changes.keys & locked_fields)
 
     if changed_locked_fields.any?

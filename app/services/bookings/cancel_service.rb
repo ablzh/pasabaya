@@ -63,7 +63,7 @@ module Bookings
           new_remaining = [ ride.remaining_seats + 1, ride.seats ].min
           ride_attributes = { remaining_seats: new_remaining }
 
-          if ride.fulfilled? && ride.departure_time.present? && ride.departure_time > Time.current
+          if ride.fulfilled? && ride.booking_cutoff_at.present? && ride.booking_cutoff_at > Time.current
             ride_attributes[:status] = :active
           end
 

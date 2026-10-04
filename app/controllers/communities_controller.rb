@@ -11,6 +11,6 @@ class CommunitiesController < ApplicationController
   def show
     @community = Community.find_by(slug: params[:id]) || Community.find(params[:id])
     @membership = authenticated? ? Current.user.community_memberships.find_by(community: @community) : nil
-    @ride_posts = @community.ride_posts.active.visible_to(Current.user).includes(:origin, :destination, :user).order(departure_time: :asc)
+    @ride_posts = @community.ride_posts.active.upcoming.visible_to(Current.user).includes(:origin, :destination, :user).order(departure_date: :asc, departure_time: :asc)
   end
 end

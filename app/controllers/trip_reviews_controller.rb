@@ -25,7 +25,7 @@ class TripReviewsController < ApplicationController
       if @trip_review.passenger_no_show? || @trip_review.driver_no_show?
         NoShowIncident.find_or_create_by!(ride_post: @ride_post, user: @trip_review.reported_user) do |incident|
           incident.status = :pending
-          incident.occurred_at = @ride_post.departure_time || Time.current
+          incident.occurred_at = @ride_post.booking_cutoff_at || @ride_post.departure_time || Time.current
           incident.decision_reason = "Reported by #{@trip_review.reporter.first_name}: #{@trip_review.notes}"
         end
       end
@@ -50,7 +50,7 @@ class TripReviewsController < ApplicationController
   end
 
   def require_review_eligibility
-    if @ride_post.departure_time.present? && Time.current < @ride_post.departure_time
+    if @ride_post.booking_cutoff_at.present? && Time.current < @ride_post.booking_cutoff_at
       redirect_to @ride_post, alert: "Reviews and no-show reports cannot be submitted before trip departure."
     elsif !@ride_post.reviewable_by?(Current.user)
       redirect_to @ride_post, alert: "Reviews require a departed ride offer with another eligible participant."

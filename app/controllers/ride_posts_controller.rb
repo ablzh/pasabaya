@@ -14,7 +14,7 @@ class RidePostsController < ApplicationController
       @ride_posts = RidePost.active.upcoming
                             .visible_to(Current.user)
                             .includes(:origin, :destination, :community, user: { avatar_attachment: :blob })
-                            .order(departure_time: :asc)
+                            .order(departure_date: :asc, departure_time: :asc)
                             .filter_by_origin(params[:origin_id])
                             .filter_by_destination(params[:destination_id])
                             .filter_by_community(params[:community_id])
@@ -139,7 +139,7 @@ class RidePostsController < ApplicationController
   # Only allow a list of trusted parameters through.
   def ride_post_params
     params.expect(ride_post: [
-      :origin_id, :destination_id, :departure_time, :expected_arrival_at,
+      :origin_id, :destination_id, :departure_date, :departure_choice, :exact_departure_time, :departure_time, :expected_arrival_at,
       :seats, :notes,
       :ladies_only, :visibility, :community_id
     ])
@@ -178,11 +178,18 @@ class RidePostsController < ApplicationController
   end
 
   def setup_show_meta_tags
-    formatted_time = if @ride_post.regular?
-                       "Flexible departure"
-    else
-                       @ride_post.departure_time.strftime("%A, %b %d at %I:%M %p")
-    end
+    formatted_time =
+      if @ride_post.departure_date.present?
+        if @ride_post.exact_time? && @ride_post.departure_time.present?
+          @ride_post.departure_time.strftime("%A, %b %d at %I:%M %p")
+        else
+          "#{@ride_post.departure_date.strftime('%A, %b %d')} (#{@ride_post.departure_choice_human})"
+        end
+      elsif @ride_post.departure_time.present?
+        @ride_post.departure_time.strftime("%A, %b %d at %I:%M %p")
+      else
+        "Flexible departure"
+      end
 
     title_text = "Ride from #{(@ride_post.origin&.name || "Choose origin")} to #{(@ride_post.destination&.name || "Choose destination")}"
     desc_text = "#{@ride_post.user.first_name} is #{@ride_post.post_type} a ride. " \

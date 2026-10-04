@@ -64,7 +64,7 @@ class CommunityMembership < ApplicationRecord
       affected_bookings = Booking.joins(:ride_post)
                                  .where(passenger_id: user_id, status: [ :pending, :accepted ])
                                  .where(ride_posts: { visibility: :hub_only, community_id: community_id })
-                                 .where("ride_posts.departure_time > ?", Time.current)
+                                 .merge(RidePost.upcoming)
 
       affected_bookings.find_each do |booking|
         Bookings::CancelService.new(booking, actor: user).call
@@ -72,7 +72,7 @@ class CommunityMembership < ApplicationRecord
 
       # 2. Cancel driver's upcoming hub-only rides (both active and fulfilled) for this community
       user.ride_posts.hub_only.where(community_id: community_id)
-                             .where("departure_time > ?", Time.current)
+                             .upcoming
                              .where(status: [ :active, :fulfilled ])
                              .find_each do |ride|
         RidePosts::CancelService.new(ride, actor: user).call

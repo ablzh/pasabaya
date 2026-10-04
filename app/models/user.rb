@@ -125,8 +125,8 @@ class User < ApplicationRecord
   end
 
   def active_trips_count
-    driver_count = ride_posts.where(status: [ :active, :fulfilled ]).where("departure_time >= ? OR departure_time IS NULL", Time.current).count
-    passenger_count = bookings.accepted.joins(:ride_post).where(ride_posts: { status: [ :active, :fulfilled ] }).where("ride_posts.departure_time >= ? OR ride_posts.departure_time IS NULL", Time.current).count
+    driver_count = ride_posts.where(status: [ :active, :fulfilled ]).upcoming.count
+    passenger_count = bookings.accepted.joins(:ride_post).where(ride_posts: { status: [ :active, :fulfilled ] }).merge(RidePost.upcoming).count
     driver_count + passenger_count
   end
 
@@ -217,14 +217,14 @@ class User < ApplicationRecord
     bookings.joins(:ride_post)
             .where(status: [ :pending, :accepted ])
             .where(ride_posts: { ladies_only: true })
-            .where("ride_posts.departure_time > ?", Time.current)
+            .merge(RidePost.upcoming)
             .find_each do |booking|
       Bookings::CancelService.call(booking, actor: self)
     end
 
     # Cancel driver offers for ladies-only rides
     ride_posts.where(ladies_only: true)
-              .where("departure_time > ?", Time.current)
+              .upcoming
               .where(status: [ :active, :fulfilled ])
               .find_each do |ride|
       RidePosts::CancelService.call(ride, actor: self)
