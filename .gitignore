@@ -42,3 +42,6 @@
 !/app/assets/builds/.keep
 
 .DS_Store
+
+# Local research and implementation notes are not part of the public repository.
+/.scratch/
