@@ -2,6 +2,7 @@ class Notification < ApplicationRecord
   belongs_to :recipient, class_name: "User"
   belongs_to :actor, class_name: "User", optional: true
   belongs_to :notifiable, polymorphic: true
+  belongs_to :route_subscription, optional: true
 
   enum :delivery_status, { pending: 0, delivered: 1, failed: 2 }, default: :pending
 
@@ -73,7 +74,10 @@ class Notification < ApplicationRecord
     return true unless event_name == "route.alert"
 
     ride = notifiable
-    ride.is_a?(RidePost) && ride.bookable? && ride.driver_eligible? && ride.authorized_for_booking?(recipient)
+    subscription = route_subscription
+    ride.is_a?(RidePost) && subscription.present? && subscription.fulfilled? &&
+      subscription.user_id == recipient_id && subscription.ride_post_id == ride.id &&
+      subscription.matches_ride?(ride.reload)
   end
 
   def deliver!

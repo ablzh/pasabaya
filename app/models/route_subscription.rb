@@ -29,6 +29,11 @@ class RouteSubscription < ApplicationRecord
 
   def matches?(ride)
     return false unless active?
+
+    matches_ride?(ride)
+  end
+
+  def matches_ride?(ride)
     return false if expired_by_date?
     return false unless ride.offering? && ride.published? && ride.bookable? && ride.driver_eligible?
     return false if ride.user_id == user_id
@@ -44,8 +49,9 @@ class RouteSubscription < ApplicationRecord
     return false if community_id.present? && ride.community_id != community_id
 
     # Recheck audience access and booking eligibility
-    return false unless user.eligible_for_booking?
-    return false unless ride.authorized_for_booking?(user)
+    passenger = user.reload
+    return false unless passenger.eligible_for_booking?
+    return false unless ride.authorized_for_booking?(passenger)
 
     true
   end

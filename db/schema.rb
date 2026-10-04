@@ -152,12 +152,14 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_04_000900) do
     t.string "notifiable_type", null: false
     t.datetime "read_at"
     t.integer "recipient_id", null: false
+    t.integer "route_subscription_id"
     t.datetime "updated_at", null: false
     t.index ["actor_id"], name: "index_notifications_on_actor_id"
     t.index ["delivery_key"], name: "index_notifications_on_delivery_key", unique: true
     t.index ["notifiable_type", "notifiable_id"], name: "index_notifications_on_notifiable"
     t.index ["recipient_id", "created_at"], name: "index_notifications_on_recipient_id_and_created_at"
     t.index ["recipient_id", "read_at"], name: "index_notifications_on_recipient_id_and_read_at"
+    t.index ["route_subscription_id"], name: "index_notifications_on_route_subscription_id"
   end
 
   create_table "ride_posts", force: :cascade do |t|
@@ -208,11 +210,11 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_04_000900) do
     t.integer "status", default: 0, null: false
     t.datetime "updated_at", null: false
     t.integer "user_id", null: false
+    t.index "user_id, origin_id, destination_id, COALESCE(departure_date, ''), COALESCE(community_id, 0), ladies_only", name: "index_route_subscriptions_active_uniqueness", unique: true, where: "status = 0"
     t.index ["community_id"], name: "index_route_subscriptions_on_community_id"
     t.index ["destination_id"], name: "index_route_subscriptions_on_destination_id"
     t.index ["origin_id", "destination_id", "status"], name: "idx_on_origin_id_destination_id_status_f127ae68fc"
     t.index ["ride_post_id"], name: "index_route_subscriptions_on_ride_post_id"
-    t.index ["user_id", "origin_id", "destination_id", "departure_date", "community_id", "ladies_only", "status"], name: "index_route_subscriptions_uniqueness", unique: true
   end
 
   create_table "sessions", force: :cascade do |t|
@@ -280,6 +282,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_04_000900) do
   add_foreign_key "no_show_incidents", "ride_posts"
   add_foreign_key "no_show_incidents", "users"
   add_foreign_key "no_show_incidents", "users", column: "reviewer_id", on_delete: :nullify
+  add_foreign_key "notifications", "route_subscriptions", on_delete: :nullify
   add_foreign_key "notifications", "users", column: "actor_id", on_delete: :nullify
   add_foreign_key "notifications", "users", column: "recipient_id"
   add_foreign_key "ride_posts", "communities", on_delete: :nullify

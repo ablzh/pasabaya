@@ -55,6 +55,32 @@ class RouteSubscriptionTest < ActiveSupport::TestCase
     assert sub2.valid?
   end
 
+  test "the same dated hub search can be subscribed and canceled repeatedly" do
+    filters = {
+      user: @user, origin: @origin, destination: @destination,
+      departure_date: 2.days.from_now.to_date, community: communities(:two)
+    }
+
+    subscription_ids = 2.times.map do
+      subscription = RouteSubscription.create!(filters)
+      subscription.cancel!
+      subscription.id
+    end
+    assert_equal [ "canceled", "canceled" ], RouteSubscription.where(id: subscription_ids).pluck(:status)
+  end
+
+  test "database rejects duplicate active searches when date or hub filters are absent" do
+    [ [ nil, nil ], [ Date.current + 2, nil ], [ nil, communities(:two).id ] ].each do |date, community_id|
+      attributes = {
+        user_id: @user.id, origin_id: @origin.id, destination_id: @destination.id,
+        departure_date: date, community_id: community_id, ladies_only: false,
+        status: RouteSubscription.statuses[:active], created_at: Time.current, updated_at: Time.current
+      }
+      RouteSubscription.insert_all!([ attributes ])
+      assert_raises(ActiveRecord::RecordNotUnique) { RouteSubscription.insert_all!([ attributes ]) }
+    end
+  end
+
   test "matches upcoming ride when no date is specified" do
     sub = RouteSubscription.create!(
       user: @user,

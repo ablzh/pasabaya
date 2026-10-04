@@ -4,7 +4,7 @@ class RouteSubscriptionsController < ApplicationController
   before_action :require_authentication
 
   def create
-    @subscription = Current.user.route_subscriptions.find_or_initialize_by(
+    @subscription = Current.user.route_subscriptions.find_or_create_by(
       origin_id: route_subscription_params[:origin_id],
       destination_id: route_subscription_params[:destination_id],
       departure_date: route_subscription_params[:departure_date].presence,
@@ -13,7 +13,7 @@ class RouteSubscriptionsController < ApplicationController
       status: :active
     )
 
-    if @subscription.save
+    if @subscription.persisted?
       redirect_back fallback_location: ride_posts_path, notice: "You will be notified when a matching ride is posted.", status: :see_other
     else
       redirect_back fallback_location: ride_posts_path, alert: @subscription.errors.full_messages.to_sentence, status: :see_other
