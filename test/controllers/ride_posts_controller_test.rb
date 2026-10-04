@@ -1,6 +1,39 @@
 require "test_helper"
 
 class RidePostsControllerTest < ActionDispatch::IntegrationTest
+  test "card notes preview is at most 110 characters and two lines without changing stored notes" do
+    original = "Long historical note " * 30
+    @ride_post.update_columns(notes: original)
+    get ride_posts_url(origin_id: @ride_post.origin_id)
+    assert_select "#ride_post_#{@ride_post.id} p.line-clamp-2", text: original.truncate(110)
+    assert_equal original, @ride_post.reload.notes
+  end
+
+  test "unchanged historical long notes allow unrelated form updates" do
+    original = "Historical details " * 30
+    @ride_post.update_columns(notes: original)
+    get edit_ride_post_url(@ride_post)
+    assert_select "textarea[name='ride_post[notes]'][maxlength]", count: 0
+    assert_select "p", text: "Existing longer notes may be kept unchanged; edited notes must be 300 characters or fewer."
+
+    patch ride_post_url(@ride_post), params: { ride_post: { notes: original, seats: 4 } }
+    assert_redirected_to ride_post_url(@ride_post)
+    assert_equal 4, @ride_post.reload.seats
+    assert_equal original, @ride_post.notes
+  end
+
+  test "notes form explains the limit and server rejects oversized notes" do
+    get new_ride_post_url
+    assert_select "textarea[name='ride_post[notes]'][maxlength='300']"
+    assert_select "p", text: "Optional. Up to 300 characters."
+
+    assert_no_difference "RidePost.count" do
+      post ride_posts_url, params: { intent: "draft", ride_post: { notes: "a" * 301 } }
+    end
+    assert_response :unprocessable_content
+    assert_select "p", text: "is too long (maximum is 300 characters)"
+  end
+
   test "owner sees their trip notes without their own driver introduction" do
     ride = ride_posts(:one)
     sign_in_as(ride.user)

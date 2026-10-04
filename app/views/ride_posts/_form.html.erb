@@ -236,10 +236,11 @@
       label: "Details & Preferences",
       name: :notes,
       id: form.field_id(:notes),
+      helper_text: ride_post.persisted? && ride_post.notes.to_s.length > 300 ? "Existing longer notes may be kept unchanged; edited notes must be 300 characters or fewer." : "Optional. Up to 300 characters.",
       classes: "col-span-full",
       error: ride_post.errors[:notes].first
     )) do %>
-      <%= form.text_area :notes, rows: 4, 
+      <%= form.text_area :notes, rows: 4, maxlength: (300 unless ride_post.persisted? && ride_post.notes.to_s.length > 300),
           class: "block w-full rounded-xl border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-base sm:text-sm text-neutral-900 dark:text-white focus:ring-blue-500 focus:border-blue-500 transition-all py-3 px-4", 
           placeholder: "e.g., I have a small dog, specific pick-up point near landmark, luggage notes..." %>
     <% end %>

@@ -1,6 +1,35 @@
 require "test_helper"
 
 class RidePostTest < ActiveSupport::TestCase
+  test "unchanged historical long notes survive cancellation and automatic completion" do
+    original = "Historical trip details " * 30
+    canceled = ride_posts(:one)
+    canceled.update_columns(notes: original)
+    RidePosts::CancelService.call(canceled, actor: canceled.user)
+    assert canceled.reload.canceled?
+    assert_equal original, canceled.notes
+
+    completed = ride_posts(:two)
+    completed.update_columns(notes: original, departure_time: 25.hours.ago, expected_arrival_at: nil)
+    TripAuditJob.perform_now(completed.id)
+    assert completed.reload.completed?
+    assert_equal original, completed.notes
+  end
+
+  test "new and changed notes allow 300 characters and reject 301" do
+    ride = ride_posts(:one).dup
+    ride.notes = "a" * 300
+    assert ride.save
+    ride.notes = "a" * 301
+    assert_not ride.save
+    assert_includes ride.errors[:notes], "is too long (maximum is 300 characters)"
+
+    fresh = ride_posts(:one).dup
+    fresh.notes = "a" * 301
+    assert_not fresh.save
+    assert_includes fresh.errors[:notes], "is too long (maximum is 300 characters)"
+  end
+
   test "passenger ride posts are invalid while driver offers remain supported" do
     ride = ride_posts(:one).dup
     ride.post_type = :requesting
