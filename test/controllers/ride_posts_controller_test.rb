@@ -410,8 +410,8 @@ class RidePostsControllerTest < ActionDispatch::IntegrationTest
 
   test "index filters by departure_date" do
     target_date = 2.days.from_now.to_date
-    @ride_post.update_columns(departure_time: target_date.to_time + 8.hours)
-    ride_posts(:two).update_columns(departure_time: (target_date + 4.days).to_time)
+    @ride_post.update!(departure_time: target_date.in_time_zone("Asia/Manila").change(hour: 8), expected_arrival_at: nil)
+    ride_posts(:two).update!(departure_time: (target_date + 4.days).in_time_zone("Asia/Manila"), expected_arrival_at: nil)
 
     get ride_posts_url(departure_date: target_date.to_s)
     assert_response :success

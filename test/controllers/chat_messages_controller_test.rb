@@ -25,6 +25,21 @@ class ChatMessagesControllerTest < ActionDispatch::IntegrationTest
     assert_equal "I am at the meeting point", @ride.chat_messages.last.body
   end
 
+  test "sending a message renders it in the response without waiting for a cable subscription" do
+    @booking.update_columns(status: Booking.statuses[:accepted])
+    sign_in_as(@passenger)
+
+    post ride_post_chat_messages_url(@ride), params: {
+      chat_message: { body: "My message must appear even before the live connection is ready" }
+    }, as: :turbo_stream
+
+    assert_response :success
+    assert_select 'turbo-stream[action="append"][target="chat_messages_list"]', 1 do
+      assert_select ".chat-message", text: /My message must appear even before the live connection is ready/, count: 1
+    end
+    assert_select 'turbo-stream[action="replace"][target="chat_message_form"]', 1
+  end
+
   test "unconfirmed user cannot post chat message" do
     # Booking is pending
     sign_in_as(@passenger)

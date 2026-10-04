@@ -47,7 +47,7 @@ module Bookings
         return unless b && b.pending?
 
         ride = RidePost.lock.find_by(id: b.ride_post_id)
-        return unless ride && (ride.requests_closed_at.present? || (ride.booking_cutoff_at.present? && Time.current >= ride.booking_cutoff_at))
+        return unless ride&.booking_requests_closed?
 
         expire_booking_record(b)
       end
@@ -56,7 +56,7 @@ module Bookings
     def expire_ride_post_bookings(ride_post_id)
       # Find pending booking IDs first, then process each with proper lock ordering
       ride = RidePost.find_by(id: ride_post_id)
-      return unless ride && (ride.requests_closed_at.present? || (ride.booking_cutoff_at.present? && Time.current >= ride.booking_cutoff_at))
+      return unless ride&.booking_requests_closed?
 
       booking_ids = ride.bookings.pending.order(:id).pluck(:id)
       booking_ids.each do |b_id|

@@ -170,6 +170,10 @@ class RidePost < ApplicationRecord
     offering? && active? && requests_closed_at.nil? && remaining_seats.to_i > 0 && booking_cutoff_at.present? && booking_cutoff_at > Time.current
   end
 
+  def booking_requests_closed?
+    requests_closed_at.present? || (booking_cutoff_at.present? && Time.current >= booking_cutoff_at)
+  end
+
   def full?
     offering? && (fulfilled? || remaining_seats.to_i <= 0)
   end
@@ -374,13 +378,13 @@ class RidePost < ApplicationRecord
       throw :abort
     end
 
-    if chat_readable?
-      errors.add(:base, "Cannot delete a ride while its conversation is retained.")
+    if historical_reviewable_participation?
+      errors.add(:base, "Cannot delete a departed ride with historical participation. Trip records must be preserved for review eligibility.")
       throw :abort
     end
 
-    if historical_reviewable_participation?
-      errors.add(:base, "Cannot delete a departed ride with historical participation. Trip records must be preserved for review eligibility.")
+    if chat_readable?
+      errors.add(:base, "Cannot delete a ride while its conversation is retained.")
       throw :abort
     end
 

@@ -22,7 +22,7 @@ class CloseRideRequestsSystemTest < ApplicationSystemTestCase
     find("#trip-chat-tab").click
     fill_in "Coordination message", with: "Our confirmed trip is still on"
     click_button "Send"
-    assert_text "Our confirmed trip is still on"
+    assert_selector ".chat-message", text: "Our confirmed trip is still on", count: 1
     assert booking.reload.accepted?
     assert ride.reload.active?
     assert_not ride.bookable?
