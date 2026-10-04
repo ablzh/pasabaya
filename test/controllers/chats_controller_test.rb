@@ -130,6 +130,18 @@ class ChatsControllerTest < ActionDispatch::IntegrationTest
     assert_select "a[href*='tab=chat']", count: 6
   end
 
+  test "inbox excludes expired conversations" do
+    @ride.chat_messages.create!(user: @driver, body: "Old chat before expiry")
+    @ride.update_columns(departure_time: 35.days.ago, expected_arrival_at: 34.days.ago)
+    sign_in_as(@passenger)
+
+    get chats_url
+
+    assert_response :success
+    assert_select "a[href=?]", ride_post_path(@ride, tab: "chat"), 0
+    assert_not_includes response.body, "Old chat before expiry"
+  end
+
   private
 
   def inbox_query_count

@@ -54,6 +54,14 @@ class RidePostsController < ApplicationController
       return # Use return to stop execution after redirecting
     end
 
+    if params[:tab] == "chat" && @ride_post.chat_expired?
+      respond_to do |format|
+        format.html { redirect_to ride_post_path(@ride_post), alert: "Chat history for this trip is no longer available." }
+        format.json { render json: { error: "Chat history is no longer available" }, status: :gone }
+      end
+      return
+    end
+
     if @ride_post.booking_cutoff_at.present? && Time.current >= @ride_post.booking_cutoff_at && @ride_post.bookings.pending.exists?
       Bookings::ExpireService.call(@ride_post)
     end

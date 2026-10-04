@@ -63,6 +63,7 @@ class RidePost < ApplicationRecord
   after_save_commit :schedule_trip_audit, if: :should_schedule_audit?
   after_save_commit :schedule_booking_cutoff, if: :should_schedule_cutoff?
   after_save_commit :schedule_route_alert, if: :should_schedule_route_alert?
+  after_save_commit :schedule_chat_retention, if: :should_schedule_chat_retention?
 
   scope :publicly_visible, -> { public_ride.where(ladies_only: false) }
   scope :filter_by_origin, ->(origin_id) { where(origin_id: origin_id) if origin_id.present? }
@@ -219,13 +220,34 @@ class RidePost < ApplicationRecord
     bookings.loaded? ? bookings.any?(&:accepted?) : bookings.accepted.exists?
   end
 
+  def chat_messaging_closes_at
+    return unless booking_cutoff_at
+
+    booking_cutoff_at + 24.hours
+  end
+
+  def chat_history_unavailable_at
+    return unless chat_messaging_closes_at
+
+    chat_messaging_closes_at + 30.days
+  end
+
   def chat_writable?
-    !canceled? && chat_unlocked? && (booking_cutoff_at.blank? || Time.current <= booking_cutoff_at + 24.hours)
+    !canceled? && chat_unlocked? && chat_messaging_closes_at.present? && Time.current <= chat_messaging_closes_at
+  end
+
+  def chat_readable?
+    chat_unlocked? && !chat_expired?
+  end
+
+  def chat_expired?
+    chat_history_unavailable_at.present? && Time.current > chat_history_unavailable_at
   end
 
   def user_authorized_for_chat?(u, verified_community_ids: nil)
     return false unless u
     return false if canceled?
+    return false if chat_expired?
     return false unless authorized_viewer?(u, verified_community_ids: verified_community_ids)
 
     if user_id == u.id
@@ -389,6 +411,14 @@ class RidePost < ApplicationRecord
 
   def schedule_booking_cutoff
     BookingCutoffJob.set(wait_until: booking_cutoff_at).perform_later(id)
+  end
+
+  def should_schedule_chat_retention?
+    offering? && published? && chat_history_unavailable_at.present? && (saved_change_to_departure_time? || saved_change_to_departure_date? || saved_change_to_departure_choice? || saved_change_to_status?)
+  end
+
+  def schedule_chat_retention
+    ChatRetentionJob.set(wait_until: chat_history_unavailable_at).perform_later(id)
   end
 
   def should_schedule_route_alert?

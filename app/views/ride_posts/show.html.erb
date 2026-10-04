@@ -416,6 +416,27 @@
             </div>
           </div>
 
+          <% if @ride_post.chat_messaging_closes_at.present? && @ride_post.chat_history_unavailable_at.present? %>
+            <div class="px-5 py-3 border-b border-neutral-100 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-800/30 text-xs text-neutral-600 dark:text-neutral-300">
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <div>
+                  <span class="font-semibold text-neutral-900 dark:text-white">Messaging closes:</span>
+                  <time datetime="<%= @ride_post.chat_messaging_closes_at.iso8601 %>">
+                    <%= @ride_post.chat_messaging_closes_at.in_time_zone("Asia/Manila").strftime("%B %d, %Y at %I:%M %p") %> Philippine time (UTC+8)
+                  </time>
+                  <p class="text-[11px] text-neutral-500 mt-0.5">Sending new messages is disabled 24 hours after booking cutoff.</p>
+                </div>
+                <div>
+                  <span class="font-semibold text-neutral-900 dark:text-white">Scheduled live-database deletion:</span>
+                  <time datetime="<%= @ride_post.chat_history_unavailable_at.iso8601 %>">
+                    <%= @ride_post.chat_history_unavailable_at.in_time_zone("Asia/Manila").strftime("%B %d, %Y at %I:%M %p") %> Philippine time (UTC+8)
+                  </time>
+                  <p class="text-[11px] text-neutral-500 mt-0.5">Reading chat history is disabled after 30 days of read-only access.</p>
+                </div>
+              </div>
+            </div>
+          <% end %>
+
           <%# Messages Stream %>
           <% if @ride_post.chat_unlocked? %>
             <%= turbo_stream_from [@ride_post, :chat], channel: "RideChatChannel" %>

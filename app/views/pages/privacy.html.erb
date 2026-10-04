@@ -74,7 +74,7 @@
               <li>Comply with valid court orders, subpoenas, or legal processes issued under Philippine law, including the <strong>Cybercrime Prevention Act of 2012 (RA 10175)</strong> and RA 10173.</li>
             </ol>
           </li>
-          <li><strong>Strict Write Lock &amp; Automated Purge:</strong> Chat input locks to read-only status exactly 24 hours after scheduled trip departure. All chat messages are permanently deleted from active production databases 30 days after creation via automated background jobs. Real-time WebSocket delivery buffers expire within 24 hours.</li>
+          <li><strong>Strict Write Lock &amp; Automated Purge:</strong> Trip messaging closes to read-only status exactly 24 hours after the booking cutoff. Authorized trip participants may read chat history for an additional 30 days following messaging closure. All messages in a trip conversation share this retention deadline; upon reaching the history deadline, the conversation and its messages are scheduled for permanent deletion from the live database via automated background jobs. Real-time WebSocket delivery buffers expire within 24 hours.</li>
           <li><strong>Sensitive Financial Data Warning:</strong> Users must never share bank account numbers, GCash or Maya PINs, credit card details, one-time passwords (OTPs), or government identity cards in chat. Pasabaya disclaims all liability for losses resulting from voluntary disclosure of financial credentials between users.</li>
         </ul>
       </section>
@@ -105,6 +105,7 @@
             </ul>
           </li>
           <li><strong>Retained De-Identified Safety Records:</strong> To maintain community trust, prevent abusive individuals from evading no-show strikes, and ensure review integrity, objective historical safety records (such as completed trip records, verified no-show strike counts, and trip outcome classifications) are retained in de-identified format linked only to an anonymous "Deleted User" record.</li>
+          <li><strong>Conversation-Wide Chat Retention:</strong> All messages within a trip coordination chat share a single conversation-wide retention timeline. Messaging closes 24 hours after the booking cutoff, after which the conversation remains accessible in read-only mode for 30 days. At that scheduled live-database deletion deadline, the conversation is permanently deleted from the live database. Live database deletion does not instantly erase disaster recovery backup snapshots, which are retained on a separate snapshot schedule and scrubbed upon restoration.</li>
           <li><strong>Disaster Recovery Backups &amp; Restoration Scrubbing:</strong> Restic backups are encrypted and stored on S3-compatible cloud storage. We retain the latest seven backups, seven daily, four weekly, six monthly, and two yearly snapshots; backup copies can therefore retain personal data beyond 30 days. Litestream also maintains database replicas for recovery. Before a restored database serves public traffic, expired data is scrubbed and account deletions are reapplied from a separate persistent deletion registry. Restoration is stopped if that registry is unavailable or an account cannot be anonymized.</li>
         </ul>
       </section>
