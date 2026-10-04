@@ -25,7 +25,7 @@ class RidesTest < ApplicationSystemTestCase
 
     # 2. Open a result
     within "#ride_posts" do
-      click_on "Show", match: :first
+      click_link "View ride: Manila to Makati"
     end
 
     assert_selector "h1", text: /Manila\s+→\s+Makati/
