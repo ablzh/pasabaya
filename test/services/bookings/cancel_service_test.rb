@@ -2,6 +2,7 @@ require "test_helper"
 
 module Bookings
   class CancelServiceTest < ActiveSupport::TestCase
+    include ActiveJob::TestHelper
     setup do
       @ride = ride_posts(:one)
       @passenger = users(:two)
@@ -28,6 +29,15 @@ module Bookings
 
       assert_equal 1, @ride.reload.remaining_seats
       assert @ride.reload.active?
+    end
+
+    test "canceling an accepted booking on a full ride schedules route alerts" do
+      @booking.update_columns(status: Booking.statuses[:accepted])
+      @ride.update_columns(remaining_seats: 0, status: RidePost.statuses[:fulfilled])
+
+      assert_enqueued_with(job: RouteAlertJob, args: [ @ride.id ]) do
+        CancelService.call(@booking, actor: @passenger)
+      end
     end
 
     test "repeated cancellation is idempotent" do

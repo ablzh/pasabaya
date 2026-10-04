@@ -352,6 +352,7 @@ class RidePost < ApplicationRecord
   def sync_remaining_seats_with_capacity
     if offering? && !bookings.accepted.exists? && will_save_change_to_seats?
       self.remaining_seats = seats
+      self.status = :active if fulfilled? && remaining_seats.to_i > 0
     end
   end
 
@@ -391,7 +392,20 @@ class RidePost < ApplicationRecord
   end
 
   def should_schedule_route_alert?
-    offering? && published? && bookable? && (previously_new_record? || saved_change_to_status?)
+    return false unless offering? && published? && bookable?
+
+    previously_new_record? ||
+      saved_change_to_status? ||
+      (saved_change_to_remaining_seats? && remaining_seats_before_last_save.to_i <= 0) ||
+      (saved_change_to_seats? && (seats_before_last_save.to_i <= 0 || remaining_seats_before_last_save.to_i <= 0)) ||
+      saved_change_to_origin_id? ||
+      saved_change_to_destination_id? ||
+      saved_change_to_departure_date? ||
+      saved_change_to_departure_choice? ||
+      saved_change_to_departure_time? ||
+      saved_change_to_community_id? ||
+      saved_change_to_visibility? ||
+      saved_change_to_ladies_only?
   end
 
   def schedule_route_alert
