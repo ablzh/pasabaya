@@ -77,6 +77,8 @@ class TripChatUnreadTest < ApplicationSystemTestCase
 
     # Add another message while backgrounded
     @ride.chat_messages.create!(user: @driver, body: "Message while backgrounded")
+    assert_selector ".chat-message", text: "Message while backgrounded"
+    assert_selector "[data-chat-unread-count]", text: "1"
 
     # Scrolled above bottom: scroll messages list to top
     page.execute_script("const el = document.querySelector('#chat_messages_list'); if (el) { el.scrollTop = 0; }")

@@ -14,6 +14,10 @@ class ChatMessage < ApplicationRecord
   after_create_commit :notify_participants
 
   scope :recent_first, -> { order(created_at: :asc) }
+  scope :latest_for_rides, ->(ride_ids) {
+    where(ride_post_id: ride_ids)
+      .where("chat_messages.id = (SELECT latest.id FROM chat_messages latest WHERE latest.ride_post_id = chat_messages.ride_post_id ORDER BY latest.created_at DESC, latest.id DESC LIMIT 1)")
+  }
 
   def self.purge_expired!(*_args)
     expired_ride_ids = []
@@ -36,20 +40,16 @@ class ChatMessage < ApplicationRecord
   end
 
   def update_author_read_state
-    state = ChatReadState.find_or_initialize_by(user_id: user_id, ride_post_id: ride_post_id)
-    if state.new_record? || id > state.last_read_message_id
-      state.last_read_message_id = id
-      state.save!
-    end
+    ChatReadState.mark_read!(user: user, ride_post: ride_post, message_id: id)
   end
 
   def notify_participants
     ride_post.participants.find_each do |recipient|
       next unless ride_post.user_authorized_for_chat?(recipient)
 
-      Turbo::StreamsChannel.broadcast_refresh_to([ recipient, :chats ])
-
       next if recipient.id == user_id
+
+      Turbo::StreamsChannel.broadcast_refresh_to([ recipient, :chats ])
 
       broadcast_toast_to(recipient)
       ChatReadState.broadcast_unread_count_for(recipient)

@@ -16,6 +16,19 @@ class Community < ApplicationRecord
 
   before_validation :generate_slug, if: -> { slug.blank? && name.present? }
 
+  def self.cleanup_disposable_local_hubs!
+    return unless Rails.env.development? || Rails.env.test?
+
+    transaction do
+      where.not(domain: "up.edu.ph").find_each do |community|
+        community.ride_posts.each(&:destroy!)
+        community.route_subscriptions.destroy_all
+        community.community_memberships.destroy_all
+        community.destroy!
+      end
+    end
+  end
+
   def to_param
     slug
   end
