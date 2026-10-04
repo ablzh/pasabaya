@@ -22,6 +22,7 @@ export default class extends Controller {
   showDetails(e) {
     if (e) e.preventDefault()
     this.switchTab("details")
+    this.tabBtnTargets.find((button) => button.dataset.tabName === "details")?.focus()
   }
 
   showChat(e) {

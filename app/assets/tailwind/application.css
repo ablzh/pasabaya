@@ -26,6 +26,49 @@ html[data-hotwire-native="true"] {
     min-height: 12rem;
 }
 
+@media (max-width: 767px) {
+    body:has(#trip-chat-pane:not(.hidden)) {
+        overflow: hidden;
+    }
+
+    body:has(#trip-chat-pane:not(.hidden)) .web-navigation,
+    body:has(#trip-chat-pane:not(.hidden)) .web-footer,
+    body:has(#trip-chat-pane:not(.hidden)) #native_navigation,
+    body:has(#trip-chat-pane:not(.hidden)) .ride-detail-header,
+    body:has(#trip-chat-pane:not(.hidden)) [data-controller~="trip-view"] > [role="tablist"] {
+        display: none;
+    }
+
+    #trip-chat-pane:not(.hidden) .trip-chat {
+        position: fixed;
+        inset: 0;
+        z-index: 40;
+        top: var(--chat-viewport-top, 0px);
+        height: var(--chat-viewport-height, 100dvh);
+        min-height: 0;
+        border: 0;
+        border-radius: 0;
+        padding-top: env(safe-area-inset-top);
+        padding-left: env(safe-area-inset-left);
+        padding-right: env(safe-area-inset-right);
+    }
+
+    .trip-chat .chat-header,
+    .trip-chat .chat-deadlines,
+    .trip-chat #chat_message_form {
+        flex-shrink: 0;
+    }
+
+    .trip-chat .chat-deadlines {
+        max-height: calc(var(--chat-viewport-height, 100dvh) / 4);
+        overflow-y: auto;
+    }
+
+    .trip-chat #chat_message_form {
+        padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
+    }
+}
+
 .chat-message[data-own-message="true"] {
     justify-content: flex-end;
 }
