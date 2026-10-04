@@ -4,20 +4,21 @@
 
 **Blocked by:** None (can start immediately).
 
-**Status:** in-progress
+**Status:** done
 
-- [ ] Mobile chat detail uses a 100dvh layout and hides global headers and footers while the discussion is open.
-- [ ] The compact header includes a back action, trip route and relevant participant/driver context.
-- [ ] The message stream uses the remaining height, reaches the latest messages initially, and follows new messages when already at the bottom without pulling someone away from older history.
-- [ ] The composer stays reachable above the mobile keyboard and respects safe-area insets, orientation changes and changing viewport height.
-- [ ] Read-only or unavailable chats show their applicable state rather than an active composer; existing deadline notices remain readable.
-- [ ] Desktop navigation and trip-detail chat access continue to work.
-- [ ] Use the existing text chat stack; do not add file/image upload infrastructure.
-- [ ] Add the smallest relevant behavior or regression test for code changes, covering this ticket's user-visible behavior and important failure boundary. Do not require a browser test for changes with no browser behavior.
-- [ ] Run bin/ci before declaring the implementation complete; report any check that could not run rather than calling the gate green.
+- [x] Mobile chat detail uses a 100dvh layout and hides global headers and footers while the discussion is open.
+- [x] The compact header includes a back action, trip route and relevant participant/driver context.
+- [x] The message stream uses the remaining height, reaches the latest messages initially, and follows new messages when already at the bottom without pulling someone away from older history.
+- [x] The composer stays reachable above the mobile keyboard and respects safe-area insets, orientation changes and changing viewport height.
+- [x] Read-only or unavailable chats show their applicable state rather than an active composer; existing deadline notices remain readable.
+- [x] Desktop navigation and trip-detail chat access continue to work.
+- [x] Use the existing text chat stack; do not add file/image upload infrastructure.
+- [x] Add the smallest relevant behavior or regression test for code changes, covering this ticket's user-visible behavior and important failure boundary. Do not require a browser test for changes with no browser behavior.
+- [x] Run bin/ci before declaring the implementation complete; report any check that could not run rather than calling the gate green.
+
 
 
 
 ## Implementation evidence
 
-Resumed from integration 802a582 in isolated worktree; relevant browser behavior under TDD.
+Feature bc953d9; ready tip a694647 integrated at 8f5c586. Worker full bin/ci passed: 402 Rails tests/1904 assertions and 23 system tests/1992 assertions, all other checks passed. Combined integration 17c4c73 mobile/chat/unread/navbar/card/ride system checks passed 11 tests/155 assertions. Physical iOS keyboard/device safe-area behavior was not exercised; synthetic visualViewport/orientation and CSS safe-area coverage passed. Final all-ticket CI and review tracked separately.
