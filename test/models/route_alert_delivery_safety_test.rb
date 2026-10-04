@@ -7,6 +7,7 @@ class RouteAlertDeliverySafetyTest < ActiveSupport::TestCase
   setup do
     @ride = ride_posts(:one)
     @passenger = users(:two)
+    bookings(:one).destroy!
     @subscription = RouteSubscription.create!(user: @passenger, origin_id: @ride.origin_id, destination_id: @ride.destination_id)
     RouteSubscriptions::MatchService.call(@ride)
     @notification = Notification.find_by!(event_name: "route.alert", recipient: @passenger)
@@ -39,6 +40,27 @@ class RouteAlertDeliverySafetyTest < ActiveSupport::TestCase
     @ride.update!(destination: original_destination)
     assert_emails(1) { NotificationDeliveryJob.perform_now(@notification.id) }
     assert @notification.reload.delivered?
+  end
+
+  test "a booking created after matching suppresses queued delivery until canceled" do
+    booking = Booking.create!(ride_post: @ride, passenger: @passenger)
+    stream = Turbo::StreamsChannel.send(:stream_name_from, [ @passenger, :notifications ])
+
+    assert_no_emails do
+      assert_no_broadcasts(stream) { NotificationDeliveryJob.perform_now(@notification.id) }
+    end
+    assert @notification.reload.pending?
+
+    Bookings::AcceptService.call(booking, actor: @ride.user)
+    assert_no_emails do
+      assert_no_broadcasts(stream) { NotificationDeliveryJob.perform_now(@notification.id) }
+    end
+    assert @notification.reload.pending?
+
+    Bookings::CancelService.call(booking, actor: @passenger)
+    assert_emails(1) { NotificationDeliveryJob.perform_now(@notification.id) }
+    assert @notification.reload.delivered?
+    assert_emails(0) { NotificationDeliveryJob.perform_now(@notification.id) }
   end
 
   test "matching and delivery reject ineligible drivers" do

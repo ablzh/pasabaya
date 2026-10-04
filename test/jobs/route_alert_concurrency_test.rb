@@ -7,6 +7,9 @@ class RouteAlertConcurrencyTest < ActiveSupport::TestCase
   test "overlapping match jobs record only one event for the same active subscription" do
     passenger = users(:two)
     ride = ride_posts(:one)
+    fixture_booking = bookings(:one)
+    fixture_booking_attributes = fixture_booking.attributes
+    fixture_booking.destroy!
     subscription = RouteSubscription.create!(user: passenger, origin_id: ride.origin_id, destination_id: ride.destination_id)
     ready = Queue.new
     start = Queue.new
@@ -54,5 +57,6 @@ class RouteAlertConcurrencyTest < ActiveSupport::TestCase
     workers&.each { |worker| worker.join(10) }
     Notification.where(route_subscription: subscription).destroy_all if subscription
     subscription&.destroy!
+    Booking.create!(fixture_booking_attributes) if fixture_booking&.destroyed?
   end
 end

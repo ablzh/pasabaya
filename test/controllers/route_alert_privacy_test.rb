@@ -4,6 +4,7 @@ class RouteAlertPrivacyTest < ActionDispatch::IntegrationTest
   include ActionCable::TestHelper
 
   test "revoked hub access hides previously delivered route details" do
+    bookings(:one).destroy!
     passenger = users(:two)
     driver = users(:one)
     CommunityMembership.create!(user: driver, community: communities(:two), institutional_email: "driver@up.edu.ph", verified_at: Time.current)
