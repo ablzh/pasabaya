@@ -17,18 +17,16 @@
         <div>
           <div class="flex items-start justify-between gap-3 mb-2">
             <div>
-              <span class="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full <%= community.company? ? 'bg-amber-100 text-amber-800 dark:bg-amber-950/50 dark:text-amber-300' : 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300' %>">
-                <%= community.hub_type.titleize %>
-              </span>
+              <%= render Badge::Component.new(text: community.hub_type.titleize, variant: (community.company? ? :orange : :green), size: :sm, pill: true, uppercase: true) %>
               <h2 class="text-lg font-bold text-neutral-900 dark:text-white mt-1">
                 <%= link_to community.name, community_path(community), class: "hover:underline" %>
               </h2>
             </div>
             <% if membership&.verified? %>
-              <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800 shrink-0">
+              <%= render Badge::Component.new(variant: :green, size: :md, pill: true, classes: "gap-1 shrink-0") do %>
                 <svg class="size-3" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
                 Verified
-              </span>
+              <% end %>
             <% end %>
           </div>
 

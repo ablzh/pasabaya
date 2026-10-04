@@ -123,7 +123,8 @@ export default class extends Controller {
     if (!["ArrowDown", "ArrowUp", "Home", "End"].includes(event.key)) return;
 
     event.preventDefault();
-    const links = Array.from(this.activeContent.querySelectorAll("a[href], button:not([disabled])"));
+    const links = Array.from(this.activeContent.querySelectorAll("a[href], button:not([disabled])"))
+      .filter((link) => link.getClientRects().length > 0);
     const index = links.indexOf(document.activeElement);
     let next = event.key === "ArrowUp" ? index - 1 : index + 1;
     if (event.key === "Home") next = 0;
@@ -141,7 +142,8 @@ export default class extends Controller {
     event.preventDefault();
     event.stopPropagation();
     this.open(event.currentTarget, event.currentTarget.dataset.contentId);
-    const links = this.activeContent?.querySelectorAll("a[href], button:not([disabled])");
+    const links = Array.from(this.activeContent?.querySelectorAll("a[href], button:not([disabled])") || [])
+      .filter((link) => link.getClientRects().length > 0);
     const index = event.key === "ArrowUp" ? links.length - 1 : 0;
     links?.[index]?.focus();
   }

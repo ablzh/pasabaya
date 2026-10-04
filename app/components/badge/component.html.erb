@@ -1,0 +1,13 @@
+<span class="<%= wrapper_classes %>" <% if @removable %>data-controller="badge"<% end %>>
+  <%= content? ? content : @text %>
+  <% if @dot %>
+    <span class="<%= dot_classes %>" aria-hidden="true"></span>
+  <% end %>
+  <% if @removable %>
+    <button type="button" class="<%= remove_button_classes %>" aria-label="<%= @text.present? ? "Remove #{@text}" : "Remove badge" %>" data-action="click->badge#remove">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="<%= icon_size %>">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+      </svg>
+    </button>
+  <% end %>
+</span>

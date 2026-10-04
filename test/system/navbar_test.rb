@@ -31,8 +31,18 @@ class NavbarSystemTest < ApplicationSystemTestCase
     end
   end
 
+  test "mobile hubs link opens from the account menu" do
+    sign_in
+    page.driver.resize(320, 900)
+    visit root_path
+    find("button[aria-label='Account menu']").click
+    within("#profile-content") { click_link "Hubs" }
+    assert_current_path communities_path
+  end
+
   test "profile menu supports keyboard focus escape outside dismissal and live resizing" do
     sign_in
+    page.driver.resize(1440, 900)
     visit root_path
     trigger = find("button[aria-label='Account menu']")
     trigger.execute_script("this.focus()")
@@ -40,6 +50,10 @@ class NavbarSystemTest < ApplicationSystemTestCase
     assert_selector "#profile-content a[href='#{user_path(users(:one))}']:focus"
     page.driver.browser.keyboard.type(:down)
     assert_selector "#profile-content a[href='#{settings_profile_path}']:focus"
+    page.driver.browser.keyboard.type(:down)
+    assert_selector "#profile-content a[href='#{notifications_path}']:focus"
+    page.driver.browser.keyboard.type(:down)
+    assert_selector "#profile-content a[href='#{session_path}']:focus"
     page.driver.browser.keyboard.type(:End)
     assert_selector "#profile-content a[href='#{session_path}']:focus"
     page.driver.browser.keyboard.type(:Escape)
@@ -52,7 +66,7 @@ class NavbarSystemTest < ApplicationSystemTestCase
       bounds = page.evaluate_script("document.querySelector('#profile-content').getBoundingClientRect().toJSON()")
       raise Capybara::ExpectationNotMet unless bounds["left"] >= 0 && bounds["right"] <= 320
     end
-    find("h1").click
+    find("footer").click
     assert_selector "#profile-content[data-state='closed']", visible: :all
     trigger.execute_script("this.focus()")
     page.driver.browser.keyboard.type(:down)
