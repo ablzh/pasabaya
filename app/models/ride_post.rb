@@ -77,11 +77,7 @@ class RidePost < ApplicationRecord
     if date_str.present?
       begin
         d = Date.parse(date_str.to_s)
-        where(
-          "(ride_posts.departure_time IS NOT NULL AND DATE(ride_posts.departure_time) = :date) OR " \
-          "(ride_posts.departure_time IS NULL AND ride_posts.departure_date = :date)",
-          date: d.to_s
-        )
+        where(departure_date: d)
       rescue ArgumentError, TypeError
         all
       end
@@ -171,7 +167,7 @@ class RidePost < ApplicationRecord
   end
 
   def bookable?
-    offering? && active? && remaining_seats.to_i > 0 && booking_cutoff_at.present? && booking_cutoff_at > Time.current
+    offering? && active? && requests_closed_at.nil? && remaining_seats.to_i > 0 && booking_cutoff_at.present? && booking_cutoff_at > Time.current
   end
 
   def full?
@@ -513,12 +509,6 @@ class RidePost < ApplicationRecord
 
     if departure_time.blank? && (departure_choice.blank? || exact_time?)
       errors.add(:departure_time, "is required for published ride offers")
-    elsif exact_time? && publishing? && departure_time <= Time.current
-      errors.add(:departure_time, "can't be in the past")
-    end
-
-    if !exact_time? && publishing? && departure_date.present? && departure_date < Date.current
-      errors.add(:departure_date, "can't be in the past")
     end
 
     if expected_arrival_at.present?

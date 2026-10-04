@@ -7,7 +7,7 @@ class AddApproximateDepartureToRidePosts < ActiveRecord::Migration[8.1]
 
     execute <<-SQL.squish
       UPDATE ride_posts
-      SET departure_date = DATE(departure_time),
+      SET departure_date = DATE(departure_time, '+8 hours'),
           departure_choice = 4
       WHERE departure_time IS NOT NULL;
     SQL
