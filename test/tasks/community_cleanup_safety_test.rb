@@ -1,5 +1,6 @@
 require "test_helper"
 require Rails.root.join("db/migrate/20261003180040_retain_only_up_community")
+require Rails.root.join("db/migrate/20261004000900_cleanup_local_hubs_after_booking_schema")
 
 class CommunityCleanupSafetyTest < ActiveSupport::TestCase
   %w[production staging].each do |environment|
@@ -9,6 +10,7 @@ class CommunityCleanupSafetyTest < ActiveSupport::TestCase
       ride.update_columns(community_id: hub.id, visibility: RidePost.visibilities[:hub_only])
       with_stubbed_method(Rails, :env, ActiveSupport::StringInquirer.new(environment)) do
         RetainOnlyUpCommunity.new.up
+        CleanupLocalHubsAfterBookingSchema.new.up
       end
       assert Community.exists?(hub.id)
       assert_equal hub.id, ride.reload.community_id
@@ -33,7 +35,7 @@ class CommunityCleanupSafetyTest < ActiveSupport::TestCase
     ride = ride_posts(:one)
     ride.update_columns(community_id: hub.id, visibility: RidePost.visibilities[:hub_only])
     bookings(:one).update_columns(status: Booking.statuses[:accepted])
-    assert_raises(ActiveRecord::RecordNotDestroyed) { RetainOnlyUpCommunity.new.up }
+    assert_raises(ActiveRecord::RecordNotDestroyed) { CleanupLocalHubsAfterBookingSchema.new.up }
     assert Community.exists?(hub.id)
     assert_equal hub.id, ride.reload.community_id
     assert ride.hub_only?
