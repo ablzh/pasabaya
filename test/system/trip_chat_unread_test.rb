@@ -63,7 +63,7 @@ class TripChatUnreadTest < ApplicationSystemTestCase
   test "background tab and scrolled above latest message do not clear unread state until reached" do
     # Create several messages so message stream is scrollable
     Prosopite.pause do
-      15.times do |i|
+      30.times do |i|
         @ride.chat_messages.create!(user: @driver, body: "Message line #{i + 1}")
       end
     end
@@ -91,6 +91,15 @@ class TripChatUnreadTest < ApplicationSystemTestCase
 
     # Still scrolled at top: not yet at bottom
     page.execute_script("const el = document.querySelector('#chat_messages_list'); if (el) { el.scrollTop = 0; el.dispatchEvent(new Event('scroll')); }")
+
+    @ride.chat_messages.create!(user: @driver, body: "New pickup while reading earlier history")
+    assert_selector ".chat-message", text: "New pickup while reading earlier history", visible: :all
+    fill_in "Coordination message", with: "Reply while reading earlier messages"
+    click_button "Send"
+    assert_selector ".chat-message", text: "Reply while reading earlier messages", visible: :all
+    assert_selector "[data-chat-unread-count]", text: "1"
+    assert_equal 1, @passenger.reload.unread_chats_count
+    assert_operator page.evaluate_script("(() => { const el = document.querySelector('#chat_messages_list'); return el.scrollHeight - el.scrollTop - el.clientHeight; })()"), :>, 50
 
     # Scroll down to bottom to reach latest message
     page.execute_script("const el = document.querySelector('#chat_messages_list'); if (el) { el.scrollTop = el.scrollHeight; el.dispatchEvent(new Event('scroll')); }")

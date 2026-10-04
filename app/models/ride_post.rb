@@ -265,6 +265,7 @@ class RidePost < ApplicationRecord
 
   def user_authorized_for_chat?(u, verified_community_ids: nil)
     return false unless u
+    return false if draft?
     return false if chat_expired?
     return false if hub_only? && !(verified_community_ids ? verified_community_ids.include?(community_id) : u.verified_member_of?(community_id))
     return false unless authorized_viewer?(u, verified_community_ids: verified_community_ids)
@@ -374,6 +375,11 @@ class RidePost < ApplicationRecord
 
     if bookings.accepted.exists?
       errors.add(:base, "Cannot delete a ride with accepted bookings. Please cancel the trip instead.")
+      throw :abort
+    end
+
+    if chat_readable?
+      errors.add(:base, "Cannot delete a ride while its conversation is retained.")
       throw :abort
     end
 

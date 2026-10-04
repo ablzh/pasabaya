@@ -11,8 +11,7 @@
   <div class="divide-y divide-neutral-100 dark:divide-neutral-800 rounded-3xl border border-neutral-200 dark:border-neutral-800 overflow-hidden">
     <% @rides.each do |ride| %>
       <% message = @latest_messages[ride.id] %>
-      <% read_state = @read_states[ride.id] %>
-      <% is_unread = message.present? && message.user_id != Current.user.id && message.id > (read_state&.last_read_message_id || 0) %>
+      <% is_unread = @unread_ride_ids.include?(ride.id) %>
       <%= link_to ride_post_path(ride, tab: "chat"),
                   data: { conversation_unread: is_unread },
                   class: "block p-5 hover:bg-neutral-50 dark:hover:bg-neutral-800 focus-visible:outline-2 focus-visible:outline-blue-600 #{'bg-blue-50/20 dark:bg-blue-950/10' if is_unread}" do %>

@@ -237,6 +237,25 @@ class RidePostsControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to ride_post_url(@ride_post)
   end
 
+  test "cannot delete a canceled future trip before its chat retention deadline" do
+    bookings(:one).update_columns(status: Booking.statuses[:accepted], accepted_at: 1.hour.ago)
+    message = @ride_post.chat_messages.create!(user: @ride_post.user, body: "Coordinate after cancellation")
+    RidePosts::CancelService.call(@ride_post, actor: @ride_post.user)
+
+    assert_no_difference [ "RidePost.count", "ChatMessage.count", "Booking.count" ] do
+      delete ride_post_url(@ride_post)
+    end
+    assert_redirected_to ride_post_url(@ride_post)
+    assert_equal "Coordinate after cancellation", message.reload.body
+
+    travel_to @ride_post.chat_history_unavailable_at do
+      assert_difference "RidePost.count", -1 do
+        delete ride_post_url(@ride_post)
+      end
+      assert_redirected_to ride_posts_url
+    end
+  end
+
   test "should not get edit for ride_post owned by another user" do
     other_post = ride_posts(:two)
     get edit_ride_post_url(other_post)

@@ -19,13 +19,22 @@ class NotificationsChannel < ApplicationCable::Channel
 
   def deliver_or_reject(data)
     if active_session? && User.where(id: current_user.id, banned_at: nil).exists?
-      transmit data if route_alerts_available?(data)
+      current_user.reload
+      transmit data if route_alerts_available?(data) && chat_previews_available?(data)
     else
       stop_all_streams
       reject
     end
   end
   private
+
+  def chat_previews_available?(data)
+    ids = Nokogiri::HTML.fragment(data.to_s).css("[data-ride-id]").filter_map { |node| node["data-ride-id"].presence }
+    return true if ids.empty?
+
+    rides = RidePost.where(id: ids)
+    rides.size == ids.uniq.size && rides.all? { |ride| ride.user_authorized_for_chat?(current_user) }
+  end
 
   def route_alerts_available?(data)
     ids = Nokogiri::HTML.fragment(data.to_s).css("[data-route-alert-id]").filter_map { |node| node["data-route-alert-id"].presence }

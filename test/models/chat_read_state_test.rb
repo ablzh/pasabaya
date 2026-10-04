@@ -32,10 +32,10 @@ class ChatReadStateTest < ActiveSupport::TestCase
     @ride.chat_messages.create!(user: @driver, body: "Driver's own message")
     assert_equal 0, @driver.unread_chats_count
 
-    # Passenger sends message
+    # A reply does not acknowledge the driver's unseen message.
     @ride.chat_messages.create!(user: @passenger, body: "Passenger's reply")
     assert_equal 1, @driver.unread_chats_count
-    assert_equal 0, @passenger.unread_chats_count
+    assert_equal 1, @passenger.unread_chats_count
   end
 
   test "mark_read! updates last_read_message_id and clears unread count" do
