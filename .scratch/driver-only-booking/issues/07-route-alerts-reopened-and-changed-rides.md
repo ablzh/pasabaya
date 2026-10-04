@@ -4,7 +4,7 @@
 
 **Blocked by:** [06: Subscribe to newly published matching rides](06-one-shot-route-alert-subscriptions.md).
 
-**Status:** in-progress
+**Status:** done
 
 - [x] Restoring available seats on a previously full ride can trigger a matching active subscription.
 - [x] Changing a ride's route or other matching criteria can trigger a subscription that the ride newly satisfies.
@@ -19,6 +19,9 @@
 
 
 
+
 ## Implementation evidence
 
-Final review found inherited delivery-time access gap; regression fix underway.
+Review fix 105f79a preserves reopened-seat/route-change one-shot matching with current driver eligibility and guarded delivery inherited from ticket06.
+
+Final integrated review and bin/ci passed at code commit 9c27ee66e6e2742cc536bb60ac5f96e21a9c946f: 424 Rails tests/2026 assertions and 31 system tests/2067 assertions; zero failures, errors or skips. Setup, Ruby style, templates, database consistency, ArchSpec, gem/importmap audits, Brakeman and seed replant all passed. No blocked automated checks. All 178 acceptance criteria are preserved verbatim.

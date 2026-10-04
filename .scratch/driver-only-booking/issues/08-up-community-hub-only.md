@@ -4,7 +4,7 @@
 
 **Blocked by:** None (can start immediately).
 
-**Status:** in-progress
+**Status:** done
 
 - [x] Retain only University of the Philippines, using institutional email domain up.edu.ph. Do not claim that this domain alone verifies Diliman campus affiliation.
 - [x] Remove unwanted locally created hubs, including commercial and test hubs, and their disposable local-only associated data safely. This is authorized local cleanup, not a blanket production-data deletion.
@@ -20,6 +20,9 @@
 
 
 
+
 ## Implementation evidence
 
-Final review found cleanup migration and seeds need production protection; regression fix underway.
+Review fix 105f79a restricts transactional cleanup in migration and seeds to development/test, aborting protected ride deletion. Original local development cleanup completed: removed test.edu, accenture.com, ateneo.edu and jpmorgan.com and disposable associated data; only canonical up.edu.ph remains. Database backup: /private/tmp/pasabaya-local-hubs-before-20261004.sqlite3. Production data untouched.
+
+Final integrated review and bin/ci passed at code commit 9c27ee66e6e2742cc536bb60ac5f96e21a9c946f: 424 Rails tests/2026 assertions and 31 system tests/2067 assertions; zero failures, errors or skips. Setup, Ruby style, templates, database consistency, ArchSpec, gem/importmap audits, Brakeman and seed replant all passed. No blocked automated checks. All 178 acceptance criteria are preserved verbatim.

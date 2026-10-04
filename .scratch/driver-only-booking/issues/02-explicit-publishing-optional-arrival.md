@@ -19,6 +19,9 @@
 
 
 
+
 ## Implementation evidence
 
 Implemented explicit Save draft and Publish ride actions, optional expected arrival, draft incomplete persistence with nullable route, automatic completion at arrival+2h or cutoff+24h, Past history labeling, and prevented draft intent from reopening canceled or completed rides. Passing full bin/ci.
+
+Final integrated review and bin/ci passed at code commit 9c27ee66e6e2742cc536bb60ac5f96e21a9c946f: 424 Rails tests/2026 assertions and 31 system tests/2067 assertions; zero failures, errors or skips. Setup, Ruby style, templates, database consistency, ArchSpec, gem/importmap audits, Brakeman and seed replant all passed. No blocked automated checks. All 178 acceptance criteria are preserved verbatim.

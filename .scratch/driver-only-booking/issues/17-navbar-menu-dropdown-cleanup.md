@@ -19,6 +19,9 @@
 
 
 
+
 ## Implementation evidence
 
 Implementation 840500a plus 025e8e2 integrated at 2f949aa. Bell removed; live accessible avatar count and exact four-link menu; top-level Hubs and Chats retained. First-frame placement, keyboard focus/Escape/dismissal, resize and streaming/read-all behavior covered. Full combined bin/ci green: 403 Rails tests/1922 assertions, 21 system tests/1961 assertions; all checks passed without skips or blockers.
+
+Final integrated review and bin/ci passed at code commit 9c27ee66e6e2742cc536bb60ac5f96e21a9c946f: 424 Rails tests/2026 assertions and 31 system tests/2067 assertions; zero failures, errors or skips. Setup, Ruby style, templates, database consistency, ArchSpec, gem/importmap audits, Brakeman and seed replant all passed. No blocked automated checks. All 178 acceptance criteria are preserved verbatim.

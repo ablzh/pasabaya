@@ -19,6 +19,9 @@
 
 
 
+
 ## Implementation evidence
 
 Added /chats inbox endpoint, latest-message preview with batched authorization and community IDs to prevent N+1 queries, Turbo refresh broadcasts for participant inboxes without disclosing private preview content in broadcasts, normal and native navigation links to Chats, and regression coverage for permissions revocation, ordering, and query stability. Passing full bin/ci with 323 Rails tests and 17 system tests.
+
+Final integrated review and bin/ci passed at code commit 9c27ee66e6e2742cc536bb60ac5f96e21a9c946f: 424 Rails tests/2026 assertions and 31 system tests/2067 assertions; zero failures, errors or skips. Setup, Ruby style, templates, database consistency, ArchSpec, gem/importmap audits, Brakeman and seed replant all passed. No blocked automated checks. All 178 acceptance criteria are preserved verbatim.

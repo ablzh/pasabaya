@@ -19,6 +19,9 @@
 
 
 
+
 ## Implementation evidence
 
 Implementation 2a06311 integrated at c03c47f. Upcoming full offers stay full cards; owner-only compact drafts have authorized Publish/Delete with actionable validation; departed pending-completion rides and Past/Canceled history are separate; passenger bookings remain separate and private. 20 targeted request tests/199 assertions, 43 related request/model tests/288 assertions, and full bin/ci green (402 Rails, 19 system). No blocked CI checks.
+
+Final integrated review and bin/ci passed at code commit 9c27ee66e6e2742cc536bb60ac5f96e21a9c946f: 424 Rails tests/2026 assertions and 31 system tests/2067 assertions; zero failures, errors or skips. Setup, Ruby style, templates, database consistency, ArchSpec, gem/importmap audits, Brakeman and seed replant all passed. No blocked automated checks. All 178 acceptance criteria are preserved verbatim.

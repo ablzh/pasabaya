@@ -4,7 +4,7 @@
 
 **Blocked by:** [12: Give chats explicit expiration deadlines](12-chat-expiration-deadlines-retention.md).
 
-**Status:** in-progress
+**Status:** done
 
 - [x] Canceling a trip with an open chat preserves access for its driver and previously accepted passengers instead of immediately hiding the conversation.
 - [x] Messaging remains available for 24 hours after cancellation, followed by 30 more days of read-only history and scheduled live-database deletion.
@@ -20,6 +20,9 @@
 
 
 
+
 ## Implementation evidence
 
-Final review found driver hub revocation and late cancellation grace gap; regression fix underway.
+Review fix 105f79a provides full24h after cancellation of an open chat without reopening closed/expired history; required hub access applies to drivers too; live cancellation refresh updates notices/deadlines.
+
+Final integrated review and bin/ci passed at code commit 9c27ee66e6e2742cc536bb60ac5f96e21a9c946f: 424 Rails tests/2026 assertions and 31 system tests/2067 assertions; zero failures, errors or skips. Setup, Ruby style, templates, database consistency, ArchSpec, gem/importmap audits, Brakeman and seed replant all passed. No blocked automated checks. All 178 acceptance criteria are preserved verbatim.

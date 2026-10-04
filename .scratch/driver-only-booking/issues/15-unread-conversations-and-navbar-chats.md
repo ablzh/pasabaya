@@ -4,7 +4,7 @@
 
 **Blocked by:** [14: Add the chats inbox](14-chats-inbox.md).
 
-**Status:** in-progress
+**Status:** done
 
 - [x] Persist per-user conversation reading state. The navbar badge counts unread conversations, not total unread messages, and the inbox identifies those conversations.
 - [x] Add a Chats navigation link with an SVG message icon and unread-conversation badge.
@@ -21,6 +21,9 @@
 
 
 
+
 ## Implementation evidence
 
-Final review found untrusted read IDs and concurrent marker regression gap; regression fix underway.
+Review fix 105f79a validates real conversation message IDs, atomically advances monotonic markers, synchronizes author badges and shares latest-message query. Race and background/scroll regressions pass.
+
+Final integrated review and bin/ci passed at code commit 9c27ee66e6e2742cc536bb60ac5f96e21a9c946f: 424 Rails tests/2026 assertions and 31 system tests/2067 assertions; zero failures, errors or skips. Setup, Ruby style, templates, database consistency, ArchSpec, gem/importmap audits, Brakeman and seed replant all passed. No blocked automated checks. All 178 acceptance criteria are preserved verbatim.

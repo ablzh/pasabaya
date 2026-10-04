@@ -18,6 +18,9 @@
 
 
 
+
 ## Implementation evidence
 
 Added Available passenger seats label and driver-exclusion helper text, Stimulus seat stepper controller (+/- without form submission, min 1, editable input, no cap), only_integer validation rejecting 0/-1/1.5/malformed while allowing larger counts, and comprehensive model and system test coverage. Passing full bin/ci with 313 Rails tests and 16 system tests.
+
+Final integrated review and bin/ci passed at code commit 9c27ee66e6e2742cc536bb60ac5f96e21a9c946f: 424 Rails tests/2026 assertions and 31 system tests/2067 assertions; zero failures, errors or skips. Setup, Ruby style, templates, database consistency, ArchSpec, gem/importmap audits, Brakeman and seed replant all passed. No blocked automated checks. All 178 acceptance criteria are preserved verbatim.

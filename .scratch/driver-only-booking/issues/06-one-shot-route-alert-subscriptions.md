@@ -4,7 +4,7 @@
 
 **Blocked by:** [03: Book rides with approximate departures](03-approximate-departure-booking.md).
 
-**Status:** in-progress
+**Status:** done
 
 - [x] A signed-in user's empty route search shows No rides found for this route yet and a Notify me when a driver posts this route action.
 - [x] A guest sees the searched origin and destination plus a sign-in/create-account action that preserves the search context.
@@ -21,6 +21,9 @@
 
 
 
+
 ## Implementation evidence
 
-Final review found missing delivery-time eligibility/audience recheck; regression fix underway.
+Review fix 105f79a: locked delivery-time bookability, driver and recipient eligibility/audience rechecks; private listing, toast and queued-stream guards; retry-safe recorded event.
+
+Final integrated review and bin/ci passed at code commit 9c27ee66e6e2742cc536bb60ac5f96e21a9c946f: 424 Rails tests/2026 assertions and 31 system tests/2067 assertions; zero failures, errors or skips. Setup, Ruby style, templates, database consistency, ArchSpec, gem/importmap audits, Brakeman and seed replant all passed. No blocked automated checks. All 178 acceptance criteria are preserved verbatim.

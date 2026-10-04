@@ -1,6 +1,6 @@
 # Driver-only booking specification
 
-**Status:** ready-for-agent
+**Status:** implemented
 **Tracker:** local `issues/` files beside this specification.
 **Authority:** The approved ticket acceptance criteria reproduced below are the agreed requirements. Implementation notes never weaken them.
 

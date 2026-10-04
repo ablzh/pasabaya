@@ -4,7 +4,7 @@
 
 **Blocked by:** [03: Book rides with approximate departures](03-approximate-departure-booking.md).
 
-**Status:** in-progress
+**Status:** done
 
 - [x] For an ordinary trip, messaging closes 24 hours after the booking cutoff, regardless of earlier automatic completion. Reading remains available for another 30 days to authorized participants.
 - [x] Show separate full-date deadlines for messaging closure and history unavailability/scheduled deletion, explicitly labeled Philippine time (UTC+8).
@@ -22,6 +22,9 @@
 
 
 
+
 ## Implementation evidence
 
-Final review found exact-deadline access and scheduled purge boundary gap; regression fix underway.
+Review fix 105f79a enforces exact send/history deadlines, scheduled message/read-state purge, open-browser and foreground-resume deadline transitions. Conversation-wide retention remains consistent.
+
+Final integrated review and bin/ci passed at code commit 9c27ee66e6e2742cc536bb60ac5f96e21a9c946f: 424 Rails tests/2026 assertions and 31 system tests/2067 assertions; zero failures, errors or skips. Setup, Ruby style, templates, database consistency, ArchSpec, gem/importmap audits, Brakeman and seed replant all passed. No blocked automated checks. All 178 acceptance criteria are preserved verbatim.
