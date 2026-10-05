@@ -1,3 +1,5 @@
+<% deploy_host = ENV.fetch("DEPLOY_HOST") %>
+# DEPLOY_HOST must be set in the invoking shell; .kamal/secrets is read later.
 # Name of your application. Used to uniquely configure containers.
 service: pasabaya
 
