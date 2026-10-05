@@ -45,6 +45,21 @@ module Buttons
       assert_selector "button[disabled]"
     end
 
+    def test_escapes_plain_icon_strings
+      render_inline(Buttons::Component.new(text: "Save", icon: '<svg onload="alert(1)"></svg>'))
+
+      assert_no_selector "button svg"
+      assert_text '<svg onload="alert(1)"></svg>'
+    end
+
+    def test_renders_icons_generated_with_rails_tag_helpers
+      tag = ApplicationController.helpers.tag
+      icon = tag.svg(viewBox: "0 0 24 24") { tag.path(d: "M1 1L2 2") }
+      render_inline(Buttons::Component.new(text: "Save", icon: icon))
+
+      assert_selector "button svg path[d='M1 1L2 2']"
+    end
+
     def test_renders_loading_spinner
       render_inline(Buttons::Component.new(text: "Loading...", loading: true))
       assert_selector "button[disabled]"

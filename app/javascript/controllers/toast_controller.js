@@ -4,78 +4,42 @@ import { Controller } from "@hotwired/stimulus";
 export default class extends Controller {
   static targets = ["container"];
   static values = {
-    position: { type: String, default: "top-center" },
-    layout: { type: String, default: "default" }, // "default" (stacked) or "expanded" (all visible)
-    gap: { type: Number, default: 14 }, // Gap between toasts in expanded mode
+    gap: { type: Number, default: 14 },
     autoDismissDuration: { type: Number, default: 4000 },
-    limit: { type: Number, default: 3 }, // Maximum number of visible toasts
+    limit: { type: Number, default: 3 },
   };
 
   connect() {
     this.toasts = [];
-    this.heights = []; // Track toast heights like Sonner
-    this.expanded = this.layoutValue === "expanded";
-    this.interacting = false;
-    this.isPrimaryController = false;
-    this.defaultMountParent = this.element?.parentNode || null;
-    this.defaultMountNextSibling = this.element?.nextSibling || null;
+    this.heights = [];
+    this.expanded = false;
+    this.autoDismissTimers = {};
+    this.pendingTimers = new Set();
+    this.animationFrames = new Set();
     this.hoverZonePadding = 10;
 
-    this.registerController();
-    this.activatePrimaryIfNeeded();
-  }
+    this.boundShowToast = this.showToast.bind(this);
+    this.boundHandleToastShow = this.handleToastShow.bind(this);
+    this.boundBeforeCache = this.clearAllToasts.bind(this);
+    this.boundPointerMove = this.handleGlobalPointerMove.bind(this);
+    this.boundPointerLeave = this.handleGlobalPointerLeave.bind(this);
+    window.toast = this.boundShowToast;
 
-  updatePositionClasses() {
-    const container = this.containerTarget;
-    // Remove all position classes
-    container.classList.remove(
-      "right-0",
-      "left-0",
-      "left-1/2",
-      "-translate-x-1/2",
-      "top-0",
-      "bottom-0",
-      "mt-4",
-      "mb-4",
-      "mr-4",
-      "ml-4",
-      "sm:mt-6",
-      "sm:mb-6",
-      "sm:mr-6",
-      "sm:ml-6",
-    );
-
-    // Add new position classes
-    const classes = this.positionClasses.split(" ");
-    container.classList.add(...classes);
+    window.addEventListener("toast-show", this.boundHandleToastShow);
+    window.addEventListener("pointermove", this.boundPointerMove, { passive: true });
+    window.addEventListener("pointerleave", this.boundPointerLeave);
+    window.addEventListener("blur", this.boundPointerLeave);
+    document.addEventListener("turbo:before-cache", this.boundBeforeCache);
   }
 
   disconnect() {
-    this.unregisterController();
-
-    // Clear all auto-dismiss timers
-    if (this.autoDismissTimers) {
-      Object.values(this.autoDismissTimers).forEach((timer) => clearTimeout(timer));
-      this.autoDismissTimers = {};
-    }
-
-    // Clean up all toasts from the DOM
+    window.removeEventListener("toast-show", this.boundHandleToastShow);
+    window.removeEventListener("pointermove", this.boundPointerMove);
+    window.removeEventListener("pointerleave", this.boundPointerLeave);
+    window.removeEventListener("blur", this.boundPointerLeave);
+    document.removeEventListener("turbo:before-cache", this.boundBeforeCache);
+    if (window.toast === this.boundShowToast) delete window.toast;
     this.clearAllToasts();
-
-    if (!this.isPrimaryController) return;
-
-    this.removePrimaryListeners();
-
-    if (window.toast === this.boundShowToast) {
-      delete window.toast;
-    }
-
-    if (window.__toastPrimaryController === this) {
-      window.__toastPrimaryController = null;
-    }
-
-    this.isPrimaryController = false;
-    this.promoteNextPrimaryController();
   }
 
   showToast(message, options = {}) {
@@ -83,27 +47,14 @@ export default class extends Controller {
       type: options.type || "default",
       message: message,
       description: options.description || "",
-      position: options.position || window.currentToastPosition || this.positionValue, // Use stored position
-      html: options.html || "",
       action: options.action || null,
-      secondaryAction: options.secondaryAction || null,
     };
 
     window.dispatchEvent(new CustomEvent("toast-show", { detail }));
   }
 
   handleToastShow(event) {
-    if (!this.isPrimaryController) return;
     event.stopPropagation();
-
-    this.ensureGlobalHostVisible();
-
-    // Update container position if a position is specified for this toast
-    if (event.detail.position) {
-      this.positionValue = event.detail.position;
-      window.currentToastPosition = event.detail.position; // Store globally
-      this.updatePositionClasses();
-    }
 
     const toast = {
       id: `toast-${Math.random().toString(16).slice(2)}`,
@@ -112,9 +63,7 @@ export default class extends Controller {
       message: event.detail.message,
       description: event.detail.description,
       type: event.detail.type,
-      html: event.detail.html,
       action: event.detail.action,
-      secondaryAction: event.detail.secondaryAction,
     };
 
     // Add toast at the beginning of the array (newest first)
@@ -132,45 +81,34 @@ export default class extends Controller {
     this.renderToast(toast);
   }
 
-  handleLayoutChange(event) {
-    if (!this.isPrimaryController) return;
-    this.layoutValue = event.detail.layout;
-    this.expanded = this.layoutValue === "expanded";
-    this.updateAllToasts();
-  }
-
-  beforeCache() {
-    if (!this.isPrimaryController) return;
-
-    // Clear all toasts before the page is cached to prevent stale toasts on navigation
-    this.clearAllToasts();
-    // Reset position to default on navigation
-    window.currentToastPosition = this.element.dataset.toastPositionValue || "top-center";
-  }
-
   clearAllToasts() {
-    // Remove all toast elements from DOM
-    const container = this.containerTarget;
-    if (container) {
-      while (container.firstChild) {
-        container.removeChild(container.firstChild);
-      }
-    }
-
-    // Clear arrays
+    this.animationFrames.forEach((frame) => cancelAnimationFrame(frame));
+    this.animationFrames.clear();
+    this.pendingTimers.forEach((timer) => clearTimeout(timer));
+    this.pendingTimers.clear();
+    this.autoDismissTimers = {};
     this.toasts = [];
     this.heights = [];
-    if (this.layoutValue === "default") {
-      this.expanded = false;
-    }
+    this.expanded = false;
+    this.containerTarget.replaceChildren();
+    this.containerTarget.style.height = "0px";
+  }
 
-    // Clear all timers
-    if (this.autoDismissTimers) {
-      Object.values(this.autoDismissTimers).forEach((timer) => clearTimeout(timer));
-      this.autoDismissTimers = {};
-    }
+  nextFrame(callback) {
+    const frame = requestAnimationFrame(() => {
+      this.animationFrames.delete(frame);
+      callback();
+    });
+    this.animationFrames.add(frame);
+  }
 
-    this.hideGlobalHostIfIdle();
+  later(callback, duration) {
+    const timer = setTimeout(() => {
+      this.pendingTimers.delete(timer);
+      callback();
+    }, duration);
+    this.pendingTimers.add(timer);
+    return timer;
   }
 
   handleMouseEnter() {
@@ -182,14 +120,12 @@ export default class extends Controller {
   }
 
   renderToast(toast) {
-    this.ensureGlobalHostVisible();
-
     const container = this.containerTarget;
     const li = this.createToastElement(toast);
     container.insertBefore(li, container.firstChild);
 
     // Measure height after a short delay to ensure rendering is complete
-    requestAnimationFrame(() => {
+    this.nextFrame(() => {
       const toastEl = document.getElementById(toast.id);
       if (toastEl) {
         const height = toastEl.getBoundingClientRect().height;
@@ -204,7 +140,7 @@ export default class extends Controller {
         const activeToasts = this.toasts.filter((t) => !t.removed);
 
         // Trigger mount animation
-        requestAnimationFrame(() => {
+        this.nextFrame(() => {
           toast.mounted = true;
           toastEl.dataset.mounted = "true";
 
@@ -228,9 +164,10 @@ export default class extends Controller {
 
     if (this.autoDismissTimers[toastId]) {
       clearTimeout(this.autoDismissTimers[toastId]);
+      this.pendingTimers.delete(this.autoDismissTimers[toastId]);
     }
 
-    this.autoDismissTimers[toastId] = setTimeout(() => {
+    this.autoDismissTimers[toastId] = this.later(() => {
       this.removeToast(toastId);
       delete this.autoDismissTimers[toastId];
     }, this.autoDismissDurationValue);
@@ -243,7 +180,6 @@ export default class extends Controller {
     li.style.pointerEvents = "auto";
     li.dataset.mounted = "false";
     li.dataset.removed = "false";
-    li.dataset.position = this.positionValue;
     li.dataset.expanded = this.expanded.toString();
     li.dataset.visible = "true";
     li.dataset.front = "false";
@@ -254,40 +190,15 @@ export default class extends Controller {
     }
 
     const span = document.createElement("span");
-    span.className = `relative flex flex-col items-start shadow-xs w-full transition-all duration-200 bg-white border border-neutral-200 dark:border-neutral-700 dark:bg-neutral-800 rounded-lg sm:rounded-xl group ${
-      toast.html ? "p-0" : "p-4"
-    }`;
+    span.className = "relative flex flex-col items-start shadow-xs w-full transition-all duration-200 bg-white border border-neutral-200 dark:border-neutral-700 dark:bg-neutral-800 rounded-lg sm:rounded-xl group p-4";
     span.style.transitionTimingFunction = "cubic-bezier(0.4, 0, 0.2, 1)";
+    span.innerHTML = this.getToastHTML(toast);
 
-    if (toast.html) {
-      span.innerHTML = toast.html;
-    } else {
-      span.innerHTML = this.getToastHTML(toast);
-    }
-
-    // Add action button event listeners if not using custom HTML
-    if (!toast.html && (toast.action || toast.secondaryAction)) {
-      requestAnimationFrame(() => {
-        if (toast.action) {
-          const primaryBtn = span.querySelector('[data-action-type="primary"]');
-          if (primaryBtn) {
-            primaryBtn.addEventListener("click", (e) => {
-              e.stopPropagation();
-              toast.action.onClick();
-              this.removeToast(toast.id);
-            });
-          }
-        }
-        if (toast.secondaryAction) {
-          const secondaryBtn = span.querySelector('[data-action-type="secondary"]');
-          if (secondaryBtn) {
-            secondaryBtn.addEventListener("click", (e) => {
-              e.stopPropagation();
-              toast.secondaryAction.onClick();
-              this.removeToast(toast.id);
-            });
-          }
-        }
+    if (toast.action) {
+      span.querySelector('[data-action-type="primary"]').addEventListener("click", (event) => {
+        event.stopPropagation();
+        toast.action.onClick();
+        this.removeToast(toast.id);
       });
     }
 
@@ -295,9 +206,8 @@ export default class extends Controller {
     const closeBtn = document.createElement("button");
     closeBtn.type = "button";
     closeBtn.setAttribute("aria-label", "Dismiss notification");
-    const hasActions = toast.action || toast.secondaryAction;
     closeBtn.className = `absolute right-0 p-1.5 mr-2.5 text-neutral-400 duration-100 ease-in-out rounded-full cursor-pointer hover:bg-neutral-50 dark:hover:bg-neutral-700 hover:text-neutral-500 dark:hover:text-neutral-300 ${
-      !toast.description && !toast.html && !hasActions ? "top-1/2 -translate-y-1/2" : "top-0 mt-2.5"
+      !toast.description && !toast.action ? "top-1/2 -translate-y-1/2" : "top-0 mt-2.5"
     }`;
     closeBtn.innerHTML = `<svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>`;
     closeBtn.dataset.toastId = toast.id;
@@ -343,21 +253,10 @@ export default class extends Controller {
 
     const icon = icons[toast.type] || "";
 
-    // Action buttons HTML
-    const hasActions = toast.action || toast.secondaryAction;
-    const actionsHTML = hasActions
+    const actionsHTML = toast.action
       ? `<div></div>
         <div class="flex justify-end items-center gap-2 mt-0.5">
-          ${
-            toast.secondaryAction
-              ? `<button data-action-type="secondary" class="flex items-center justify-center gap-1.5 rounded-lg border border-neutral-200 bg-white/90 px-2 py-1.5 text-xs font-medium whitespace-nowrap text-neutral-800 shadow-xs transition-all duration-100 ease-in-out select-none hover:bg-neutral-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-600 disabled:cursor-not-allowed disabled:opacity-50 dark:border-white/10 dark:bg-neutral-700/50 dark:text-neutral-50 dark:hover:bg-neutral-700/75 dark:focus-visible:outline-neutral-200">${this.escapeHTML(toast.secondaryAction.label)}</button>`
-              : ""
-          }
-          ${
-            toast.action
-              ? `<button data-action-type="primary" class="flex items-center justify-center gap-1.5 rounded-lg border border-neutral-400/30 bg-neutral-800 px-2 py-1.5 text-xs font-medium whitespace-nowrap text-white shadow-sm transition-all duration-100 ease-in-out select-none hover:bg-neutral-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-600 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-white dark:text-neutral-800 dark:hover:bg-neutral-100 dark:focus-visible:outline-neutral-200">${this.escapeHTML(toast.action.label)}</button>`
-              : ""
-          }
+          <button type="button" data-action-type="primary" class="flex items-center justify-center gap-1.5 rounded-lg border border-neutral-400/30 bg-neutral-800 px-2 py-1.5 text-xs font-medium whitespace-nowrap text-white shadow-sm transition-all duration-100 ease-in-out select-none hover:bg-neutral-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-600 dark:bg-white dark:text-neutral-800 dark:hover:bg-neutral-100 dark:focus-visible:outline-neutral-200">${this.escapeHTML(toast.action.label)}</button>
         </div>`
       : "";
 
@@ -403,11 +302,12 @@ export default class extends Controller {
     // Clear auto-dismiss timer
     if (this.autoDismissTimers && this.autoDismissTimers[id]) {
       clearTimeout(this.autoDismissTimers[id]);
+      this.pendingTimers.delete(this.autoDismissTimers[id]);
       delete this.autoDismissTimers[id];
     }
 
     // Wait for exit animation to complete
-    setTimeout(() => {
+    this.later(() => {
       // Remove from arrays
       this.toasts = this.toasts.filter((t) => t.id !== id);
       this.heights = this.heights.filter((h) => h.toastId !== id);
@@ -420,8 +320,6 @@ export default class extends Controller {
       // Update remaining toasts
       this.updateAllToasts();
 
-      this.hideGlobalHostIfIdle();
-
       // Schedule auto-dismiss for newly visible toast
       if (this.toasts.length >= this.limitValue) {
         const newlyVisibleToast = this.toasts[this.limitValue - 1];
@@ -433,7 +331,7 @@ export default class extends Controller {
   }
 
   updateAllToasts() {
-    requestAnimationFrame(() => {
+    this.nextFrame(() => {
       const visibleToasts = this.limitValue;
 
       // Calculate visual index (excluding removed toasts)
@@ -449,7 +347,6 @@ export default class extends Controller {
           toastEl.dataset.index = String(this.limitValue - 1);
           toastEl.dataset.visible = "true";
           toastEl.dataset.expanded = this.expanded.toString();
-          toastEl.dataset.position = this.positionValue;
           // Set lowest z-index so it appears behind all active toasts
           toastEl.style.setProperty("--toast-z-index", 0);
           toastEl.style.setProperty("--toast-index", this.limitValue - 1);
@@ -478,7 +375,6 @@ export default class extends Controller {
         toastEl.dataset.visible = isVisible.toString();
         toastEl.dataset.front = isFront.toString();
         toastEl.dataset.index = visualIndex.toString();
-        toastEl.dataset.position = this.positionValue;
 
         // Set CSS custom properties for dynamic values
         toastEl.style.setProperty("--toast-z-index", 100 - visualIndex);
@@ -505,7 +401,7 @@ export default class extends Controller {
 
       // Update container height immediately and after transitions complete
       this.updateContainerHeight();
-      setTimeout(() => this.updateContainerHeight(), 400);
+      this.later(() => this.updateContainerHeight(), 400);
     });
   }
 
@@ -515,7 +411,6 @@ export default class extends Controller {
 
     if (activeToasts.length === 0) {
       this.containerTarget.style.height = "0px";
-      this.hideGlobalHostIfIdle();
       return;
     }
 
@@ -547,257 +442,14 @@ export default class extends Controller {
     }
   }
 
-  get positionClasses() {
-    const positions = {
-      "top-right": "right-0 top-0 mt-4 mr-4 sm:mt-6 sm:mr-6",
-      "top-left": "left-0 top-0 mt-4 ml-4 sm:mt-6 sm:ml-6",
-      "top-center": "left-1/2 -translate-x-1/2 top-0 mt-4 sm:mt-6",
-      "bottom-right": "right-0 bottom-0 mb-4 mr-4 sm:mr-6 sm:mb-6",
-      "bottom-left": "left-0 bottom-0 mb-4 ml-4 sm:ml-6 sm:mb-6",
-      "bottom-center": "left-1/2 -translate-x-1/2 bottom-0 mb-4 sm:mb-6",
-    };
-
-    return positions[this.positionValue] || positions["top-center"];
-  }
-
-  registerController() {
-    if (!window.__toastControllers) {
-      window.__toastControllers = new Set();
-    }
-
-    window.__toastControllers.add(this);
-  }
-
-  unregisterController() {
-    if (window.__toastControllers) {
-      window.__toastControllers.delete(this);
-    }
-  }
-
-  activatePrimaryIfNeeded() {
-    const existingPrimary = window.__toastPrimaryController;
-    const existingPrimaryConnected = existingPrimary?.element?.isConnected;
-
-    if (existingPrimary && existingPrimary !== this && existingPrimaryConnected) {
-      return;
-    }
-
-    this.becomePrimaryController();
-  }
-
-  becomePrimaryController() {
-    if (this.isPrimaryController) return;
-
-    this.isPrimaryController = true;
-    window.__toastPrimaryController = this;
-
-    this.initializePositionState();
-    this.updatePositionClasses();
-    this.mountToGlobalHost();
-    this.applyPointerEventPolicy();
-
-    this.boundShowToast = this.showToast.bind(this);
-    window.toast = this.boundShowToast;
-
-    this.boundHandleToastShow = this.handleToastShow.bind(this);
-    this.boundHandleLayoutChange = this.handleLayoutChange.bind(this);
-    this.boundBeforeCache = this.beforeCache.bind(this);
-    this.boundPointerMove = this.handleGlobalPointerMove.bind(this);
-    this.boundPointerLeave = this.handleGlobalPointerLeave.bind(this);
-    this.boundHandleDialogStateChange = this.handleDialogStateChange.bind(this);
-
-    window.addEventListener("toast-show", this.boundHandleToastShow);
-    window.addEventListener("set-toasts-layout", this.boundHandleLayoutChange);
-    window.addEventListener("pointermove", this.boundPointerMove, { passive: true });
-    window.addEventListener("pointerleave", this.boundPointerLeave);
-    window.addEventListener("blur", this.boundPointerLeave);
-    document.addEventListener("turbo:before-cache", this.boundBeforeCache);
-    this.startDialogStateObserver();
-  }
-
-  removePrimaryListeners() {
-    if (this.boundHandleToastShow) {
-      window.removeEventListener("toast-show", this.boundHandleToastShow);
-    }
-
-    if (this.boundHandleLayoutChange) {
-      window.removeEventListener("set-toasts-layout", this.boundHandleLayoutChange);
-    }
-
-    if (this.boundPointerMove) {
-      window.removeEventListener("pointermove", this.boundPointerMove);
-    }
-
-    if (this.boundPointerLeave) {
-      window.removeEventListener("pointerleave", this.boundPointerLeave);
-      window.removeEventListener("blur", this.boundPointerLeave);
-    }
-
-    if (this.boundBeforeCache) {
-      document.removeEventListener("turbo:before-cache", this.boundBeforeCache);
-    }
-
-    this.stopDialogStateObserver();
-  }
-
-  promoteNextPrimaryController() {
-    if (!window.__toastControllers?.size) return;
-
-    const nextPrimary = Array.from(window.__toastControllers).find((controller) => controller?.element?.isConnected);
-    if (nextPrimary) {
-      nextPrimary.becomePrimaryController();
-    }
-  }
-
-  initializePositionState() {
-    if (!window.currentToastPosition) {
-      window.currentToastPosition = this.positionValue;
-      return;
-    }
-
-    this.positionValue = window.currentToastPosition;
-  }
-
-  mountToGlobalHost() {
-    this.globalHost = this.element;
-
-    if (!this.globalHost) return;
-
-    if (typeof this.globalHost.showPopover === "function" && !this.globalHost.hasAttribute("popover")) {
-      this.globalHost.setAttribute("popover", "manual");
-    }
-
-    const mountRoot = this.preferredMountRoot();
-    if (!mountRoot) return;
-
-    if (this.globalHost.parentNode !== mountRoot) {
-      if (typeof this.globalHost.hidePopover === "function") {
-        try {
-          if (this.globalHost.matches(":popover-open")) {
-            this.globalHost.hidePopover();
-          }
-        } catch {
-          // Ignore popover state errors before remount.
-        }
-      }
-
-      if (mountRoot === this.defaultMountParent && this.defaultMountNextSibling?.parentNode === mountRoot) {
-        mountRoot.insertBefore(this.globalHost, this.defaultMountNextSibling);
-      } else {
-        mountRoot.appendChild(this.globalHost);
-      }
-    }
-  }
-
-  preferredMountRoot() {
-    const openDialog = this.topmostOpenDialog();
-    if (openDialog) return openDialog;
-
-    const parentDialog = this.defaultMountParent instanceof Element ? this.defaultMountParent.closest("dialog") : null;
-    if (parentDialog && !parentDialog.open) return document.body;
-
-    if (this.defaultMountParent?.tagName === "DIALOG" && !this.defaultMountParent.open) {
-      return document.body;
-    }
-
-    return this.defaultMountParent || document.body;
-  }
-
-  topmostOpenDialog() {
-    const openDialogs = Array.from(document.querySelectorAll("dialog[open]")).filter((dialog) => dialog.isConnected);
-    if (openDialogs.length === 0) return null;
-
-    return openDialogs[openDialogs.length - 1];
-  }
-
-  applyPointerEventPolicy() {
-    if (this.element) {
-      this.element.style.pointerEvents = "none";
-    }
-
-    if (this.hasContainerTarget) {
-      this.containerTarget.style.pointerEvents = "none";
-    }
-  }
-
-  ensureGlobalHostVisible() {
-    this.mountToGlobalHost();
-
-    if (!this.globalHost || typeof this.globalHost.showPopover !== "function") return;
-
-    try {
-      if (this.globalHost.matches(":popover-open")) {
-        this.globalHost.hidePopover();
-      }
-    } catch {
-      // Ignore popover close errors.
-    }
-
-    try {
-      this.globalHost.showPopover();
-    } catch {
-      // No-op: keep standard DOM rendering when Popover API isn't available.
-    }
-  }
-
-  hideGlobalHostIfIdle() {
-    if (!this.globalHost || typeof this.globalHost.hidePopover !== "function") return;
-
-    const hasActiveToasts = this.toasts.some((toast) => !toast.removed);
-    if (hasActiveToasts) return;
-
-    try {
-      if (this.globalHost.matches(":popover-open")) {
-        this.globalHost.hidePopover();
-      }
-    } catch {
-      // No-op: host stays visible when popover state isn't available.
-    }
-  }
-
-  startDialogStateObserver() {
-    if (this.dialogStateObserver) return;
-    if (!document.body) return;
-
-    this.dialogStateObserver = new MutationObserver(this.boundHandleDialogStateChange);
-    this.dialogStateObserver.observe(document.body, {
-      subtree: true,
-      childList: true,
-      attributes: true,
-      attributeFilter: ["open"],
-    });
-  }
-
-  stopDialogStateObserver() {
-    if (!this.dialogStateObserver) return;
-    this.dialogStateObserver.disconnect();
-    this.dialogStateObserver = null;
-  }
-
-  handleDialogStateChange() {
-    if (!this.isPrimaryController) return;
-
-    this.mountToGlobalHost();
-
-    const hasActiveToasts = this.toasts.some((toast) => !toast.removed);
-    if (hasActiveToasts) {
-      this.ensureGlobalHostVisible();
-    } else {
-      this.hideGlobalHostIfIdle();
-    }
-  }
-
   setExpandedState(nextExpanded) {
-    if (this.layoutValue !== "default") return;
     if (nextExpanded === this.expanded) return;
-    if (!nextExpanded && this.interacting) return;
 
     this.expanded = nextExpanded;
     this.updateAllToasts();
   }
 
   handleGlobalPointerMove(event) {
-    if (!this.isPrimaryController) return;
     if (!this.hasContainerTarget) return;
     if (!this.toasts.some((toast) => !toast.removed)) {
       this.setExpandedState(false);
@@ -809,7 +461,6 @@ export default class extends Controller {
   }
 
   handleGlobalPointerLeave() {
-    if (!this.isPrimaryController) return;
     this.setExpandedState(false);
   }
 

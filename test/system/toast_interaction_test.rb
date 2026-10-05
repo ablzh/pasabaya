@@ -9,7 +9,7 @@ class ToastInteractionTest < ApplicationSystemTestCase
         localStorage.setItem('theme', '#{theme}');
         document.documentElement.classList.toggle('dark', '#{theme}' === 'dark');
         document.documentElement.style.colorScheme = '#{theme}';
-        window.__toastPrimaryController.autoDismissDurationValue = 60000;
+        Stimulus.getControllerForElementAndIdentifier(document.getElementById('toast-container'), 'toast').autoDismissDurationValue = 60000;
         window.toast('Saved.', {type: 'success'});
         window.toast('A multiline notification with enough detail to wrap across several lines on a narrow phone. Check the route and departure before requesting a seat.', {description: 'Optional description also wraps.', type: 'info'});
         window.toast('Maria requested a seat on your ride.', {type: 'info', action: {label: 'View', onClick: () => Turbo.visit('#{ride_posts_path}')}});
@@ -55,7 +55,7 @@ class ToastInteractionTest < ApplicationSystemTestCase
     click_button "Sign in"
     assert_current_path root_path
     assert_selector "turbo-cable-stream-source[connected]", visible: :all
-    page.execute_script("window.__toastPrimaryController.autoDismissDurationValue = 60000")
+    page.execute_script("Stimulus.getControllerForElementAndIdentifier(document.getElementById('toast-container'), 'toast').autoDismissDurationValue = 60000")
     notification = notifications(:one)
     notification.deliver!
     assert_selector ".toast-item", text: "#{actor.first_name} requested a seat on your ride."
