@@ -1,3 +1,5 @@
+<% deploy_host = ENV.fetch("DEPLOY_HOST") %>
+# DEPLOY_HOST must be set in the invoking shell; .kamal/secrets is read later.
 # Name of your application. Used to uniquely configure containers.
 service: pasabaya
 
@@ -8,7 +10,7 @@ image: ablzh/pasabaya
 servers:
   web:
     hosts:
-      - 140.245.98.120
+      - <%= deploy_host %>
     options:
       memory: 10g
 
@@ -81,7 +83,7 @@ ssh:
 accessories:
   netdata:
     image: netdata/netdata:latest
-    host: 140.245.98.120
+    host: <%= deploy_host %>
     network: host
     options:
       pid: host
@@ -111,7 +113,7 @@ accessories:
 
   litestream:
     image: litestream/litestream:latest
-    host: 140.245.98.120
+    host: <%= deploy_host %>
     cmd: "replicate"
     options:
       user: "1000:1000"
@@ -127,7 +129,7 @@ accessories:
 
   backup:
     image: ghcr.io/crmne/kamal-backup:latest
-    host: 140.245.98.120
+    host: <%= deploy_host %>
     files:
       - config/kamal-backup.yml:/app/config/kamal-backup.yml:ro
     env:

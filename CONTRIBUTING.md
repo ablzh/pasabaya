@@ -1,61 +1,16 @@
 # Contributing to Pasabaya.app
 
-First of all, thank you for taking the time to contribute to Pasabaya.app! Your help is highly appreciated, and together we can make carpooling and ride-sharing simple and accessible.
+Start with the local setup in [README.md](README.md) and the domain boundaries in [docs/architecture.md](docs/architecture.md). Prefer Rails conventions and an existing module before adding dependencies or abstractions.
 
-As a project built on **The One Person Framework** philosophy, I aim to keep the codebase clean, lean, and simple. I prefer leveraging native Rails features and avoiding unnecessary external dependencies.
+## Changes and tests
 
----
+1. Fork the repository and create a descriptive branch from `main`.
+2. Keep the change focused and include the smallest relevant behavior or regression test. Browser tests are needed for browser behavior, not for every backend change.
+3. Run `bin/ci`. This is the full gate for style, templates, architecture, schema consistency, security, application tests, browser tests, and seeds. If a check cannot run, state what prevented it; do not describe the gate as passing.
+4. Open a pull request describing the problem, resulting behavior, and validation. Include screenshots when the visual result matters.
 
-## 🛠️ Getting Started
+Use `bin/rails test path/to/test.rb` for a focused application test and `bin/rails test:system` for browser tests. `bin/rubocop` uses Rails Omakase style. Avoid unrelated formatting or generated scaffolding in a functional change.
 
-Before you start writing code, make sure you have followed the setup instructions in the [README.md](file:///Users/uzver/Repos/pasabaya/README.md)
+## Issues and security
 
----
-
-## 🌿 Branching Policy
-
-1. Fork the repository and create your branch from `main`.
-2. Keep your branch names descriptive (e.g., `feature/add-profile-avatars` or `fix/ride-post-validation`).
-
----
-
-## 🧪 Quality Standards
-
-To maintain a healthy codebase, I ask all contributors to run tests and linters locally before submitting a Pull Request.
-
-### 1. Code Style (RuboCop)
-The project uses Rails' default Omakase style guide (`rubocop-rails-omakase`).
-Check your code style by running:
-```bash
-bundle exec rubocop
-```
-Please resolve any style offenses before submitting your code.
-
-### 2. Testing
-Ensure your changes do not break existing features. The test suite includes unit, integration, and system tests.
-- Run all tests:
-  ```bash
-  bin/rails test
-  ```
-- Run system tests (which run in a headless browser to test interactive features):
-  ```bash
-  bin/rails test:system
-  ```
-
----
-
-## 📬 Submitting a Pull Request
-
-When you are ready to submit your changes:
-
-1. Double-check that all tests pass and there are no RuboCop style offenses.
-2. Push your branch to your fork.
-3. Open a Pull Request against the `main` branch of `ablzh/pasabaya`.
-4. Provide a clear description of the problem you are solving, what changes you made, and how to test them.
-5. Wait for review! I will do my best to review your PR as soon as possible.
-
-## 👀 If you find an error or have a suggestion
-If you know how to resolve this yourself, the information above will help. 
-If not, just open an issue and describe the situation in detail :)
-
-Thank you again for contributing!
+For bugs, include the reproduction steps, expected result, actual result, and relevant environment. Keep personal data and credentials out of reports. Follow [SECURITY.md](SECURITY.md) for vulnerabilities instead of posting exploit details in a public issue.
