@@ -2,6 +2,8 @@
 
 class RouteSubscriptionsController < ApplicationController
   before_action :require_authentication
+  rate_limit to: 20, within: 10.minutes, name: "account", only: :create,
+    by: -> { Current.user.id }, with: :reject_rate_limited_request
 
   def create
     @subscription = Current.user.route_subscriptions.find_or_create_by(

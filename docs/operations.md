@@ -44,6 +44,43 @@ using sandbox SMTP, with `mailtrap_sandbox.user_name` and
 are an error rather than silently discarding mail. Never copy production keys
 into a contributor's setup.
 
+## Abuse protection
+
+Registration uses an `invisible_captcha` honeypot. The field is hidden from users,
+keyboard navigation, and assistive technology. Timing and spinner checks are
+disabled so autofill and Turbo-restored forms remain usable. No interactive
+CAPTCHA provider is configured.
+
+Rack::Attack and Rails controller limits use the application cache, which is
+shared Solid Cache in production. Recipient keys use a SHA-256 digest of the
+trimmed, lowercase email address; raw addresses are not counter keys.
+
+| Operation | Limits |
+| --- | --- |
+| Registration | 5 attempts/minute and 20/hour per IP |
+| Login | Rack::Attack: 5 attempts/20 seconds per IP and normalized email; Rails: 10/3 minutes per IP |
+| Password reset | 10 attempts/3 minutes per IP; 1/minute and 5/hour per recipient |
+| Membership verification email | 5 attempts/10 minutes per account; 1/minute and 5/hour per recipient |
+| Email change confirmation | 5 attempts/10 minutes per account; 1/minute and 5/hour per recipient |
+| New ride offers | 10 attempts/10 minutes per account |
+| Seat requests | 20 attempts/minute per account |
+| Route alerts | 20 attempts/10 minutes per account |
+| Trip reviews | 10 attempts/10 minutes per account |
+| Chat messages | 30 attempts/minute per account |
+
+Limits count attempts, including invalid submissions. Password reset recipient
+limits return the same generic acknowledgement as successful or unknown-account
+requests. Authenticated forms receive a 429 response; Turbo displays a toast and
+leaves the unsent form intact. Cancellation, leaving a hub, and account deletion
+have no new account quota.
+
+Monitor `rate_limit.action_controller`, `invisible_captcha.spam_detected`, and
+Rack::Attack throttle events. Treat these initial thresholds as a policy to tune
+against actual usage, especially registration from shared university or office
+IPs. Verify trusted client IP handling and origin restrictions before relying on
+IP quotas behind Cloudflare. Honeypots and rate limits do not establish email
+ownership; registration's existing immediate sign-in behavior is unchanged.
+
 ## Deployment and rollback
 
 1. Run `bin/ci` and review migrations for data loss and compatibility with the

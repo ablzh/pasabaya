@@ -6,6 +6,8 @@ class RidePostsController < ApplicationController
   before_action :set_grouped_locations, only: %i[ index new edit create update ]
   before_action :resolve_route_slugs, only: :index
   before_action :redirect_to_seo_route, only: :index
+  rate_limit to: 10, within: 10.minutes, name: "account", only: :create,
+    by: -> { Current.user.id }, with: :reject_rate_limited_request
 
 
   # GET /ride_posts or /ride_posts.json

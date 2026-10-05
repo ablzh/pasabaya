@@ -44,6 +44,9 @@ gem "image_processing", "~> 2.0"
 
 gem "cloudflare-rails"
 
+# Honeypot protection for the public registration form.
+gem "invisible_captcha", "~> 2.3"
+
 gem "skylight"
 
 gem "view_component"
