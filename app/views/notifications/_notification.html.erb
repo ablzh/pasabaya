@@ -43,6 +43,8 @@
           <%= notification.actor&.first_name || "A user" %> canceled their seat booking.
         <% when "ride.canceled" %>
           A ride you had booked has been canceled by the driver.
+        <% when "incident.resolved" %>
+          <%= notification.summary %>
         <% else %>
           <%= notification.event_name.humanize %>
         <% end %>

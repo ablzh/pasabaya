@@ -81,4 +81,35 @@ class NotificationTest < ActiveSupport::TestCase
       Turbo::StreamsChannel.define_singleton_method(:broadcast_append_to, original_broadcast)
     end
   end
+
+  test "incident decision summaries distinguish both outcomes and restrictions" do
+    incident = NoShowIncident.create!(ride_post: @ride, user: @user, occurred_at: 1.day.ago)
+    freeze_until = 2.days.from_now
+
+    { upheld: "warning", dismissed: "info" }.each do |status, toast_type|
+      decision = incident.decisions.create!(
+        reviewer: users(:two), previous_status: :pending, status: status,
+        reason: "Private reason", booking_freeze_until: status == :upheld ? freeze_until : nil
+      )
+      notification = Notification.new(notifiable: decision, event_name: "incident.resolved")
+
+      assert_equal "A no-show report about your participation was #{status}.", notification.summary
+      assert_equal toast_type, notification.toast_type
+      if status == :upheld
+        assert_includes notification.incident_booking_restriction_summary, freeze_until.to_fs(:long)
+      else
+        assert_equal "No booking restriction was active when this decision was made.", notification.incident_booking_restriction_summary
+      end
+      assert_not_includes notification.summary, decision.reason
+    end
+  end
+
+  test "legacy incident notifications retain a generic summary" do
+    notification = Notification.new(notifiable: @ride, event_name: "incident.resolved")
+
+    assert_nil notification.incident_decision
+    assert_nil notification.incident_booking_restriction_summary
+    assert_equal "An incident report was resolved.", notification.summary
+    assert_equal "info", notification.toast_type
+  end
 end

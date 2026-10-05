@@ -31,9 +31,26 @@ and current trip access before subscribing and transmitting.
 
 Trip chat belongs to the driver and accepted participants. Messaging and history
 have separate deadlines. Reviews and no-show decisions retain historical
-participation; deleting records must not erase review eligibility. No-show
-adjudication is currently a trusted console operation, documented in
-[operations](operations.md#moderation).
+participation; deleting records must not erase review eligibility. No-show outcome
+categories must match the subject's role on the trip. The private `/admin` area
+shows reviews and the incident queue. Administrator rights are checked against
+the current account state, and console access is required to grant or revoke them.
+
+`NoShowIncidents::AdjudicateService` owns confirmation, dismissal, and reversal of
+decisions. It requires an active administrator who was not involved in the trip,
+checks the displayed incident version, and records each changed decision in
+`NoShowIncidentDecision`. The incident's reviewer, reason, and resolution time
+describe the latest decision; its history preserves earlier outcomes. The same
+transaction updates strike restrictions and records a result notification keyed
+by the decision. Repeated submissions of an unchanged result do not add another
+decision or notification. Existing appealed cases can be reviewed, but there is
+no user appeal submission workflow. See [operations](operations.md#moderation).
+
+Account deletion scrubs reasons from the decision history as well as review notes
+and the latest incident reason. Later decisions on anonymized cases preserve
+objective outcomes without restoring personal commentary. Administrative access
+does not extend the chat retention deadline or grant routine access to private
+trip conversations.
 
 ## Boundaries
 

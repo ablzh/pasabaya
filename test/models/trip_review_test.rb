@@ -77,6 +77,18 @@ class TripReviewTest < ActiveSupport::TestCase
     assert_includes review.errors[:reported_user], "cannot be yourself"
   end
 
+  test "no show categories must match the reported participant role" do
+    review = TripReview.new(ride_post: @ride_post, reporter: @driver, reported_user: @passenger, outcome: :driver_no_show)
+    assert_not review.valid?
+    assert_includes review.errors[:outcome], "must describe a passenger when reviewing a passenger"
+
+    review = TripReview.new(ride_post: @ride_post, reporter: @passenger, reported_user: @driver, outcome: :passenger_no_show)
+    assert_not review.valid?
+    assert_includes review.errors[:outcome], "must describe a driver when reviewing the driver"
+    review.outcome = :driver_no_show
+    assert review.valid?
+  end
+
   test "cannot review non-participants" do
     review = TripReview.new(
       ride_post: @ride_post,

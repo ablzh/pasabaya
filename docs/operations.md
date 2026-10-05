@@ -74,12 +74,21 @@ requests. Authenticated forms receive a 429 response; Turbo displays a toast and
 leaves the unsent form intact. Cancellation, leaving a hub, and account deletion
 have no new account quota.
 
-Monitor `rate_limit.action_controller`, `invisible_captcha.spam_detected`, and
-Rack::Attack throttle events. Treat these initial thresholds as a policy to tune
-against actual usage, especially registration from shared university or office
-IPs. Verify trusted client IP handling and origin restrictions before relying on
-IP quotas behind Cloudflare. Honeypots and rate limits do not establish email
-ownership; registration's existing immediate sign-in behavior is unchanged.
+Blocked requests produce JSON application log records for
+`rate_limit.action_controller`, `invisible_captcha.spam_detected`, and
+`throttle.rack_attack`. These structured records contain only the event and known
+controller, action, or limiter names; they omit IPs, email addresses, counter keys,
+form data, honeypot contents, request URLs, referrers, and user agents. The deprecated
+`rack.attack` event is not subscribed to, avoiding duplicate throttle records.
+This describes the added metrics records, not a redaction policy for ordinary
+Rails, proxy, or dependency logs. Inspect their logging and retention separately.
+
+Use `bin/kamal logs` and the configured log collection to compare event counts by
+operation or limiter. Treat these initial thresholds as a policy to tune against
+actual usage, especially registration from shared university or office IPs. Verify
+trusted client IP handling and origin restrictions before relying on IP quotas
+behind Cloudflare. Honeypots and rate limits do not establish email ownership;
+registration's existing immediate sign-in behavior is unchanged.
 
 ## Deployment and rollback
 
@@ -133,27 +142,85 @@ do not select replacement versions from tag names alone.
 
 ## Moderation
 
-There is no administrative web UI. A trusted operator uses `bin/kamal console`
-and the domain service to review pending or appealed no-show incidents. Check the
-trip's review evidence and historical participation before deciding. The service
-records the reviewer and reason and maintains strikes, booking freezes, and
-notifications; changing `status` directly bypasses that behavior.
+Administrators sign in with the existing application account and open `/admin`.
+The area provides read-only trip reviews and a no-show incident queue. Review
+filters distinguish trip outcomes; incident filters distinguish pending,
+confirmed, dismissed, and existing appealed cases. Lists are not paginated.
+An incident's detail page brings together the reported participant, route and
+departure, historical participation, related reviews, current restrictions, and
+decision history. Reports are evidence to review, not confirmed strikes.
+
+The migration preserves the latest known pre-history decision, including its
+operator, reason, and recorded time. Its previous outcome and booking restriction
+are unknown; earlier unrecorded decisions are not reconstructed.
+
+The available actions confirm or dismiss a no-show, including correcting a
+previous decision. Each requires a meaningful reason and an active administrator
+who was not involved in that trip. The service records the operator and result,
+updates the existing 60-day strike count and booking freeze policy, and notifies
+the reported user of either result. The recipient can read the result through
+their own notification. Deleted accounts are not notified or restricted again;
+anonymized evidence and reasons remain scrubbed.
+
+This area does not edit or delete reviews, grant roles, manage other accounts,
+change bookings, or provide a user appeal submission workflow. Existing appealed
+records remain readable and can receive a final decision. Private chats keep
+their existing access and retention rules. Infrastructure, recovery, and queue
+operations continue to use the tools described above.
+
+### Granting and revoking access
+
+Use `bin/kamal console` in production. Identify the intended existing account
+before setting its ID below; production seeds do not create operator accounts.
+The `admin` attribute is read-only for ordinary model updates, and HTTP forms do
+not accept it. A targeted console update deliberately bypasses that protection:
+
+```ruby
+admin_user_id = 123 # Replace with the verified operator account ID.
+changed = User.where(id: admin_user_id, deleted_at: nil, banned_at: nil)
+              .update_all(admin: true, updated_at: Time.current)
+raise "Expected exactly one active operator account" unless changed == 1
+User.find(admin_user_id).admin?
+```
+
+Revoke access from the specific account with the same console boundary:
+
+```ruby
+changed = User.where(id: admin_user_id)
+              .update_all(admin: false, updated_at: Time.current)
+raise "Expected exactly one operator account" unless changed == 1
+```
+
+Administrator access is rechecked on each request; revocation applies to an
+already signed-in account on its next request. Decisions also recheck the
+operator's current eligibility inside the write transaction. Demo moderator
+accounts are local-only. Production seeds do not remove accounts that may exist
+from older deployments; an operator must review those separately.
+
+### Console decisions
+
+The console may use the same domain service. Check the trip's review evidence and
+historical participation before deciding; do not change incident status directly.
+Use a real, active administrator account independent of the trip:
 
 ```ruby
 incident = NoShowIncident.find(incident_id)
 reviewer = User.find(reviewer_id)
-NoShowIncidents::AdjudicateService.call(
+incident = NoShowIncidents::AdjudicateService.call(
   incident, status: :upheld, reviewer: reviewer,
-  reason: "Document the evidence and decision here"
+  reason: "Reviewed participant reports and acceptance/cancellation timestamps.",
+  expected_version: incident.lock_version
 )
 ```
 
-Use `:dismissed` for a dismissed case, including reversing an earlier decision.
-Record a real operator account and a meaningful reason. Console access is the
-authorization boundary; the `admin` flag does not expose a moderation interface.
-Demo moderator accounts are local-only. Production seeds do not provision users
-and do not remove any demo accounts that may exist from older deployments; an
-operator must review those separately.
+Use `:dismissed` for a dismissed case. `expected_version` defaults to the supplied
+incident's `lock_version`; a stale case raises
+`NoShowIncidents::AdjudicateService::Conflict`. Reload the incident and review the
+new decision before deciding again. Do not automatically retry a conflict.
+The service returns a fresh incident; keep that return value or reload before
+another transition. Changed decisions append history and use a distinct
+notification key, so confirmation, dismissal, and a later correction are each
+reported once. An unchanged result adds no new decision.
 
 The old waitlist no longer accepts subscriptions. Existing Subscriber records
 and anonymous signed unsubscribe links are retained for compatibility and account

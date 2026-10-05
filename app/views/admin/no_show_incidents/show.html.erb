@@ -1,0 +1,134 @@
+<%= link_to "← No-show incidents", admin_no_show_incidents_path, class: "text-sm underline underline-offset-4" %>
+<div class="mt-5 flex flex-wrap items-center justify-between gap-3">
+  <h1 class="text-2xl font-bold">Incident #<%= @incident.id %></h1>
+  <%= admin_status_badge(@incident.status) %>
+</div>
+<p class="mt-2 text-sm text-neutral-600 dark:text-neutral-400">Reported participant: <%= admin_user_name(@incident.user) %> · Occurred <%= admin_timestamp(@incident.occurred_at) %></p>
+
+<% if @decision_error %>
+  <div role="alert" class="mt-5">
+    <%= render Alert::Component.new(title: "Decision was not saved", description: @decision_error, variant: :error) %>
+  </div>
+<% end %>
+
+<div class="mt-6 grid gap-6 lg:grid-cols-2">
+  <section class="rounded-xl border border-neutral-200 bg-white p-5 dark:border-neutral-700 dark:bg-neutral-900">
+    <h2 class="text-lg font-semibold">Trip #<%= @ride_post.id %></h2>
+    <p class="mt-2 text-sm"><%= admin_route_name(@ride_post) %></p>
+    <dl class="mt-5 grid gap-4 sm:grid-cols-2">
+      <div><dt class="text-xs text-neutral-500 dark:text-neutral-400">Driver</dt><dd class="mt-1 text-sm"><%= admin_user_name(@ride_post.user) %></dd></div>
+      <div><dt class="text-xs text-neutral-500 dark:text-neutral-400">Departure</dt><dd class="mt-1 text-sm"><%= admin_timestamp(@ride_post.booking_cutoff_at) %></dd></div>
+      <div><dt class="text-xs text-neutral-500 dark:text-neutral-400">Status</dt><dd class="mt-1 text-sm"><%= @ride_post.status.humanize %></dd></div>
+      <div><dt class="text-xs text-neutral-500 dark:text-neutral-400">Audience</dt><dd class="mt-1 text-sm"><%= @ride_post.hub_only? ? (@ride_post.community&.name || "Hub members") : "Public" %><%= " · Ladies only" if @ride_post.ladies_only? %></dd></div>
+      <% if @ride_post.canceled_at %>
+        <div><dt class="text-xs text-neutral-500 dark:text-neutral-400">Trip canceled</dt><dd class="mt-1 text-sm"><%= admin_timestamp(@ride_post.canceled_at) %></dd></div>
+      <% end %>
+    </dl>
+  </section>
+
+  <section class="rounded-xl border border-neutral-200 bg-white p-5 dark:border-neutral-700 dark:bg-neutral-900">
+    <h2 class="text-lg font-semibold">Decision</h2>
+    <% if @adjudicable %>
+      <p class="mt-2 text-sm text-neutral-600 dark:text-neutral-400">Record the evidence behind your decision. Confirmed incidents count toward the existing booking restrictions.</p>
+      <% if @incident.upheld? || @incident.dismissed? %>
+        <p class="mt-2 text-sm text-neutral-600 dark:text-neutral-400">Current outcome: <%= @incident.status.humanize %>. Choose the other outcome to correct this decision; earlier reasoning stays in history.</p>
+      <% end %>
+      <%= form_with url: admin_no_show_incident_path(@incident), scope: :no_show_incident, method: :patch, data: { turbo: false }, class: "mt-5 space-y-4" do |form| %>
+        <%= form.hidden_field :lock_version, value: @incident.lock_version %>
+        <div>
+          <%= form.label :status, "Decision", class: "text-sm font-medium" %>
+          <%= form.select :status, [["Confirm no-show", "upheld", { disabled: @incident.upheld? }], ["Dismiss report", "dismissed", { disabled: @incident.dismissed? }]], { selected: @entered_status || (@incident.upheld? ? "dismissed" : "upheld") }, class: admin_field_classes %>
+        </div>
+        <div>
+          <%= form.label :reason, "Decision reason", class: "text-sm font-medium" %>
+          <%= form.text_area :reason, value: @entered_reason, required: true, maxlength: 2000, rows: 4, class: admin_field_classes %>
+        </div>
+        <%= render Buttons::Component.new(text: "Save decision", type: "submit", full_width: true) %>
+      <% end %>
+    <% else %>
+      <div class="mt-4">
+        <%= render Alert::Component.new(title: "Another administrator must review this case", description: "You are involved in this trip and cannot record its decision.", variant: :warning) %>
+      </div>
+    <% end %>
+  </section>
+</div>
+
+<section class="mt-6 rounded-xl border border-neutral-200 bg-white p-5 dark:border-neutral-700 dark:bg-neutral-900">
+  <h2 class="text-lg font-semibold">Participant reports</h2>
+  <p class="mt-2 text-sm text-neutral-600 dark:text-neutral-400">Reports about this participant on this trip. Original outcomes remain separate from moderation decisions.</p>
+  <% @reviews.each do |review| %>
+    <article class="mt-4 border-t border-neutral-200 pt-4 dark:border-neutral-700">
+      <h3 class="text-sm font-semibold"><%= link_to "Review ##{review.id} · #{review.outcome.humanize}", admin_trip_review_path(review), class: "underline underline-offset-4" %></h3>
+      <p class="mt-1 text-xs text-neutral-500 dark:text-neutral-400">By <%= admin_user_name(review.reporter) %> · <%= admin_timestamp(review.created_at) %></p>
+      <p class="mt-3 whitespace-pre-wrap break-words text-sm"><%= review.notes.presence || "No comment retained." %></p>
+    </article>
+  <% end %>
+  <% if @reviews.empty? %>
+    <p class="mt-4 text-sm text-neutral-600 dark:text-neutral-400">No participant review is linked to this case.</p>
+  <% end %>
+</section>
+
+<section class="mt-6 rounded-xl border border-neutral-200 bg-white p-5 dark:border-neutral-700 dark:bg-neutral-900">
+  <h2 class="text-lg font-semibold">Accounts and restrictions</h2>
+  <div class="mt-4 grid gap-4 sm:grid-cols-2">
+    <% @participants.each do |user| %>
+      <article class="rounded-lg bg-neutral-50 p-4 dark:bg-neutral-800">
+        <h3 class="text-sm font-semibold"><%= admin_user_name(user) %></h3>
+        <p class="mt-1 text-xs text-neutral-500 dark:text-neutral-400"><%= user.id == @ride_post.user_id ? "Driver" : "Passenger" %><%= " · Reported participant" if user.id == @incident.user_id %></p>
+        <dl class="mt-3 space-y-2 text-sm">
+          <div><dt class="inline text-neutral-500 dark:text-neutral-400">Account:</dt> <dd class="inline"><%= user.deleted? ? "Deleted" : (user.banned_at? ? "Banned" : "Active") %></dd></div>
+          <div><dt class="inline text-neutral-500 dark:text-neutral-400">Confirmed incidents in 60 days:</dt> <dd class="inline"><%= @strike_counts.fetch(user.id, 0) %></dd></div>
+          <div><dt class="inline text-neutral-500 dark:text-neutral-400">Booking restriction:</dt> <dd class="inline"><%= user.booking_frozen? ? "Until #{admin_timestamp(user.booking_freeze_until)}" : "None active" %></dd></div>
+        </dl>
+      </article>
+    <% end %>
+  </div>
+</section>
+
+<section class="mt-6 rounded-xl border border-neutral-200 bg-white p-5 dark:border-neutral-700 dark:bg-neutral-900">
+  <h2 class="text-lg font-semibold">Booking history</h2>
+  <% @ride_post.bookings.sort_by { |booking| [booking.created_at, booking.id] }.each do |booking| %>
+    <article class="mt-4 border-t border-neutral-200 pt-4 dark:border-neutral-700">
+      <h3 class="text-sm font-semibold">Booking #<%= booking.id %> · <%= admin_user_name(booking.passenger) %> · <%= booking.status.humanize %></h3>
+      <dl class="mt-3 grid gap-3 text-sm sm:grid-cols-3">
+        <div><dt class="text-xs text-neutral-500 dark:text-neutral-400">Requested</dt><dd class="mt-1"><%= admin_timestamp(booking.created_at) %></dd></div>
+        <div><dt class="text-xs text-neutral-500 dark:text-neutral-400">Accepted</dt><dd class="mt-1"><%= admin_timestamp(booking.accepted_at) %></dd></div>
+        <div><dt class="text-xs text-neutral-500 dark:text-neutral-400">Decided</dt><dd class="mt-1"><%= admin_timestamp(booking.decided_at) %></dd></div>
+        <% if booking.canceled_at %>
+          <div><dt class="text-xs text-neutral-500 dark:text-neutral-400">Canceled</dt><dd class="mt-1"><%= admin_timestamp(booking.canceled_at) %></dd></div>
+          <div><dt class="text-xs text-neutral-500 dark:text-neutral-400">Canceled by</dt><dd class="mt-1"><%= admin_user_name(booking.canceled_by) %></dd></div>
+        <% end %>
+      </dl>
+    </article>
+  <% end %>
+  <% if @ride_post.bookings.empty? %>
+    <p class="mt-4 text-sm text-neutral-600 dark:text-neutral-400">No booking history is retained.</p>
+  <% end %>
+</section>
+
+<section id="decision-history" class="mt-6 rounded-xl border border-neutral-200 bg-white p-5 dark:border-neutral-700 dark:bg-neutral-900">
+  <h2 class="text-lg font-semibold">Decision history</h2>
+  <% @decisions.each do |decision| %>
+    <article class="mt-4 border-t border-neutral-200 pt-4 dark:border-neutral-700">
+      <h3 class="text-sm font-semibold"><%= decision.legacy? ? "Recorded outcome before decision history: #{decision.status.humanize}" : "#{decision.previous_status.humanize} → #{decision.status.humanize}" %></h3>
+      <p class="mt-1 text-xs text-neutral-500 dark:text-neutral-400">By <%= admin_user_name(decision.reviewer) %> · <%= admin_timestamp(decision.created_at) %></p>
+      <p class="mt-3 whitespace-pre-wrap break-words text-sm"><%= decision.reason.presence || "Reason no longer retained." %></p>
+      <% if decision.legacy? %>
+        <p class="mt-2 text-xs text-neutral-500 dark:text-neutral-400">The previous outcome and booking restriction at that time were not recorded.</p>
+      <% else %>
+        <p class="mt-2 text-xs text-neutral-500 dark:text-neutral-400">Booking restriction after this decision: <%= decision.booking_freeze_until ? "until #{admin_timestamp(decision.booking_freeze_until)}" : "none" %></p>
+      <% end %>
+    </article>
+  <% end %>
+  <% if @decisions.empty? %>
+    <% if @incident.resolved_at %>
+      <article class="mt-4 border-t border-neutral-200 pt-4 dark:border-neutral-700">
+        <h3 class="text-sm font-semibold">Latest decision before history was introduced: <%= @incident.status.humanize %></h3>
+        <p class="mt-1 text-xs text-neutral-500 dark:text-neutral-400">By <%= admin_user_name(@incident.reviewer) %> · <%= admin_timestamp(@incident.resolved_at) %></p>
+        <p class="mt-3 whitespace-pre-wrap break-words text-sm"><%= @incident.decision_reason.presence || "Reason no longer retained." %></p>
+      </article>
+    <% else %>
+      <p class="mt-4 text-sm text-neutral-600 dark:text-neutral-400">No decision has been recorded.</p>
+    <% end %>
+  <% end %>
+</section>

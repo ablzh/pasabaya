@@ -94,11 +94,13 @@ module Users
       reported_incident_ids = NoShowIncident.joins("INNER JOIN trip_reviews ON trip_reviews.ride_post_id = no_show_incidents.ride_post_id AND trip_reviews.reported_user_id = no_show_incidents.user_id")
                                             .where(trip_reviews: { reporter_id: user.id }).pluck(:id)
       driver_incident_ids = NoShowIncident.joins(:ride_post).where(ride_posts: { user_id: user.id }).pluck(:id)
-      all_incident_ids = reported_incident_ids + driver_incident_ids + user.no_show_incidents.ids + user.adjudicated_incidents.ids
+      historic_reviewed_incident_ids = user.incident_decisions.pluck(:no_show_incident_id)
+      all_incident_ids = reported_incident_ids + driver_incident_ids + user.no_show_incidents.ids + user.adjudicated_incidents.ids + historic_reviewed_incident_ids
 
       NoShowIncident.where(id: all_incident_ids).find_each do |incident|
         incident.update_columns(decision_reason: "Reported by former user (account deleted); outcome preserved for safety records.")
       end
+      NoShowIncidentDecision.where(no_show_incident_id: all_incident_ids).update_all(reason: nil)
 
       reviews.update_all(notes: nil)
     end

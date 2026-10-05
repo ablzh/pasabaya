@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_05_120000) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_05_121000) do
   create_table "account_deletion_tombstones", force: :cascade do |t|
     t.string "anonymized_email", null: false
     t.bigint "avatar_blob_id"
@@ -126,9 +126,24 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_05_120000) do
     t.index ["slug"], name: "index_locations_on_slug", unique: true
   end
 
+  create_table "no_show_incident_decisions", force: :cascade do |t|
+    t.datetime "booking_freeze_until"
+    t.datetime "created_at", null: false
+    t.boolean "legacy", default: false, null: false
+    t.integer "no_show_incident_id", null: false
+    t.integer "previous_status"
+    t.text "reason"
+    t.integer "reviewer_id"
+    t.integer "status", null: false
+    t.datetime "updated_at", null: false
+    t.index ["no_show_incident_id"], name: "index_no_show_incident_decisions_on_no_show_incident_id"
+    t.index ["reviewer_id"], name: "index_no_show_incident_decisions_on_reviewer_id"
+  end
+
   create_table "no_show_incidents", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.text "decision_reason"
+    t.integer "lock_version", default: 0, null: false
     t.datetime "occurred_at", null: false
     t.datetime "resolved_at"
     t.integer "reviewer_id"
@@ -277,6 +292,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_05_120000) do
   add_foreign_key "community_memberships", "communities"
   add_foreign_key "community_memberships", "users"
   add_foreign_key "locations", "locations", column: "parent_id"
+  add_foreign_key "no_show_incident_decisions", "no_show_incidents"
+  add_foreign_key "no_show_incident_decisions", "users", column: "reviewer_id", on_delete: :nullify
   add_foreign_key "no_show_incidents", "ride_posts"
   add_foreign_key "no_show_incidents", "users"
   add_foreign_key "no_show_incidents", "users", column: "reviewer_id", on_delete: :nullify

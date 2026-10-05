@@ -53,13 +53,19 @@ class Notification < ApplicationRecord
     when "review.requested"
       "Please review your recent trip."
     when "incident.resolved"
-      "An incident report was resolved."
+      if (decision = incident_decision)
+        "A no-show report about your participation was #{decision.status}."
+      else
+        "An incident report was resolved."
+      end
     else
       event_name.humanize
     end
   end
 
   def toast_type
+    return incident_decision.upheld? ? "warning" : "info" if incident_decision
+
     case event_name
     when "booking.accepted", "route.alert"
       "success"
@@ -67,6 +73,20 @@ class Notification < ApplicationRecord
       "warning"
     else
       "info"
+    end
+  end
+
+  def incident_decision
+    notifiable if event_name == "incident.resolved" && notifiable.is_a?(NoShowIncidentDecision)
+  end
+
+  def incident_booking_restriction_summary
+    return unless (decision = incident_decision)
+
+    if decision.booking_freeze_until.present?
+      "When this decision was made, new booking requests were paused until #{decision.booking_freeze_until.to_fs(:long)}."
+    else
+      "No booking restriction was active when this decision was made."
     end
   end
 

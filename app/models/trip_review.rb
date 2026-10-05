@@ -25,8 +25,19 @@ class TripReview < ApplicationRecord
   validate :reporter_and_reported_must_be_different
   validate :participants_must_belong_to_trip
   validate :trip_must_have_departed
+  validate :no_show_outcome_matches_role
 
   private
+
+  def no_show_outcome_matches_role
+    return unless ride_post && reported_user_id
+
+    if driver_no_show? && reported_user_id != ride_post.user_id
+      errors.add(:outcome, "must describe a passenger when reviewing a passenger")
+    elsif passenger_no_show? && reported_user_id == ride_post.user_id
+      errors.add(:outcome, "must describe a driver when reviewing the driver")
+    end
+  end
 
   def refresh_participants
     self.reporter = User.lock.find_by(id: reporter_id) if reporter_id

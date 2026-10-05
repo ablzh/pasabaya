@@ -83,6 +83,21 @@ class TripReviewsControllerTest < ActionDispatch::IntegrationTest
     assert incident.pending?
   end
 
+  test "wrong no show role cannot create a review or incident" do
+    @ride_post.update_columns(departure_time: 2.hours.ago)
+    sign_in_as(@driver)
+    get new_ride_post_review_url(@ride_post)
+    assert_select "option[value='driver_no_show'][disabled]"
+    assert_select "option[value='passenger_no_show']:not([disabled])"
+    assert_no_difference [ "TripReview.count", "NoShowIncident.count" ] do
+      post ride_post_reviews_url(@ride_post), params: {
+        trip_review: { reported_user_id: @passenger.id, outcome: "driver_no_show" }
+      }
+    end
+    assert_response :unprocessable_content
+    assert_select "li", text: /must describe a passenger/
+  end
+
   test "passenger can review after the driver cancels a departed trip without retaining chat access" do
     @booking.update_columns(accepted_at: 35.days.ago)
     @ride_post.update_columns(departure_time: 35.days.ago, expected_arrival_at: 34.days.ago)
