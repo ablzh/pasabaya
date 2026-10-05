@@ -19,11 +19,27 @@ class TripReview < ApplicationRecord
     message: "has already been reviewed by this user for this trip"
   }
 
+  before_validation :refresh_participants
+  validate :reporter_must_be_eligible
+
   validate :reporter_and_reported_must_be_different
   validate :participants_must_belong_to_trip
   validate :trip_must_have_departed
 
   private
+
+  def refresh_participants
+    self.reporter = User.lock.find_by(id: reporter_id) if reporter_id
+    self.reported_user = User.lock.find_by(id: reported_user_id) if reported_user_id
+    # Preserve the safety outcome without restoring free-form data about a deleted account.
+    self.notes = nil if reported_user&.deleted?
+  end
+
+  def reporter_must_be_eligible
+    if reporter && (reporter.deleted? || reporter.banned_at.present?)
+      errors.add(:reporter, "is not eligible to submit reviews")
+    end
+  end
 
   def reporter_and_reported_must_be_different
     if reporter_id.present? && reported_user_id.present? && reporter_id == reported_user_id

@@ -15,7 +15,10 @@ class TripAuditJob < ApplicationJob
       ride_post.update!(status: :completed) unless ride_post.completed?
       Bookings::ExpireService.call(ride_post)
 
-      participants = ride_post.review_participants
+      participants = ride_post.review_participants.to_a
+      return if participants.size < 2
+
+      participants.reject! { |participant| participant.deleted? || participant.banned_at.present? }
       participant_keys = participants.map { |p| "review_requested:#{ride_post.id}:#{p.id}" }
       existing_keys = Notification.where(delivery_key: participant_keys).pluck(:delivery_key).to_set
 

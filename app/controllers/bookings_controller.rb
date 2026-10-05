@@ -7,28 +7,10 @@ class BookingsController < ApplicationController
 
   # POST /rides/:ride_post_id/bookings
   def create
-    Booking.transaction do
-      @booking = @ride_post.bookings.build(booking_params.merge(passenger: Current.user))
-      @booking.save!
-
-      now = Time.current
-      delivery_key = "booking_requested:#{@booking.id}:#{now.to_i}"
-      Notification.find_or_create_by!(delivery_key: delivery_key) do |n|
-        n.recipient = @ride_post.user
-        n.actor = Current.user
-        n.notifiable = @booking
-        n.event_name = "booking.requested"
-        n.delivery_status = :pending
-      end
-
-      if @ride_post.booking_cutoff_at.present? && @ride_post.booking_cutoff_at > Time.current
-        BookingCutoffJob.set(wait_until: @ride_post.booking_cutoff_at).perform_later(@ride_post.id)
-      end
-    end
-
-    redirect_to @ride_post, notice: "Seat requested! The driver has been notified.", status: :see_other
+    @booking = Bookings::CreateService.call(ride_post: @ride_post, passenger: Current.user, pickup_notes: booking_params[:pickup_notes])
+    redirect_to @booking.ride_post, notice: "Seat requested! The driver has been notified.", status: :see_other
   rescue ActiveRecord::RecordInvalid => e
-    redirect_to @ride_post, alert: (@booking&.errors&.full_messages&.to_sentence || e.message), status: :see_other
+    redirect_to @ride_post, alert: e.record.errors.full_messages.to_sentence, status: :see_other
   end
 
   # GET /bookings/:id

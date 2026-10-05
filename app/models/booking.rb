@@ -14,6 +14,8 @@ class Booking < ApplicationRecord
     message: "already has an active booking for this ride"
   }
 
+  before_validation :refresh_creation_context, on: :create
+
   validate :passenger_cannot_be_driver, on: :create
   validate :validate_passenger_eligibility, on: :create
   validate :validate_ride_bookable, on: :create
@@ -41,6 +43,13 @@ class Booking < ApplicationRecord
   end
 
   private
+
+  def refresh_creation_context
+    # Save validations run inside SQLite's immediate transaction. Reloading here
+    # serializes eligibility checks with trip cancellation and account deletion.
+    self.passenger = User.lock.find_by(id: passenger_id) if passenger_id
+    self.ride_post = RidePost.lock.find_by(id: ride_post_id) if ride_post_id
+  end
 
   def check_destruction_allowed
     if historical_reviewable?

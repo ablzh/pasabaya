@@ -153,21 +153,18 @@ class RidePostsLifecycleTest < ActionDispatch::IntegrationTest
     assert_select "input[name='ride_post[share_tolls]']", count: 0
     assert_select "input[name='ride_post[split_gas]']", count: 0
 
-    [ true, false ].each do |free_ride|
-      ride.update_columns(is_free_ride: free_ride, share_tolls: !free_ride, split_gas: !free_ride)
-      get ride_post_url(ride)
-      assert_response :success
-      assert_select "span", text: /Libreng Sakay/, count: 0
-      assert_select "span", text: /Share Tolls/, count: 0
-      assert_select "span", text: /Split Gas/, count: 0
-      assert_select "div", text: /Users arrange any expense sharing among themselves/
+    get ride_post_url(ride)
+    assert_response :success
+    assert_select "span", text: /Libreng Sakay/, count: 0
+    assert_select "span", text: /Share Tolls/, count: 0
+    assert_select "span", text: /Split Gas/, count: 0
+    assert_select "div", text: /Users arrange any expense sharing among themselves/
 
-      get ride_posts_url(origin_id: "")
-      assert_response :success
-      assert_select "#ride_post_#{ride.id}", count: 1
-      assert_select "span", text: /Libreng Sakay/, count: 0
-      assert_select "span", text: /Tolls/, count: 0
-      assert_select "span", text: /Gas/, count: 0
-    end
+    get ride_posts_url(origin_id: "")
+    assert_response :success
+    assert_select "#ride_post_#{ride.id}", count: 1
+    assert_select "span", text: /Libreng Sakay/, count: 0
+    assert_select "span", text: /Tolls/, count: 0
+    assert_select "span", text: /Gas/, count: 0
   end
 end

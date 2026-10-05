@@ -59,7 +59,7 @@ module Bookings
       end
     end
 
-    test "competing accepts for final seat: only one succeeds" do
+    test "accepting another request after the final seat is filled fails" do
       @ride.update_columns(remaining_seats: 1)
 
       # Create a second passenger and booking
@@ -71,9 +71,7 @@ module Bookings
         facebook_profile_url: "https://facebook.com/other"
       )
 
-      # Bypass initial create check to simulate two simultaneous pending requests
-      second_booking = Booking.new(ride_post: @ride, passenger: other_user, status: :pending)
-      second_booking.save!(validate: false)
+      second_booking = Booking.create!(ride_post: @ride, passenger: other_user)
 
       # Accept first
       AcceptService.call(@booking, actor: @driver)

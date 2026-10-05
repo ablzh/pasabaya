@@ -61,12 +61,12 @@ class RouteSubscriptionTest < ActiveSupport::TestCase
       departure_date: 2.days.from_now.to_date, community: communities(:two)
     }
 
-    subscription_ids = 2.times.map do
-      subscription = RouteSubscription.create!(filters)
-      subscription.cancel!
-      subscription.id
-    end
-    assert_equal [ "canceled", "canceled" ], RouteSubscription.where(id: subscription_ids).pluck(:status)
+    first = RouteSubscription.create!(filters)
+    first.cancel!
+    second = RouteSubscription.create!(filters)
+    second.cancel!
+
+    assert_equal [ "canceled", "canceled" ], RouteSubscription.where(id: [ first.id, second.id ]).pluck(:status)
   end
 
   test "database rejects duplicate active searches when date or hub filters are absent" do

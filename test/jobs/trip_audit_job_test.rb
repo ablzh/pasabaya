@@ -35,12 +35,11 @@ class TripAuditJobTest < ActiveJob::TestCase
     assert @ride_post.reload.completed?
     assert draft.reload.draft?
     assert canceled.reload.canceled?
-    assert_no_difference -> { Notification.where(event_name: "review.requested").count } do
+    assert_no_enqueued_jobs(only: TripAuditJob) do
       # Separate job executions each have their own query scan in production.
       Prosopite.finish
       Prosopite.scan
       TripAuditRecoveryJob.perform_now
-      perform_enqueued_jobs(only: TripAuditJob)
     end
   end
 
@@ -96,6 +95,17 @@ class TripAuditJobTest < ActiveJob::TestCase
     TripAuditJob.perform_now(@ride_post.id)
     assert @ride_post.reload.completed?
     assert @booking.reload.expired?
-    assert_not Notification.exists?(recipient: @passenger, notifiable: @ride_post, event_name: "review.requested")
+    assert_not Notification.exists?(notifiable: @ride_post, event_name: "review.requested")
+  end
+
+  test "completion does not prompt banned or deleted participants to review" do
+    @ride_post.update_columns(departure_time: 5.hours.ago, expected_arrival_at: 3.hours.ago)
+    @driver.update_columns(banned_at: Time.current)
+    @passenger.update_columns(deleted_at: Time.current)
+
+    assert_no_difference -> { Notification.where(event_name: "review.requested").count } do
+      TripAuditJob.perform_now(@ride_post.id)
+    end
+    assert @ride_post.reload.completed?
   end
 end

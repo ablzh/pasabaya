@@ -11,6 +11,8 @@ class RouteSubscription < ApplicationRecord
 
   validates :origin_id, :destination_id, :user_id, :status, presence: true
   validates :ladies_only, inclusion: { in: [ true, false ] }
+  before_validation :refresh_user, on: :create
+  validate :user_must_not_be_deleted, on: :create
   validate :locations_must_differ
   validate :departure_date_cannot_be_in_the_past, on: :create
   validates :user_id, uniqueness: {
@@ -66,6 +68,14 @@ class RouteSubscription < ApplicationRecord
   end
 
   private
+
+  def refresh_user
+    self.user = User.lock.find_by(id: user_id) if user_id
+  end
+
+  def user_must_not_be_deleted
+    errors.add(:user, "is not eligible to request route alerts") if user&.deleted?
+  end
 
   def locations_must_differ
     return unless origin_id && destination_id
