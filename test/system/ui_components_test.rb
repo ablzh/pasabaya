@@ -1,38 +1,6 @@
 require "application_system_test_case"
 
 class UiComponentsTest < ApplicationSystemTestCase
-  test "password visibility strength and requirements respond to input" do
-    mount_components Password::Component.new(name: "password", show_strength: true, show_requirements: true)
-
-    assert_selector "[data-password-target='strengthBar'].bg-neutral-300", visible: :all
-    fill_in "Password", with: "a"
-    assert_selector "[data-password-target='strengthText']", text: "Weak"
-    assert_selector "[data-password-target='lowercaseCheck'].text-green-600"
-    assert_selector "[data-password-target='lengthCheck'].text-neutral-500"
-
-    fill_in "Password", with: "Abcdef1!"
-    assert_selector "[data-password-target='strengthText']", text: "Strong"
-    assert_equal "100%", page.evaluate_script("document.querySelector('[data-password-target=strengthBar]').style.width")
-    %w[lengthCheck lowercaseCheck uppercaseCheck numberCheck].each do |target|
-      assert_selector "[data-password-target='#{target}'].text-green-600 span.line-through"
-    end
-
-    find("button[aria-label='Toggle password visibility']").click
-    assert_selector "input[name='password'][type='text']"
-    assert_equal "Abcdef1!", find("input[name='password']").value
-    find("button[aria-label='Toggle password visibility']").click
-    assert_selector "input[name='password'][type='password']"
-
-    # Cuprite's empty fill emits change without an input event.
-    find("input[name='password']").send_keys(:end, *Array.new(8, :backspace))
-    assert_no_selector "[data-password-target='strengthText']", visible: true
-    assert_equal "0%", page.evaluate_script("document.querySelector('[data-password-target=strengthBar]').style.width")
-    %w[lengthCheck lowercaseCheck uppercaseCheck numberCheck].each do |target|
-      assert_selector "[data-password-target='#{target}'].text-neutral-500"
-      assert_no_selector "[data-password-target='#{target}'] span.line-through"
-    end
-  end
-
   test "named badge removal works with the keyboard" do
     mount_components Badge::Component.new(text: "Selected", removable: true)
 

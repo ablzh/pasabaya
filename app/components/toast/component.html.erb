@@ -1,12 +1,7 @@
 <div
   id="toast-container"
-  class="<%= container_classes %>"
+  class="fixed left-1/2 -translate-x-1/2 top-0 mt-4 sm:mt-6 m-0 z-[99999] w-[calc(100%-2rem)] sm:w-96 p-0 border-0 bg-transparent overflow-visible pointer-events-none"
   data-controller="toast"
-  data-toast-position-value="<%= @position %>"
-  data-toast-layout-value="<%= @layout %>"
-  data-toast-auto-dismiss-duration-value="<%= @auto_dismiss_duration %>"
-  data-toast-limit-value="<%= @limit %>"
-  data-toast-gap-value="<%= @gap %>"
   data-action="mouseenter->toast#handleMouseEnter mouseleave->toast#handleMouseLeave"
 >
   <ol

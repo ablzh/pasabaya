@@ -75,7 +75,7 @@ jobs:
         run: bin/rubocop -f github
 
       - name: Lint ERB templates
-        run: bin/herb lint app/views
+        run: bin/herb lint app/views app/components
 
       - name: Prepare database
         run: bin/rails db:prepare

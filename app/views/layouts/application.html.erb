@@ -158,7 +158,7 @@
 <%= render "layouts/native_navigation" if hotwire_native_app? %>
 
 <%# Global Toast & Flash Notifications %>
-<%= render Toast::Component.new(position: "top-center", flash: flash) %>
+<%= render Toast::Component.new(flash: flash) %>
 <%= turbo_stream_from [ Current.user, :notifications ], channel: NotificationsChannel if authenticated? %>
 
 <main class="app-content container mx-auto px-4 mt-8 flex-grow">

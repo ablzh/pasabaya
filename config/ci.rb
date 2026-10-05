@@ -4,7 +4,7 @@ CI.run do
   step "Setup", "bin/setup --skip-server"
 
   step "Style: Ruby", "bin/rubocop"
-  step "Lint: Templates", "bin/herb lint app/views"
+  step "Lint: Templates", "bin/herb lint app/views app/components"
 
   step "Consistency: Database", "bin/database_consistency"
   step "Architecture: ArchSpec", "bundle exec archspec check"
