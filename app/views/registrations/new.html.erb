@@ -3,6 +3,9 @@
 
   <%= render(Card::Component.new(rounded: :"3xl", padding: :lg)) do %>
     <%= form_with model: @user, url: sign_up_path, class: "space-y-6" do |form| %>
+      <div class="hidden" aria-hidden="true">
+        <%= form.invisible_captcha :contact_reference %>
+      </div>
 
       <% if @user.errors.any? %>
         <div class="bg-red-50 dark:bg-red-900/10 text-red-600 px-4 py-3 font-medium rounded-xl border border-red-100 dark:border-red-900/20">

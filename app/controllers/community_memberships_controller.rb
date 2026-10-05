@@ -2,6 +2,12 @@ class CommunityMembershipsController < ApplicationController
   allow_unauthenticated_access only: [ :verify ]
   before_action :resume_session, only: [ :verify ]
   before_action :require_authentication, except: [ :verify ]
+  rate_limit to: 5, within: 10.minutes, name: "account", only: :create,
+    by: -> { Current.user.id }, with: :reject_rate_limited_request
+  rate_limit to: 1, within: 1.minute, name: "recipient-minute", only: :create,
+    by: -> { email_rate_limit_key(params[:institutional_email]) }, with: :reject_rate_limited_request
+  rate_limit to: 5, within: 1.hour, name: "recipient-hour", only: :create,
+    by: -> { email_rate_limit_key(params[:institutional_email]) }, with: :reject_rate_limited_request
 
   def create
     @community = Community.find_by(slug: params[:community_id]) || Community.find(params[:community_id])

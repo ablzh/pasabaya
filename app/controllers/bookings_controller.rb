@@ -4,6 +4,8 @@ class BookingsController < ApplicationController
   before_action :require_authentication
   before_action :set_ride_post, only: :create
   before_action :set_booking, only: %i[ show accept decline cancel ]
+  rate_limit to: 20, within: 1.minute, name: "account", only: :create,
+    by: -> { Current.user.id }, with: :reject_rate_limited_request
 
   # POST /rides/:ride_post_id/bookings
   def create

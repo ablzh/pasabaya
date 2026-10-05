@@ -4,6 +4,8 @@ class ChatMessagesController < ApplicationController
   before_action :require_authentication
   before_action :set_ride_post
   before_action :authorize_participant
+  rate_limit to: 30, within: 1.minute, name: "account", only: :create,
+    by: -> { Current.user.id }, with: :reject_rate_limited_request
 
   # POST /rides/:ride_post_id/chat_messages
   def create

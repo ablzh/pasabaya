@@ -5,6 +5,8 @@ class TripReviewsController < ApplicationController
   before_action :set_ride_post
   before_action :require_participant
   before_action :require_review_eligibility, only: %i[ new create ]
+  rate_limit to: 10, within: 10.minutes, name: "account", only: :create,
+    by: -> { Current.user.id }, with: :reject_rate_limited_request
 
   def new
     @possible_reviewees = @ride_post.review_participants.where.not(id: Current.user.id)

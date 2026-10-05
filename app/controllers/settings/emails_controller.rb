@@ -1,4 +1,11 @@
 class Settings::EmailsController < Settings::BaseController
+  rate_limit to: 5, within: 10.minutes, name: "account", only: :update,
+    by: -> { Current.user.id }, with: :reject_rate_limited_request
+  rate_limit to: 1, within: 1.minute, name: "recipient-minute", only: :update,
+    by: -> { email_rate_limit_key(email_params[:unconfirmed_email]) }, with: :reject_rate_limited_request
+  rate_limit to: 5, within: 1.hour, name: "recipient-hour", only: :update,
+    by: -> { email_rate_limit_key(email_params[:unconfirmed_email]) }, with: :reject_rate_limited_request
+
   def update
     @user = Current.user
     if @user.update(email_params)
