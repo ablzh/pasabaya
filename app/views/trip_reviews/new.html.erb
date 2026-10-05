@@ -10,7 +10,8 @@
   </div>
 
   <%= render(Card::Component.new(rounded: :"2xl", padding: :lg)) do %>
-    <%= form_with(model: [@ride_post, @trip_review], url: ride_post_reviews_path(@ride_post), class: "space-y-6") do |form| %>
+    <%= form_with(model: [@ride_post, @trip_review], url: ride_post_reviews_path(@ride_post), class: "space-y-6",
+        data: { controller: "trip-review", trip_review_driver_id_value: @ride_post.user_id }) do |form| %>
       <% if @trip_review.errors.any? %>
         <div class="bg-red-50 dark:bg-red-900/10 text-red-600 px-4 py-3 font-medium rounded-xl border border-red-100 dark:border-red-900/20 text-sm">
           <ul class="list-disc ml-6">
@@ -26,10 +27,11 @@
         <div>
           <%= form.label :reported_user_id, "Participant to Review", class: "block text-xs font-bold uppercase tracking-wider text-neutral-500 mb-2" %>
           <%= form.collection_select :reported_user_id, @possible_reviewees, :id, ->(u) { "#{u.first_name} #{u.last_name}" }, {},
+              data: { trip_review_target: "participant", action: "change->trip-review#updateOutcomes" },
               class: "w-full rounded-xl border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-sm py-3 px-4" %>
         </div>
       <% elsif @possible_reviewees.one? %>
-        <%= form.hidden_field :reported_user_id, value: @possible_reviewees.first.id %>
+        <%= form.hidden_field :reported_user_id, value: @possible_reviewees.first.id, data: { trip_review_target: "participant" } %>
         <div class="p-3.5 rounded-xl bg-neutral-50 dark:bg-neutral-800/50 border border-neutral-200 dark:border-neutral-700">
           <p class="text-xs text-neutral-500">Reviewing participant:</p>
           <p class="text-sm font-bold text-neutral-900 dark:text-white"><%= @possible_reviewees.first.first_name %> <%= @possible_reviewees.first.last_name %></p>
@@ -39,13 +41,9 @@
       <!-- Outcome selection -->
       <div>
         <%= form.label :outcome, "Trip Outcome", class: "block text-xs font-bold uppercase tracking-wider text-neutral-500 mb-2" %>
-        <%= form.select :outcome, [
-          ["Ride completed smoothly", "completed"],
-          ["Passenger did not show up (No-show)", "passenger_no_show"],
-          ["Driver did not show up (No-show)", "driver_no_show"],
-          ["Canceled last minute", "canceled_last_minute"],
-          ["Other issue / dispute", "other_issue"]
-        ], {}, class: "w-full rounded-xl border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-sm py-3 px-4" %>
+        <%= form.select :outcome, trip_review_outcome_options(@trip_review, @ride_post), {},
+            data: { trip_review_target: "outcome" },
+            class: "w-full rounded-xl border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-sm py-3 px-4" %>
       </div>
 
       <!-- Notes -->

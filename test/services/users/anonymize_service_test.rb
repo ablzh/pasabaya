@@ -72,7 +72,7 @@ class Users::AnonymizeServiceTest < ActiveSupport::TestCase
       ride_post: ride,
       reporter: @user,
       reported_user: driver,
-      outcome: :passenger_no_show,
+      outcome: :driver_no_show,
       notes: "Driver never arrived at the meeting location."
     )
 
@@ -132,6 +132,31 @@ class Users::AnonymizeServiceTest < ActiveSupport::TestCase
     assert_equal 0, @user.chat_messages.count
     assert_equal 0, @user.received_notifications.count
     assert_not Subscriber.exists?(email: "anonymize_target@example.com")
+  end
+
+  test "scrubs every decision when a previous moderator deletes their account" do
+    incident = NoShowIncident.create!(ride_post: ride_posts(:one), user: users(:two), occurred_at: 1.day.ago)
+    first = incident.decisions.create!(reviewer: @user, status: :upheld, previous_status: :pending, reason: "Private first evidence")
+    last = incident.decisions.create!(reviewer: users(:one), status: :dismissed, previous_status: :upheld, reason: "Private second evidence")
+    incident.update!(reviewer: users(:one), decision_reason: last.reason, status: :dismissed)
+
+    assert Users::AnonymizeService.call(@user)
+    assert_nil first.reload.reason
+    assert_nil last.reload.reason
+    assert first.upheld?
+    assert last.dismissed?
+    assert_no_match(/Private/, incident.reload.decision_reason)
+  end
+
+  test "scrubs decision history about a deleted participant while preserving unrelated decisions" do
+    incident = NoShowIncident.create!(ride_post: ride_posts(:one), user: @user, occurred_at: 1.day.ago)
+    decision = incident.decisions.create!(reviewer: users(:one), status: :upheld, previous_status: :pending, reason: "Phone 0917-123-4567")
+    unrelated = NoShowIncident.create!(ride_post: ride_posts(:one), user: users(:two), occurred_at: 1.day.ago)
+    unrelated_decision = unrelated.decisions.create!(reviewer: users(:one), status: :upheld, previous_status: :pending, reason: "Unrelated evidence")
+
+    assert Users::AnonymizeService.call(@user)
+    assert_nil decision.reload.reason
+    assert_equal "Unrelated evidence", unrelated_decision.reload.reason
   end
 
   test "records tombstone entry for post-restore idempotence" do

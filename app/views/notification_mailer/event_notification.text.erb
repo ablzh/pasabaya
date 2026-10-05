@@ -12,12 +12,21 @@ An upcoming ride you booked has been canceled by the driver.
 <% when "route.alert" %>
 A driver just published a matching ride for your route alert!
 <% when "incident.resolved" %>
+<% if @notification.incident_decision %>
+<%= @notification.summary %>
+<% else %>
 A decision has been reached regarding your reported incident on Pasabaya.
+<% end %>
 <% else %>
 You have a new update regarding your trip on Pasabaya.
 <% end %>
 
-<% if @notifiable.is_a?(RidePost) %>
+<% if @notification.incident_decision %>
+<%= @notification.incident_booking_restriction_summary %>
+Open the update below to check whether a later decision has replaced it.
+
+View the decision: <%= notification_url(@notification) %>
+<% elsif @notifiable.is_a?(RidePost) %>
 Check the ride details here: <%= ride_post_url(@notifiable) %>
 <% else %>
 Visit Pasabaya to check the latest updates: <%= root_url %>

@@ -1,4 +1,10 @@
 Rails.application.routes.draw do
+  namespace :admin do
+    root "no_show_incidents#index"
+    resources :trip_reviews, only: [ :index, :show ]
+    resources :no_show_incidents, only: [ :index, :show, :update ]
+  end
+
   resources :chats, only: [ :index ]
   resources :users, only: [ :show ]
   get "trips", to: "users#trips", as: :trips

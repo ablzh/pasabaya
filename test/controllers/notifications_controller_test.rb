@@ -79,4 +79,111 @@ class NotificationsControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to ride_posts_url
     assert_equal "The trip is no longer available.", flash[:notice]
   end
+
+  test "recipient can read the decision without private moderation evidence" do
+    notification = incident_decision_notification(status: :upheld, booking_freeze_until: 2.days.from_now)
+    sign_in_as(@user)
+
+    get notification_url(notification)
+
+    assert_response :success
+    assert notification.reload.read?
+    assert_includes response.headers["Cache-Control"], "no-store"
+    assert_includes response.headers["Cache-Control"], "private"
+    assert_select "h1", text: "No-show report decision"
+    assert_includes response.body, "A no-show report about your participation was upheld."
+    assert_includes response.body, notification.incident_booking_restriction_summary
+    assert_includes response.body, locations(:one).name
+    assert_includes response.body, locations(:two).name
+    assert_not_includes response.body, "PRIVATE MODERATION REASON"
+    assert_not_includes response.body, ride_posts(:two).notes
+  end
+
+  test "another recipient cannot read an incident decision notification" do
+    notification = incident_decision_notification(status: :dismissed)
+    sign_in_as(users(:two))
+
+    get notification_url(notification)
+
+    assert_response :not_found
+    assert_not notification.reload.read?
+  end
+
+  test "decision ownership is checked even if a notification has the wrong recipient" do
+    notification = incident_decision_notification(status: :upheld)
+    notification.update!(recipient: users(:two))
+    sign_in_as(users(:two))
+
+    get notification_url(notification)
+
+    assert_response :not_found
+    assert_not_includes response.body, "PRIVATE MODERATION REASON"
+  end
+
+  test "an older decision identifies its replacement and the current incident outcome" do
+    notification = incident_decision_notification(status: :upheld)
+    incident = notification.notifiable.no_show_incident
+    incident.update!(status: :dismissed)
+    incident.decisions.create!(
+      reviewer: users(:two), previous_status: :upheld, status: :dismissed,
+      reason: "PRIVATE REVISED REASON"
+    )
+    sign_in_as(@user)
+
+    get notification_url(notification)
+
+    assert_response :success
+    assert_select "[role='status']", text: /A later decision replaced this update.*Current incident outcome: Dismissed/m
+    assert_includes response.body, "A no-show report about your participation was upheld."
+    assert_not_includes response.body, "PRIVATE REVISED REASON"
+  end
+
+  test "incident decision summaries appear in the notifications list" do
+    notification = incident_decision_notification(status: :dismissed)
+    sign_in_as(@user)
+
+    get notifications_url
+
+    assert_response :success
+    assert_select "#notification_#{notification.id}", text: /A no-show report about your participation was dismissed\./
+    assert_not_includes response.body, "PRIVATE MODERATION REASON"
+  end
+
+  test "a retained decision remains readable after its reviewer and reason are scrubbed" do
+    notification = incident_decision_notification(status: :dismissed)
+    NoShowIncidentDecision.where(id: notification.notifiable_id).update_all(reviewer_id: nil, reason: nil)
+    sign_in_as(@user)
+
+    get notification_url(notification)
+
+    assert_response :success
+    assert_includes response.body, "A no-show report about your participation was dismissed."
+    assert_not_includes response.body, "PRIVATE MODERATION REASON"
+  end
+
+  test "legacy incident notifications still open their ride" do
+    notification = Notification.create!(
+      recipient: @user, notifiable: ride_posts(:two), event_name: "incident.resolved",
+      delivery_key: "legacy_incident_notification"
+    )
+    sign_in_as(@user)
+
+    get notification_url(notification)
+
+    assert_redirected_to ride_post_url(ride_posts(:two))
+  end
+
+  private
+
+  def incident_decision_notification(status:, booking_freeze_until: nil)
+    incident = NoShowIncident.create!(ride_post: ride_posts(:two), user: @user, status: status, occurred_at: 1.day.ago)
+    decision = incident.decisions.create!(
+      reviewer: users(:two), previous_status: :pending, status: status,
+      reason: "PRIVATE MODERATION REASON", booking_freeze_until: booking_freeze_until
+    )
+    Notification.create!(
+      recipient: @user, actor: users(:two), notifiable: decision,
+      event_name: "incident.resolved", delivery_key: "incident_resolved:decision:#{decision.id}"
+    )
+  end
 end

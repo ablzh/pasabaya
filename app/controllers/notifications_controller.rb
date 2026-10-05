@@ -5,7 +5,7 @@ class NotificationsController < ApplicationController
 
   # GET /notifications
   def index
-    @notifications = Current.user.received_notifications.includes(:actor).recent.limit(50)
+    @notifications = Current.user.received_notifications.includes(:actor, :notifiable).recent.limit(50)
   end
 
   def mark_all_as_read
@@ -30,6 +30,15 @@ class NotificationsController < ApplicationController
       end
     when RidePost
       redirect_to ride_post_path(@notification.notifiable)
+    when NoShowIncidentDecision
+      @decision = @notification.notifiable
+      @incident = @decision.no_show_incident
+      return head :not_found unless @incident.user_id == Current.user.id
+
+      @ride = @incident.ride_post
+      @superseded = @incident.decisions.where("id > ?", @decision.id).exists?
+      response.headers["Cache-Control"] = "no-store"
+      render :incident_decision
     else
       redirect_to ride_posts_path, notice: "The trip is no longer available."
     end

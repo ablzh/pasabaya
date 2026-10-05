@@ -15,7 +15,7 @@ This is a Rails monolith maintained by one developer. Its engineering focus is e
 - Request seats, accept or decline requests, cancel participation, and close new requests.
 - Coordinate accepted trips through private chat and receive notifications or route alerts.
 - Join the University of the Philippines hub through institutional email verification.
-- Record post-trip reviews; no-show adjudication currently uses an operator console, with no administrative web UI.
+- Record post-trip reviews; administrators review reports and decide no-show cases through a private moderation area, with decision history and notifications.
 - Use responsive HTML, dark mode, and versioned Hotwire Native navigation configuration. Native apps and offline storage are not implemented; see [the mobile guide](docs/hotwire-native.md).
 
 Optional Facebook profile links are self-supplied and do not verify identity.
@@ -60,9 +60,11 @@ SEED_DEMO=1 bin/rails db:seed
 | --- | --- | --- |
 | `driver@example.com` | `password` | Manila → Quezon City draft; Manila → Baguio active offer |
 | `passenger@example.com` | `password` | Verified demo UP membership |
-| `admin@example.com` | `password` | Local moderator flag; no administrative web UI |
+| `admin@example.com` | `password` | Local moderator access at `/admin` |
 
 Demo seeds are restricted to development and test, even when `SEED_DEMO=1`. Replaying them preserves existing accounts and ride IDs; it does not refresh an old offer's departure date or reset passwords. `SEED_DEMO=1 bin/setup --reset` recreates a disposable local database and demo data. Never use reset/replant commands on a production database.
+
+Production administrator permissions are granted and revoked through a trusted console. See [moderation operations](docs/operations.md#moderation); the application does not provide a role-management screen.
 
 ## Verification
 

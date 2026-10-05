@@ -22,7 +22,7 @@ class NotificationMailer < ApplicationMailer
     when "route.alert"
                 "New ride offer matching your route alert on Pasabaya"
     when "incident.resolved"
-                "Update on your reported incident on Pasabaya"
+                @notification.incident_decision ? "Decision on a no-show report on Pasabaya" : "Update on your reported incident on Pasabaya"
     else
                 "Notification from Pasabaya"
     end

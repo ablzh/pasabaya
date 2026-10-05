@@ -45,7 +45,7 @@ class User < ApplicationRecord
     received_notifications.unread.where("id <= ?", snapshot_id).update_all(read_at: Time.current, updated_at: Time.current)
     Turbo::StreamsChannel.broadcast_update_to(
       [ self, :notifications ], target: "notifications_list",
-      partial: "notifications/list", locals: { notifications: received_notifications.includes(:actor).recent.limit(50) }
+      partial: "notifications/list", locals: { notifications: received_notifications.includes(:actor, :notifiable).recent.limit(50) }
     )
     Turbo::StreamsChannel.broadcast_update_to(
       [ self, :notifications ], targets: "[data-notification-count]",
@@ -58,6 +58,7 @@ class User < ApplicationRecord
   has_many :received_trip_reviews, class_name: "TripReview", foreign_key: :reported_user_id, dependent: :restrict_with_error, inverse_of: :reported_user
   has_many :no_show_incidents, dependent: :restrict_with_error
   has_many :adjudicated_incidents, class_name: "NoShowIncident", foreign_key: :reviewer_id, dependent: :nullify, inverse_of: :reviewer
+  has_many :incident_decisions, class_name: "NoShowIncidentDecision", foreign_key: :reviewer_id, dependent: :nullify, inverse_of: :reviewer
 
   before_destroy :cancel_active_commitments, prepend: true
   before_update :reject_updates_after_deletion
@@ -95,6 +96,10 @@ class User < ApplicationRecord
 
   def deleted?
     deleted_at.present?
+  end
+
+  def active_admin?
+    admin? && !deleted? && banned_at.blank?
   end
 
   def initials

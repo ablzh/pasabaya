@@ -16,14 +16,27 @@
     <% when "route.alert" %>
       A driver just published a matching ride for your route alert!
     <% when "incident.resolved" %>
-      A decision has been reached regarding your reported incident on Pasabaya.
+      <% if @notification.incident_decision %>
+        <%= @notification.summary %>
+      <% else %>
+        A decision has been reached regarding your reported incident on Pasabaya.
+      <% end %>
     <% else %>
       You have a new update regarding your trip on Pasabaya.
     <% end %>
   </p>
 
+  <% if @notification.incident_decision %>
+    <p><%= @notification.incident_booking_restriction_summary %></p>
+    <p>Open the update below to check whether a later decision has replaced it.</p>
+  <% end %>
+
   <p style="margin-top: 30px;">
-    <% if @notifiable.is_a?(RidePost) %>
+    <% if @notification.incident_decision %>
+      <a href="<%= notification_url(@notification) %>" style="display: inline-block; padding: 10px 20px; background-color: #2563eb; color: #ffffff; text-decoration: none; border-radius: 6px; font-weight: bold;">
+        View Decision
+      </a>
+    <% elsif @notifiable.is_a?(RidePost) %>
       <a href="<%= ride_post_url(@notifiable) %>" style="display: inline-block; padding: 10px 20px; background-color: #2563eb; color: #ffffff; text-decoration: none; border-radius: 6px; font-weight: bold;">
         View Ride Details
       </a>

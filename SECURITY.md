@@ -24,3 +24,10 @@ Registration has a honeypot, and account creation, outgoing account emails, and
 authenticated creation actions have rate limits. These reduce automated abuse;
 they do not verify identity or email ownership. Current thresholds and cache/IP
 requirements are documented in [abuse protection](docs/operations.md#abuse-protection).
+
+The private moderation area requires current administrator rights. Roles are
+granted and revoked through a trusted console; administrators cannot decide cases
+involving their own trips. Decisions preserve an audit history, apply the existing
+strike policy, and send private result notifications. Account deletion scrubs
+personal commentary from that history. Review [moderation operations](docs/operations.md#moderation)
+before granting production access.
