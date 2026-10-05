@@ -6,6 +6,8 @@ class ChatMessage < ApplicationRecord
 
   validates :body, presence: true, length: { maximum: 1000 }
 
+  before_validation :refresh_creation_context, on: :create
+
   validate :participant_must_be_authorized, on: :create
   validate :chat_must_not_be_closed, on: :create
 
@@ -30,6 +32,11 @@ class ChatMessage < ApplicationRecord
   end
 
   private
+
+  def refresh_creation_context
+    self.user = User.lock.find_by(id: user_id) if user_id
+    self.ride_post = RidePost.lock.find_by(id: ride_post_id) if ride_post_id
+  end
 
   def broadcast_to_ride_chat
     broadcast_append_to [ ride_post, :chat ],

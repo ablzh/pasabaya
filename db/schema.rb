@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_04_180000) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_05_120000) do
   create_table "account_deletion_tombstones", force: :cascade do |t|
     t.string "anonymized_email", null: false
     t.bigint "avatar_blob_id"
@@ -172,7 +172,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_04_180000) do
     t.datetime "departure_time"
     t.integer "destination_id"
     t.datetime "expected_arrival_at"
-    t.boolean "is_free_ride", default: false, null: false
     t.boolean "ladies_only", default: false, null: false
     t.text "notes"
     t.integer "origin_id"
@@ -180,8 +179,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_04_180000) do
     t.integer "remaining_seats"
     t.datetime "requests_closed_at"
     t.integer "seats"
-    t.boolean "share_tolls", default: false, null: false
-    t.boolean "split_gas", default: false, null: false
     t.integer "status", default: 0, null: false
     t.datetime "updated_at", null: false
     t.integer "user_id", null: false
@@ -191,7 +188,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_04_180000) do
     t.index ["destination_id"], name: "index_ride_posts_on_destination_id"
     t.index ["origin_id"], name: "index_ride_posts_on_origin_id"
     t.index ["user_id"], name: "index_ride_posts_on_user_id"
-    t.check_constraint "NOT (is_free_ride = 1 AND (share_tolls = 1 OR split_gas = 1))", name: "check_ride_posts_cost_sharing"
     t.check_constraint "post_type = 0", name: "check_ride_posts_driver_offers_only"
     t.check_constraint "remaining_seats IS NULL OR (remaining_seats >= 0 AND remaining_seats <= seats)", name: "check_ride_posts_offering_inventory"
     t.check_constraint "seats > 0", name: "check_ride_posts_seats_positive"

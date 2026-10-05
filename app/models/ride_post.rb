@@ -38,6 +38,9 @@ class RidePost < ApplicationRecord
 
   attr_accessor :exact_departure_time
 
+  before_validation :refresh_driver_for_edit, if: :driver_edit?
+  validate :driver_must_not_be_deleted, if: :driver_edit?
+
   validate :departure_date_cannot_be_in_the_past
   validate :departure_time_cannot_be_in_the_past
   validates :seats, numericality: { only_integer: true, greater_than: 0 }, allow_nil: true
@@ -110,15 +113,9 @@ class RidePost < ApplicationRecord
     end
   }
 
-  scope :regular, -> { where(departure_time: nil) }
-  scope :specific, -> { where.not(departure_time: nil) }
   scope :upcoming, -> {
     where("ride_posts.departure_time > ? OR (ride_posts.departure_time IS NULL AND (ride_posts.departure_date >= ? OR ride_posts.departure_date IS NULL))", Time.current, Date.current)
   }
-
-  def regular?
-    departure_time.nil?
-  end
 
   def to_param
     return id.to_s unless origin_id && destination_id
@@ -355,6 +352,18 @@ class RidePost < ApplicationRecord
   end
 
   private
+
+  def driver_edit?
+    new_record? || publishing? || (changes.keys & %w[user_id origin_id destination_id notes departure_date departure_choice departure_time expected_arrival_at seats visibility ladies_only community_id]).any?
+  end
+
+  def refresh_driver_for_edit
+    self.user = User.lock.find_by(id: user_id) if user_id
+  end
+
+  def driver_must_not_be_deleted
+    errors.add(:user, "has been deleted") if user&.deleted?
+  end
 
   def refresh_chat_after_cancellation
     Turbo::StreamsChannel.broadcast_refresh_to([ self, :chat ])

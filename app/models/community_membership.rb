@@ -4,6 +4,9 @@ class CommunityMembership < ApplicationRecord
 
   normalizes :institutional_email, with: ->(e) { e.to_s.strip.downcase }
 
+  before_validation :refresh_user, on: :create
+  validate :user_must_not_be_deleted, on: :create
+
   validates :user_id, uniqueness: { scope: :community_id, message: "is already a member of this community" }
   validates :institutional_email, presence: true, format: { with: URI::MailTo::EMAIL_REGEXP },
                                   uniqueness: {
@@ -81,6 +84,14 @@ class CommunityMembership < ApplicationRecord
   end
 
   private
+
+  def refresh_user
+    self.user = User.lock.find_by(id: user_id) if user_id
+  end
+
+  def user_must_not_be_deleted
+    errors.add(:user, "is not eligible to join communities") if user&.deleted?
+  end
 
   def email_domain_matches_community
     return if institutional_email.blank? || community.blank?
