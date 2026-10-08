@@ -1,6 +1,6 @@
 # Form errors and feedback remediation plan
 
-Status: plan only. No application changes or commits in this step.
+Status: implemented locally; final verification is recorded in [form-errors-and-feedback-verification.md](form-errors-and-feedback-verification.md). Changes remain uncommitted.
 
 ## Goal
 
@@ -107,4 +107,4 @@ Use request/model/component tests for validation and wording, plus targeted brow
 
 Run `bin/ci` after implementation and fix any failures before declaring completion. Save representative before/after screenshots and an English verification note. Leave all changes uncommitted, as previously requested.
 
-Completion means the examples above are fixed and the inventoried error paths have clear, consistently placed feedback. This plan does not authorize implementation yet.
+Completion means the examples above are fixed and the inventoried error paths have clear, consistently placed feedback. Implementation was subsequently authorized by the user.

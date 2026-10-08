@@ -14,14 +14,17 @@ class ProfileTripOrganizationTest < ActionDispatch::IntegrationTest
     patch publish_ride_post_url(ride)
     assert_redirected_to user_url(ride.user)
     assert ride.reload.draft?
-    assert_match /Origin.*Destination.*Departure/i, flash[:alert]
+    assert_equal "Your ride wasn’t published. Edit the ride and check its details.", flash[:alert]
+    assert_includes flash[:feedback_errors], "Choose a departure city."
+    assert_includes flash[:feedback_errors], "Choose a destination city."
+    assert_includes flash[:feedback_errors], "Choose a departure date."
     follow_redirect!
     assert_select "#profile-drafts #ride_post_#{ride.id} a", text: "Edit"
 
     ride.update_columns(origin_id: locations(:one).id, destination_id: locations(:two).id, departure_time: 1.hour.ago, departure_date: Date.current)
     patch publish_ride_post_url(ride)
     assert ride.reload.draft?
-    assert_match /past/, flash[:alert]
+    assert_includes flash[:feedback_errors], "Choose a departure time in the future."
     delete ride_post_url(ride)
     assert_redirected_to ride_posts_url
     assert_not RidePost.exists?(ride.id)
@@ -61,7 +64,7 @@ class ProfileTripOrganizationTest < ActionDispatch::IntegrationTest
     assert_select "#profile-history #ride_post_#{ride.id}", text: /Canceled/
     patch publish_ride_post_url(ride)
     assert ride.reload.canceled?
-    assert_match /Only a private draft/, flash[:alert]
+    assert_includes flash[:feedback_errors], "Only a private draft can be published."
   end
 
   test "owner separates full upcoming offers from drafts and elapsed history" do

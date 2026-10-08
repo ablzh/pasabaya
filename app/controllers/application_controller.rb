@@ -10,15 +10,23 @@ class ApplicationController < ActionController::Base
 
   private
 
+  def model_error_feedback(record, title:)
+    flash[:feedback_errors] = helpers.form_error_entries(record).map { |entry| entry[:error].to_s }
+    title
+  end
+
   def email_rate_limit_key(value)
     Digest::SHA256.hexdigest(value.to_s.strip.downcase)
   end
 
   def reject_rate_limited_request
-    message = "Too many requests. Please wait and try again."
+    action = { "chat_messages" => "messages", "ride_posts" => "ride posts", "bookings" => "seat requests",
+      "route_subscriptions" => "route alert requests", "emails" => "email change requests",
+      "community_memberships" => "Hub verification requests" }.fetch(controller_name, "requests")
+    message = "Too many #{action}. Please wait before trying again."
     respond_to do |format|
       format.turbo_stream do
-        render turbo_stream: turbo_stream.append("toast-container", partial: "shared/request_throttled", locals: { message: message }), status: :too_many_requests
+        render turbo_stream: turbo_stream.update(controller_name == "chat_messages" ? "chat_request_feedback" : "request_feedback", partial: "shared/request_throttled", locals: { message: message }), status: :too_many_requests
       end
       format.html { render "errors/too_many_requests", locals: { message: message }, status: :too_many_requests }
       format.json { render json: { error: message }, status: :too_many_requests }

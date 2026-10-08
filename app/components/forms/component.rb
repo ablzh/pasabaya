@@ -55,6 +55,23 @@ module Forms
       @input_wrapper_classes = input_wrapper_classes
     end
 
+    # Pass these attributes to the supplied native input or custom picker.
+    def input_attributes
+      description_ids = []
+      description_ids << "#{@id}_hint" if @helper_text.present?
+      description_ids << "#{@id}_error" if @error.present?
+      attributes = {}
+      attributes[:"aria-describedby"] = description_ids.join(" ") if description_ids.any?
+      if @error.present?
+        attributes[:"aria-invalid"] = "true"
+        if @error.respond_to?(:rule) && @error.rule
+          attributes[:"data-form-error-rule"] = @error.rule
+          attributes[:"data-form-error-limit"] = @error.limit
+        end
+      end
+      attributes
+    end
+
     def wrapper_classes
       base = case @variant
       when :inline then "flex items-center gap-4"
@@ -62,7 +79,7 @@ module Forms
       else "flex flex-col gap-y-1.5"
       end
 
-      [ base, @classes ].compact.reject(&:empty?).join(" ")
+      [ base, "form-field min-w-0", @classes ].compact.reject(&:empty?).join(" ")
     end
 
     def label_classes
@@ -77,8 +94,6 @@ module Forms
 
       color_class = if @disabled
                       "text-neutral-400 dark:text-neutral-500"
-      elsif @error.present?
-                      "text-red-700 dark:text-red-400"
       else
                       "text-neutral-700 dark:text-neutral-300"
       end
@@ -114,7 +129,7 @@ module Forms
       else "text-xs"
       end
 
-      [ size_class, "text-red-600 dark:text-red-400 mt-1" ].join(" ")
+      [ size_class, "text-red-700 dark:text-red-400 mt-1" ].join(" ")
     end
 
     def addon_classes(position)

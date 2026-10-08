@@ -53,7 +53,7 @@ class Booking < ApplicationRecord
 
   def check_destruction_allowed
     if historical_reviewable?
-      errors.add(:base, "Cannot delete booking with historical participation. Records must be preserved for review eligibility.")
+      errors.add(:base, :historical_participation, message: "Cannot delete booking with historical participation. Records must be preserved for review eligibility.")
       throw :abort
     end
   end
@@ -66,7 +66,7 @@ class Booking < ApplicationRecord
     return unless ride_post && passenger_id
 
     if ride_post.user_id == passenger_id
-      errors.add(:base, "Drivers cannot request seats on their own ride")
+      errors.add(:base, :own_ride, message: "Drivers cannot request seats on their own ride")
     end
   end
 
@@ -74,7 +74,7 @@ class Booking < ApplicationRecord
     return unless passenger
 
     unless passenger.eligible_for_booking?
-      errors.add(:passenger, "is not eligible to request seats")
+      errors.add(:passenger, :ineligible_passenger, message: "is not eligible to request seats")
     end
   end
 
@@ -82,7 +82,7 @@ class Booking < ApplicationRecord
     return unless ride_post
 
     unless ride_post.bookable?
-      errors.add(:ride_post, "is not available for booking")
+      errors.add(:ride_post, :unavailable_ride, message: "is not available for booking")
     end
   end
 
@@ -90,7 +90,7 @@ class Booking < ApplicationRecord
     return unless ride_post && passenger
 
     unless ride_post.authorized_for_booking?(passenger)
-      errors.add(:base, "You are not eligible to book this ride")
+      errors.add(:base, :ineligible_passenger, message: "You are not eligible to book this ride")
     end
   end
 end

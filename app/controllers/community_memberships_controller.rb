@@ -22,7 +22,8 @@ class CommunityMembershipsController < ApplicationController
       CommunityMailer.verification_email(@membership).deliver_later
       redirect_to @community, notice: "Verification email sent to #{institutional_email}. Please check your inbox within 24 hours to confirm.", status: :see_other
     else
-      redirect_to @community, alert: @membership.errors.full_messages.to_sentence, status: :see_other
+      @ride_posts = @community.ride_posts.active.upcoming.visible_to(Current.user).includes(:origin, :destination, :user).order(departure_date: :asc, departure_time: :asc)
+      render "communities/show", status: :unprocessable_content
     end
   end
 
@@ -38,12 +39,12 @@ class CommunityMembershipsController < ApplicationController
     membership = CommunityMembership.find_by_token_for(:verification, params[:token])
 
     if membership.nil?
-      redirect_to root_path, alert: "The verification link is invalid or has expired."
+      redirect_to root_path, alert: "The verification link is invalid or has expired. Open the Hub page and request a new verification link."
       return
     end
 
     if authenticated? && Current.user.id != membership.user_id
-      redirect_to root_path, alert: "This verification link belongs to a different account."
+      redirect_to root_path, alert: "This verification link belongs to a different account. Sign in with the account that requested it."
       return
     end
 

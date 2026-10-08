@@ -24,7 +24,7 @@ module Toast
 
       assert_selector "div[data-controller='flash-toasts']"
       assert_selector "div[data-flash-toasts-target='item'][data-type='success'][data-message='Trip was successfully posted!']"
-      assert_selector "div[data-flash-toasts-target='item'][data-type='error'][data-message='Please confirm your password.']"
+      assert_no_selector "div[data-flash-toasts-target='item'][data-type='error']"
     end
 
     def test_handles_empty_or_blank_flash_messages

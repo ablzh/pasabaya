@@ -95,7 +95,7 @@ class TripReviewsControllerTest < ActionDispatch::IntegrationTest
       }
     end
     assert_response :unprocessable_content
-    assert_select "li", text: /must describe a passenger/
+    assert_select "#trip_review_outcome_error", text: "Choose an outcome that describes the passenger."
   end
 
   test "passenger can review after the driver cancels a departed trip without retaining chat access" do

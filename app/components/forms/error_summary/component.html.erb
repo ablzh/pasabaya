@@ -1,0 +1,16 @@
+<div role="group" aria-labelledby="<%= @form.field_id(:error_summary_title) %>" tabindex="-1" data-controller="form-errors" data-form-errors-summary
+     class="form-error-summary w-full scroll-mt-6 rounded-xl border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-950/30 text-red-800 dark:text-red-200 p-4 [overflow-wrap:anywhere] focus-visible:outline-2 focus-visible:outline-red-600">
+  <h2 id="<%= @form.field_id(:error_summary_title) %>" class="text-sm font-semibold mb-2"><%= @title %></h2>
+  <ul class="list-disc pl-5 space-y-1 text-sm">
+    <% entries.each do |entry| %>
+      <% target = target_for(entry[:attribute]) %>
+      <li data-error-for="<%= target %>">
+        <% if target %>
+          <%= link_to entry[:error].to_s, "##{target}", class: "underline underline-offset-2", data: { action: "form-errors#focusField" } %>
+        <% else %>
+          <%= entry[:error].to_s %>
+        <% end %>
+      </li>
+    <% end %>
+  </ul>
+</div>

@@ -8,7 +8,8 @@ class Settings::EmailsController < Settings::BaseController
 
   def update
     @user = Current.user
-    if @user.update(email_params)
+    @user.assign_attributes(email_params)
+    if @user.save(context: :email_change)
       UserMailer.with(user: @user).email_confirmation.deliver_later
       redirect_to settings_profile_path, notice: "Confirmation link sent to #{@user.unconfirmed_email}.", status: :see_other
     else

@@ -63,9 +63,8 @@ class Settings::UsersControllerTest < ActionDispatch::IntegrationTest
       delete settings_user_url, params: { password_challenge: "wrong_password" }
     end
 
-    assert_redirected_to settings_profile_url
-    assert_response :see_other
-    assert_equal "Incorrect password. Account was not deleted.", flash[:alert]
+    assert_response :unprocessable_content
+    assert_select "#password_challenge_error", text: "Your current password is incorrect."
     assert_not @user.reload.deleted?
   end
 

@@ -11,7 +11,7 @@ module Toast
       return [] unless @flash
 
       @flash.filter_map do |type, message|
-        next if message.blank?
+        next if message.blank? || %w[alert error feedback_errors].include?(type.to_s)
 
         toast_type = case type.to_s
         when "alert", "error" then "error"

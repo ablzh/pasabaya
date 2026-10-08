@@ -20,7 +20,7 @@ class BookingsControllerTest < ActionDispatch::IntegrationTest
     sign_in_as(outsider)
     get booking_url(bookings(:one))
     assert_redirected_to ride_posts_url
-    assert_equal "Not authorized", flash[:alert]
+    assert_equal "Only the passenger and driver can view this seat request. Open a ride you can access.", flash[:alert]
 
     delete session_url
     get booking_url(bookings(:one))

@@ -1,0 +1,201 @@
+---
+en:
+  activerecord:
+    attributes:
+      user:
+        password_challenge: Current password
+        password_confirmation: Confirm new password
+        unconfirmed_email: New email address
+        facebook_profile_url: Facebook profile link
+      ride_post:
+        origin: Departure city
+        destination: Destination city
+        seats: Available passenger seats
+        remaining_seats: Available passenger seats
+        departure_choice: Departure schedule
+        expected_arrival_at: Expected arrival
+        community: Hub
+        ladies_only: Ladies Only carpool
+      trip_review:
+        reported_user: Participant
+        outcome: Trip outcome
+      chat_message:
+        body: Message
+  form_errors:
+    messages:
+      blank: Complete %{field}.
+      required: Choose %{field}.
+      invalid: Check %{field} and enter a valid value.
+      taken: "%{field} is already in use. Choose another value."
+      too_long: Keep %{field} to %{count} characters or fewer.
+      inclusion: Choose one of the available options for %{field}.
+      greater_than: Enter a value greater than %{count} for %{field}.
+      not_a_number: Enter a number for %{field}.
+      not_an_integer: Enter a whole number for %{field}.
+      decision_failed: "%{detail}"
+    models:
+      user:
+        facebook_profile_url:
+          facebook_url: Enter an HTTPS link to your Facebook profile.
+        avatar:
+          file_too_large: Choose an image smaller than 5 MB.
+          unsupported_image: Choose a JPEG, PNG, or WebP image.
+          unreadable_image: This image couldn’t be read. Choose another JPEG, PNG,
+            or WebP image.
+        email_address:
+          reserved_email: Use a different email address.
+          blank: Enter an email address.
+          invalid: Enter a valid email address.
+          taken: This email address is already in use. Choose another address.
+        unconfirmed_email:
+          email_taken: This email address is already in use. Choose another address.
+          blank: Enter an email address.
+          invalid: Enter a valid email address.
+          taken: This email address is already in use. Choose another address.
+        base:
+          registration_acceptance: Confirm that you are at least 18 and agree to the
+            Terms of Service and Privacy Policy.
+          deleted_account: This account has been deleted. Sign in with another account.
+        password_challenge:
+          invalid: Your current password is incorrect.
+        password_confirmation:
+          confirmation: The passwords don’t match. Re-enter your new password.
+          blank: Re-enter your new password to confirm it.
+        password:
+          blank: Enter a new password.
+          password_too_long: This password is too long. Try a shorter password.
+        first_name:
+          blank: Enter your first name.
+        last_name:
+          blank: Enter your last name.
+      ride_post:
+        destination:
+          same_location: Choose a destination different from your departure city.
+          blank: Choose a destination city.
+          required: Choose a destination city.
+        departure_date:
+          past_date: Choose today or a future departure date.
+          required_for_publication: Choose a departure date.
+        departure_choice:
+          required_for_publication: Choose a departure schedule.
+        departure_time:
+          past_time: Choose a departure time in the future.
+          required_for_publication: Enter a departure time.
+          invalid_time: Enter a valid departure time.
+        expected_arrival_at:
+          before_departure: Choose an arrival time after departure.
+          before_departure_date: Choose an arrival on or after the departure date.
+        remaining_seats:
+          unconfirmed_capacity: Confirm the available passenger seats before publishing.
+          exceeds_capacity: Only %{count} passenger seats remain after confirmed bookings.
+            Reduce the available seats.
+        community:
+          unverified_membership: Verify your Hub membership before posting a ride
+            for this Hub.
+          blank: Choose a Hub for this ride.
+          required: Choose a Hub for this ride.
+        ladies_only:
+          ineligible_driver: Ladies Only carpools require a driver whose profile gender
+            is Female.
+        user:
+          ineligible_driver: Your account can’t publish rides right now. Check your
+            account restrictions.
+          deleted_account: The driver’s account has been deleted. This ride can’t
+            be changed.
+        base:
+          accepted_bookings_locked: Confirmed passengers are booked on this ride.
+            Cancel the trip before changing its route, schedule, seats, or audience.
+          historical_trip_locked: This trip has participation history. Its route,
+            schedule, seats, and audience can no longer be changed.
+          review_history: This ride has reviews or incident history and must be kept.
+          accepted_bookings: This ride has confirmed passengers. Cancel the trip instead.
+          historical_participation: This departed ride must be kept for participant
+            reviews.
+          retained_chat: This ride’s chat history is still available. Cancel the trip
+            instead of deleting it.
+        origin:
+          blank: Choose a departure city.
+          required: Choose a departure city.
+        origin_id:
+          blank: Choose a departure city.
+        seats:
+          blank: Enter the number of passenger seats.
+          not_a_number: Enter a whole number of passenger seats greater than 0.
+          not_an_integer: Enter a whole number of passenger seats greater than 0.
+          greater_than: Enter a whole number of passenger seats greater than 0.
+        notes:
+          too_long: Keep your notes to %{count} characters or fewer.
+      route_subscription:
+        destination:
+          same_location: Choose different departure and destination cities.
+        departure_date:
+          past_date: Choose today or a future departure date.
+        user_id:
+          taken: You already have a route alert for this search. Update the search
+            to create a different alert.
+        user:
+          deleted_account: Your account can’t create route alerts. Sign in with an
+            active account.
+        origin_id:
+          blank: Choose a departure city in your search.
+        destination_id:
+          blank: Choose a destination city in your search.
+      community_membership:
+        institutional_email:
+          already_verified: This Hub email address is already verified by another
+            account. Use your own Hub email address.
+          wrong_domain: Use your Hub email address ending in @%{domain}.
+          blank: Enter your Hub email address.
+          invalid: Enter a valid Hub email address.
+          taken: This Hub email address is already verified by another account. Use
+            your own Hub email address.
+        user:
+          deleted_account: Your account can’t join Hubs. Sign in with an active account.
+        base:
+          revoked_membership: This Hub membership has ended. Request a new verification
+            link from the Hub page.
+      booking:
+        base:
+          own_ride: You are the driver of this ride. Request a seat on another ride.
+          ineligible_passenger: Your account can’t request a seat on this ride. Check
+            its audience and your account restrictions.
+          historical_participation: This booking must be kept for participant reviews.
+        ride_post:
+          unavailable_ride: This ride is no longer accepting seat requests. Find another
+            ride.
+        passenger:
+          ineligible_passenger: Your account can’t request seats right now. Check
+            your account restrictions.
+        passenger_id:
+          taken: You already have an active seat request for this ride. Check its
+            status on the ride page.
+      chat_message:
+        base:
+          not_participant: Only the driver and confirmed passengers can send messages.
+            Check your seat request status.
+          cancellation_closed: Messaging has closed after this trip’s cancellation.
+            You can still read the available chat history.
+          messaging_closed: Messaging for this trip has closed. You can still read
+            the available chat history.
+        body:
+          blank: Write a message before sending.
+          too_long: Keep your message to %{count} characters or fewer.
+      trip_review:
+        outcome:
+          passenger_outcome: Choose an outcome that describes the passenger.
+          driver_outcome: Choose an outcome that describes the driver.
+        reported_user:
+          self_review: Choose another participant to review.
+          not_participant: Choose the driver or a confirmed passenger on this trip.
+        base:
+          before_departure: You can submit a review or no-show report after the trip
+            departs.
+          not_departed: This trip isn’t ready for reviews. Return after departure.
+        ride_post_id:
+          taken: You already reviewed this participant on this trip. Return to the
+            ride to view your review.
+        reporter:
+          ineligible_reporter: Your account can’t submit reviews right now. Check
+            your account restrictions.
+          not_participant: You can review trips where you were the driver or a confirmed
+            passenger.

@@ -31,7 +31,7 @@ class Email::ConfirmationsControllerTest < ActionDispatch::IntegrationTest
     get email_confirmation_url(token: token)
 
     assert_redirected_to root_path
-    assert_equal "The confirmation link is invalid or has expired.", flash[:alert]
+    assert_equal "The confirmation link is invalid or has expired. Request a new email confirmation in Account Settings.", flash[:alert]
   end
 
   test "rejects confirmation when user has been marked deleted" do
@@ -49,7 +49,7 @@ class Email::ConfirmationsControllerTest < ActionDispatch::IntegrationTest
     get email_confirmation_url(token: "invalid_token_value")
 
     assert_redirected_to root_path
-    assert_equal "The confirmation link is invalid or has expired.", flash[:alert]
+    assert_equal "The confirmation link is invalid or has expired. Request a new email confirmation in Account Settings.", flash[:alert]
   end
 
   test "rejects confirmation loaded before deletion" do
@@ -62,7 +62,7 @@ class Email::ConfirmationsControllerTest < ActionDispatch::IntegrationTest
     end
 
     assert_redirected_to root_path
-    assert_equal "The confirmation link is invalid or has expired.", flash[:alert]
+    assert_equal "The confirmation link is invalid or has expired. Request a new email confirmation in Account Settings.", flash[:alert]
     assert_match(/@deleted\.pasabaya\.app\z/, @user.reload.email_address)
   end
 end

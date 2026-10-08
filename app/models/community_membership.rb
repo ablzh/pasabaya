@@ -46,12 +46,12 @@ class CommunityMembership < ApplicationRecord
   def verify!
     transaction do
       if revoked_at.present?
-        errors.add(:base, "Revoked membership cannot be verified directly. Please request a new verification link.")
+        errors.add(:base, :revoked_membership, message: "Revoked membership cannot be verified directly. Please request a new verification link.")
         raise ActiveRecord::RecordInvalid.new(self)
       end
 
       if CommunityMembership.active_verified.where(institutional_email: institutional_email).where.not(id: id).exists?
-        errors.add(:institutional_email, "is already verified by another account")
+        errors.add(:institutional_email, :already_verified, message: "is already verified by another account")
         raise ActiveRecord::RecordInvalid.new(self)
       end
 
@@ -90,7 +90,7 @@ class CommunityMembership < ApplicationRecord
   end
 
   def user_must_not_be_deleted
-    errors.add(:user, "is not eligible to join communities") if user&.deleted?
+    errors.add(:user, :deleted_account, message: "is not eligible to join communities") if user&.deleted?
   end
 
   def email_domain_matches_community
@@ -98,7 +98,7 @@ class CommunityMembership < ApplicationRecord
 
     domain_part = institutional_email.split("@").last.to_s.downcase
     if domain_part != community.domain.downcase
-      errors.add(:institutional_email, "must match the community domain (@#{community.domain})")
+      errors.add(:institutional_email, :wrong_domain, message: "must match the community domain (@#{community.domain})")
     end
   end
 end

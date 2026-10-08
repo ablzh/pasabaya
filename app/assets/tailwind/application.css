@@ -747,3 +747,18 @@ select[data-select-disable-typing-value="true"] + .ts-wrapper.single.input-activ
 .toast-item[data-expanded="false"]:not([data-front="true"]) > span > * {
     visibility: hidden;
 }
+
+/* Keep invalid states above Tom Select’s unlayered control styles. */
+.form-field :is(input, select, textarea, [role="combobox"])[aria-invalid="true"],
+fieldset[aria-invalid="true"] {
+  border-color: var(--color-red-600);
+  outline: 1px solid var(--color-red-600);
+}
+.form-field .ts-wrapper:has([aria-invalid="true"]) .ts-control {
+  border-color: var(--color-red-600);
+}
+.dark .form-field :is(input, select, textarea, [role="combobox"])[aria-invalid="true"],
+.dark fieldset[aria-invalid="true"] {
+  border-color: var(--color-red-400);
+  outline-color: var(--color-red-400);
+}

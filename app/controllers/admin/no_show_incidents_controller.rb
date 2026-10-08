@@ -45,9 +45,9 @@ module Admin
         expected_version: version.to_i)
       redirect_to admin_no_show_incident_path(@incident), notice: "Decision saved.", status: :see_other
     rescue NoShowIncidents::AdjudicateService::Conflict => error
-      render_decision_error(error.message, :conflict)
+      render_decision_error(error.message, :conflict, attribute: error.attribute)
     rescue NoShowIncidents::AdjudicateService::Error => error
-      render_decision_error(error.message, :unprocessable_content)
+      render_decision_error(error.message, :unprocessable_content, attribute: error.attribute)
     end
 
     private
@@ -69,9 +69,10 @@ module Admin
       @adjudicable = @incident.adjudicable_by?(Current.user)
     end
 
-    def render_decision_error(message, status)
+    def render_decision_error(message, status, attribute: :base)
       @decision_error = message
       load_case_context
+      @incident.errors.add(attribute == :reason ? :decision_reason : attribute, :decision_failed, message: message)
       render :show, formats: [ :html ], status: status
     end
   end

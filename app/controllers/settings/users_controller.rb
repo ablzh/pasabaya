@@ -10,7 +10,8 @@ class Settings::UsersController < Settings::BaseController
         redirect_to settings_profile_path, alert: "Account could not be deleted at this time. Please contact privacy@pasabaya.app.", status: :see_other
       end
     else
-      redirect_to settings_profile_path, alert: "Incorrect password. Account was not deleted.", status: :see_other
+      @user.errors.add(:password_challenge, :invalid)
+      render "settings/profiles/show", status: :unprocessable_content
     end
   end
 end

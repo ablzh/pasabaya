@@ -23,7 +23,8 @@ class RegistrationsControllerTest < ActionDispatch::IntegrationTest
       end
 
       assert_response :unprocessable_content
-      assert_select "li", text: "You must be at least 18 years old and agree to the Terms of Service and Privacy Policy to register."
+      assert_select "#user_registration_acceptance_error", text: "Confirm that you are at least 18 and agree to the Terms of Service and Privacy Policy."
+      assert_select "a[href='#user_registration_acceptance']"
       assert_select "input[name='user[first_name]'][value='Liza']"
       assert_select "input[name='user[email_address]'][value='attestation@example.com']"
     end
@@ -86,7 +87,7 @@ class RegistrationsControllerTest < ActionDispatch::IntegrationTest
     end
 
     assert_response :unprocessable_content
-    assert_select "p", text: /must be an HTTPS Facebook profile URL/
+    assert_select "p", text: /Enter an HTTPS link to your Facebook profile/
   end
 
   test "should not create user and render errors on validation failure" do

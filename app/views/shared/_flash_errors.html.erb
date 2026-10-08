@@ -1,0 +1,13 @@
+<% message = flash[:alert].presence || flash[:error].presence %>
+<% if message %>
+  <div class="mb-6" role="alert" data-persistent-feedback>
+    <%= render Alert::Component.new(title: message.to_s, variant: :error) %>
+    <% if flash[:feedback_errors].present? %>
+      <ul class="list-disc pl-8 mt-2 space-y-1 text-sm text-red-800 dark:text-red-200 [overflow-wrap:anywhere]">
+        <% Array(flash[:feedback_errors]).each do |error| %>
+          <li><%= error %></li>
+        <% end %>
+      </ul>
+    <% end %>
+  </div>
+<% end %>

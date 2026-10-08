@@ -48,7 +48,7 @@ module Bookings
         return b if b.accepted?
 
         unless b.pending?
-          raise InvalidStateError, "Only pending bookings can be accepted (current: #{b.status})"
+          raise InvalidStateError, "This seat request is no longer pending and can’t be accepted"
         end
 
         if ride.requests_closed_at.present?

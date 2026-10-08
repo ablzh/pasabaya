@@ -15,7 +15,7 @@ class PasswordsControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to new_session_path
 
     follow_redirect!
-    assert_notice "reset instructions sent"
+    assert_notice "If an account uses this email address"
   end
 
   test "create for an unknown user redirects but sends no mail" do
@@ -24,7 +24,7 @@ class PasswordsControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to new_session_path
 
     follow_redirect!
-    assert_notice "reset instructions sent"
+    assert_notice "If an account uses this email address"
   end
 
   test "edit" do
@@ -73,7 +73,7 @@ class PasswordsControllerTest < ActionDispatch::IntegrationTest
       assert_select "form[action='#{password_path(token)}']"
     end
 
-    assert_notice "doesn't match Password"
+    assert_select "#password_confirmation_error", text: "The passwords don’t match. Re-enter your new password."
   end
 
   private

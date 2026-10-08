@@ -174,6 +174,7 @@ class AuditRemediationTest < ApplicationSystemTestCase
     fill_in "Email Address", with: user.email_address
     fill_in "Password", with: "password"
     click_button "Sign in"
+    assert_selector "[data-notification-count]", visible: :all
     assert_current_path root_path
   end
 

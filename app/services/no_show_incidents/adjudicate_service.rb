@@ -2,7 +2,14 @@
 
 module NoShowIncidents
   class AdjudicateService
-    class Error < StandardError; end
+    class Error < StandardError
+      attr_reader :attribute
+
+      def initialize(message, attribute: :base)
+        @attribute = attribute
+        super(message)
+      end
+    end
     class Conflict < Error; end
 
     def self.call(...)
@@ -18,8 +25,9 @@ module NoShowIncidents
     end
 
     def call
-      raise Error, "Choose upheld or dismissed." unless %w[upheld dismissed].include?(status)
-      raise Error, "A decision reason is required (maximum 2000 characters)." if reason.blank? || reason.length > 2000
+      raise Error.new("Choose Confirm no-show or Dismiss report.", attribute: :status) unless %w[upheld dismissed].include?(status)
+      raise Error.new("Enter a decision reason.", attribute: :reason) if reason.blank?
+      raise Error.new("Keep the decision reason to 2000 characters or fewer.", attribute: :reason) if reason.length > 2000
 
       ActiveRecord::Base.transaction do
         incident_record = NoShowIncident.lock.preload(:user, :reviewer, ride_post: :user).find(incident.id)
@@ -79,7 +87,7 @@ module NoShowIncidents
         incident_record
       end
     rescue ActiveRecord::RecordInvalid => e
-      raise Error, e.record.errors.full_messages.to_sentence
+      raise Error, "The decision couldn’t be saved. Reload the case and try again."
     end
 
     private

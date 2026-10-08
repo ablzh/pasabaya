@@ -19,7 +19,7 @@ class Settings::ProfilesControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :unprocessable_content
     assert_select "input[name='user[first_name]'][value='Entered name']"
-    assert_select "li", text: /Avatar must be a JPEG, PNG, or WEBP image/
+    assert_select "#user_avatar_error", text: "Choose a JPEG, PNG, or WebP image."
     assert_select "img[data-avatar-preview-target='preview']"
     assert_equal original_blob_id, @user.reload.avatar.blob.id
   ensure
@@ -35,7 +35,7 @@ class Settings::ProfilesControllerTest < ActionDispatch::IntegrationTest
     patch settings_profile_url, params: { user: { avatar: Rack::Test::UploadedFile.new(file.path, "image/png") } }
 
     assert_response :unprocessable_content
-    assert_select "li", text: /Avatar/
+    assert_select "#user_avatar_error", text: "This image couldn’t be read. Choose another JPEG, PNG, or WebP image."
     assert_not @user.reload.avatar.attached?
   ensure
     file&.close!
@@ -50,7 +50,7 @@ class Settings::ProfilesControllerTest < ActionDispatch::IntegrationTest
     corrupt = ActiveStorage::Blob.create_and_upload!(io: StringIO.new("\x89PNG\r\n\x1A\n".b + "broken image data"), filename: "corrupt.png", content_type: "image/png", identify: false)
     patch settings_profile_url, params: { user: { avatar: corrupt.signed_id } }
     assert_response :unprocessable_content
-    assert_select "li", text: /Avatar must be a readable/
+    assert_select "#user_avatar_error", text: "This image couldn’t be read. Choose another JPEG, PNG, or WebP image."
     assert_equal image.id, @user.reload.avatar.blob.id
   end
 
@@ -86,7 +86,7 @@ class Settings::ProfilesControllerTest < ActionDispatch::IntegrationTest
     }
 
     assert_response :unprocessable_content
-    assert_select "p", text: /must be an HTTPS Facebook profile URL/
+    assert_select "p", text: /Enter an HTTPS link to your Facebook profile/
   end
 
   test "allows updating profile with unchanged legacy invalid facebook_profile_url" do
