@@ -59,8 +59,8 @@ html[data-hotwire-native="true"] {
         flex-shrink: 0;
     }
 
-    .trip-chat .chat-deadlines {
-        max-height: calc(var(--chat-viewport-height, 100dvh) / 4);
+    .trip-chat .chat-deadline-body {
+        max-height: calc(var(--chat-viewport-height, 100dvh) / 5);
         overflow-y: auto;
     }
 

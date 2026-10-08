@@ -146,7 +146,7 @@ module Badge
     private
 
     def base_classes
-      "inline-flex items-center select-none"
+      "inline-flex min-w-0 max-w-full items-center [overflow-wrap:anywhere] select-none"
     end
 
     def typography_classes

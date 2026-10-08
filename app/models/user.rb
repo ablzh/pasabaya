@@ -226,6 +226,24 @@ class User < ApplicationRecord
     unless acceptable_types.include?(avatar.content_type)
       errors.add(:avatar, "must be a JPEG, PNG, or WEBP image")
     end
+
+    validate_avatar_image if errors[:avatar].empty? && attachment_changes["avatar"]
+  end
+
+  def validate_avatar_image
+    source = attachment_changes.fetch("avatar").attachable
+    source = source[:io] if source.is_a?(Hash)
+    source = source.tempfile if source.respond_to?(:tempfile)
+
+    if source.respond_to?(:read)
+      source.rewind
+      Vips::Image.new_from_buffer(source.read, "").avg
+      source.rewind
+    else
+      avatar.blob.open { |file| Vips::Image.new_from_file(file.path).avg }
+    end
+  rescue Vips::Error, ActiveStorage::IntegrityError
+    errors.add(:avatar, "must be a readable JPEG, PNG, or WEBP image")
   end
 
   def unconfirmed_email_uniqueness

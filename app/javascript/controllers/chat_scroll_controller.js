@@ -122,8 +122,28 @@ export default class extends Controller {
   }
 
   onScroll() {
+    if (this.disclosureScrollState) return
+
     this.followLatest = this.isAtBottom()
     this.checkAndMarkRead()
+  }
+
+  prepareDisclosureToggle() {
+    if (!this.hasMessagesTarget) return
+
+    this.disclosureScrollState = { followLatest: this.followLatest, top: this.messagesTarget.scrollTop }
+  }
+
+  deadlineDetailsToggled() {
+    const state = this.disclosureScrollState
+    if (!state || !this.hasMessagesTarget) return
+
+    requestAnimationFrame(() => {
+      this.followLatest = state.followLatest
+      this.messagesTarget.scrollTop = state.followLatest ? this.messagesTarget.scrollHeight : state.top
+      this.disclosureScrollState = null
+      this.checkAndMarkRead()
+    })
   }
 
   scrollToBottom() {

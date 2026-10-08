@@ -8,6 +8,52 @@ class Settings::ProfilesControllerTest < ActionDispatch::IntegrationTest
     sign_in_as(@user)
   end
 
+  test "invalid avatar renders field errors and retains the saved avatar and entered name" do
+    @user.avatar.attach(io: StringIO.new(Vips::Image.black(2, 2).pngsave_buffer), filename: "avatar.png", content_type: "image/png")
+    original_blob_id = @user.avatar.blob.id
+    file = Tempfile.new([ "invalid-avatar", ".txt" ])
+    file.write("Not an image")
+    file.rewind
+
+    patch settings_profile_url, params: { user: { first_name: "Entered name", avatar: Rack::Test::UploadedFile.new(file.path, "text/plain") } }
+
+    assert_response :unprocessable_content
+    assert_select "input[name='user[first_name]'][value='Entered name']"
+    assert_select "li", text: /Avatar must be a JPEG, PNG, or WEBP image/
+    assert_select "img[data-avatar-preview-target='preview']"
+    assert_equal original_blob_id, @user.reload.avatar.blob.id
+  ensure
+    file&.close!
+  end
+
+  test "corrupt image is rejected without replacing the saved avatar" do
+    file = Tempfile.new([ "corrupt-avatar", ".png" ])
+    file.binmode
+    file.write("\x89PNG\r\n\x1A\n".b + "broken image data")
+    file.rewind
+
+    patch settings_profile_url, params: { user: { avatar: Rack::Test::UploadedFile.new(file.path, "image/png") } }
+
+    assert_response :unprocessable_content
+    assert_select "li", text: /Avatar/
+    assert_not @user.reload.avatar.attached?
+  ensure
+    file&.close!
+  end
+
+  test "direct-upload avatar accepts a real image and rejects a corrupt replacement" do
+    image = ActiveStorage::Blob.create_and_upload!(io: StringIO.new(Vips::Image.black(2, 2).pngsave_buffer), filename: "direct.png", content_type: "image/png")
+    patch settings_profile_url, params: { user: { avatar: image.signed_id } }
+    assert_redirected_to settings_profile_url
+    assert_equal image.id, @user.reload.avatar.blob.id
+
+    corrupt = ActiveStorage::Blob.create_and_upload!(io: StringIO.new("\x89PNG\r\n\x1A\n".b + "broken image data"), filename: "corrupt.png", content_type: "image/png", identify: false)
+    patch settings_profile_url, params: { user: { avatar: corrupt.signed_id } }
+    assert_response :unprocessable_content
+    assert_select "li", text: /Avatar must be a readable/
+    assert_equal image.id, @user.reload.avatar.blob.id
+  end
+
   test "removes facebook_profile_url and hides profile action" do
     assert @user.safe_facebook_profile_url?
     assert_nil @user.registration_accepted_at

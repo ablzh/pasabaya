@@ -7,6 +7,26 @@ class BookingsControllerTest < ActionDispatch::IntegrationTest
     @passenger = users(:two)
   end
 
+  test "direct booking links redirect the passenger and driver to the trip" do
+    [ @passenger, @driver ].each do |user|
+      sign_in_as(user)
+      get booking_url(bookings(:one))
+      assert_redirected_to ride_post_url(@ride)
+    end
+  end
+
+  test "direct booking links deny unrelated users and require guest login" do
+    outsider = User.create!(first_name: "Other", last_name: "User", email_address: "booking-outsider@example.test", password: "password")
+    sign_in_as(outsider)
+    get booking_url(bookings(:one))
+    assert_redirected_to ride_posts_url
+    assert_equal "Not authorized", flash[:alert]
+
+    delete session_url
+    get booking_url(bookings(:one))
+    assert_redirected_to new_session_url
+  end
+
   test "passenger can request a seat on a bookable ride" do
     # Remove existing fixture booking so user :two has no active booking
     bookings(:one).destroy!

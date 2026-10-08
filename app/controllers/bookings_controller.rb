@@ -17,7 +17,9 @@ class BookingsController < ApplicationController
 
   # GET /bookings/:id
   def show
-    unless @booking.passenger_id == Current.user.id || @booking.ride_post.user_id == Current.user.id
+    if @booking.passenger_id == Current.user.id || @booking.ride_post.user_id == Current.user.id
+      redirect_to @booking.ride_post
+    else
       redirect_to ride_posts_path, alert: "Not authorized"
     end
   end

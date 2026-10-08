@@ -78,9 +78,13 @@ class ResponsiveUxTest < ApplicationSystemTestCase
       %w[left right].each { |edge| assert_in_delta measurements["from"][edge], measurements["to"][edge], 1 }
       assert_in_delta measurements["fromLabel"]["left"], measurements["from"]["left"], 1
       assert_in_delta measurements["toLabel"]["left"], measurements["to"]["left"], 1
-      assert_operator measurements["swap"]["left"], :>, measurements["from"]["right"]
-      assert_operator measurements["swap"]["top"], :>=, measurements["fromLabel"]["top"]
-      assert_operator measurements["swap"]["bottom"], :<=, measurements["to"]["bottom"]
+      assert_in_delta (measurements["from"]["left"] + measurements["from"]["right"]) / 2,
+                      (measurements["swap"]["left"] + measurements["swap"]["right"]) / 2, 1
+      assert_operator measurements["swap"]["top"], :>, measurements["from"]["bottom"]
+      assert_operator measurements["swap"]["bottom"], :<, measurements["toLabel"]["top"]
+      assert_operator measurements["swap"]["width"], :>=, 44
+      assert_operator measurements["swap"]["height"], :>=, 44
+      assert_in_delta measurements["from"]["width"], measurements["date"]["width"], 1
       %w[button date].each do |control|
         assert_operator measurements[control]["left"] - measurements["panel"]["left"], :>=, 16
         assert_operator measurements["panel"]["right"] - measurements[control]["right"], :>=, 16
@@ -90,6 +94,7 @@ class ResponsiveUxTest < ApplicationSystemTestCase
       assert_not measurements["overflow"], "#{surface} #{width}px #{theme} overflow"
       find("#destination_id-ts-control").click
       assert_selector ".ts-dropdown", visible: true
+      assert page.evaluate_script("(() => { const option = document.querySelector('#destination_id + .ts-wrapper .ts-dropdown .option'); const r = option.getBoundingClientRect(); return document.elementFromPoint(r.left + 5, r.top + 5).closest('.option') === option })()"), "Swap must not cover dropdown options"
       find("#destination_id-ts-control").send_keys(:escape)
     end
   end

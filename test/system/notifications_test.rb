@@ -1,6 +1,30 @@
 require "application_system_test_case"
 
 class NotificationsSystemTest < ApplicationSystemTestCase
+  test "notification row and keyboard link open the target and mark it read" do
+    page.driver.resize(320, 844)
+    visit new_session_path
+    fill_in "Email Address", with: users(:one).email_address
+    fill_in "Password", with: "password"
+    click_button "Sign in"
+    assert_current_path root_path
+    notification = notifications(:one)
+    target_path = ride_post_path(notification.notifiable.ride_post)
+    %i[row keyboard].each do |interaction|
+      notification.update_columns(read_at: nil)
+      visit notifications_path
+      assert_selector "#notification_#{notification.id}[data-unread-notification='true']"
+      if interaction == :row
+        find("#notification_#{notification.id}").click(x: 12, y: 12)
+      else
+        find("#notification_#{notification.id} a").execute_script("this.focus()")
+        page.driver.browser.keyboard.type(:Enter)
+      end
+      assert_current_path target_path
+      Prosopite.pause { assert notification.reload.read? }
+    end
+  end
+
   test "mark all read updates an open notification list and every count" do
     user = users(:one)
     visit new_session_path

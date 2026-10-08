@@ -28,7 +28,7 @@ module Alert
     def layout_classes
       return "grid grid-cols-1 gap-2" unless @show_icon
 
-      @description.present? ? "grid grid-cols-[auto_1fr] gap-2 items-start" : "flex gap-2 items-center"
+      @description.present? ? "grid grid-cols-[auto_minmax(0,1fr)] gap-2 items-start" : "flex gap-2 items-center"
     end
 
     def colors

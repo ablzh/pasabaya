@@ -8,8 +8,8 @@
       <p class="text-neutral-900 dark:text-white"><%= @notification.summary %></p>
 
       <% if @superseded %>
-        <div role="status" class="rounded-xl bg-amber-50 dark:bg-amber-900/20 p-4 text-sm text-amber-900 dark:text-amber-200">
-          A later decision replaced this update. Current incident outcome: <strong><%= @incident.status.humanize %></strong>.
+        <div role="status">
+          <%= render Alert::Component.new(title: "Decision Update", description: safe_join(["A later decision replaced this update. Current incident outcome: ", tag.strong(@incident.status.humanize), "."]), variant: :warning) %>
         </div>
       <% end %>
 

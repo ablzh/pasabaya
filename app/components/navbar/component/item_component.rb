@@ -35,13 +35,13 @@ module Navbar
       end
 
       def link_classes
-        "block rounded-md px-2 sm:px-3 py-2 text-sm font-medium text-neutral-700 no-underline select-none " \
+        "flex min-h-11 min-w-11 items-center justify-center rounded-md px-1.5 sm:px-3 py-2 text-sm font-medium text-neutral-700 no-underline select-none " \
           "hover:bg-neutral-100 dark:text-neutral-300 dark:hover:bg-neutral-700 " \
           "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-600 dark:focus-visible:outline-neutral-200"
       end
 
       def trigger_classes
-        "group flex items-center gap-1 rounded-md px-3 py-2 text-sm font-medium text-neutral-700 select-none " \
+        "group flex min-h-11 min-w-11 items-center gap-1 rounded-md px-3 py-2 text-sm font-medium text-neutral-700 select-none " \
           "hover:bg-neutral-100 dark:text-neutral-300 dark:hover:bg-neutral-700 " \
           "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-600 dark:focus-visible:outline-neutral-200"
       end

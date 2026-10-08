@@ -131,7 +131,7 @@ class ResponsiveFlowsTest < ApplicationSystemTestCase
       page.driver.browser.keyboard.type(:Escape)
     end
     assert_equal 32, page.evaluate_script("document.querySelector('nav img').getBoundingClientRect().width")
-    assert_operator page.evaluate_script("document.querySelector('nav').getBoundingClientRect().height"), :<=, 52
+    assert_operator page.evaluate_script("document.querySelector('nav').getBoundingClientRect().height"), :<=, 56
     assert_fits
   end
 
