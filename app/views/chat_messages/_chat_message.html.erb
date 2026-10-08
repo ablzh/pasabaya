@@ -1,0 +1,22 @@
+<% is_driver = chat_message.user_id == chat_message.ride_post.user_id %>
+
+<div id="<%= dom_id chat_message %>" class="chat-message flex min-w-0 items-end gap-2.5 justify-start" data-chat-scroll-target="message" data-sender-id="<%= chat_message.user_id %>" data-message-id="<%= chat_message.id %>">
+  <div class="chat-message-avatar shrink-0"><%= user_avatar(chat_message.user, classes: "size-7 text-[10px] shrink-0 mb-1") %></div>
+
+  <div class="chat-message-content min-w-0 flex flex-col items-start max-w-[85%] sm:max-w-[75%]">
+      <div class="chat-message-author min-w-0 max-w-full flex flex-wrap items-center gap-1.5 mb-1 px-1">
+        <span class="min-w-0 max-w-full [overflow-wrap:anywhere] text-xs font-semibold text-neutral-800 dark:text-neutral-200">
+          <%= chat_message.user.first_name %>
+        </span>
+        <% if is_driver %>
+          <%= render Badge::Component.new(text: "Driver", variant: :indigo, size: :sm, pill: true, uppercase: true) %>
+        <% end %>
+      </div>
+
+    <div class="chat-message-body min-w-0 max-w-full px-4 py-2.5 rounded-2xl text-sm leading-relaxed whitespace-pre-wrap [overflow-wrap:anywhere] bg-neutral-100 dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 rounded-bl-xs border border-neutral-200/50 dark:border-neutral-700/50 shadow-xs"><%= chat_message.body %></div>
+
+    <span class="text-xs text-neutral-600 dark:text-neutral-400 mt-1 px-1">
+      <%= time_ago_in_words(chat_message.created_at) %> ago
+    </span>
+  </div>
+</div>

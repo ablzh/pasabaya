@@ -1,0 +1,46 @@
+<% content_for :title, "Chats" %>
+<%= turbo_stream_from [Current.user, :chats], channel: NotificationsChannel %>
+<div class="max-w-2xl mx-auto my-8 px-4 sm:px-0">
+  <h1 class="text-2xl font-bold text-neutral-900 dark:text-white mb-6">Chats</h1>
+  <% if @rides.empty? %>
+    <div class="rounded-3xl border border-neutral-200 dark:border-neutral-800 p-8 text-center">
+      <p class="text-neutral-600 dark:text-neutral-400">No trip conversations yet. Chats appear when you drive or join a confirmed trip.</p>
+      <%= link_to "Find a ride", ride_posts_path, class: "inline-block mt-4 text-blue-600 dark:text-blue-400 font-semibold hover:underline" %>
+    </div>
+  <% end %>
+  <div class="divide-y divide-neutral-100 dark:divide-neutral-800 rounded-3xl border border-neutral-200 dark:border-neutral-800 overflow-hidden">
+    <% @rides.each do |ride| %>
+      <% message = @latest_messages[ride.id] %>
+      <% is_unread = @unread_ride_ids.include?(ride.id) %>
+      <%= link_to ride_post_path(ride, tab: "chat"),
+                  data: { conversation_unread: is_unread },
+                  class: "block p-5 hover:bg-neutral-50 dark:hover:bg-neutral-800 focus-visible:outline-2 focus-visible:outline-blue-600 #{'bg-blue-50/20 dark:bg-blue-950/10' if is_unread}" do %>
+        <div class="flex items-center justify-between gap-2">
+          <div class="flex items-center gap-2">
+            <h2 class="font-semibold text-neutral-900 dark:text-white"><%= ride.origin.name %> → <%= ride.destination.name %></h2>
+            <% if is_unread %>
+              <%= render Badge::Component.new(text: "Unread", variant: :blue, size: :sm, pill: true) %>
+            <% end %>
+          </div>
+          <% if ride.canceled? %>
+            <%= render Badge::Component.new(text: "Canceled", variant: :red, size: :sm, pill: true) %>
+          <% end %>
+        </div>
+        <span class="inline-block mt-1 text-xs text-neutral-600 dark:text-neutral-400">
+          <% if ride.canceled? %>
+            <% if ride.chat_writable? %>
+              Canceled • Open for coordination until <%= ride.chat_messaging_closes_at.in_time_zone("Asia/Manila").strftime("%b %d, %Y at %I:%M %p") %> Philippine time (UTC+8)
+            <% else %>
+              Canceled • Read-only until <%= ride.chat_history_unavailable_at.in_time_zone("Asia/Manila").strftime("%b %d, %Y at %I:%M %p") %> Philippine time (UTC+8)
+            <% end %>
+          <% else %>
+            <%= ride.chat_writable? ? "Open for messages" : (ride.chat_unlocked? ? "Read-only" : "Waiting for confirmed passengers") %>
+          <% end %>
+        </span>
+        <p class="text-sm text-neutral-600 dark:text-neutral-400 mt-2"><%= message&.body&.truncate(110) || "No messages yet. Coordinate your trip here." %></p>
+        <% timestamp = message&.created_at || ride.created_at %>
+        <time datetime="<%= timestamp.iso8601 %>" class="block text-xs text-neutral-500 mt-2"><%= timestamp.in_time_zone("Asia/Manila").strftime("%b %d, %Y at %I:%M %p") %> Philippine time (UTC+8)</time>
+      <% end %>
+    <% end %>
+  </div>
+</div>

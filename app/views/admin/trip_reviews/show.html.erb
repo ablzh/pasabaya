@@ -1,0 +1,20 @@
+<%= link_to "← Trip reviews", admin_trip_reviews_path, class: "text-sm underline underline-offset-4" %>
+<div class="mt-5 rounded-xl border border-neutral-200 bg-white p-5 sm:p-6 dark:border-neutral-700 dark:bg-neutral-900">
+  <h1 class="text-2xl font-bold">Review #<%= @trip_review.id %></h1>
+  <dl class="mt-6 grid gap-5 sm:grid-cols-2">
+    <div><dt class="text-xs text-neutral-500 dark:text-neutral-400">Outcome</dt><dd class="mt-1 font-medium"><%= @trip_review.outcome.humanize %></dd></div>
+    <div><dt class="text-xs text-neutral-500 dark:text-neutral-400">Submitted</dt><dd class="mt-1 text-sm"><%= admin_timestamp(@trip_review.created_at) %></dd></div>
+    <div><dt class="text-xs text-neutral-500 dark:text-neutral-400">Author</dt><dd class="mt-1 text-sm"><%= admin_user_name(@trip_review.reporter) %></dd></div>
+    <div><dt class="text-xs text-neutral-500 dark:text-neutral-400">Reported participant</dt><dd class="mt-1 text-sm"><%= admin_user_name(@trip_review.reported_user) %></dd></div>
+    <div><dt class="text-xs text-neutral-500 dark:text-neutral-400">Trip #<%= @trip_review.ride_post_id %></dt><dd class="mt-1 text-sm"><%= admin_route_name(@trip_review.ride_post) %></dd></div>
+    <div><dt class="text-xs text-neutral-500 dark:text-neutral-400">Departure</dt><dd class="mt-1 text-sm"><%= admin_timestamp(@trip_review.ride_post.booking_cutoff_at) %></dd></div>
+  </dl>
+  <h2 class="mt-6 text-sm font-semibold">Participant comment</h2>
+  <p class="mt-2 whitespace-pre-wrap break-words text-sm"><%= @trip_review.notes.presence || "No comment retained." %></p>
+  <% if @incident %>
+    <div class="mt-6 flex flex-wrap items-center gap-3 border-t border-neutral-200 pt-5 dark:border-neutral-700">
+      <%= admin_status_badge(@incident.status) %>
+      <%= link_to "Open incident ##{@incident.id}", admin_no_show_incident_path(@incident), class: "text-sm underline underline-offset-4" %>
+    </div>
+  <% end %>
+</div>

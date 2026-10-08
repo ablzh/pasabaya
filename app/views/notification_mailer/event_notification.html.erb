@@ -1,0 +1,49 @@
+<div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+  <h2>Notification from Pasabaya</h2>
+
+  <p>Hello <%= @recipient.first_name %>,</p>
+
+  <p>
+    <% case @event_name %>
+    <% when "booking.requested" %>
+      <strong><%= @actor&.first_name || "A passenger" %></strong> has requested a seat on your ride.
+    <% when "booking.accepted" %>
+      Great news! Your seat request has been <strong>confirmed</strong> by the driver.
+    <% when "booking.canceled" %>
+      A booking on your ride has been <strong>canceled</strong>.
+    <% when "ride.canceled" %>
+      An upcoming ride you booked has been <strong>canceled</strong> by the driver.
+    <% when "route.alert" %>
+      A driver just published a matching ride for your route alert!
+    <% when "incident.resolved" %>
+      <% if @notification.incident_decision %>
+        <%= @notification.summary %>
+      <% else %>
+        A decision has been reached regarding your reported incident on Pasabaya.
+      <% end %>
+    <% else %>
+      You have a new update regarding your trip on Pasabaya.
+    <% end %>
+  </p>
+
+  <% if @notification.incident_decision %>
+    <p><%= @notification.incident_booking_restriction_summary %></p>
+    <p>Open the update below to check whether a later decision has replaced it.</p>
+  <% end %>
+
+  <p style="margin-top: 30px;">
+    <% if @notification.incident_decision %>
+      <a href="<%= notification_url(@notification) %>" style="display: inline-block; padding: 10px 20px; background-color: #2563eb; color: #ffffff; text-decoration: none; border-radius: 6px; font-weight: bold;">
+        View Decision
+      </a>
+    <% elsif @notifiable.is_a?(RidePost) %>
+      <a href="<%= ride_post_url(@notifiable) %>" style="display: inline-block; padding: 10px 20px; background-color: #2563eb; color: #ffffff; text-decoration: none; border-radius: 6px; font-weight: bold;">
+        View Ride Details
+      </a>
+    <% else %>
+      <a href="<%= root_url %>" style="display: inline-block; padding: 10px 20px; background-color: #2563eb; color: #ffffff; text-decoration: none; border-radius: 6px; font-weight: bold;">
+        Open Pasabaya
+      </a>
+    <% end %>
+  </p>
+</div>

@@ -13,7 +13,7 @@ module Buttons
     # @param pill [Boolean] Whether to use pill shape (rounded-full) instead of rounded corners
     # @param disabled [Boolean] Whether the button is disabled
     # @param loading [Boolean] Whether to show loading spinner
-    # @param icon [String] Optional icon SVG HTML (placed before text by default)
+    # @param icon [ActiveSupport::SafeBuffer] Optional icon generated with Rails tag helpers
     # @param icon_position [Symbol] Icon position: :left (default), :right
     # @param icon_only [Boolean] Whether this is an icon-only button (no text)
     # @param full_width [Boolean] Whether button should take full width
@@ -126,7 +126,7 @@ module Buttons
       end
 
       [
-        "inline-flex items-center justify-center gap-1.5 font-medium whitespace-nowrap",
+        "inline-flex items-center justify-center gap-1.5 max-w-full font-medium whitespace-normal text-center [overflow-wrap:anywhere]",
         transition,
         "select-none focus-visible:outline-2 focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
       ].compact.join(" ")

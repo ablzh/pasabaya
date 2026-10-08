@@ -10,70 +10,145 @@
     </a>
 
     <h1 class="text-4xl font-extrabold text-neutral-900 dark:text-white mb-2">Privacy Policy</h1>
-    <p class="text-sm text-neutral-500 dark:text-neutral-400 mb-8 italic">Last Updated: June 4, 2026</p>
+    <p class="text-sm text-neutral-500 dark:text-neutral-400 mb-8 italic">Effective Date: October 3, 2026</p>
 
     <div class="prose prose-neutral dark:prose-invert prose-indigo max-w-none space-y-8">
       <section>
-        <h2 class="text-xl font-bold text-neutral-900 dark:text-white">1. Introduction</h2>
+        <h2 class="text-xl font-bold text-neutral-900 dark:text-white">1. Introduction &amp; Controller Identity</h2>
         <p>
-          At <strong>Pasabaya.app</strong>, we are committed to protecting your privacy while helping you find travel companions. This policy explains how we collect, use, and safeguard your data in compliance with the <strong>Philippine Data Privacy Act of 2012 (RA 10173)</strong>.
+          Welcome to <strong>Pasabaya.app</strong> ("Pasabaya", "we", "us", or "our"). Pasabaya is a free, non-commercial community carpool matching platform operating in the Philippines. We are committed to safeguarding your personal data in accordance with the <strong>Philippine Data Privacy Act of 2012 (Republic Act No. 10173)</strong>, its Implementing Rules and Regulations, and issuance directives of the National Privacy Commission (NPC).
+        </p>
+        <p>
+          Our data processing practices adhere strictly to the foundational principles of <strong>Transparency, Legitimate Purpose, and Proportionality</strong>. This policy details what personal information we collect, why we process it, who can view it, how long we retain it, and your statutory rights as a data subject.
         </p>
       </section>
 
       <section>
         <h2 class="text-xl font-bold text-neutral-900 dark:text-white">2. Information We Collect</h2>
-        <p>We collect information that you voluntarily provide to us to facilitate the carpooling board:</p>
+        <p>We collect only the personal information strictly necessary to operate a community carpool bulletin board:</p>
         <ul class="list-disc pl-5 space-y-2">
-          <li><strong>Account Information:</strong> Name, email address, and password (encrypted).</li>
-          <li><strong>Profile Information:</strong> Your Facebook profile URL (mandatory for trust and verification).</li>
-          <li><strong>Trip Information:</strong> Origin and destination cities, preferred departure times, number of available seats, and trip notes.</li>
-          <li><strong>Communications:</strong> Information you provide when contacting us for support.</li>
+          <li><strong>Account Information:</strong> First name, last name, email address, password hash (encrypted via bcrypt; we never store plain-text passwords), and pending email confirmation tokens.</li>
+          <li><strong>Profile Information:</strong> Optional user avatar image (stored securely via ActiveStorage; maximum 5 MB in JPEG, PNG, or WEBP formats), optional HTTPS Facebook profile link (provided voluntarily to help peers view your profile; a supplied link does not verify identity), and self-declared gender (unspecified, female, male, or non-binary, used exclusively to operate optional Ladies Only ride filters).</li>
+          <li><strong>Trip Information:</strong> Origin city, destination city, departure date and approximate choice or exact time, optional estimated arrival time, number of available passenger seats, visibility preference (public ride vs. institutional community hub), and optional trip coordination notes.</li>
+          <li><strong>Trip Communications:</strong> In-app trip coordination chat messages, including message content, sender ID, recipient IDs, and delivery timestamps.</li>
+          <li><strong>Safety, Reputation &amp; Incident Records:</strong> Post-trip reviews, ratings, reported outcome categories (e.g., completed, passenger no-show, driver no-show), no-show incident allegations, decision reasons, and moderation action logs.</li>
+          <li><strong>Community Hub Verification:</strong> Institutional email addresses submitted to verify membership in university or workplace closed carpool hubs, along with cryptographic verification tokens and membership expiry dates.</li>
+          <li><strong>Technical &amp; Session Data:</strong> Cryptographically signed, encrypted session cookies strictly required for user authentication and CSRF security. We use <strong>Umami Cloud (umami.is)</strong>, a third-party privacy-focused analytics service, to measure aggregate site visits without cookies, without collecting personally identifiable information (PII), and without cross-site profiling. Standard web server access logs (IP address, user agent, timestamps) are generated for operational stability and security monitoring.</li>
         </ul>
       </section>
 
       <section>
-        <h2 class="text-xl font-bold text-neutral-900 dark:text-white">3. How We Use Your Information</h2>
-        <p>We use your data strictly for the following purposes:</p>
+        <h2 class="text-xl font-bold text-neutral-900 dark:text-white">3. Legal Basis &amp; Purpose of Processing</h2>
+        <p>We process your personal information under the following statutory grounds recognized by RA 10173:</p>
         <ul class="list-disc pl-5 space-y-2">
-          <li><strong>Matching:</strong> To enable other users to find your ride posts based on origin and destination.</li>
-          <li><strong>Trust & Verification:</strong> Your Facebook profile URL is displayed to other logged-in users to allow them to verify your identity externally.</li>
-          <li><strong>Notifications:</strong> To send you updates about your account or the Service.</li>
-          <li><strong>Analytics:</strong> We use <strong>Umami</strong>, a privacy-focused, cookie-less analytics tool, to understand website traffic without collecting personally identifiable information (PII).</li>
+          <li><strong>Consent:</strong> Provided when you voluntarily register an account, upload an optional avatar, provide an optional social profile link, or join an institutional community hub.</li>
+          <li><strong>Contractual Necessity:</strong> To fulfill our role as a matching platform, including publishing driver ride offers, processing passenger seat requests and bookings, enabling driver approval workflows, and delivering transactional in-app notifications and transactional emails (via SMTP) regarding trip status changes.</li>
+          <li><strong>Legitimate Interests:</strong> To maintain platform security, investigate reports of misconduct, enforce no-show accountability rules, prevent suspended or banned users from re-registering, and defend against fraudulent or abusive behavior.</li>
+        </ul>
+        <p class="font-semibold text-neutral-900 dark:text-white">
+          Absolute Commercial Commitment: Pasabaya does not sell, rent, monetize, broker, or trade your personal data to advertisers, data brokers, or third-party marketing networks.
+        </p>
+      </section>
+
+      <section>
+        <h2 class="text-xl font-bold text-neutral-900 dark:text-white">4. Information Sharing &amp; Public Visibility</h2>
+        <p>Information visibility on Pasabaya is segmented based on role and authentication status:</p>
+        <ul class="list-disc pl-5 space-y-2">
+          <li><strong>Public Visitors (Unauthenticated Guests):</strong> Anyone visiting Pasabaya can view public driver ride offers, including origin, destination, schedules, seat counts, trip notes, and the driver's <strong>first name, last name, and profile avatar</strong>.</li>
+          <li><strong>Registered &amp; Logged-In Members:</strong> Logged-in users can view the above information plus verified community badges, female profile badges, and optional Facebook profile URLs (if provided by the user).</li>
+          <li><strong>Confirmed Trip Participants Only:</strong> In-app coordination chat messages are strictly private to the driver and accepted, confirmed passengers of that specific trip, including previously confirmed passengers retained for coordination after trip cancellation. Public visitors, pending requesters, and declined users cannot access trip chat. Bans, account deletion, and loss of required hub access revoke chat access.</li>
         </ul>
       </section>
 
       <section>
-        <h2 class="text-xl font-bold text-neutral-900 dark:text-white">4. Information Sharing and Disclosure</h2>
+        <h2 class="text-xl font-bold text-neutral-900 dark:text-white">5. In-App Chat Privacy &amp; Moderation Protocol</h2>
         <p>
-          Pasabaya.app is a public bulletin board. <strong>Your trip details (Origin, Destination, Time, Notes) are visible to all visitors.</strong>
+          Trip coordination chat is built to help confirmed travel companions arrange practical travel logistics (such as exact pickup landmarks, luggage space, and arrival estimates).
         </p>
-        <p>
-          However, specific contact details like your Facebook profile link are only shared with registered users who are logged into the platform. We never sell your personal information to third parties.
-        </p>
-      </section>
-
-      <section>
-        <h2 class="text-xl font-bold text-neutral-900 dark:text-white">5. Data Retention</h2>
-        <p>
-          We retain your personal information for as long as your account is active or as needed to provide you with the Service. You may delete your ride posts or your entire account at any time through your account settings.
-        </p>
-      </section>
-
-      <section>
-        <h2 class="text-xl font-bold text-neutral-900 dark:text-white">6. Your Rights</h2>
-        <p>Under the Data Privacy Act of 2012, you have the right to:</p>
         <ul class="list-disc pl-5 space-y-2">
-          <li>Access and rectify your personal data.</li>
-          <li>Object to the processing of your data.</li>
-          <li>Request the erasure or blocking of your data.</li>
+          <li><strong>Encryption Reality:</strong> Chat messages are encrypted in transit using SSL/TLS (HTTPS and WSS / ActionCable). Chat messages are <strong>not end-to-end encrypted (E2EE)</strong>; they are stored on secure servers to enable multi-device synchronization and safety moderation.</li>
+          <li><strong>Access &amp; Moderation Exceptions:</strong> Platform staff do not routinely monitor private coordination chats. However, Pasabaya reserves the right to review chat transcripts when necessary to:
+            <ol class="list-decimal pl-5 space-y-1 mt-1">
+              <li>Investigate user reports of harassment, threats, abusive conduct, scams, or community guideline violations.</li>
+              <li>Resolve disputed no-show incidents, safety complaints, or review appeals.</li>
+              <li>Comply with valid court orders, subpoenas, or legal processes issued under Philippine law, including the <strong>Cybercrime Prevention Act of 2012 (RA 10175)</strong> and RA 10173.</li>
+            </ol>
+          </li>
+          <li><strong>Messaging Closure &amp; Automated Purge:</strong> For an ordinary trip, messaging closes to read-only status 24 hours after the booking cutoff. If a trip is canceled while messaging is open, messaging closes 24 hours after cancellation. Cancellation does not reopen closed messaging or unavailable history. Authorized trip participants may read chat history for another 30 days after messaging closes. All messages in a conversation share this deadline. At the history deadline, the conversation and its messages become inaccessible and are scheduled for permanent deletion from the live database via background jobs. Real-time WebSocket delivery buffers expire within 24 hours.</li>
+          <li><strong>Sensitive Financial Data Warning:</strong> Users must never share bank account numbers, GCash or Maya PINs, credit card details, one-time passwords (OTPs), or government identity cards in chat. Pasabaya disclaims all liability for losses resulting from voluntary disclosure of financial credentials between users.</li>
         </ul>
-        <p>To exercise these rights, please contact us at <a href="mailto:privacy@pasabaya.app" class="text-indigo-600 dark:text-indigo-400">privacy@pasabaya.app</a>.</p>
       </section>
 
       <section>
-        <h2 class="text-xl font-bold text-neutral-900 dark:text-white">7. Security</h2>
+        <h2 class="text-xl font-bold text-neutral-900 dark:text-white">6. Cookies &amp; Technical Session Storage</h2>
         <p>
-          We use industry-standard security measures (SSL/TLS encryption) to protect your data during transmission. While we strive to protect your personal information, no method of transmission over the internet is 100% secure.
+          Pasabaya does not use third-party tracking cookies or targeted advertising cookies. We utilize only:
+        </p>
+        <ul class="list-disc pl-5 space-y-2">
+          <li><strong>Essential Session Cookies:</strong> Encrypted, HttpOnly, SameSite cookies created by Rails to maintain secure login sessions and prevent cross-site request forgery (CSRF).</li>
+          <li><strong>Privacy-Preserving Analytics:</strong> We use Umami Cloud, which operates without tracking cookies and collects zero personally identifiable information.</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2 class="text-xl font-bold text-neutral-900 dark:text-white">7. Data Retention &amp; Account Deletion Policy</h2>
+        <p>
+          We retain personal data only for as long as necessary to provide matching services and protect community safety:
+        </p>
+        <ul class="list-disc pl-5 space-y-2">
+          <li><strong>Unrestricted Account Deletion:</strong> You may delete your account at any time directly through <strong>Settings &rarr; Delete Account</strong>. When you confirm deletion:
+            <ul class="list-disc pl-5 space-y-1 mt-1">
+              <li>Your personal direct identifiers (first name, last name, email address, password hash, Facebook profile URL, unconfirmed email, and gender) are immediately erased and replaced with de-identified placeholder values. Your avatar is immediately detached from your account; physical image files are purged asynchronously, with retries if cleanup fails.</li>
+              <li>Your active login sessions, pending confirmation links, in-app chat messages, received notifications, and community memberships are permanently destroyed.</li>
+              <li>Any upcoming active ride offers or passenger seat bookings are automatically canceled, notifying affected participants.</li>
+              <li>Free-form personal text (including trip notes, passenger pickup notes, and review commentary) is permanently scrubbed.</li>
+            </ul>
+          </li>
+          <li><strong>Retained De-Identified Safety Records:</strong> To maintain community trust, prevent abusive individuals from evading no-show strikes, and ensure review integrity, objective historical safety records (such as completed trip records, verified no-show strike counts, and trip outcome classifications) are retained in de-identified format linked only to an anonymous "Deleted User" record.</li>
+          <li><strong>Conversation-Wide Chat Retention:</strong> All messages in a trip coordination chat share the messaging and history deadlines described above. At the history deadline, the conversation becomes inaccessible and is scheduled for permanent deletion from the live database. Queue delays may postpone physical deletion; the deadline does not promise instantaneous erasure. Live database deletion does not instantly erase disaster recovery backup snapshots, which are retained on a separate snapshot schedule and scrubbed upon restoration.</li>
+          <li><strong>Disaster Recovery Backups &amp; Restoration Scrubbing:</strong> Restic backups are encrypted and stored on S3-compatible cloud storage. We retain the latest seven backups, seven daily, four weekly, six monthly, and two yearly snapshots; backup copies can therefore retain personal data beyond 30 days. Litestream also maintains database replicas for recovery. Before a restored database serves public traffic, expired data is scrubbed and account deletions are reapplied from a separate persistent deletion registry. Restoration is stopped if that registry is unavailable or an account cannot be anonymized.</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2 class="text-xl font-bold text-neutral-900 dark:text-white">8. External Service Providers (Sub-Processors)</h2>
+        <p>We work with trusted technical service providers who process limited data under strict security agreements:</p>
+        <ul class="list-disc pl-5 space-y-2">
+          <li><strong>Transactional Email Delivery:</strong> Mailtrap (SMTP server for transactional emails such as booking updates, cancellation alerts, and email confirmations).</li>
+          <li><strong>Database Backup Storage:</strong> S3-compatible cloud object storage for Litestream database replicas and encrypted Restic backups, retained according to the disaster recovery schedule described above.</li>
+          <li><strong>Cloud Infrastructure:</strong> Dedicated cloud server managed via Kamal container deployments.</li>
+          <li><strong>Web Analytics:</strong> Umami Cloud (umami.is), collecting aggregate, cookie-less, non-PII metrics.</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2 class="text-xl font-bold text-neutral-900 dark:text-white">9. Data Subject Rights (RA 10173)</h2>
+        <p>Under the Philippine Data Privacy Act of 2012, you possess the following enforceable rights:</p>
+        <ul class="list-disc pl-5 space-y-2">
+          <li><strong>Right to be Informed:</strong> You have the right to know whether personal data pertaining to you is being processed.</li>
+          <li><strong>Right to Access:</strong> You may request reasonable access to your personal data held in our systems.</li>
+          <li><strong>Right to Rectification:</strong> You may correct inaccurate or outdated information through your account settings.</li>
+          <li><strong>Right to Erasure or Blocking:</strong> You may delete your account at any time, scrubbing all personal identifiers.</li>
+          <li><strong>Right to Object:</strong> You may object to data processing based on consent or legitimate interests.</li>
+          <li><strong>Right to Damages &amp; Complaint:</strong> You have the right to lodge a formal complaint with the <strong>National Privacy Commission (NPC)</strong> (privacy.gov.ph) if your privacy rights have been violated.</li>
+        </ul>
+        <p>To exercise your data privacy rights or submit inquiries, email our privacy team at <a href="mailto:privacy@pasabaya.app" class="text-indigo-600 dark:text-indigo-400">privacy@pasabaya.app</a>.</p>
+      </section>
+
+      <section>
+        <h2 class="text-xl font-bold text-neutral-900 dark:text-white">10. Information Security Measures</h2>
+        <p>
+          We implement organizational, physical, and technical measures to protect personal data against accidental loss, unauthorized access, or unlawful destruction. These include mandatory HTTPS/TLS transport encryption, bcrypt salted password hashing, role-based database constraints, signed session cookies, and automated vulnerability scanning. While we employ industry best practices, no internet transmission or electronic storage is completely impenetrable.
+        </p>
+      </section>
+
+      <section class="border-t border-neutral-200 dark:border-neutral-800 pt-8 mt-12">
+        <h2 class="text-xl font-bold text-neutral-900 dark:text-white">11. Changes to this Privacy Policy</h2>
+        <p>
+          We may update this Privacy Policy from time to time. Material updates will be communicated through an announcement on the platform and by updating the effective date above. For major modifications impacting data handling rights, registered users will be notified via email.
+        </p>
+        <p class="text-sm text-neutral-500 dark:text-neutral-400 mt-4">
+          Contact: Data Protection Office &bull; Pasabaya.app &bull; Email: <a href="mailto:privacy@pasabaya.app" class="text-indigo-600 dark:text-indigo-400">privacy@pasabaya.app</a>
         </p>
       </section>
     </div>

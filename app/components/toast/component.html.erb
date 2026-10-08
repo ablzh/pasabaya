@@ -1,0 +1,28 @@
+<div
+  id="toast-container"
+  class="fixed left-1/2 -translate-x-1/2 top-0 mt-4 sm:mt-6 m-0 z-[99999] w-[calc(100%-2rem)] sm:w-96 p-0 border-0 bg-transparent overflow-visible pointer-events-none"
+  data-controller="toast"
+  data-action="mouseenter->toast#handleMouseEnter mouseleave->toast#handleMouseLeave"
+>
+  <ol
+    data-toast-target="container"
+    aria-live="polite"
+    aria-relevant="additions text"
+    class="relative m-0 p-0 list-none pointer-events-none [&>li]:pointer-events-auto"
+    style="height: 0px;"
+  >
+  </ol>
+</div>
+
+<% if flash_items.any? %>
+  <div data-controller="flash-toasts" class="hidden" aria-live="polite">
+    <% flash_items.each do |item| %>
+      <div data-flash-toasts-target="item"
+           data-type="<%= item[:type] %>"
+           data-message="<%= item[:message] %>"
+           class="sr-only">
+        <%= item[:message] %>
+      </div>
+    <% end %>
+  </div>
+<% end %>

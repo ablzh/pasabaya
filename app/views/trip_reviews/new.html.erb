@@ -1,0 +1,53 @@
+<div class="max-w-xl mx-auto px-4 py-8 space-y-6">
+  <div>
+    <%= link_to "&larr; Back to ride".html_safe, ride_post_path(@ride_post), class: "text-xs font-semibold text-neutral-500 hover:text-neutral-900 dark:hover:text-white" %>
+    <h1 class="text-2xl font-extrabold text-neutral-900 dark:text-white tracking-tight mt-2">
+      Trip Feedback &amp; Incident Report
+    </h1>
+    <p class="text-sm text-neutral-500 mt-1">
+      <%= @ride_post.origin.name %> &rarr; <%= @ride_post.destination.name %>
+    </p>
+  </div>
+
+  <%= render(Card::Component.new(rounded: :"2xl", padding: :lg)) do %>
+    <%= form_with(model: [@ride_post, @trip_review], url: ride_post_reviews_path(@ride_post), class: "space-y-6",
+        data: { controller: "trip-review", trip_review_driver_id_value: @ride_post.user_id }) do |form| %>
+      <%= render Forms::ErrorSummary::Component.new(record: @trip_review, form: form,
+        title: "Your review wasn’t submitted. Check the highlighted fields.",
+        targets: { reported_user_id: @possible_reviewees.count > 1 ? form.field_id(:reported_user_id) : nil }) %>
+
+      <!-- Participant selection -->
+      <% if @possible_reviewees.count > 1 %>
+        <%= render(Forms::Component.new(label: "Participant to Review", id: form.field_id(:reported_user_id), error: form_error(@trip_review, :reported_user_id))) do |field| %>
+          <%= form.collection_select :reported_user_id, @possible_reviewees, :id, ->(u) { "#{u.first_name} #{u.last_name}" }, {},
+              data: { trip_review_target: "participant", action: "change->trip-review#updateOutcomes" },
+              class: "w-full rounded-xl border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-sm py-3 px-4", **field.input_attributes %>
+        <% end %>
+      <% elsif @possible_reviewees.one? %>
+        <%= form.hidden_field :reported_user_id, value: @possible_reviewees.first.id, data: { trip_review_target: "participant" } %>
+        <div class="p-3.5 rounded-xl bg-neutral-50 dark:bg-neutral-800/50 border border-neutral-200 dark:border-neutral-700">
+          <p class="text-xs text-neutral-500">Reviewing participant:</p>
+          <p class="text-sm font-bold text-neutral-900 dark:text-white"><%= @possible_reviewees.first.first_name %> <%= @possible_reviewees.first.last_name %></p>
+        </div>
+      <% end %>
+
+      <!-- Outcome selection -->
+      <%= render(Forms::Component.new(label: "Trip Outcome", id: form.field_id(:outcome), error: form_error(@trip_review, :outcome))) do |field| %>
+        <%= form.select :outcome, trip_review_outcome_options(@trip_review, @ride_post), {},
+            data: { trip_review_target: "outcome" },
+            class: "w-full rounded-xl border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-sm py-3 px-4", **field.input_attributes %>
+      <% end %>
+
+      <!-- Notes -->
+      <%= render(Forms::Component.new(label: "Details or Notes (Optional)", id: form.field_id(:notes), error: form_error(@trip_review, :notes))) do |field| %>
+        <%= form.text_area :notes, rows: 4, placeholder: "Provide any helpful context or details about what happened...",
+            class: "w-full rounded-xl border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-sm py-3 px-4", **field.input_attributes %>
+      <% end %>
+
+      <div class="pt-4 border-t border-neutral-100 dark:border-white/5 flex items-center justify-between">
+        <%= link_to "Cancel", ride_post_path(@ride_post), class: "text-xs font-semibold text-neutral-500 hover:underline" %>
+        <%= render Buttons::Component.new(text: "Submit Report", type: "submit", size: :md) %>
+      </div>
+    <% end %>
+  <% end %>
+</div>

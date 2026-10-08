@@ -1,7 +1,72 @@
 class User < ApplicationRecord
+  REGISTRATION_POLICY_VERSION = "2026-10-03".freeze
+
+  attr_accessor :registration_acceptance
+
+  validate :registration_attestation, on: :registration
+
   has_secure_password
+  validates :password, :password_confirmation, presence: true, on: %i[password_change password_reset]
+  validates :unconfirmed_email, presence: true, on: :email_change
   has_many :sessions, dependent: :destroy
   has_many :ride_posts, dependent: :destroy
+  has_many :bookings, foreign_key: :passenger_id, dependent: :destroy, inverse_of: :passenger
+  has_many :canceled_bookings, class_name: "Booking", foreign_key: :canceled_by_id, dependent: :nullify, inverse_of: :canceled_by
+  has_many :received_notifications, class_name: "Notification", foreign_key: :recipient_id, dependent: :destroy, inverse_of: :recipient
+  has_many :acted_notifications, class_name: "Notification", foreign_key: :actor_id, dependent: :nullify, inverse_of: :actor
+  has_many :chat_messages, dependent: :destroy
+  has_many :chat_read_states, dependent: :destroy
+  has_many :route_subscriptions, dependent: :destroy
+
+  def unread_chats_count
+    unread_chat_ride_ids.size
+  end
+
+  def unread_chat_ride_ids(rides: nil)
+    candidate_ids = rides ? rides.map(&:id) : chat_ride_candidates.select(:id)
+    unread_messages = ChatMessage.where(ride_post_id: candidate_ids).where.not(user_id: id)
+                                 .where("chat_messages.id > COALESCE((SELECT last_read_message_id FROM chat_read_states WHERE chat_read_states.ride_post_id = chat_messages.ride_post_id AND chat_read_states.user_id = ?), 0)", id)
+    if rides
+      unread_messages.distinct.pluck(:ride_post_id)
+    else
+      authorized_chat_rides(includes: [ :bookings ], ride_ids: unread_messages.select(:ride_post_id)).map(&:id)
+    end
+  end
+
+  def authorized_chat_rides(includes: [ :origin, :destination, :bookings ], ride_ids: nil)
+    verified_ids = verified_community_ids
+    candidates = chat_ride_candidates.includes(includes)
+    candidates = candidates.where(id: ride_ids) if ride_ids
+    candidates.select { |ride| ride.user_authorized_for_chat?(self, verified_community_ids: verified_ids) }
+  end
+
+  def mark_all_notifications_as_read!
+    snapshot_id = received_notifications.maximum(:id)
+    return unless snapshot_id
+
+    received_notifications.unread.where("id <= ?", snapshot_id).update_all(read_at: Time.current, updated_at: Time.current)
+    Turbo::StreamsChannel.broadcast_update_to(
+      [ self, :notifications ], target: "notifications_list",
+      partial: "notifications/list", locals: { notifications: received_notifications.includes(:actor, :notifiable).recent.limit(50) }
+    )
+    Turbo::StreamsChannel.broadcast_update_to(
+      [ self, :notifications ], targets: "[data-notification-count]",
+      partial: "notifications/count", locals: { count: received_notifications.unread.count }
+    )
+  end
+  has_many :community_memberships, dependent: :destroy
+  has_many :communities, through: :community_memberships
+  has_many :reported_trip_reviews, class_name: "TripReview", foreign_key: :reporter_id, dependent: :restrict_with_error, inverse_of: :reporter
+  has_many :received_trip_reviews, class_name: "TripReview", foreign_key: :reported_user_id, dependent: :restrict_with_error, inverse_of: :reported_user
+  has_many :no_show_incidents, dependent: :restrict_with_error
+  has_many :adjudicated_incidents, class_name: "NoShowIncident", foreign_key: :reviewer_id, dependent: :nullify, inverse_of: :reviewer
+  has_many :incident_decisions, class_name: "NoShowIncidentDecision", foreign_key: :reviewer_id, dependent: :nullify, inverse_of: :reviewer
+
+  before_destroy :cancel_active_commitments, prepend: true
+  before_update :reject_updates_after_deletion
+  after_update_commit :withdraw_ineligible_participation, if: :saved_change_to_gender?
+
+  enum :gender, { unspecified: 0, female: 1, male: 2, non_binary: 3 }, default: :unspecified
 
   has_one_attached :avatar do |attachable|
     attachable.variant :thumb,
@@ -17,21 +82,83 @@ class User < ApplicationRecord
 
   # Ensure email is present, unique, and validly formatted
   validates :email_address, presence: true, uniqueness: true, format: { with: URI::MailTo::EMAIL_REGEXP }
+  validate :reject_reserved_internal_domains, on: :create
 
   # Ensure names are always provided and not blank
   validates :first_name, presence: true
   validates :last_name, presence: true
 
-  # Ensure the Facebook link is always provided
-  validates :facebook_profile_url, presence: true
+  normalizes :facebook_profile_url, with: ->(url) { url.to_s.strip.presence }
 
-  # A simple regex to ensure it looks vaguely like a URL
-  validates :facebook_profile_url, format: { with: URI::DEFAULT_PARSER.make_regexp }
+  validate :acceptable_facebook_profile_url, if: -> { new_record? || will_save_change_to_facebook_profile_url? }
 
   attr_readonly :admin
 
+  validates :gender, presence: true
+
+  def deleted?
+    deleted_at.present?
+  end
+
+  def active_admin?
+    admin? && !deleted? && banned_at.blank?
+  end
+
   def initials
     "#{first_name&.first}#{last_name&.first}".upcase
+  end
+
+  def safe_facebook_profile_url?
+    return false if facebook_profile_url.blank?
+
+    uri = URI.parse(facebook_profile_url.to_s)
+    uri.is_a?(URI::HTTPS) && %w[facebook.com www.facebook.com m.facebook.com].include?(uri.host&.downcase) &&
+      uri.userinfo.nil? && uri.port == 443 && uri.path.present? && uri.path != "/"
+  rescue URI::InvalidURIError
+    false
+  end
+
+  def booking_frozen?
+    booking_freeze_until.present? && booking_freeze_until > Time.current
+  end
+
+  def eligible_for_booking?
+    banned_at.blank? && !booking_frozen? && !deleted?
+  end
+
+  def eligible_for_offering?
+    banned_at.blank? && !booking_frozen? && !deleted?
+  end
+
+  def verified_community_memberships
+    community_memberships.active_verified
+  end
+
+  def verified_communities
+    communities.merge(CommunityMembership.active_verified)
+  end
+
+  def verified_community_ids
+    verified_community_memberships.pluck(:community_id)
+  end
+
+  def verified_member_of?(community_or_id)
+    comm_id = community_or_id.is_a?(Community) ? community_or_id.id : community_or_id
+    verified_community_memberships.where(community_id: comm_id).exists?
+  end
+
+  def recent_upheld_incidents_count
+    no_show_incidents.upheld.where("occurred_at >= ?", 60.days.ago).count
+  end
+
+  def reliability_warning?
+    recent_upheld_incidents_count >= 2
+  end
+
+  def active_trips_count
+    driver_count = ride_posts.where(status: [ :active, :fulfilled ]).upcoming.count
+    passenger_count = bookings.accepted.joins(:ride_post).where(ride_posts: { status: [ :active, :fulfilled ] }).merge(RidePost.upcoming).count
+    driver_count + passenger_count
   end
 
 
@@ -48,30 +175,113 @@ class User < ApplicationRecord
 
   # 4. Confirmation method
   def confirm_email
+    return false if deleted? || unconfirmed_email.blank?
+
     update(email_address: unconfirmed_email, unconfirmed_email: nil)
   end
 
 
   private
 
+  def chat_ride_candidates
+    candidate_bookings = bookings.where("status = ? OR (status = ? AND accepted_at IS NOT NULL)", Booking.statuses[:accepted], Booking.statuses[:canceled])
+    RidePost.where(user: self).or(RidePost.where(id: candidate_bookings.select(:ride_post_id)))
+  end
+
+  def registration_attestation
+    unless registration_acceptance == "1"
+      errors.add(:base, :registration_acceptance, message: "You must be at least 18 years old and agree to the Terms of Service and Privacy Policy to register.")
+    end
+  end
+
+  def reject_updates_after_deletion
+    if User.lock.find(id).deleted?
+      errors.add(:base, :deleted_account, message: "This account has been deleted.")
+      throw :abort
+    end
+  end
+
+  def reject_reserved_internal_domains
+    return if email_address.blank?
+
+    if email_address.downcase.end_with?("@deleted.pasabaya.app")
+      errors.add(:email_address, :reserved_email, message: "is reserved and cannot be registered")
+    end
+  end
+
+  def acceptable_facebook_profile_url
+    if facebook_profile_url.present? && !safe_facebook_profile_url?
+      errors.add(:facebook_profile_url, :facebook_url, message: "must be an HTTPS Facebook profile URL")
+    end
+  end
+
   def acceptable_avatar
     return unless avatar.attached?
 
     # 1. Enforce size limit (e.g., max 5MB to save server storage)
     if avatar.blob.byte_size > 5.megabytes
-      errors.add(:avatar, "is too large (must be under 5MB)")
+      errors.add(:avatar, :file_too_large, message: "is too large (must be under 5MB)")
     end
 
     # 2. Enforce file types (images only)
     acceptable_types = [ "image/jpeg", "image/png", "image/webp" ]
     unless acceptable_types.include?(avatar.content_type)
-      errors.add(:avatar, "must be a JPEG, PNG, or WEBP image")
+      errors.add(:avatar, :unsupported_image, message: "must be a JPEG, PNG, or WEBP image")
     end
+
+    validate_avatar_image if errors[:avatar].empty? && attachment_changes["avatar"]
+  end
+
+  def validate_avatar_image
+    source = attachment_changes.fetch("avatar").attachable
+    source = source[:io] if source.is_a?(Hash)
+    source = source.tempfile if source.respond_to?(:tempfile)
+
+    if source.respond_to?(:read)
+      source.rewind
+      Vips::Image.new_from_buffer(source.read, "").avg
+      source.rewind
+    else
+      avatar.blob.open { |file| Vips::Image.new_from_file(file.path).avg }
+    end
+  rescue Vips::Error, ActiveStorage::IntegrityError
+    errors.add(:avatar, :unreadable_image, message: "must be a readable JPEG, PNG, or WEBP image")
   end
 
   def unconfirmed_email_uniqueness
     if unconfirmed_email.present? && User.exists?(email_address: unconfirmed_email)
-      errors.add(:unconfirmed_email, "is already taken")
+      errors.add(:unconfirmed_email, :email_taken, message: "is already taken")
+    end
+  end
+
+  def cancel_active_commitments
+    bookings.active.find_each do |b|
+      Bookings::CancelService.call(b, actor: self)
+    end
+
+    ride_posts.where(status: [ :active, :fulfilled ]).find_each do |ride|
+      RidePosts::CancelService.call(ride, actor: self)
+    end
+  end
+
+  def withdraw_ineligible_participation
+    return if female?
+
+    # Cancel passenger bookings on ladies-only rides
+    bookings.joins(:ride_post)
+            .where(status: [ :pending, :accepted ])
+            .where(ride_posts: { ladies_only: true })
+            .merge(RidePost.upcoming)
+            .find_each do |booking|
+      Bookings::CancelService.call(booking, actor: self)
+    end
+
+    # Cancel driver offers for ladies-only rides
+    ride_posts.where(ladies_only: true)
+              .upcoming
+              .where(status: [ :active, :fulfilled ])
+              .find_each do |ride|
+      RidePosts::CancelService.call(ride, actor: self)
     end
   end
 end

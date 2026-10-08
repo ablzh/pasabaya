@@ -3,16 +3,12 @@
 
   <%= render(Card::Component.new(rounded: :"3xl", padding: :lg)) do %>
     <%= form_with model: @user, url: sign_up_path, class: "space-y-6" do |form| %>
+      <div class="hidden" aria-hidden="true">
+        <%= form.invisible_captcha :contact_reference %>
+      </div>
 
-      <% if @user.errors.any? %>
-        <div class="bg-red-50 dark:bg-red-900/10 text-red-600 px-4 py-3 font-medium rounded-xl border border-red-100 dark:border-red-900/20">
-          <ul class="list-disc ml-6 text-sm">
-            <% @user.errors.full_messages.each do |message| %>
-              <li><%= message %></li>
-            <% end %>
-          </ul>
-        </div>
-      <% end %>
+      <%= render Forms::ErrorSummary::Component.new(record: @user, form: form,
+        title: "Your account wasn’t created. Check the highlighted fields.") %>
 
       <div class="grid grid-cols-2 gap-4">
         <%= render(Forms::Component.new(
@@ -20,9 +16,9 @@
           name: :first_name,
           id: form.field_id(:first_name),
           required: true,
-          error: @user.errors[:first_name].first
-        )) do %>
-          <%= form.text_field :first_name, required: true, class: "w-full rounded-xl border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-base sm:text-sm focus:ring-blue-500 focus:border-blue-500 py-3 px-4" %>
+          error: form_error(@user, :first_name)
+        )) do |field| %>
+          <%= form.text_field :first_name, required: true, class: "w-full rounded-xl border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-base sm:text-sm focus:ring-blue-500 focus:border-blue-500 py-3 px-4", **field.input_attributes %>
         <% end %>
 
         <%= render(Forms::Component.new(
@@ -30,9 +26,9 @@
           name: :last_name,
           id: form.field_id(:last_name),
           required: true,
-          error: @user.errors[:last_name].first
-        )) do %>
-          <%= form.text_field :last_name, required: true, class: "w-full rounded-xl border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-base sm:text-sm focus:ring-blue-500 focus:border-blue-500 py-3 px-4" %>
+          error: form_error(@user, :last_name)
+        )) do |field| %>
+          <%= form.text_field :last_name, required: true, class: "w-full rounded-xl border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-base sm:text-sm focus:ring-blue-500 focus:border-blue-500 py-3 px-4", **field.input_attributes %>
         <% end %>
       </div>
 
@@ -40,11 +36,11 @@
         label: "Facebook Profile URL",
         name: :facebook_profile_url,
         id: form.field_id(:facebook_profile_url),
-        required: true,
-        helper_text: "Required for trust safety. Other users will view this link to verify you and connect with you.",
-        error: @user.errors[:facebook_profile_url].first
-      )) do %>
-        <%= form.url_field :facebook_profile_url, required: true, placeholder: "https://facebook.com/username", class: "w-full rounded-xl border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-base sm:text-sm focus:ring-blue-500 focus:border-blue-500 py-3 px-4" %>
+        required: false,
+        helper_text: "Optional. Add a link to your Facebook profile to help others recognize you. This does not verify identity.",
+        error: form_error(@user, :facebook_profile_url)
+      )) do |field| %>
+        <%= form.url_field :facebook_profile_url, placeholder: "https://facebook.com/username", class: "w-full rounded-xl border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-base sm:text-sm focus:ring-blue-500 focus:border-blue-500 py-3 px-4", **field.input_attributes %>
       <% end %>
 
       <%= render(Forms::Component.new(
@@ -52,9 +48,9 @@
         name: :email_address,
         id: form.field_id(:email_address),
         required: true,
-        error: @user.errors[:email_address].first
-      )) do %>
-        <%= form.email_field :email_address, required: true, class: "w-full rounded-xl border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-base sm:text-sm focus:ring-blue-500 focus:border-blue-500 py-3 px-4" %>
+        error: form_error(@user, :email_address)
+      )) do |field| %>
+        <%= form.email_field :email_address, required: true, class: "w-full rounded-xl border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-base sm:text-sm focus:ring-blue-500 focus:border-blue-500 py-3 px-4", **field.input_attributes %>
       <% end %>
 
       <%= render(Forms::Component.new(
@@ -62,9 +58,9 @@
         name: :password,
         id: form.field_id(:password),
         required: true,
-        error: @user.errors[:password].first
-      )) do %>
-        <%= form.password_field :password, required: true, class: "w-full rounded-xl border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-base sm:text-sm focus:ring-blue-500 focus:border-blue-500 py-3 px-4" %>
+        error: form_error(@user, :password)
+      )) do |field| %>
+        <%= form.password_field :password, required: true, class: "w-full rounded-xl border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-base sm:text-sm focus:ring-blue-500 focus:border-blue-500 py-3 px-4", **field.input_attributes %>
       <% end %>
 
       <%= render(Forms::Component.new(
@@ -72,21 +68,23 @@
         name: :password_confirmation,
         id: form.field_id(:password_confirmation),
         required: true,
-        error: @user.errors[:password_confirmation].first
-      )) do %>
-        <%= form.password_field :password_confirmation, required: true, class: "w-full rounded-xl border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-base sm:text-sm focus:ring-blue-500 focus:border-blue-500 py-3 px-4" %>
+        error: form_error(@user, :password_confirmation)
+      )) do |field| %>
+        <%= form.password_field :password_confirmation, required: true, class: "w-full rounded-xl border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-base sm:text-sm focus:ring-blue-500 focus:border-blue-500 py-3 px-4", **field.input_attributes %>
       <% end %>
 
 
-      <%= render Switch::Component.new(
-        label: safe_join([
-          "I accept the ",
-          link_to("Terms of Service", terms_path, class: "text-blue-600 dark:text-blue-400 hover:underline font-semibold", onclick: "event.stopPropagation()"),
-          " and ",
-          link_to("Privacy Policy", privacy_path, class: "text-blue-600 dark:text-blue-400 hover:underline font-semibold", onclick: "event.stopPropagation()")
-        ]),
-        name: "accept_terms",
-        required: true) %>
+      <%= render(Forms::Component.new(id: form.field_id(:registration_acceptance), error: form_error(@user, :registration_acceptance))) do |field| %>
+      <div class="flex items-start gap-3">
+        <%= form.check_box :registration_acceptance, required: true, class: "mt-1 rounded border-neutral-300 text-blue-600 focus:ring-blue-500", **field.input_attributes %>
+        <%= form.label :registration_acceptance, class: "text-sm text-neutral-700 dark:text-neutral-300" do %>
+          I confirm that I am at least 18 years old and agree to the
+          <%= link_to "Terms of Service", terms_path, class: "text-blue-600 dark:text-blue-400 hover:underline font-semibold" %>
+          and
+          <%= link_to "Privacy Policy", privacy_path, class: "text-blue-600 dark:text-blue-400 hover:underline font-semibold" %>
+        <% end %>
+      </div>
+      <% end %>
 
       <div class="pt-4">
         <%= render Buttons::Component.new(text: "Create Account & Log In", type: "submit", size: :lg, full_width: true) %>

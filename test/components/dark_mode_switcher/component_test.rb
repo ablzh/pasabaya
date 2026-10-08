@@ -12,6 +12,9 @@ module DarkModeSwitcher
       assert_selector "button[data-controller='tooltip']"
       assert_selector "button[data-tooltip-content='Change theme']"
       assert_no_selector "[data-theme-target='cycleLabel']"
+      assert_selector "svg[data-theme-mode='system']:not([hidden])", visible: :all
+      assert_selector "svg[data-theme-mode='light'][hidden]", visible: :all
+      assert_selector "svg[data-theme-mode='dark'][hidden]", visible: :all
     end
 
     def test_renders_cycle_pill_variant

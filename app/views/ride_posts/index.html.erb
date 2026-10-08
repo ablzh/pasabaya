@@ -7,14 +7,14 @@
         <h1 class="text-4xl font-extrabold text-neutral-900 dark:text-white tracking-tight sm:text-5xl">
           Carpool from <%= @origin.name %> to <%= @destination.name %>
         </h1>
-        <p class="mt-4 text-lg text-neutral-500 max-w-2xl">
+        <p class="mt-4 text-lg text-neutral-500">
           Find rides and travel companions from <%= @origin.name %> to <%= @destination.name %> on Pasabaya. Share fuel costs and travel together.
         </p>
       <% else %>
         <h1 class="text-4xl font-extrabold text-neutral-900 dark:text-white tracking-tight sm:text-5xl">
           The Ride Board
         </h1>
-        <p class="mt-4 text-lg text-neutral-500 max-w-2xl">
+        <p class="mt-4 text-lg text-neutral-500">
           Find your next travel companion or share your empty seats. Community-driven carpooling for the Philippines.
         </p>
       <% end %>
@@ -28,12 +28,64 @@
   <div id="ride_posts" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
     <% if @ride_posts.any? %>
       <%= render @ride_posts %>
-    <% elsif params.key?(:post_type) || params.key?(:origin_id) || params.key?(:destination_id) %>
+    <% elsif @origin && @destination %>
+      <%# Searched specific route, but found nothing %>
+      <div class="col-span-full py-16 px-6 text-center bg-neutral-50 dark:bg-neutral-800/50 rounded-3xl border-2 border-dashed border-neutral-200 dark:border-neutral-700">
+        <div class="inline-flex items-center justify-center size-12 rounded-full bg-blue-50 text-blue-600 mb-2 dark:bg-blue-950/30 dark:text-blue-400">
+          <svg class="size-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0" />
+          </svg>
+        </div>
+        <h3 class="text-lg font-bold text-neutral-900 dark:text-white">No rides found for this route yet</h3>
+        <p class="mt-1 text-sm font-semibold text-neutral-700 dark:text-neutral-300">
+          <%= @origin.name %> &rarr; <%= @destination.name %>
+          <% if params[:departure_date].present? %>
+            <% begin %>
+              &bull; <%= Date.parse(params[:departure_date]).strftime("%a, %b %d") %>
+            <% rescue ArgumentError, TypeError %>
+            <% end %>
+          <% end %>
+        </p>
+
+        <% if authenticated? %>
+          <p class="mt-2 text-sm text-neutral-500 max-w-md mx-auto">
+            This is a one-time notification. You will receive an email and in-app alert when a driver publishes a matching, bookable ride for this route.
+          </p>
+
+          <% if @existing_route_subscription %>
+            <div class="mt-6 flex flex-col items-center gap-3">
+              <%= render Badge::Component.new(text: "You are subscribed to route alerts for this search", variant: :green, size: :md, pill: true, dot: true) %>
+              <%= button_to "Cancel alert", route_subscription_path(@existing_route_subscription), method: :delete, class: "text-xs text-red-600 hover:text-red-700 font-semibold underline underline-offset-2 cursor-pointer" %>
+            </div>
+          <% else %>
+            <div class="mt-6 flex flex-col sm:flex-row items-center justify-center gap-4">
+              <%= form_with url: route_subscriptions_path, method: :post do |f| %>
+                <%= f.hidden_field "route_subscription[origin_id]", value: @origin.id %>
+                <%= f.hidden_field "route_subscription[destination_id]", value: @destination.id %>
+                <%= f.hidden_field "route_subscription[departure_date]", value: params[:departure_date] %>
+                <%= f.hidden_field "route_subscription[community_id]", value: params[:community_id] %>
+                <%= f.hidden_field "route_subscription[ladies_only]", value: params[:ladies_only] %>
+                <%= f.submit "Notify me when a driver posts this route", class: "btn-primary px-5 py-2.5 rounded-xl font-bold text-sm shadow-sm cursor-pointer" %>
+              <% end %>
+              <%= link_to "Offer a ride instead", new_ride_post_path, class: "text-sm text-neutral-600 dark:text-neutral-400 font-medium hover:underline" %>
+            </div>
+          <% end %>
+        <% else %>
+          <p class="mt-2 text-sm text-neutral-500 max-w-sm mx-auto">
+            Sign in or create an account to get a one-time notification when a driver offers this ride.
+          </p>
+          <div class="mt-6 flex flex-wrap items-center justify-center gap-3">
+            <%= link_to "Sign in to get notified", new_session_path(return_to: request.fullpath), class: "btn-primary px-5 py-2.5 rounded-xl font-bold text-sm shadow-sm" %>
+            <%= link_to "Create an account", sign_up_path(return_to: request.fullpath), class: "px-5 py-2.5 rounded-xl font-bold text-sm bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-200 hover:bg-neutral-200 dark:hover:bg-neutral-700 transition" %>
+          </div>
+        <% end %>
+      </div>
+    <% elsif params.key?(:origin_id) || params.key?(:destination_id) || params.key?(:departure_date) %>
       <%# Searched, but found nothing %>
       <div class="col-span-full py-20 text-center bg-neutral-50 dark:bg-neutral-800/50 rounded-3xl border-2 border-dashed border-neutral-200 dark:border-neutral-700">
         <svg class="mx-auto size-12 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
         <h3 class="mt-4 text-lg font-bold text-neutral-900 dark:text-white">No rides found</h3>
-        <p class="mt-2 text-sm text-neutral-500 max-w-sm mx-auto">Didn't find what you're looking for? Create your own post to let others know you're traveling!</p>
+        <p class="mt-2 text-sm text-neutral-500 max-w-sm mx-auto">No matching driver offers yet. Try another route or date. Driving this route? Offer your available seats.</p>
         <div class="mt-6">
           <%= link_to "Post a Ride", new_ride_post_path, class: "text-blue-600 font-bold hover:text-blue-500 underline underline-offset-4" %>
         </div>

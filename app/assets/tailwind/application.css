@@ -3,6 +3,92 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
+html[data-hotwire-native="true"] {
+    .web-navigation,
+    .web-footer {
+        display: none;
+    }
+
+    main h1:not([data-profile-name], .profile-name) {
+        @apply sr-only;
+    }
+
+    .app-content {
+        margin-top: 1rem;
+        padding-left: max(1rem, env(safe-area-inset-left));
+        padding-right: max(1rem, env(safe-area-inset-right));
+        padding-bottom: max(1rem, env(safe-area-inset-bottom));
+    }
+}
+
+.trip-chat {
+    height: min(620px, calc(100dvh - 20rem));
+    min-height: 12rem;
+}
+
+@media (max-width: 767px) {
+    body:has(#trip-chat-pane:not(.hidden)) {
+        overflow: hidden;
+    }
+
+    body:has(#trip-chat-pane:not(.hidden)) .web-navigation,
+    body:has(#trip-chat-pane:not(.hidden)) .web-footer,
+    body:has(#trip-chat-pane:not(.hidden)) #native_navigation,
+    body:has(#trip-chat-pane:not(.hidden)) .ride-detail-header,
+    body:has(#trip-chat-pane:not(.hidden)) [data-controller~="trip-view"] > [role="tablist"] {
+        display: none;
+    }
+
+    #trip-chat-pane:not(.hidden) .trip-chat {
+        position: fixed;
+        inset: 0;
+        z-index: 40;
+        top: var(--chat-viewport-top, 0px);
+        height: var(--chat-viewport-height, 100dvh);
+        min-height: 0;
+        border: 0;
+        border-radius: 0;
+        padding-top: env(safe-area-inset-top);
+        padding-left: env(safe-area-inset-left);
+        padding-right: env(safe-area-inset-right);
+    }
+
+    .trip-chat .chat-header,
+    .trip-chat .chat-deadlines,
+    .trip-chat #chat_message_form {
+        flex-shrink: 0;
+    }
+
+    .trip-chat .chat-deadline-body {
+        max-height: calc(var(--chat-viewport-height, 100dvh) / 5);
+        overflow-y: auto;
+    }
+
+    .trip-chat #chat_message_form {
+        padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
+    }
+}
+
+.chat-message[data-own-message="true"] {
+    justify-content: flex-end;
+}
+
+.chat-message[data-own-message="true"] .chat-message-content {
+    align-items: flex-end;
+}
+
+.chat-message[data-own-message="true"] .chat-message-avatar,
+.chat-message[data-own-message="true"] .chat-message-author,
+#chat_messages_list:has(.chat-message) #chat_messages_empty,
+#notifications_list:not(:has(.notification)),
+#notifications_list:has(.notification) + #notifications_empty {
+    display: none;
+}
+
+.chat-message[data-own-message="true"] .chat-message-body {
+    @apply bg-blue-600 text-white border-blue-600 rounded-bl-2xl rounded-br-xs dark:bg-blue-600 dark:text-white dark:border-blue-600;
+}
+
 kbd {
     @apply rounded-md border border-black/10 bg-white px-1 font-mono text-[11px] text-neutral-800 shadow-[0px_1.5px_0px_0px_rgba(0,0,0,0.05)] dark:border-white/10 dark:bg-neutral-900 dark:text-neutral-200 dark:shadow-[0px_1px_0px_0px_rgba(255,255,255,0.1)];
 }
@@ -627,4 +713,52 @@ select[data-select-disable-typing-value="true"] + .ts-wrapper.single.input-activ
     [role="button"]:not(:disabled) {
         cursor: pointer;
     }
+}
+
+.toast-item {
+    position: absolute;
+    top: 0;
+    width: 100%;
+    z-index: var(--toast-z-index, 1);
+    transform-origin: top center;
+    transition: transform 200ms ease, opacity 200ms ease;
+}
+
+.toast-item[data-expanded="false"] {
+    transform: translateY(calc(var(--toast-index, 0) * 12px)) scale(calc(1 - var(--toast-index, 0) * 0.04));
+}
+
+.toast-item[data-expanded="true"] {
+    transform: translateY(calc(var(--toast-offset, 0px)));
+}
+
+.toast-item[data-mounted="false"],
+.toast-item[data-removed="true"],
+.toast-item[data-visible="false"] {
+    opacity: 0;
+    pointer-events: none !important;
+}
+
+.toast-item[data-expanded="false"]:not([data-front="true"]) > span {
+    height: var(--front-toast-height);
+    overflow: hidden;
+}
+
+.toast-item[data-expanded="false"]:not([data-front="true"]) > span > * {
+    visibility: hidden;
+}
+
+/* Keep invalid states above Tom Select’s unlayered control styles. */
+.form-field :is(input, select, textarea, [role="combobox"])[aria-invalid="true"],
+fieldset[aria-invalid="true"] {
+  border-color: var(--color-red-600);
+  outline: 1px solid var(--color-red-600);
+}
+.form-field .ts-wrapper:has([aria-invalid="true"]) .ts-control {
+  border-color: var(--color-red-600);
+}
+.dark .form-field :is(input, select, textarea, [role="combobox"])[aria-invalid="true"],
+.dark fieldset[aria-invalid="true"] {
+  border-color: var(--color-red-400);
+  outline-color: var(--color-red-400);
 }

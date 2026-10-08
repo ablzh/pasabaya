@@ -1,24 +1,40 @@
 class RidePostsController < ApplicationController
   before_action :require_authentication, except: %i[ index show ]
   before_action :set_ride_post, only: :show
-  before_action :set_user_ride_post, only: %i[ edit update destroy ]
+  before_action :set_user_ride_post, only: %i[ edit update destroy cancel publish close_requests ]
   before_action :resume_session, only: [ :index, :show ]
   before_action :set_grouped_locations, only: %i[ index new edit create update ]
   before_action :resolve_route_slugs, only: :index
   before_action :redirect_to_seo_route, only: :index
+  rate_limit to: 10, within: 10.minutes, name: "account", only: :create,
+    by: -> { Current.user.id }, with: :reject_rate_limited_request
 
 
   # GET /ride_posts or /ride_posts.json
   def index
-    if params.key?(:post_type) || params.key?(:origin_id) || params.key?(:destination_id)
-      @ride_posts = RidePost.active
-                            .includes(:origin, :destination, :user)
-                            .order(departure_time: :asc)
-                            .filter_by_post_type(params[:post_type])
+    if params.key?(:origin_id) || params.key?(:destination_id) || params.key?(:community_id) || params.key?(:ladies_only) || params.key?(:departure_date)
+      @ride_posts = RidePost.active.upcoming
+                            .visible_to(Current.user)
+                            .includes(:origin, :destination, :community, user: { avatar_attachment: :blob })
+                            .order(departure_date: :asc, departure_time: :asc)
                             .filter_by_origin(params[:origin_id])
                             .filter_by_destination(params[:destination_id])
+                            .filter_by_community(params[:community_id])
+                            .filter_by_ladies_only(params[:ladies_only])
+                            .filter_by_departure_date(params[:departure_date])
 
-      setup_route_meta_tags if @origin && @destination
+      if @origin && @destination
+        setup_route_meta_tags
+        if authenticated?
+          @existing_route_subscription = Current.user.route_subscriptions.active.find_by(
+            origin_id: @origin.id,
+            destination_id: @destination.id,
+            departure_date: params[:departure_date].presence,
+            community_id: params[:community_id].presence,
+            ladies_only: ActiveModel::Type::Boolean.new.cast(params[:ladies_only]) || false
+          )
+        end
+      end
     else
       @ride_posts = RidePost.none
       @popular_routes = RidePost.popular_routes
@@ -27,17 +43,42 @@ class RidePostsController < ApplicationController
 
   # GET /ride_posts/1 or /ride_posts/1.json
   def show
+    unless @ride_post.authorized_viewer?(Current.user)
+      respond_to do |format|
+        format.html { redirect_to ride_posts_path, alert: "You are not authorized to view this restricted ride." }
+        format.json { render json: { error: "Forbidden" }, status: :forbidden }
+      end
+      return
+    end
+
     if params[:id] != @ride_post.to_param
-      redirect_to @ride_post, status: :moved_permanently
+      redirect_to ride_post_path(@ride_post, tab: params[:tab].presence, format: params[:format]), status: :moved_permanently
       return # Use return to stop execution after redirecting
     end
 
+    if params[:tab] == "chat" && @ride_post.chat_expired?
+      respond_to do |format|
+        format.html { redirect_to ride_post_path(@ride_post), alert: "Chat history for this trip is no longer available." }
+        format.json { render json: { error: "Chat history is no longer available" }, status: :gone }
+      end
+      return
+    end
+
+    if @ride_post.booking_cutoff_at.present? && Time.current >= @ride_post.booking_cutoff_at && @ride_post.bookings.pending.exists?
+      Bookings::ExpireService.call(@ride_post)
+    end
+
     setup_show_meta_tags
+    @chat_messages = @ride_post.chat_messages.includes(user: { avatar_attachment: :blob }).order(created_at: :desc, id: :desc).limit(100).to_a.reverse if @ride_post.user_authorized_for_chat?(Current.user)
   end
 
   # GET /ride_posts/new
   def new
-    @ride_post = RidePost.new
+    @ride_post = Current.user.ride_posts.build
+    if params[:community_id].present?
+      @ride_post.community = Current.user.verified_communities.find(params[:community_id])
+      @ride_post.visibility = :hub_only
+    end
   end
 
   # GET /ride_posts/1/edit
@@ -47,10 +88,12 @@ class RidePostsController < ApplicationController
   # POST /ride_posts or /ride_posts.json
   def create
     @ride_post = Current.user.ride_posts.build(ride_post_params)
+    @ride_post.status = params[:intent] == "publish" ? :active : :draft if @ride_post.offering?
 
     respond_to do |format|
       if @ride_post.save
-        format.html { redirect_to @ride_post, notice: "Ride post was successfully created." }
+        notice = @ride_post.draft? ? "Ride saved as a private draft. Choose Publish ride when ready." : "Ride post was successfully created."
+        format.html { redirect_to @ride_post, notice: notice, status: :see_other }
         format.json { render :show, status: :created, location: @ride_post }
       else
         format.html { render :new, status: :unprocessable_content }
@@ -61,8 +104,13 @@ class RidePostsController < ApplicationController
 
   # PATCH/PUT /ride_posts/1 or /ride_posts/1.json
   def update
+    @ride_post.assign_attributes(ride_post_params)
+    if @ride_post.offering?
+      @ride_post.status = :active if params[:intent] == "publish" && @ride_post.draft?
+    end
+
     respond_to do |format|
-      if @ride_post.update(ride_post_params)
+      if @ride_post.save
         format.html { redirect_to @ride_post, notice: "Ride post was successfully updated.", status: :see_other }
         format.json { render :show, status: :ok, location: @ride_post }
       else
@@ -72,13 +120,56 @@ class RidePostsController < ApplicationController
     end
   end
 
+  def publish
+    published = @ride_post.with_lock do
+      if @ride_post.draft?
+        @ride_post.status = :active
+        @ride_post.save
+      else
+        @ride_post.errors.add(:base, "Only a private draft can be published.")
+        false
+      end
+    end
+    if published
+      redirect_to user_path(Current.user), notice: "Ride published.", status: :see_other
+    else
+      redirect_to user_path(Current.user), alert: model_error_feedback(@ride_post, title: "Your ride wasn’t published. Edit the ride and check its details."), status: :see_other
+    end
+  end
+
+  def close_requests
+    RidePosts::CloseRequestsService.call(@ride_post, actor: Current.user)
+    redirect_to @ride_post, notice: "Seat requests closed. Confirmed passengers and trip chat are unchanged.", status: :see_other
+  rescue RidePosts::CloseRequestsService::Error => e
+    redirect_to @ride_post, alert: "#{e.message}. Refresh the ride to check its current status.", status: :see_other
+  end
+
   # DELETE /ride_posts/1 or /ride_posts/1.json
   def destroy
-    @ride_post.destroy!
+    if @ride_post.destroy
+      respond_to do |format|
+        format.html { redirect_to ride_posts_path, notice: "Ride post was successfully destroyed.", status: :see_other }
+        format.json { head :no_content }
+      end
+    else
+      respond_to do |format|
+        format.html { redirect_to @ride_post, alert: model_error_feedback(@ride_post, title: "Your ride wasn’t deleted."), status: :see_other }
+        format.json { render json: @ride_post.errors, status: :unprocessable_content }
+      end
+    end
+  end
 
+  # PATCH /rides/1/cancel
+  def cancel
+    RidePosts::CancelService.call(@ride_post, actor: Current.user)
     respond_to do |format|
-      format.html { redirect_to ride_posts_path, notice: "Ride post was successfully destroyed.", status: :see_other }
+      format.html { redirect_to @ride_post, notice: "Trip was successfully canceled.", status: :see_other }
       format.json { head :no_content }
+    end
+  rescue RidePosts::CancelService::Error => e
+    respond_to do |format|
+      format.html { redirect_to @ride_post, alert: "#{e.message}. Refresh the ride to check its current status.", status: :see_other }
+      format.json { render json: { error: e.message }, status: :unprocessable_content }
     end
   end
 
@@ -86,7 +177,8 @@ class RidePostsController < ApplicationController
 
   # Use callbacks to share common setup or constraints between actions.
   def set_ride_post
-    @ride_post = RidePost.includes(:origin, :destination).find(params.expect(:id))
+    @ride_post = RidePost.includes(:origin, :destination, :community).find_by(id: params.expect(:id).to_i)
+    redirect_to ride_posts_path, alert: "The trip is no longer available" unless @ride_post
   end
 
   def set_user_ride_post
@@ -95,7 +187,11 @@ class RidePostsController < ApplicationController
 
   # Only allow a list of trusted parameters through.
   def ride_post_params
-    params.expect(ride_post: [ :post_type, :origin_id, :destination_id, :departure_time, :seats, :notes ])
+    params.expect(ride_post: [
+      :origin_id, :destination_id, :departure_date, :departure_choice, :exact_departure_time, :departure_time, :expected_arrival_at,
+      :seats, :notes,
+      :ladies_only, :visibility, :community_id
+    ])
   end
 
   def set_grouped_locations
@@ -131,17 +227,24 @@ class RidePostsController < ApplicationController
   end
 
   def setup_show_meta_tags
-    formatted_time = if @ride_post.regular?
-                       "Flexible departure"
-    else
-                       @ride_post.departure_time.strftime("%A, %b %d at %I:%M %p")
-    end
+    formatted_time =
+      if @ride_post.departure_date.present?
+        if @ride_post.exact_time? && @ride_post.departure_time.present?
+          @ride_post.departure_time.strftime("%A, %b %d at %I:%M %p")
+        else
+          "#{@ride_post.departure_date.strftime('%A, %b %d')} (#{@ride_post.departure_choice_human})"
+        end
+      elsif @ride_post.departure_time.present?
+        @ride_post.departure_time.strftime("%A, %b %d at %I:%M %p")
+      else
+        "Flexible departure"
+      end
 
-    title_text = "Ride from #{@ride_post.origin.name} to #{@ride_post.destination.name}"
+    title_text = "Ride from #{(@ride_post.origin&.name || "Choose origin")} to #{(@ride_post.destination&.name || "Choose destination")}"
     desc_text = "#{@ride_post.user.first_name} is #{@ride_post.post_type} a ride. " \
       "Departure: #{formatted_time}. " \
-      "Seats available: #{@ride_post.seats}. " \
-      "Check notes and coordinate via Facebook."
+      "Total seats: #{@ride_post.seats}. " \
+      "View profiles before traveling. Seat requests need driver approval; accepted participants coordinate in private in-app chat."
 
     canonical_url = ride_post_url(@ride_post)
     set_meta_tags(
@@ -160,14 +263,17 @@ class RidePostsController < ApplicationController
 
   def redirect_to_seo_route
     if params[:origin_id].present? && params[:destination_id].present? && params[:origin_slug].blank? && request.format.html?
-      origin = Location.find_by(id: params[:origin_id])
-      destination = Location.find_by(id: params[:destination_id])
+      locations = Location.where(id: [ params[:origin_id], params[:destination_id] ]).index_by(&:id)
+      origin = locations[params[:origin_id].to_i]
+      destination = locations[params[:destination_id].to_i]
 
       if origin && destination
         redirect_to route_rides_path(
                       origin_slug: origin.slug,
                       destination_slug: destination.slug,
-                      post_type: params[:post_type].presence
+                      departure_date: params[:departure_date].presence,
+                      community_id: params[:community_id].presence,
+                      ladies_only: params[:ladies_only].presence
                     )
       end
     end

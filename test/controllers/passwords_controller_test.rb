@@ -10,11 +10,12 @@ class PasswordsControllerTest < ActionDispatch::IntegrationTest
 
   test "create" do
     post passwords_path, params: { email_address: @user.email_address }
+    assert_response :see_other
     assert_enqueued_email_with PasswordsMailer, :reset, args: [ @user ]
     assert_redirected_to new_session_path
 
     follow_redirect!
-    assert_notice "reset instructions sent"
+    assert_notice "If an account uses this email address"
   end
 
   test "create for an unknown user redirects but sends no mail" do
@@ -23,7 +24,7 @@ class PasswordsControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to new_session_path
 
     follow_redirect!
-    assert_notice "reset instructions sent"
+    assert_notice "If an account uses this email address"
   end
 
   test "edit" do
@@ -42,6 +43,21 @@ class PasswordsControllerTest < ActionDispatch::IntegrationTest
   test "update" do
     assert_changes -> { @user.reload.password_digest } do
       put password_path(@user.password_reset_token), params: { password: "new", password_confirmation: "new" }
+      assert_response :see_other
+      assert_redirected_to new_session_path
+    end
+
+    follow_redirect!
+    assert_notice "Password has been reset"
+  end
+
+  test "update succeeds with unchanged legacy invalid facebook_profile_url" do
+    @user.update_columns(facebook_profile_url: "http://legacy.facebook.com/outdated:8080")
+    token = @user.password_reset_token
+
+    assert_changes -> { @user.reload.password_digest } do
+      put password_path(token), params: { password: "new_password_123", password_confirmation: "new_password_123" }
+      assert_response :see_other
       assert_redirected_to new_session_path
     end
 
@@ -53,11 +69,11 @@ class PasswordsControllerTest < ActionDispatch::IntegrationTest
     token = @user.password_reset_token
     assert_no_changes -> { @user.reload.password_digest } do
       put password_path(token), params: { password: "no", password_confirmation: "match" }
-      assert_redirected_to edit_password_path(token)
+      assert_response :unprocessable_content
+      assert_select "form[action='#{password_path(token)}']"
     end
 
-    follow_redirect!
-    assert_notice "Passwords did not match"
+    assert_select "#password_confirmation_error", text: "The passwords don’t match. Re-enter your new password."
   end
 
   private

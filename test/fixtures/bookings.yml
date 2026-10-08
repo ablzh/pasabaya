@@ -1,0 +1,6 @@
+# test/fixtures/bookings.yml
+one:
+  ride_post: one
+  passenger: two
+  status: pending
+  pickup_notes: Meeting near MRT station

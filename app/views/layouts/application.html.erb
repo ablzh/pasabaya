@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="en" data-hotwire-native="<%= hotwire_native_app? %>">
 <head>
   <script>
     (function() {
@@ -14,6 +14,7 @@
     })();
   </script>
 
+  <% set_meta_tags title: native_page_title, site: nil if hotwire_native_app? %>
   <%= display_meta_tags site: 'Pasabaya',
                         title: 'Carpooling Philippines',
                         reverse: true,
@@ -29,7 +30,7 @@
                           image: image_url('og-preview.png')
                         } %>
 
-  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="application-name" content="Pasabaya - Carpooling Philippines">
   <meta name="mobile-web-app-capable" content="yes">
@@ -37,6 +38,7 @@
   <%= turbo_refreshes_with method: :morph, scroll: :preserve %>
 
   <%= csrf_meta_tags %>
+  <%= turbo_exempts_page_from_cache if hotwire_native_app? && authenticated? %>
   <%= csp_meta_tag %>
 
   <%= yield :head %>
@@ -58,24 +60,46 @@
   <% end %>
 </head>
 
-<body class="bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100 flex flex-col min-h-screen">
+<body class="bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100 flex flex-col min-h-dvh">
 
-<%= render(Navbar::Component.new(classes: "mx-auto", show_mobile_menu: false)) do |navbar| %>
+<%= render(Navbar::Component.new(classes: "mx-auto web-navigation", show_mobile_menu: false)) do |navbar| %>
   <% navbar.with_logo do %>
-    <%= link_to root_path, class: "flex items-center mr-2 ml-2 select-none no-underline" do %>
-      <%= image_tag "/icon.svg", size: "32x32", class: "h-8 w-8 object-contain", alt: "Pasabaya Logo" %>
+    <%= link_to root_path, class: "flex min-h-11 min-w-11 justify-center shrink-0 items-center sm:mx-2 select-none no-underline" do %>
+      <%= image_tag "/icon.svg", size: "32x32", class: "h-8 w-8 shrink-0 object-contain", alt: "Pasabaya Logo" %>
     <% end %>
   <% end %>
 
   <% navbar.with_item(label: "Search", href: ride_posts_path) %>
-  <% navbar.with_item(label: "Add a ride", href: new_ride_post_path) %>
+  <% navbar.with_item(label: "Hubs", href: communities_path, mobile_hidden: true) %>
+  <% if authenticated? %>
+    <% chats_label = safe_join([
+         tag.span(class: "inline-flex items-center gap-1.5") do
+           safe_join([
+             tag.svg(class: "hidden sm:block size-4 shrink-0", fill: "none", viewBox: "0 0 24 24", stroke_width: "1.5", stroke: "currentColor") do
+               tag.path(stroke_linecap: "round", stroke_linejoin: "round", d: "M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 01-2.555-.337A5.972 5.972 0 015.41 20.97a.75.75 0 01-1.154-.755c.106-.777.37-1.503.766-2.148A7.776 7.776 0 013 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25z")
+             end,
+             tag.span("Chats"),
+             tag.span(data: { chat_unread_count: true }, class: "unread-chats-badge inline-flex items-center") do
+               render("chats/unread_badge", count: current_unread_chats_count)
+             end
+           ])
+         end
+       ]) %>
+    <% navbar.with_item(label: chats_label, href: chats_path) %>
+  <% end %>
+  <% navbar.with_item(label: safe_join([tag.span("Post", class: "sm:hidden"), tag.span("Add a ride", class: "hidden sm:inline")]), href: new_ride_post_path, classes: "whitespace-nowrap") %>
 
   <% navbar.with_actions do %>
     <% if authenticated? %>
       <!-- Profile Dropdown Trigger -->
-      <li class="ml-1 pl-1">
-        <button type="button" data-navbar-target="trigger" data-content-id="profile-content" aria-controls="profile-content" aria-expanded="false" data-align="end" data-action="click->navbar#toggleMenu pointerenter->navbar#handlePointerEnter pointermove->navbar#handlePointerMove pointerleave->navbar#handlePointerLeave keydown->navbar#handleTriggerKeydown" data-state="closed" class="group flex items-center gap-2 rounded-md px-2 py-2 text-sm font-medium text-neutral-700 select-none hover:bg-neutral-100 dark:text-neutral-300 dark:hover:bg-neutral-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-600 dark:focus-visible:outline-neutral-200">
+      <li class="ml-0.5">
+        <button type="button" data-navbar-target="trigger" data-content-id="profile-content" aria-label="Account menu" aria-describedby="account-notification-count" aria-controls="profile-content" aria-expanded="false" data-align="end" data-action="click->navbar#toggleMenu pointerenter->navbar#handlePointerEnter pointermove->navbar#handlePointerMove pointerleave->navbar#handlePointerLeave keydown->navbar#handleTriggerKeydown" data-state="closed" class="group flex min-h-11 min-w-11 items-center gap-2 rounded-md px-2 py-2 text-sm font-medium text-neutral-700 select-none hover:bg-neutral-100 dark:text-neutral-300 dark:hover:bg-neutral-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-600 dark:focus-visible:outline-neutral-200">
+          <span class="relative">
           <%= user_avatar Current.user, classes: "flex items-center justify-center size-6 rounded-full bg-gradient-to-br from-red-400 to-red-600 text-white text-xs font-semibold" %>
+            <span id="account-notification-count" data-notification-count class="absolute -top-2 -right-2" aria-live="polite">
+              <%= render "notifications/count", count: Current.user.received_notifications.unread.count %>
+            </span>
+          </span>
         </button>
       </li>
     <% else %>
@@ -95,47 +119,60 @@
 
   <% if authenticated? %>
     <% navbar.with_dropdown_content(id: "profile-content", width: "w-[calc(100vw-2rem)] sm:w-[200px]") do %>
-      <a href="<%= user_path(Current.user) %>" class="flex items-center gap-2 rounded-lg p-2 no-underline hover:bg-neutral-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-600 dark:hover:bg-neutral-700 dark:focus-visible:outline-neutral-200">
+      <%= link_to user_path(Current.user), class: "flex items-center gap-2 rounded-lg p-2 no-underline hover:bg-neutral-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-600 dark:hover:bg-neutral-700 dark:focus-visible:outline-neutral-200" do %>
         <span class="text-xs text-neutral-500 dark:text-neutral-400"><svg xmlns="http://www.w3.org/2000/svg" class="size-3.5 sm:size-4" width="18" height="18" viewBox="0 0 18 18"><g fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" stroke="currentColor"><circle cx="9" cy="4.5" r="2.75"></circle><path d="M13.762,15.516c.86-.271,1.312-1.221,.947-2.045-.97-2.191-3.159-3.721-5.709-3.721s-4.739,1.53-5.709,3.721c-.365,.825,.087,1.774,.947,2.045,1.225,.386,2.846,.734,4.762,.734s3.537-.348,4.762-.734Z"></path></g></svg></span>
         <span class="text-sm font-medium text-neutral-900 dark:text-neutral-100">Profile</span>
-      </a>
+      <% end %>
+
+      <%= link_to settings_profile_path, class: "flex items-center gap-2 rounded-lg p-2 no-underline hover:bg-neutral-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-600 dark:hover:bg-neutral-700 dark:focus-visible:outline-neutral-200" do %>
+        <span class="text-xs text-neutral-500 dark:text-neutral-400">
+          <svg class="size-3.5 sm:size-4" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.325.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 011.37.49l1.296 2.247a1.125 1.125 0 01-.26 1.431l-1.003.827c-.293.241-.438.613-.43.992a7.723 7.723 0 010 .255c-.008.378.137.75.43.991l1.004.827c.424.35.534.955.26 1.43l-1.298 2.247a1.125 1.125 0 01-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.47 6.47 0 01-.22.128c-.331.183-.581.495-.644.869l-.213 1.281c-.09.543-.56.941-1.11.941h-2.594c-.55 0-1.019-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 01-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 01-1.369-.49l-1.297-2.247a1.125 1.125 0 01.26-1.431l1.004-.827c.292-.24.437-.613.43-.991a6.932 6.932 0 010-.255c.007-.38-.138-.751-.43-.992l-1.004-.827a1.125 1.125 0 01-.26-1.43l1.297-2.247a1.125 1.125 0 011.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.086.22-.128.332-.183.582-.495.644-.869l.214-1.28z" />
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+          </svg>
+        </span>
+        <span class="text-sm font-medium text-neutral-900 dark:text-neutral-100">Settings</span>
+      <% end %>
+
+
+      <%= link_to notifications_path, class: "flex items-center gap-2 rounded-lg p-2 no-underline hover:bg-neutral-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-600 dark:hover:bg-neutral-700 dark:focus-visible:outline-neutral-200" do %>
+        <span class="text-xs text-neutral-500 dark:text-neutral-400"><svg xmlns="http://www.w3.org/2000/svg" class="size-3.5 sm:size-4" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" /></svg></span>
+        <span class="text-sm font-medium text-neutral-900 dark:text-neutral-100">Notifications</span>
+        <span data-notification-count class="ml-auto">
+          <%= render "notifications/count", count: Current.user.received_notifications.unread.count %>
+        </span>
+      <% end %>
+
+      <%= link_to "Hubs", communities_path, class: "block rounded-lg p-2 text-sm font-medium sm:hidden no-underline hover:bg-neutral-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-600 dark:hover:bg-neutral-700 dark:focus-visible:outline-neutral-200" %>
+
+      <% if Current.user.active_admin? %>
+        <%= link_to "Administration", admin_root_path, data: { turbo: false }, class: "block rounded-lg p-2 text-sm font-medium no-underline hover:bg-neutral-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-600 dark:hover:bg-neutral-700 dark:focus-visible:outline-neutral-200" %>
+      <% end %>
 
       <div class="border-t border-neutral-200 dark:border-neutral-700"></div>
 
-      <a href="/session" data-turbo-method="delete" class="flex items-center gap-2 rounded-lg p-2 no-underline hover:bg-neutral-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-600 dark:hover:bg-neutral-700 dark:focus-visible:outline-neutral-200">
+      <%= link_to session_path, data: { turbo_method: :delete }, class: "flex items-center gap-2 rounded-lg p-2 no-underline hover:bg-neutral-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-600 dark:hover:bg-neutral-700 dark:focus-visible:outline-neutral-200" do %>
         <span class="text-xs text-neutral-500 dark:text-neutral-400"><svg xmlns="http://www.w3.org/2000/svg" class="size-3.5 sm:size-4" width="18" height="18" viewBox="0 0 18 18"><g fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" stroke="currentColor"><path d="M9.75,2.75h3.5c1.105,0,2,.895,2,2V13.25c0,1.105-.895,2-2,2h-3.5"></path><polyline points="6.25 5.5 2.75 9 6.25 12.5"></polyline><line x1="2.75" y1="9" x2="10.25" y2="9"></line></g></svg></span>
         <span class="text-sm font-medium text-neutral-900 dark:text-neutral-100">Sign out</span>
-      </a>
+      <% end %>
     <% end %>
   <% end %>
 <% end %>
 
-<%# Global Flash Container %>
-<div id="flash-notifications" class="fixed top-5 right-5 z-50 space-y-3">
-  <% flash.each do |type, message| %>
-    <% 
-      # Dynamic colors based on flash type
-      theme_classes = if type == "alert"
-        "bg-red-100 border-red-400 text-red-700 dark:bg-red-950/20 dark:border-red-900/30 dark:text-red-400"
-      else
-        "bg-green-100 border-green-400 text-green-700 dark:bg-green-950/20 dark:border-green-900/30 dark:text-green-400"
-      end
-    %>
-    <div data-turbo-temporary
-         data-controller="flash"
-         data-action="click->flash#dismiss"
-         class="<%= theme_classes %> border px-4 py-3 rounded-xl shadow-lg animate-bounce">
-      <%= message %>
-    </div>
-  <% end %>
-</div>
+<%= render "layouts/native_navigation" if hotwire_native_app? %>
 
-<main class="container mx-auto px-4 mt-8 flex-grow">
+<%# Global Toast & Flash Notifications %>
+<%= render Toast::Component.new(flash: flash) %>
+<%= turbo_stream_from [ Current.user, :notifications ], channel: NotificationsChannel if authenticated? %>
+
+<main class="app-content container mx-auto px-4 mt-8 flex-grow">
+  <div id="request_feedback"></div>
+  <%= render "shared/flash_errors" %>
   <%= yield %>
 </main>
 
 <%# Global Footer %>
-<footer class="mt-auto py-12 border-t border-neutral-200 dark:border-neutral-800">
+<footer class="web-footer mt-auto py-12 border-t border-neutral-200 dark:border-neutral-800">
   <div class="container mx-auto px-4">
     <div class="flex flex-col md:flex-row justify-between items-center gap-6">
       <div class="text-center md:text-left">
@@ -163,6 +200,9 @@
 
       <div class="flex flex-col items-center md:items-end gap-3">
         <div class="flex gap-4">
+          <% unless authenticated? %>
+            <%= link_to "Hubs", communities_path, class: "text-xs text-neutral-400 hover:text-indigo-600 dark:hover:text-indigo-400 sm:hidden" %>
+          <% end %>
           <%= link_to "Privacy", privacy_path, class: "text-xs text-neutral-400 hover:text-indigo-600 dark:hover:text-indigo-400" %>
           <%= link_to "Terms", terms_path, class: "text-xs text-neutral-400 hover:text-indigo-600 dark:hover:text-indigo-400" %>
         </div>

@@ -1,3 +1,5 @@
+Rack::Attack.cache.store = Rails.cache
+
 class Rack::Attack
   # General Throttle: Protect against overall high volume of requests
   # We exclude /assets to prevent blocking legitimate users loading site resources.
@@ -12,6 +14,10 @@ class Rack::Attack
     end
   end
 
+  throttle("sign_up/ip/hour", limit: 20, period: 1.hour) do |req|
+    req.ip if req.path == "/sign_up" && req.post?
+  end
+
   # Login Protection (IP): Limit brute force login attempts per IP
   throttle("logins/ip", limit: 5, period: 20.seconds) do |req|
     if req.path == "/session" && req.post?
@@ -24,8 +30,8 @@ class Rack::Attack
   throttle("logins/email", limit: 5, period: 20.seconds) do |req|
     if req.path == "/session" && req.post?
       # Based on SessionsController, email is in params[:email_address]
-      email = req.params["email_address"]
-      email.to_s.downcase.gsub(/\s+/, "").presence
+      email = req.params["email_address"].to_s.strip.downcase.presence
+      Digest::SHA256.hexdigest(email) if email
     end
   end
 end

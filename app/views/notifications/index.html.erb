@@ -1,0 +1,18 @@
+<div class="max-w-2xl mx-auto my-8 px-4 sm:px-0">
+  <div class="flex flex-wrap items-center justify-between gap-3 mb-6">
+    <h1 class="text-2xl font-bold text-neutral-900 dark:text-white">Notifications</h1>
+    <%= button_to mark_all_as_read_notifications_path, method: :patch, class: "inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-blue-700 dark:text-blue-300" do %>
+      <svg class="size-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" /></svg>
+      Mark all as read
+    <% end %>
+  </div>
+
+  <div id="notifications_container">
+      <div id="notifications_list" class="divide-y divide-neutral-100 dark:divide-neutral-800 bg-white dark:bg-neutral-900 rounded-3xl border border-neutral-100 dark:border-neutral-800 shadow-sm overflow-hidden">
+        <%= render partial: "notifications/notification", collection: @notifications, as: :notification %>
+      </div>
+      <div id="notifications_empty" class="text-center py-12 bg-white dark:bg-neutral-900 rounded-3xl border border-neutral-100 dark:border-neutral-800 p-8">
+        <p class="text-neutral-500 text-sm">No notifications yet.</p>
+      </div>
+  </div>
+</div>

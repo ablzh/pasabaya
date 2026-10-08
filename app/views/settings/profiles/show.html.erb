@@ -5,17 +5,9 @@
     <%= render(Card::Component.new(rounded: :"3xl", padding: :lg)) do %>
       <%= form_with model: @user, url: settings_profile_path, method: :patch, class: "space-y-6" do |form| %>
 
-        <% if controller_name == "profiles" && @user.errors.any? %>
-          <div class="bg-red-50 dark:bg-red-900/10 text-red-600 px-4 py-3 font-medium rounded-xl border border-red-100 dark:border-red-900/20">
-            <ul class="list-disc ml-6 text-sm">
-              <% @user.errors.full_messages.each do |message| %>
-                <li><%= message %></li>
-              <% end %>
-            </ul>
-          </div>
-        <% end %>
+        <%= render Forms::ErrorSummary::Component.new(record: @user, form: form, title: "Your profile wasn’t saved. Check the highlighted fields.") if controller_name == "profiles" %>
 
-        <div class="flex items-center gap-6" data-controller="avatar-preview">
+        <div class="flex flex-col sm:flex-row items-center gap-6" data-controller="avatar-preview">
 
           <%# 1. Wrap or update user_avatar rendering to attach the target %>
           <% if @user.avatar.attached? %>
@@ -23,19 +15,19 @@
                           class: "w-20 h-20 rounded-full object-cover text-2xl bg-neutral-200",
                           data: { avatar_preview_target: "preview" } %>
           <% else %>
-            <div class="w-20 h-20 rounded-full flex items-center justify-center font-medium bg-neutral-200 text-neutral-600 text-2xl"
+            <div class="shrink-0 w-20 h-20 rounded-full flex items-center justify-center font-medium bg-neutral-200 text-neutral-600 text-2xl"
                  data-avatar-preview-target="initials">
               <%= @user.initials %>
             </div>
           <% end %>
 
-          <div class="flex-1">
+          <div class="w-full min-w-0 flex-1">
             <%= render(Forms::Component.new(
                        label: "Upload Avatar",
                        name: :avatar,
                        id: form.field_id(:avatar),
-                       error: @user.errors[:avatar].first
-            )) do %>
+                       error: settings_form_error(@user, :avatar, "profiles")
+            )) do |field| %>
 
               <%# 2. Connect input target & trigger change action %>
               <%= form.file_field :avatar,
@@ -46,7 +38,7 @@
                                     action: "change->avatar-preview#preview"
                                   },
                                   class: "block w-full text-sm text-neutral-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border file:border-neutral-200 dark:file:border-neutral-700 file:text-sm file:font-semibold file:bg-neutral-50 dark:file:bg-neutral-800 file:text-neutral-700 dark:file:text-neutral-300
-  hover:file:bg-neutral-100 dark:hover:file:bg-neutral-700 cursor-pointer" %>
+  hover:file:bg-neutral-100 dark:hover:file:bg-neutral-700 cursor-pointer", **field.input_attributes %>
             <% end %>
           </div>
         </div>
@@ -57,9 +49,9 @@
                      name: :first_name,
                      id: form.field_id(:first_name),
                      required: true,
-                     error: @user.errors[:first_name].first
-          )) do %>
-            <%= form.text_field :first_name, required: true, class: "w-full rounded-xl border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-base sm:text-sm focus:ring-blue-500 focus:border-blue-500 py-3 px-4" %>
+                     error: settings_form_error(@user, :first_name, "profiles")
+          )) do |field| %>
+            <%= form.text_field :first_name, required: true, class: "w-full rounded-xl border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-base sm:text-sm focus:ring-blue-500 focus:border-blue-500 py-3 px-4", **field.input_attributes %>
           <% end %>
 
           <%= render(Forms::Component.new(
@@ -67,9 +59,9 @@
                      name: :last_name,
                      id: form.field_id(:last_name),
                      required: true,
-                     error: @user.errors[:last_name].first
-          )) do %>
-            <%= form.text_field :last_name, required: true, class: "w-full rounded-xl border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-base sm:text-sm focus:ring-blue-500 focus:border-blue-500 py-3 px-4" %>
+                     error: settings_form_error(@user, :last_name, "profiles")
+          )) do |field| %>
+            <%= form.text_field :last_name, required: true, class: "w-full rounded-xl border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-base sm:text-sm focus:ring-blue-500 focus:border-blue-500 py-3 px-4", **field.input_attributes %>
           <% end %>
         </div>
 
@@ -77,11 +69,21 @@
                    label: "Facebook Profile URL",
                    name: :facebook_profile_url,
                    id: form.field_id(:facebook_profile_url),
-                   required: true,
-                   helper_text: "Required. Other members will use this to view your profile and contact you.",
-                   error: @user.errors[:facebook_profile_url].first
-        )) do %>
-          <%= form.url_field :facebook_profile_url, required: true, placeholder: "https://facebook.com/username", class: "w-full rounded-xl border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-base sm:text-sm focus:ring-blue-500 focus:border-blue-500 py-3 px-4" %>
+                   required: false,
+                   helper_text: "Optional. A linked Facebook profile is visible to other signed-in members. A supplied link does not verify identity.",
+                   error: settings_form_error(@user, :facebook_profile_url, "profiles")
+        )) do |field| %>
+          <%= form.url_field :facebook_profile_url, placeholder: "https://facebook.com/username", class: "w-full rounded-xl border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-base sm:text-sm focus:ring-blue-500 focus:border-blue-500 py-3 px-4", **field.input_attributes %>
+        <% end %>
+
+        <%= render(Forms::Component.new(
+                   label: "Gender (Self-Declared)",
+                   name: :gender,
+                   id: form.field_id(:gender),
+                   helper_text: "Used for eligibility in Ladies-Only carpools. Pasabaya does not share your private data.",
+                   error: settings_form_error(@user, :gender, "profiles")
+        )) do |field| %>
+          <%= form.select :gender, User.genders.keys.map { |g| [g.titleize, g] }, {}, class: "w-full rounded-xl border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-base sm:text-sm focus:ring-blue-500 focus:border-blue-500 py-3 px-4", **field.input_attributes %>
         <% end %>
 
         <div class="pt-6 border-t border-neutral-100 dark:border-white/5">
@@ -94,21 +96,13 @@
   <%= render(Card::Component.new(rounded: :"3xl", padding: :lg)) do %>
     <h2 class="text-xl font-bold text-neutral-900 dark:text-white mb-6">Change Email Address</h2>
 
-    <%= form_with model: @user, url: settings_email_path, method: :patch, class: "space-y-6" do |form| %>
-      <% if controller_name == "emails" && @user.errors.any? %>
-        <div class="bg-red-50 dark:bg-red-900/10 text-red-600 px-4 py-3 font-medium rounded-xl border border-red-100 dark:border-red-900/20 text-sm">
-          <% @user.errors.full_messages.each do |message| %>
-            <li><%= message %></li>
-          <% end %>
-        </div>
-      <% end %>
+    <%= form_with model: @user, url: settings_email_path, namespace: :email_change, method: :patch, class: "space-y-6" do |form| %>
+      <%= render Forms::ErrorSummary::Component.new(record: @user, form: form, title: "Your email address wasn’t changed. Check the highlighted fields.") if controller_name == "emails" %>
 
       <div class="text-sm text-neutral-600 dark:text-neutral-400">
         Current email: <strong class="text-neutral-800 dark:text-neutral-200"><%= @user.email_address %></strong>
         <% if @user.unconfirmed_email_was.present? %>
-          <div class="mt-2 p-3 bg-amber-50 dark:bg-amber-950/20 text-amber-700 dark:text-amber-400 rounded-xl border border-amber-200 dark:border-amber-900/30">
-            Pending verification: <strong><%= @user.unconfirmed_email_was %></strong>
-          </div>
+          <%= render Alert::Component.new(title: "Verification Pending", description: safe_join(["Pending verification: ", tag.strong(@user.unconfirmed_email_was)]), variant: :warning, classes: "mt-2") %>
         <% end %>
       </div>
 
@@ -116,9 +110,10 @@
                  label: "New email address",
                  name: :unconfirmed_email,
                  id: form.field_id(:unconfirmed_email),
-                 required: true
-      )) do %>
-        <%= form.email_field :unconfirmed_email, required: true, class: "w-full rounded-xl border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-base sm:text-sm focus:ring-blue-500 focus:border-blue-500 py-3 px-4" %>
+                 required: true,
+                 error: settings_form_error(@user, :unconfirmed_email, "emails")
+      )) do |field| %>
+        <%= form.email_field :unconfirmed_email, required: true, class: "w-full rounded-xl border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-base sm:text-sm focus:ring-blue-500 focus:border-blue-500 py-3 px-4", **field.input_attributes %>
       <% end %>
 
       <%= render(Forms::Component.new(
@@ -126,9 +121,10 @@
                  name: :password_challenge,
                  id: form.field_id(:password_challenge),
                  required: true,
-                 helper_text: "Verify identity with your current password"
-      )) do %>
-        <%= form.password_field :password_challenge, required: true, autocomplete: "current-password", class: "w-full rounded-xl border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-base sm:text-sm focus:ring-blue-500 focus:border-blue-500 py-3 px-4" %>
+                 error: settings_form_error(@user, :password_challenge, "emails"),
+                 helper_text: "Enter your current password to confirm this change."
+      )) do |field| %>
+        <%= form.password_field :password_challenge, required: true, autocomplete: "current-password", class: "w-full rounded-xl border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-base sm:text-sm focus:ring-blue-500 focus:border-blue-500 py-3 px-4", **field.input_attributes %>
       <% end %>
 
       <div class="pt-4">
@@ -141,41 +137,41 @@
   <%= render(Card::Component.new(rounded: :"3xl", padding: :lg)) do %>
     <h2 class="text-xl font-bold text-neutral-900 dark:text-white mb-6">Change Password</h2>
 
-    <%= form_with model: @user, url: settings_password_path, method: :patch, class: "space-y-6" do |form| %>
-      <% if controller_name == "passwords" && @user.errors.any? %>
-        <div class="bg-red-50 dark:bg-red-900/10 text-red-600 px-4 py-3 font-medium rounded-xl border border-red-100 dark:border-red-900/20 text-sm">
-          <% @user.errors.full_messages.each do |message| %>
-            <li><%= message %></li>
-          <% end %>
-        </div>
-      <% end %>
+    <%= form_with model: @user, url: settings_password_path, namespace: :password_change, method: :patch, class: "space-y-6" do |form| %>
+      <%= render Forms::ErrorSummary::Component.new(record: @user, form: form, title: "Your password wasn’t changed. Check the highlighted fields.") if controller_name == "passwords" %>
 
       <%= render(Forms::Component.new(
                  label: "Current password",
                  name: :password_challenge,
                  id: form.field_id(:password_challenge),
-                 required: true
-      )) do %>
-        <%= form.password_field :password_challenge, required: true, autocomplete: "current-password", class: "w-full rounded-xl border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-base sm:text-sm focus:ring-blue-500 focus:border-blue-500 py-3 px-4" %>
+                 required: true,
+                 error: settings_form_error(@user, :password_challenge, "passwords")
+      )) do |field| %>
+        <%= form.password_field :password_challenge, required: true, autocomplete: "current-password", class: "w-full rounded-xl border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-base sm:text-sm focus:ring-blue-500 focus:border-blue-500 py-3 px-4", **field.input_attributes %>
       <% end %>
 
+      <% if controller_name == "passwords" && @user.errors.any? %>
+        <p class="text-sm text-neutral-600 dark:text-neutral-400">For your security, re-enter all password fields before submitting again.</p>
+      <% end %>
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
         <%= render(Forms::Component.new(
                    label: "New password",
                    name: :password,
                    id: form.field_id(:password),
-                   required: true
-        )) do %>
-          <%= form.password_field :password, required: true, class: "w-full rounded-xl border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-base sm:text-sm focus:ring-blue-500 focus:border-blue-500 py-3 px-4" %>
+                   required: true,
+                   error: settings_form_error(@user, :password, "passwords")
+        )) do |field| %>
+          <%= form.password_field :password, required: true, autocomplete: "new-password", class: "w-full rounded-xl border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-base sm:text-sm focus:ring-blue-500 focus:border-blue-500 py-3 px-4", **field.input_attributes %>
         <% end %>
 
         <%= render(Forms::Component.new(
                    label: "Confirm new password",
                    name: :password_confirmation,
                    id: form.field_id(:password_confirmation),
-                   required: true
-        )) do %>
-          <%= form.password_field :password_confirmation, required: true, class: "w-full rounded-xl border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-base sm:text-sm focus:ring-blue-500 focus:border-blue-500 py-3 px-4" %>
+                   required: true,
+                   error: settings_form_error(@user, :password_confirmation, "passwords")
+        )) do |field| %>
+          <%= form.password_field :password_confirmation, required: true, autocomplete: "new-password", class: "w-full rounded-xl border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-base sm:text-sm focus:ring-blue-500 focus:border-blue-500 py-3 px-4", **field.input_attributes %>
         <% end %>
       </div>
 
@@ -213,13 +209,13 @@
       <div class="shrink-0 w-full sm:w-auto">
         <%= form_with url: settings_user_path, method: :delete, data: { turbo_confirm: "Are you sure you want to permanently delete your account?
   All your rides will also be deleted." }, class: "space-y-4" do |form| %>
-          <div>
-            <%= form.password_field :password_challenge,
-                                    required: true,
-                                    placeholder: "Confirm password",
-                                    class: "w-full rounded-xl border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800
-  text-base sm:text-sm focus:ring-blue-500 focus:border-blue-500 py-2.5 px-4" %>
-          </div>
+          <%= render Forms::ErrorSummary::Component.new(record: @user, form: form,
+            title: "Your account wasn’t deleted. Check the highlighted field.") if controller_name == "users" %>
+          <%= render(Forms::Component.new(label: "Current password", id: form.field_id(:password_challenge),
+            error: settings_form_error(@user, :password_challenge, "users"))) do |field| %>
+            <%= form.password_field :password_challenge, required: true, autocomplete: "current-password",
+              class: "w-full rounded-xl border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-base sm:text-sm focus:ring-blue-500 focus:border-blue-500 py-2.5 px-4", **field.input_attributes %>
+          <% end %>
           <%= render Buttons::Component.new(
                      text: "Delete My Account",
                      variant: :destructive,

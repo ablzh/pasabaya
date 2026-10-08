@@ -1,0 +1,8 @@
+# test/fixtures/notifications.yml
+one:
+  recipient: one
+  actor: two
+  notifiable: one (Booking)
+  event_name: booking.requested
+  delivery_key: test_booking_requested_1
+  delivery_status: pending

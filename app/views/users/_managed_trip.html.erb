@@ -1,0 +1,15 @@
+<div id="<%= dom_id(ride) %>" class="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-neutral-200 dark:border-neutral-800 p-4">
+  <div class="min-w-0">
+    <p class="font-semibold text-neutral-900 dark:text-white"><%= ride.origin&.name || "Choose origin" %> → <%= ride.destination&.name || "Choose destination" %></p>
+    <p class="text-xs text-neutral-500"><%= ride.departure_display %> · <%= state == "History" ? (ride.canceled? ? "Canceled" : "Past") : state %></p>
+  </div>
+  <div class="flex flex-wrap items-center gap-3 text-sm">
+    <% if ride.draft? %>
+      <%= link_to "Edit", edit_ride_post_path(ride), class: "font-semibold text-blue-700 dark:text-blue-300" %>
+      <%= button_to "Publish", publish_ride_post_path(ride), method: :patch, class: "font-semibold text-blue-700 dark:text-blue-300" %>
+      <%= button_to "Delete", ride_post_path(ride), method: :delete, data: { turbo_confirm: "Delete this private draft?" }, class: "font-semibold text-red-700 dark:text-red-300" %>
+    <% else %>
+      <%= link_to "View", ride_post_path(ride), class: "font-semibold text-blue-700 dark:text-blue-300" %>
+    <% end %>
+  </div>
+</div>

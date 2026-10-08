@@ -4,23 +4,43 @@
   <%= render(Card::Component.new(rounded: :"3xl", padding: :lg)) do %>
     <div class="flex flex-col sm:flex-row items-center gap-6 text-center sm:text-left">
       <%= user_avatar(@user, classes: "w-32 h-32 text-3xl shrink-0") %>
-      <div class="flex-1 space-y-2">
-        <h1 class="text-3xl font-extrabold text-neutral-900 dark:text-white tracking-tight">
+      <div class="w-full min-w-0 flex-1 space-y-2 [overflow-wrap:anywhere]">
+        <h1 class="profile-name text-3xl font-extrabold text-neutral-900 dark:text-white tracking-tight" data-profile-name="true">
           <%= @user.first_name %> <%= @user.last_name %>
         </h1>
         <p class="text-sm text-neutral-500 dark:text-neutral-400">
           Member since <%= @user.created_at.strftime("%B %Y") %>
         </p>
 
+        <div class="flex flex-wrap gap-2 items-center justify-center sm:justify-start pt-1">
+          <% @user.verified_communities.each do |comm| %>
+            <%= render Badge::Component.new(variant: :green, size: :md, pill: true, classes: "gap-1.5 max-w-full") do %>
+              <svg class="size-3 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12c0 1.268-.63 2.39-1.593 3.068a3.745 3.745 0 01-1.043 3.296 3.745 3.745 0 01-3.296 1.043A3.745 3.745 0 0112 21c-1.268 0-2.39-.63-3.068-1.593a3.746 3.746 0 01-3.296-1.043 3.745 3.745 0 01-1.043-3.296A3.745 3.745 0 013 12c0-1.268.63-2.39 1.593-3.068a3.745 3.745 0 011.043-3.296 3.746 3.746 0 013.296-1.043A3.746 3.746 0 0112 3c1.268 0 2.39.63 3.068 1.593a3.746 3.746 0 013.296 1.043 3.746 3.746 0 011.043 3.296A3.745 3.745 0 0121 12z" /></svg>
+              <span class="min-w-0"><%= comm.name %></span>
+            <% end %>
+          <% end %>
+          <% if @user.female? %>
+            <%= render Badge::Component.new(text: "Female Profile", variant: :pink, size: :md, pill: true) %>
+          <% end %>
+        </div>
+
+        <% if @user.booking_frozen? %>
+          <%= render Alert::Component.new(title: "Account Frozen", description: "Booking and offering privileges are suspended until #{@user.booking_freeze_until.strftime('%b %d, %Y')} due to repeated verified no-shows.", variant: :error, classes: "mt-3") %>
+        <% elsif @user.reliability_warning? %>
+          <%= render Alert::Component.new(title: "Reliability Notice", description: "This profile has recent verified no-show incidents in the past 60 days.", variant: :warning, classes: "mt-3") %>
+        <% end %>
+
         <%# Button Actions (Facebook Profile + Conditional Edit Profile) %>
         <div class="mt-4 flex flex-wrap gap-3 justify-center sm:justify-start">
-          <% if @user.facebook_profile_url.present? %>
+          <% if @user.safe_facebook_profile_url? %>
             <%= render Buttons::Component.new(
                        text: "View Facebook Profile",
                        href: @user.facebook_profile_url,
                        variant: :primary,
                        size: :sm,
                        target: "_blank") %>
+          <% else %>
+            <span class="text-xs text-neutral-500">Facebook profile not linked</span>
           <% end %>
 
           <% if Current.user == @user %>
@@ -35,22 +55,125 @@
     </div>
   <% end %>
 
-  <%# 2. Listings Section %>
+  <%# 2. Activity / Listings Section %>
+  <% active_tab = (params[:tab] == "bookings") ? "bookings" : "posts" %>
+  <% posts_path = action_name == "trips" ? trips_path(tab: "posts") : user_path(@user, tab: "posts") %>
+  <% bookings_path = action_name == "trips" ? trips_path(tab: "bookings") : user_path(@user, tab: "bookings") %>
   <div>
-    <div class="flex items-center justify-between mb-6">
-      <h2 class="text-2xl font-bold text-neutral-900 dark:text-white tracking-tight">Active Posts</h2>
-      <span class="text-xs font-bold text-neutral-400 uppercase tracking-widest"><%= @ride_posts.count %> listings</span>
-    </div>
+    <% if Current.user == @user %>
+      <div class="flex items-center gap-3 border-b border-neutral-200 dark:border-neutral-800 mb-6">
+        <%= link_to posts_path, class: "pb-3 px-1 text-sm font-semibold transition-colors border-b-2 #{active_tab == 'posts' ? 'border-neutral-900 text-neutral-900 dark:border-white dark:text-white' : 'border-transparent text-neutral-500 hover:text-neutral-700 dark:text-neutral-400 dark:hover:text-neutral-200'}" do %>
+          My Posts (<%= @ride_posts.count %>)
+        <% end %>
+        <%= link_to bookings_path, class: "pb-3 px-1 text-sm font-semibold transition-colors border-b-2 #{active_tab == 'bookings' ? 'border-neutral-900 text-neutral-900 dark:border-white dark:text-white' : 'border-transparent text-neutral-500 hover:text-neutral-700 dark:text-neutral-400 dark:hover:text-neutral-200'}" do %>
+          Joined Trips &amp; Bookings (<%= @passenger_bookings.count %>)
+        <% end %>
+      </div>
+    <% else %>
+      <div class="flex items-center justify-between mb-6">
+        <h2 class="text-2xl font-bold text-neutral-900 dark:text-white tracking-tight">Active Posts</h2>
+        <span class="text-xs font-bold text-neutral-400 uppercase tracking-widest"><%= @ride_posts.count %> listings</span>
+      </div>
+    <% end %>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-      <% if @ride_posts.any? %>
-        <%= render @ride_posts %>
-      <% else %>
-        <div class="col-span-full py-12 text-center text-neutral-500 bg-neutral-50 dark:bg-neutral-800/50 rounded-2xl border border-dashed border-neutral-200 dark:border-neutral-700">
-          No active ride offers or requests listed at the moment.
-        </div>
+    <% if active_tab == "bookings" && Current.user == @user %>
+      <div class="space-y-4">
+        <% if @passenger_bookings.any? %>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <% @passenger_bookings.each do |booking| %>
+              <% ride = booking.ride_post %>
+              <% next unless ride %>
+              <%= render(Card::Component.new(rounded: :"2xl", padding: :md, classes: "flex flex-col justify-between")) do %>
+                <div class="space-y-4">
+                  <div class="flex items-start justify-between gap-3">
+                    <div>
+                      <div class="flex items-center gap-2">
+                        <% booking_variant = case booking.status
+                           when 'accepted' then :green
+                           when 'pending' then :yellow
+                           when 'canceled' then :red
+                           else :neutral
+                           end %>
+                        <% booking_label = case booking.status
+                           when 'accepted' then "Confirmed Seat"
+                           when 'pending' then "Pending Driver"
+                           else booking.status.humanize
+                           end %>
+                        <%= render Badge::Component.new(text: booking_label, variant: booking_variant, size: :sm, pill: true, uppercase: true) %>
+                      </div>
+                      <h3 class="text-lg font-bold text-neutral-900 dark:text-white mt-1.5">
+                        <%= link_to ride_post_path(ride), class: "hover:underline focus:outline-none" do %>
+                          <%= ride.origin.name %> &rarr; <%= ride.destination.name %>
+                        <% end %>
+                      </h3>
+                    </div>
+                    <%= user_avatar(ride.user, classes: "size-10 text-sm shrink-0") %>
+                  </div>
+
+                  <div class="space-y-1.5 text-xs text-neutral-600 dark:text-neutral-400">
+                    <div class="flex items-center gap-2">
+                      <span class="font-medium text-neutral-800 dark:text-neutral-200">Driver:</span>
+                      <span><%= ride.user.first_name %> <%= ride.user.last_name %></span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                      <span class="font-medium text-neutral-800 dark:text-neutral-200">Departure:</span>
+                      <span><%= ride.departure_display %></span>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="pt-4 mt-4 border-t border-neutral-100 dark:border-neutral-800 flex items-center justify-between gap-2">
+                  <% if booking.accepted? %>
+                    <%= link_to ride_post_path(ride, tab: "chat"), class: "inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white transition-colors shadow-xs" do %>
+                      <svg class="size-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 01-2.555-.337A5.972 5.972 0 015.41 20.97a.75.75 0 01-.874-.954 6.002 6.002 0 011.085-2.083C4.248 16.51 3 14.402 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25z" />
+                      </svg>
+                      <span>Trip Chat</span>
+                    <% end %>
+                  <% end %>
+
+                  <div class="ml-auto flex items-center gap-2">
+                    <%= link_to "View Ride", ride_post_path(ride), class: "text-xs font-semibold px-3 py-1.5 rounded-xl bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 dark:hover:bg-neutral-700 text-neutral-700 dark:text-neutral-300 transition-colors" %>
+                  </div>
+                </div>
+              <% end %>
+            <% end %>
+          </div>
+        <% else %>
+          <div class="py-12 text-center text-neutral-500 bg-neutral-50 dark:bg-neutral-800/50 rounded-2xl border border-dashed border-neutral-200 dark:border-neutral-700">
+            You haven't booked or joined any rides yet.
+          </div>
+        <% end %>
+      </div>
+    <% else %>
+      <div id="profile-active-rides" class="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <% if @ride_posts.any? %>
+          <%= render @ride_posts %>
+        <% else %>
+          <div class="col-span-full py-12 text-center text-neutral-500 bg-neutral-50 dark:bg-neutral-800/50 rounded-2xl border border-dashed border-neutral-200 dark:border-neutral-700">
+            No upcoming driver offers listed at the moment.
+          </div>
+        <% end %>
+      </div>
+      <% if Current.user == @user %>
+        <section id="profile-drafts" class="mt-8 space-y-3">
+          <h2 class="text-xl font-bold text-neutral-900 dark:text-white">Drafts</h2>
+          <p class="text-sm text-neutral-500">Only you can see drafts. Add a route, future departure and passenger seats before publishing.</p>
+          <%= render partial: "users/managed_trip", collection: @draft_ride_posts, as: :ride, locals: { state: "Draft" } %>
+          <% if @draft_ride_posts.empty? %><p class="text-sm text-neutral-500">No saved drafts.</p><% end %>
+        </section>
+        <section id="profile-departed-rides" class="mt-8 space-y-3">
+          <h2 class="text-xl font-bold text-neutral-900 dark:text-white">Departed rides</h2>
+          <p class="text-sm text-neutral-500">Booking has closed. These rides are awaiting automatic completion.</p>
+          <%= render partial: "users/managed_trip", collection: @departed_ride_posts, as: :ride, locals: { state: "Departed" } %>
+          <% if @departed_ride_posts.empty? %><p class="text-sm text-neutral-500">No rides awaiting completion.</p><% end %>
+        </section>
+        <section id="profile-history" class="mt-8 space-y-3">
+          <h2 class="text-xl font-bold text-neutral-900 dark:text-white">Past and canceled rides</h2>
+          <%= render partial: "users/managed_trip", collection: @past_ride_posts, as: :ride, locals: { state: "History" } %>
+          <% if @past_ride_posts.empty? %><p class="text-sm text-neutral-500">No past or canceled rides.</p><% end %>
+        </section>
       <% end %>
-    </div>
+    <% end %>
   </div>
-
 </div>

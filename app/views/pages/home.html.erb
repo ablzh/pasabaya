@@ -99,9 +99,9 @@
               <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18.75C7.71719 18.75 13.0136 19.4812 18.0468 20.8512C18.7738 21.0491 19.5 20.5086 19.5 19.7551V18.75M3.75 4.5V5.25C3.75 5.66421 3.41421 6 3 6H2.25M2.25 6V5.625C2.25 5.00368 2.75368 4.5 3.375 4.5H20.25M2.25 6V15M20.25 4.5V5.25C20.25 5.66421 20.5858 6 21 6H21.75M20.25 4.5H20.625C21.2463 4.5 21.75 5.00368 21.75 5.625V15.375C21.75 15.9963 21.2463 16.5 20.625 16.5H20.25M21.75 15H21C20.5858 15 20.25 15.3358 20.25 15.75V16.5M20.25 16.5H3.75M3.75 16.5H3.375C2.75368 16.5 2.25 15.9963 2.25 15.375V15M3.75 16.5V15.75C3.75 15.3358 3.41421 15 3 15H2.25M15 10.5C15 12.1569 13.6569 13.5 12 13.5C10.3431 13.5 9 12.1569 9 10.5C9 8.84315 10.3431 7.5 12 7.5C13.6569 7.5 15 8.84315 15 10.5ZM18 10.5H18.0075V10.5075H18V10.5ZM6 10.5H6.0075V10.5075H6V10.5Z" />
             </svg>
           </div>
-          <h3 class="text-xl font-bold text-neutral-900 dark:text-white mb-4">Zero Payments</h3>
+          <h3 class="text-xl font-bold text-neutral-900 dark:text-white mb-4">Free Platform</h3>
           <p class="text-neutral-600 dark:text-neutral-400 leading-relaxed">
-            We don't handle money. No booking fees, no commissions, no hidden costs.
+            Using Pasabaya is free, with no booking fees or commissions. Users arrange any expense sharing among themselves; Pasabaya does not set amounts or handle payments.
           </p>
         <% end %>
 
@@ -111,9 +111,9 @@
               <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.7498L11.25 14.9998L15 9.74985M12 2.71411C9.8495 4.75073 6.94563 5.99986 3.75 5.99986C3.69922 5.99986 3.64852 5.99955 3.59789 5.99892C3.2099 7.17903 3 8.43995 3 9.74991C3 15.3414 6.82432 20.0397 12 21.3719C17.1757 20.0397 21 15.3414 21 9.74991C21 8.43995 20.7901 7.17903 20.4021 5.99892C20.3515 5.99955 20.3008 5.99986 20.25 5.99986C17.0544 5.99986 14.1505 4.75073 12 2.71411Z" />
             </svg>
           </div>
-          <h3 class="text-xl font-bold text-neutral-900 dark:text-white mb-4">Facebook-Verified</h3>
+          <h3 class="text-xl font-bold text-neutral-900 dark:text-white mb-4">Facebook Profiles</h3>
           <p class="text-neutral-600 dark:text-neutral-400 leading-relaxed">
-            Connect with real people. Check profiles and mutual friends before you decide to ride together.
+            Inspect shared Facebook profiles before deciding to travel together. These links are supplied by users and do not verify identity.
           </p>
         <% end %>
 
@@ -167,8 +167,7 @@
             </h2>
             <div class="space-y-4 text-neutral-700 dark:text-neutral-300 leading-relaxed">
               <p>
-                Pasabaya.app is a <strong>public bulletin board</strong>. We provide the tools to find matches, but the
-                actual coordination happens between you and the other person on Facebook.
+                Find a driver offer, request a seat, and wait for the driver to approve it. Once accepted, coordinate pickup in private in-app trip chat. Use Facebook links to inspect profiles before deciding to travel together.
               </p>
               <p class="font-medium text-amber-800 dark:text-amber-200">
                 You are responsible for your own safety. Always verify who you are traveling with.
@@ -235,7 +234,7 @@
       <div class="flex justify-center">
         <%= render Buttons::Component.new(
               text: "Browse All Rides", 
-              href: ride_posts_path(post_type: "", origin_id: "", destination_id: ""),
+              href: ride_posts_path(origin_id: "", destination_id: ""),
               variant: :primary, 
               size: :lg, 
               style: :fancy,

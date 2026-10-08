@@ -1,7 +1,50 @@
 Rails.application.routes.draw do
+  namespace :admin do
+    root "no_show_incidents#index"
+    resources :trip_reviews, only: [ :index, :show ]
+    resources :no_show_incidents, only: [ :index, :show, :update ]
+  end
+
+  resources :chats, only: [ :index ]
   resources :users, only: [ :show ]
+  get "trips", to: "users#trips", as: :trips
   get "rides/from-:origin_slug-to-:destination_slug", to: "ride_posts#index", as: :route_rides
-  resources :ride_posts, path: "rides"
+  resources :ride_posts, path: "rides" do
+    member do
+      patch :cancel
+      patch :publish
+      patch :close_requests
+    end
+    resources :bookings, only: [ :create ]
+    resources :chat_messages, only: [ :create ]
+    resources :chat_reads, only: [ :create ]
+    resources :reviews, only: [ :new, :create ], controller: "trip_reviews"
+  end
+
+  resources :bookings, only: [ :show ] do
+    member do
+      patch :accept
+      patch :decline
+      patch :cancel
+    end
+  end
+
+  resources :route_subscriptions, only: [ :create, :destroy ]
+
+  resources :notifications, only: [ :index, :show ] do
+    collection do
+      patch :mark_all_as_read
+    end
+    member do
+      patch :mark_as_read
+    end
+  end
+
+  resources :communities, only: [ :index, :show ] do
+    resources :memberships, only: [ :create, :destroy ], controller: "community_memberships"
+  end
+  get "community_memberships/verify/:token", to: "community_memberships#verify", as: :verify_community_membership
+
   resource :session
   resources :passwords, param: :token
 
@@ -26,7 +69,7 @@ Rails.application.routes.draw do
   get "up" => "rails/health#show", as: :rails_health_check
 
   root "pages#home"
-  resources :subscribers, only: [ :create ] do
+  resources :subscribers, only: [] do
     member do
       get :unsubscribe
     end

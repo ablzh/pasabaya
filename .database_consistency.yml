@@ -38,6 +38,23 @@ RidePost:
     NumericalityConstraintChecker:
       enabled: false
 
+RouteSubscription:
+  # The checker cannot compare the active-only COALESCE expression index with
+  # the conditional Rails validator. Regression tests enforce nullable filters.
+  index_route_subscriptions_active_uniqueness:
+    UniqueIndexChecker:
+      enabled: false
+  user_id+origin_id+destination_id+departure_date+community_id+ladies_only+status:
+    MissingUniqueIndexChecker:
+      enabled: false
+  # Location subscriptions associations are retained when locations exist; prevent cascade deletes on shared locations
+  destination:
+    MissingDependentDestroyChecker:
+      enabled: false
+  origin:
+    MissingDependentDestroyChecker:
+      enabled: false
+
 Subscriber:
   # Existing columns without database NOT NULL constraints; model validates presence
   name:

@@ -12,12 +12,38 @@ class UserTest < ActiveSupport::TestCase
   end
 
   # 2. Testing validations (negative path)
-  test "invalid without facebook_profile_url" do
+  test "valid without facebook_profile_url" do
     user = users(:one)
     user.facebook_profile_url = nil
+    assert user.valid?
 
+    user.facebook_profile_url = ""
+    assert user.valid?
+    assert_nil user.facebook_profile_url
+  end
+
+  test "normalizes and trims whitespace from facebook_profile_url" do
+    user = users(:one)
+    user.facebook_profile_url = "   https://facebook.com/trimmed   "
+    assert_equal "https://facebook.com/trimmed", user.facebook_profile_url
+    assert user.valid?
+  end
+
+  test "unchanged legacy invalid facebook_profile_url does not block other user updates" do
+    user = users(:one)
+    user.update_columns(facebook_profile_url: "http://legacy.facebook.com/invalid:8080")
+
+    user.reload
+    assert_equal "http://legacy.facebook.com/invalid:8080", user.facebook_profile_url
+    assert_not user.safe_facebook_profile_url?
+
+    user.first_name = "UpdatedJuan"
+    assert user.valid?
+    assert user.save
+
+    user.facebook_profile_url = "https://evil.example.com/bad"
     assert_not user.valid?
-    assert_includes user.errors[:facebook_profile_url], "can't be blank"
+    assert_includes user.errors[:facebook_profile_url], "must be an HTTPS Facebook profile URL"
   end
 
   # 3. Testing validations (positive path)
@@ -26,5 +52,171 @@ class UserTest < ActiveSupport::TestCase
     user.facebook_profile_url = "https://facebook.com/custom_username"
 
     assert user.valid?
+  end
+
+  test "rejects unsafe and non-Facebook profile URLs" do
+    user = users(:one)
+    %w[javascript:alert(1) https://example.com/juan https://facebook.com.evil.test/juan
+       https://facebook.com@evil.test/juan http://facebook.com/juan https://facebook.com/].each do |url|
+      user.facebook_profile_url = url
+      assert_not user.valid?, "Expected #{url} to be rejected"
+      assert_not user.safe_facebook_profile_url?
+      assert user.errors[:facebook_profile_url].any?
+    end
+  end
+
+  test "changing gender from female withdraws ladies-only driver and passenger commitments" do
+    female_user = User.create!(
+      email_address: "maria_withdrawal@example.com",
+      password: "password",
+      first_name: "Maria",
+      last_name: "Clara",
+      gender: :female,
+      facebook_profile_url: "https://facebook.com/mariaclara"
+    )
+
+    origin = Location.create!(name: "Origin A", location_type: :city)
+    dest = Location.create!(name: "Dest B", location_type: :city)
+
+    # 1. Driver offer
+    driver_ride = RidePost.create!(
+      user: female_user,
+      origin: origin,
+      destination: dest,
+      post_type: :offering,
+      seats: 2,
+      remaining_seats: 2,
+      status: :active,
+      ladies_only: true,
+      departure_time: 2.days.from_now,
+      expected_arrival_at: 2.days.from_now + 2.hours
+    )
+
+    # 2. Passenger booking on another ladies-only ride
+    other_driver = User.create!(
+      email_address: "other_female@example.com",
+      password: "password",
+      first_name: "Ana",
+      last_name: "Santos",
+      gender: :female,
+      facebook_profile_url: "https://facebook.com/anasantos"
+    )
+    other_ride = RidePost.create!(
+      user: other_driver,
+      origin: origin,
+      destination: dest,
+      post_type: :offering,
+      seats: 2,
+      remaining_seats: 2,
+      status: :active,
+      ladies_only: true,
+      departure_time: 3.days.from_now,
+      expected_arrival_at: 3.days.from_now + 2.hours
+    )
+    passenger_booking = Booking.create!(ride_post: other_ride, passenger: female_user, status: :pending)
+
+    # Change gender to male
+    female_user.update!(gender: :male)
+
+    assert driver_ride.reload.canceled?
+    assert passenger_booking.reload.canceled?
+  end
+
+  test "account deletion cancels active passenger bookings and restores driver remaining seats" do
+    passenger = User.create!(
+      email_address: "passenger_del@example.com",
+      password: "password",
+      first_name: "Pedro",
+      last_name: "Penduko",
+      facebook_profile_url: "https://facebook.com/pedro"
+    )
+
+    ride = ride_posts(:one)
+    initial_remaining = ride.remaining_seats
+    booking = Booking.create!(ride_post: ride, passenger: passenger, status: :accepted)
+    ride.update!(remaining_seats: initial_remaining - 1)
+
+    Users::AnonymizeService.call(passenger)
+    assert_equal initial_remaining, ride.reload.remaining_seats
+  end
+
+  test "passenger account deletion preserves driver cancellation notification and allows delivery" do
+    driver = users(:one)
+    passenger = User.create!(
+      email_address: "passenger_del_notif@example.com",
+      password: "password",
+      first_name: "Pedro",
+      last_name: "Penduko",
+      facebook_profile_url: "https://facebook.com/pedro"
+    )
+
+    ride = ride_posts(:one)
+    Booking.create!(ride_post: ride, passenger: passenger, status: :accepted)
+
+    Users::AnonymizeService.call(passenger)
+
+    notif = driver.received_notifications.find_by(event_name: "booking.canceled")
+    assert_not_nil notif
+    assert_equal ride, notif.notifiable
+    assert_nothing_raised do
+      NotificationDeliveryJob.perform_now(notif.id)
+    end
+    assert notif.reload.delivered?
+  end
+
+  test "driver account deletion preserves passenger cancellation notification and allows delivery" do
+    driver = User.create!(
+      email_address: "driver_del_notif@example.com",
+      password: "password",
+      first_name: "Diego",
+      last_name: "Driver",
+      facebook_profile_url: "https://facebook.com/diego"
+    )
+    passenger = users(:two)
+
+    ride = RidePost.create!(
+      user: driver,
+      origin: locations(:one),
+      destination: locations(:two),
+      post_type: :offering,
+      seats: 3,
+      departure_time: 2.days.from_now,
+      expected_arrival_at: 2.days.from_now + 2.hours,
+      status: :active
+    )
+    Booking.create!(ride_post: ride, passenger: passenger, status: :accepted)
+
+    Users::AnonymizeService.call(driver)
+
+    notif = passenger.received_notifications.find_by(event_name: "ride.canceled")
+    assert_not_nil notif
+    assert_nothing_raised do
+      NotificationDeliveryJob.perform_now(notif.id)
+    end
+    assert notif.reload.delivered?
+  end
+
+  test "rejects registration with reserved internal domain" do
+    user = User.new(
+      first_name: "Test",
+      last_name: "Reserved",
+      email_address: "attacker@deleted.pasabaya.app",
+      password: "password123"
+    )
+    assert_not user.valid?
+    assert_includes user.errors[:email_address], "is reserved and cannot be registered"
+  end
+
+  test "active_trips_count tallies active driver rides and accepted passenger bookings" do
+    driver = users(:one)
+    passenger = users(:two)
+
+    initial_driver_trips = driver.active_trips_count
+    assert initial_driver_trips >= 1
+
+    booking = bookings(:one)
+    booking.update_columns(status: Booking.statuses[:accepted])
+
+    assert passenger.active_trips_count >= 1
   end
 end
