@@ -45,6 +45,7 @@ class MobileTripChatTest < ApplicationSystemTestCase
     page.driver.resize(740, 390)
     page.execute_script("window.visualViewport.dispatchEvent(new Event('resize'))")
     assert_chat_fits(390)
+    find(".chat-deadlines summary").click
     assert_text "Messaging closes:"
     assert_text "Scheduled live-database deletion:"
     assert_operator page.evaluate_script("document.querySelector('#chat_messages_list').clientHeight"), :>, 50
@@ -81,6 +82,7 @@ class MobileTripChatTest < ApplicationSystemTestCase
     assert_text "Read-only"
     assert_text "Messaging for this trip has closed."
     assert_no_selector "#chat_message_form input"
+    find(".chat-deadlines summary").click
     assert_selector ".chat-deadlines time", count: 2
     assert_chat_fits(844)
     @ride.update_columns(departure_date: 33.days.ago.to_date, departure_time: 33.days.ago)
@@ -91,11 +93,43 @@ class MobileTripChatTest < ApplicationSystemTestCase
     assert_selector ".web-navigation"
   end
 
+  test "deadline disclosure stays compact and preserves latest and older messages" do
+    Prosopite.pause do
+      20.times { |index| @ride.chat_messages.create!(user: @ride.user, body: "History #{index}. " * 10) }
+    end
+    [ [ 320, 844 ], [ 390, 420 ], [ 1440, 900 ] ].product(%w[light dark]).each do |(width, height), theme|
+      page.driver.resize(width, height)
+      visit ride_post_path(@ride, tab: "chat")
+      page.execute_script("document.documentElement.classList.toggle('dark', arguments[0] === 'dark')", theme)
+      assert_selector "#chat_message_form input"
+      assert_no_selector ".chat-deadline-policy[open]"
+      collapsed = page.evaluate_script("document.querySelector('.chat-deadlines').getBoundingClientRect().height")
+      assert_operator collapsed, :<=, 64
+      assert_at_bottom
+      summary = find(".chat-deadlines summary")
+      summary.execute_script("this.focus()")
+      page.driver.browser.keyboard.type(:Space)
+      assert_selector ".chat-deadline-policy[open]"
+      assert_text "Scheduled live-database deletion:"
+      assert_operator page.evaluate_script("document.querySelector('.chat-deadlines').getBoundingClientRect().height"), :>, collapsed
+      assert_operator page.evaluate_script("document.querySelector('#chat_messages_list').clientHeight"), :>, 50
+      assert_at_bottom
+      page.execute_script("const list = document.querySelector('#chat_messages_list'); list.scrollTop = 0; list.dispatchEvent(new Event('scroll'))")
+      summary.execute_script("this.focus()")
+      page.driver.browser.keyboard.type(:Space)
+      assert_no_selector ".chat-deadline-policy[open]"
+      assert_in_delta 0, page.evaluate_script("document.querySelector('#chat_messages_list').scrollTop"), 1
+      summary.click
+      assert_selector ".chat-deadline-policy[open]"
+      assert_in_delta 0, page.evaluate_script("document.querySelector('#chat_messages_list').scrollTop"), 1
+    end
+  end
+
   private
 
   def assert_at_bottom
-    page.document.synchronize(errors: [ Minitest::Assertion ]) do
-      assert_operator page.evaluate_script("(() => {const list = document.querySelector('#chat_messages_list'); return list.scrollHeight - list.scrollTop - list.clientHeight})()"), :<=, 1
+    assert_selector "#chat_messages_list" do |list|
+      list.evaluate_script("this.scrollHeight - this.scrollTop - this.clientHeight <= 1")
     end
   end
 

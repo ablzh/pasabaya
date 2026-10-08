@@ -54,12 +54,7 @@
 
           <% if @existing_route_subscription %>
             <div class="mt-6 flex flex-col items-center gap-3">
-              <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800">
-                <svg class="size-4 text-emerald-600 dark:text-emerald-400" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-                </svg>
-                You are subscribed to route alerts for this search
-              </span>
+              <%= render Badge::Component.new(text: "You are subscribed to route alerts for this search", variant: :green, size: :md, pill: true, dot: true) %>
               <%= button_to "Cancel alert", route_subscription_path(@existing_route_subscription), method: :delete, class: "text-xs text-red-600 hover:text-red-700 font-semibold underline underline-offset-2 cursor-pointer" %>
             </div>
           <% else %>

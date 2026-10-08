@@ -1,0 +1,44 @@
+<% if ride_post.chat_messaging_closes_at.present? && ride_post.chat_history_unavailable_at.present? %>
+  <div class="chat-deadlines shrink-0 border-b border-neutral-100 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-800/30 text-xs text-neutral-700 dark:text-neutral-300">
+    <% if ride_post.canceled? %>
+      <div role="status" data-chat-scroll-target="coordinationNotice" class="mx-3 sm:mx-5 my-2 p-2.5 rounded-xl bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-900/40 text-red-700 dark:text-red-300 font-medium">
+        Trip canceled &bull;
+        <% if ride_post.chat_writable? %>
+          Coordination messaging remains open for 24 hours following cancellation.
+        <% else %>
+          Messaging is closed. Chat history remains readable until scheduled deletion.
+        <% end %>
+      </div>
+    <% end %>
+    <details class="chat-deadline-policy group" data-action="toggle->chat-scroll#deadlineDetailsToggled">
+      <summary class="min-h-11 flex items-center justify-between gap-2 px-3 sm:px-5 py-2 cursor-pointer font-semibold text-neutral-900 dark:text-white focus-visible:outline-2 focus-visible:outline-blue-600 focus-visible:outline-offset-[-2px]" data-action="click->chat-scroll#prepareDisclosureToggle">
+        <span class="min-w-0">
+          Chat deadlines
+          <span class="font-normal text-neutral-700 dark:text-neutral-300">
+            &bull; Messaging closes <%= ride_post.chat_messaging_closes_at.in_time_zone("Asia/Manila").strftime("%b %-d, %-I:%M %p") %> PHT
+          </span>
+        </span>
+        <span class="sr-only">Policy details</span>
+        <svg aria-hidden="true" class="size-4 shrink-0 group-open:rotate-180 transition-transform motion-reduce:transition-none" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" d="m6 9 6 6 6-6" />
+        </svg>
+      </summary>
+      <div class="chat-deadline-body grid grid-cols-1 sm:grid-cols-2 gap-3 px-3 sm:px-5 pb-3">
+        <div>
+          <span class="font-semibold text-neutral-900 dark:text-white">Messaging closes:</span>
+          <time datetime="<%= ride_post.chat_messaging_closes_at.iso8601 %>">
+            <%= ride_post.chat_messaging_closes_at.in_time_zone("Asia/Manila").strftime("%B %d, %Y at %I:%M %p") %> Philippine time (UTC+8)
+          </time>
+          <p class="mt-1"><%= ride_post.canceled? ? "Sending messages disabled 24 hours after trip cancellation." : "Sending new messages is disabled 24 hours after booking cutoff." %></p>
+        </div>
+        <div>
+          <span class="font-semibold text-neutral-900 dark:text-white">Scheduled live-database deletion:</span>
+          <time datetime="<%= ride_post.chat_history_unavailable_at.iso8601 %>">
+            <%= ride_post.chat_history_unavailable_at.in_time_zone("Asia/Manila").strftime("%B %d, %Y at %I:%M %p") %> Philippine time (UTC+8)
+          </time>
+          <p class="mt-1">Reading chat history is disabled after 30 days of read-only access.</p>
+        </div>
+      </div>
+    </details>
+  </div>
+<% end %>

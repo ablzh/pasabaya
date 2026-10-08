@@ -2,9 +2,9 @@
 <% card_footer = capture do %>
   <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
     <%# Left side: User Info %>
-    <div class="flex items-center">
-      <%= user_avatar(ride_post.user, classes: "h-9 w-9 text-xs") %>
-      <div class="ml-2">
+    <div class="flex min-w-0 items-center">
+      <%= user_avatar(ride_post.user, classes: "h-9 w-9 text-xs shrink-0") %>
+      <div class="ml-2 min-w-0 [overflow-wrap:anywhere]">
         <p class="text-sm font-semibold text-neutral-900 dark:text-white leading-none">
           <%= ride_post.user.first_name %> <%= ride_post.user.last_name %>
         </p>
@@ -31,7 +31,7 @@
 <% end %>
 
 <%# 2. Render the Component %>
-<div id="<%= dom_id ride_post %>" class="w-full h-full">
+<div id="<%= dom_id ride_post %>" class="w-full min-w-0 h-full [overflow-wrap:anywhere]">
   <%= render(Card::Component.new(
              divide: true,
              hoverable: true,
@@ -43,7 +43,7 @@
       <% end %>
       <%# Top Row: Badge + Badges + Seats %>
       <div class="flex justify-between items-start mb-3 gap-2">
-        <div class="flex flex-wrap items-center gap-1.5">
+        <div class="flex min-w-0 flex-wrap items-center gap-1.5">
           <% if ride_post.draft? || ride_post.canceled? || ride_post.completed? %>
             <span class="text-[10px] font-bold uppercase tracking-wider text-neutral-500"><%= ride_post.completed? ? "Past" : ride_post.status.humanize %></span>
           <% end %>

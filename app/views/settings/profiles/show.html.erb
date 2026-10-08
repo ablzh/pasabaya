@@ -15,7 +15,7 @@
           </div>
         <% end %>
 
-        <div class="flex items-center gap-6" data-controller="avatar-preview">
+        <div class="flex flex-col sm:flex-row items-center gap-6" data-controller="avatar-preview">
 
           <%# 1. Wrap or update user_avatar rendering to attach the target %>
           <% if @user.avatar.attached? %>
@@ -23,13 +23,13 @@
                           class: "w-20 h-20 rounded-full object-cover text-2xl bg-neutral-200",
                           data: { avatar_preview_target: "preview" } %>
           <% else %>
-            <div class="w-20 h-20 rounded-full flex items-center justify-center font-medium bg-neutral-200 text-neutral-600 text-2xl"
+            <div class="shrink-0 w-20 h-20 rounded-full flex items-center justify-center font-medium bg-neutral-200 text-neutral-600 text-2xl"
                  data-avatar-preview-target="initials">
               <%= @user.initials %>
             </div>
           <% end %>
 
-          <div class="flex-1">
+          <div class="w-full min-w-0 flex-1">
             <%= render(Forms::Component.new(
                        label: "Upload Avatar",
                        name: :avatar,
@@ -116,9 +116,7 @@
       <div class="text-sm text-neutral-600 dark:text-neutral-400">
         Current email: <strong class="text-neutral-800 dark:text-neutral-200"><%= @user.email_address %></strong>
         <% if @user.unconfirmed_email_was.present? %>
-          <div class="mt-2 p-3 bg-amber-50 dark:bg-amber-950/20 text-amber-700 dark:text-amber-400 rounded-xl border border-amber-200 dark:border-amber-900/30">
-            Pending verification: <strong><%= @user.unconfirmed_email_was %></strong>
-          </div>
+          <%= render Alert::Component.new(title: "Verification Pending", description: safe_join(["Pending verification: ", tag.strong(@user.unconfirmed_email_was)]), variant: :warning, classes: "mt-2") %>
         <% end %>
       </div>
 

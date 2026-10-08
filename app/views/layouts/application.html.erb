@@ -64,7 +64,7 @@
 
 <%= render(Navbar::Component.new(classes: "mx-auto web-navigation", show_mobile_menu: false)) do |navbar| %>
   <% navbar.with_logo do %>
-    <%= link_to root_path, class: "flex shrink-0 items-center mx-1 sm:mx-2 select-none no-underline" do %>
+    <%= link_to root_path, class: "flex min-h-11 min-w-11 justify-center shrink-0 items-center sm:mx-2 select-none no-underline" do %>
       <%= image_tag "/icon.svg", size: "32x32", class: "h-8 w-8 shrink-0 object-contain", alt: "Pasabaya Logo" %>
     <% end %>
   <% end %>
@@ -75,7 +75,7 @@
     <% chats_label = safe_join([
          tag.span(class: "inline-flex items-center gap-1.5") do
            safe_join([
-             tag.svg(class: "size-4 shrink-0", fill: "none", viewBox: "0 0 24 24", stroke_width: "1.5", stroke: "currentColor") do
+             tag.svg(class: "hidden sm:block size-4 shrink-0", fill: "none", viewBox: "0 0 24 24", stroke_width: "1.5", stroke: "currentColor") do
                tag.path(stroke_linecap: "round", stroke_linejoin: "round", d: "M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 01-2.555-.337A5.972 5.972 0 015.41 20.97a.75.75 0 01-1.154-.755c.106-.777.37-1.503.766-2.148A7.776 7.776 0 013 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25z")
              end,
              tag.span("Chats"),
@@ -93,7 +93,7 @@
     <% if authenticated? %>
       <!-- Profile Dropdown Trigger -->
       <li class="ml-0.5">
-        <button type="button" data-navbar-target="trigger" data-content-id="profile-content" aria-label="Account menu" aria-describedby="account-notification-count" aria-controls="profile-content" aria-expanded="false" data-align="end" data-action="click->navbar#toggleMenu pointerenter->navbar#handlePointerEnter pointermove->navbar#handlePointerMove pointerleave->navbar#handlePointerLeave keydown->navbar#handleTriggerKeydown" data-state="closed" class="group flex items-center gap-2 rounded-md px-2 py-2 text-sm font-medium text-neutral-700 select-none hover:bg-neutral-100 dark:text-neutral-300 dark:hover:bg-neutral-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-600 dark:focus-visible:outline-neutral-200">
+        <button type="button" data-navbar-target="trigger" data-content-id="profile-content" aria-label="Account menu" aria-describedby="account-notification-count" aria-controls="profile-content" aria-expanded="false" data-align="end" data-action="click->navbar#toggleMenu pointerenter->navbar#handlePointerEnter pointermove->navbar#handlePointerMove pointerleave->navbar#handlePointerLeave keydown->navbar#handleTriggerKeydown" data-state="closed" class="group flex min-h-11 min-w-11 items-center gap-2 rounded-md px-2 py-2 text-sm font-medium text-neutral-700 select-none hover:bg-neutral-100 dark:text-neutral-300 dark:hover:bg-neutral-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-600 dark:focus-visible:outline-neutral-200">
           <span class="relative">
           <%= user_avatar Current.user, classes: "flex items-center justify-center size-6 rounded-full bg-gradient-to-br from-red-400 to-red-600 text-white text-xs font-semibold" %>
             <span id="account-notification-count" data-notification-count class="absolute -top-2 -right-2" aria-live="polite">

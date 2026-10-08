@@ -126,7 +126,7 @@ module Buttons
       end
 
       [
-        "inline-flex items-center justify-center gap-1.5 font-medium whitespace-nowrap",
+        "inline-flex items-center justify-center gap-1.5 max-w-full font-medium whitespace-normal text-center [overflow-wrap:anywhere]",
         transition,
         "select-none focus-visible:outline-2 focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
       ].compact.join(" ")

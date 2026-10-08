@@ -31,9 +31,11 @@ class ChatDeadlineTransitionsTest < ApplicationSystemTestCase
   end
 
   test "canceled discussion updates its coordination notice when messaging ends" do
+    page.driver.resize(320, 420)
     @ride.update_columns(status: RidePost.statuses[:canceled], canceled_at: 24.hours.ago + 8.seconds)
     visit ride_post_path(@ride, tab: "chat")
     assert_text "Coordination messaging remains open for 24 hours following cancellation."
+    assert_no_selector ".chat-deadline-policy[open]"
     assert_no_selector "#chat_message_form input", wait: 12
     assert_text "Trip canceled. Messaging is closed."
     assert_no_text "Coordination messaging remains open"
@@ -45,6 +47,7 @@ class ChatDeadlineTransitionsTest < ApplicationSystemTestCase
     assert_selector "#chat_message_form input"
     RidePosts::CancelService.call(@ride, actor: users(:one))
     assert_text "Coordination messaging remains open for 24 hours following cancellation."
+    find(".chat-deadlines summary").click
     assert_selector ".chat-deadlines time[datetime='#{@ride.reload.chat_messaging_closes_at.iso8601}']"
     assert_selector "#chat_message_form input"
   end

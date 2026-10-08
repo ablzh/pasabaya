@@ -95,6 +95,15 @@ class RidePostsControllerTest < ActionDispatch::IntegrationTest
     assert_select "button", text: "Request Seat", count: 0
   end
 
+  test "booking notice escapes driver names and keeps cancellation action" do
+    @ride_post.user.update_columns(first_name: "<a href='/fake'>Driver</a>")
+    sign_in_as(users(:two))
+    get ride_post_url(@ride_post)
+    assert_select ".passenger-booking-content p", text: "Waiting for <a href='/fake'>Driver</a> to accept your request."
+    assert_select ".passenger-booking-content a[href='/fake']", count: 0
+    assert_select ".passenger-booking-content button", text: "Cancel Request"
+  end
+
   test "search omits departed rides even before the audit runs" do
     ride = ride_posts(:one)
     ride.update_columns(departure_time: 1.hour.ago)
@@ -377,6 +386,9 @@ class RidePostsControllerTest < ActionDispatch::IntegrationTest
     assert_select "div", text: /Trip canceled/
     assert_select "div", text: /Coordination messaging remains open for 24 hours/
     assert_select "p", text: /Sending messages disabled 24 hours after trip cancellation/
+    assert_select ".chat-deadline-policy[open]", count: 0
+    assert_select ".chat-deadline-policy [data-chat-scroll-target='coordinationNotice']", count: 0
+    assert_select ".chat-deadlines > [role='status'][data-chat-scroll-target='coordinationNotice']", text: /Trip canceled/
   end
 
   test "expired chat tab direct navigation redirects to details with alert" do

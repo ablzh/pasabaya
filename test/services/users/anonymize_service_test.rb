@@ -192,7 +192,7 @@ class Users::AnonymizeServiceTest < ActiveSupport::TestCase
   end
 
   test "commits deletion and retries avatar purge after the job queue fails" do
-    @user.avatar.attach(io: StringIO.new("avatar image"), filename: "avatar.png", content_type: "image/png", identify: false)
+    @user.avatar.attach(io: StringIO.new(Vips::Image.black(2, 2).pngsave_buffer), filename: "avatar.png", content_type: "image/png", identify: false)
     blob_id = @user.avatar.blob.id
 
     with_stubbed_method(ActiveStorage::PurgeJob, :perform_later, ->(*) { raise "queue unavailable" }) do
@@ -225,7 +225,7 @@ class Users::AnonymizeServiceTest < ActiveSupport::TestCase
   end
 
   test "retries physical avatar deletion even after the blob row has been removed" do
-    @user.avatar.attach(io: StringIO.new("avatar image"), filename: "avatar.png", content_type: "image/png", identify: false)
+    @user.avatar.attach(io: StringIO.new(Vips::Image.black(2, 2).pngsave_buffer), filename: "avatar.png", content_type: "image/png", identify: false)
     blob = @user.avatar.blob
     service = blob.service
     key = blob.key

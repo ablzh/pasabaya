@@ -8,13 +8,13 @@
       </div>
     <% end %>
 
-    <p class="text-sm font-medium <%= colors[:title] %>">
+    <p class="text-sm font-medium break-words <%= colors[:title] %>">
       <%= @title %>
     </p>
 
     <% if @description.present? %>
       <% if @show_icon %><div></div><% end %>
-      <p class="text-sm <%= colors[:text] %>">
+      <p class="text-sm break-words <%= colors[:text] %>">
         <%= sanitize(@description) %>
       </p>
     <% end %>

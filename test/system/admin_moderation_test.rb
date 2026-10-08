@@ -52,5 +52,13 @@ class AdminModerationSystemTest < ApplicationSystemTestCase
     page.driver.browser.resize(width: 390, height: 844)
     assert_selector "h1", text: "Incident ##{incident.id}"
     assert page.evaluate_script("document.documentElement.scrollWidth <= window.innerWidth"), "Admin case should fit a mobile viewport"
+    page.driver.resize(320, 844)
+    assert page.evaluate_script("document.documentElement.scrollWidth <= innerWidth"), "Admin navigation must scroll inside its own row"
+    nav = find("nav[aria-label='Administration']")
+    nav.execute_script("this.scrollLeft = this.scrollWidth")
+    sign_out = nav.find("a", text: "Sign out")
+    assert sign_out.evaluate_script("(() => { const r = this.getBoundingClientRect(); return r.left >= 0 && r.right <= innerWidth })()"), "Last navigation action should be reachable"
+    click_link "Back to Pasabaya"
+    assert_current_path root_path
   end
 end
