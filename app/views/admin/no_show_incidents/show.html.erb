@@ -5,12 +5,6 @@
 </div>
 <p class="mt-2 text-sm text-neutral-600 dark:text-neutral-400">Reported participant: <%= admin_user_name(@incident.user) %> · Occurred <%= admin_timestamp(@incident.occurred_at) %></p>
 
-<% if @decision_error %>
-  <div role="alert" class="mt-5">
-    <%= render Alert::Component.new(title: "Decision was not saved", description: @decision_error, variant: :error) %>
-  </div>
-<% end %>
-
 <div class="mt-6 grid gap-6 lg:grid-cols-2">
   <section class="rounded-xl border border-neutral-200 bg-white p-5 dark:border-neutral-700 dark:bg-neutral-900">
     <h2 class="text-lg font-semibold">Trip #<%= @ride_post.id %></h2>
@@ -34,15 +28,16 @@
         <p class="mt-2 text-sm text-neutral-600 dark:text-neutral-400">Current outcome: <%= @incident.status.humanize %>. Choose the other outcome to correct this decision; earlier reasoning stays in history.</p>
       <% end %>
       <%= form_with url: admin_no_show_incident_path(@incident), scope: :no_show_incident, method: :patch, data: { turbo: false }, class: "mt-5 space-y-4" do |form| %>
+        <%= render Forms::ErrorSummary::Component.new(record: @incident, form: form,
+          title: "Your decision wasn’t saved. Check the details below.",
+          targets: { status: form.field_id(:status), reason: form.field_id(:reason) }) %>
         <%= form.hidden_field :lock_version, value: @incident.lock_version %>
-        <div>
-          <%= form.label :status, "Decision", class: "text-sm font-medium" %>
-          <%= form.select :status, [["Confirm no-show", "upheld", { disabled: @incident.upheld? }], ["Dismiss report", "dismissed", { disabled: @incident.dismissed? }]], { selected: @entered_status || (@incident.upheld? ? "dismissed" : "upheld") }, class: admin_field_classes %>
-        </div>
-        <div>
-          <%= form.label :reason, "Decision reason", class: "text-sm font-medium" %>
-          <%= form.text_area :reason, value: @entered_reason, required: true, maxlength: 2000, rows: 4, class: admin_field_classes %>
-        </div>
+        <%= render(Forms::Component.new(label: "Decision", id: form.field_id(:status), error: form_error(@incident, :status))) do |field| %>
+          <%= form.select :status, [["Confirm no-show", "upheld", { disabled: @incident.upheld? }], ["Dismiss report", "dismissed", { disabled: @incident.dismissed? }]], { selected: @entered_status || (@incident.upheld? ? "dismissed" : "upheld") }, class: admin_field_classes, **field.input_attributes %>
+        <% end %>
+        <%= render(Forms::Component.new(label: "Decision reason", id: form.field_id(:reason), error: form_error(@incident, :reason))) do |field| %>
+          <%= form.text_area :reason, value: @entered_reason, required: true, maxlength: 2000, rows: 4, class: admin_field_classes, **field.input_attributes %>
+        <% end %>
         <%= render Buttons::Component.new(text: "Save decision", type: "submit", full_width: true) %>
       <% end %>
     <% else %>

@@ -11,7 +11,7 @@ class DepartureDatesTest < ActionDispatch::IntegrationTest
         ride_post: { departure_date: Date.tomorrow, departure_choice: :exact_time, exact_departure_time: time, expected_arrival_at: "" }
       }
       assert_response :unprocessable_content
-      assert_select "#error_explanation", text: /Departure time must be a valid time/
+      assert_select "#ride_post_exact_departure_time_error", text: "Enter a valid departure time."
       assert_equal original_departure, ride.reload.departure_time
     end
   end

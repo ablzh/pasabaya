@@ -12,7 +12,7 @@ class BookingsController < ApplicationController
     @booking = Bookings::CreateService.call(ride_post: @ride_post, passenger: Current.user, pickup_notes: booking_params[:pickup_notes])
     redirect_to @booking.ride_post, notice: "Seat requested! The driver has been notified.", status: :see_other
   rescue ActiveRecord::RecordInvalid => e
-    redirect_to @ride_post, alert: e.record.errors.full_messages.to_sentence, status: :see_other
+    redirect_to @ride_post, alert: model_error_feedback(e.record, title: "Your seat wasn’t requested. Check this ride’s availability and your account restrictions."), status: :see_other
   end
 
   # GET /bookings/:id
@@ -20,7 +20,7 @@ class BookingsController < ApplicationController
     if @booking.passenger_id == Current.user.id || @booking.ride_post.user_id == Current.user.id
       redirect_to @booking.ride_post
     else
-      redirect_to ride_posts_path, alert: "Not authorized"
+      redirect_to ride_posts_path, alert: "Only the passenger and driver can view this seat request. Open a ride you can access."
     end
   end
 
@@ -29,7 +29,7 @@ class BookingsController < ApplicationController
     Bookings::AcceptService.call(@booking, actor: Current.user)
     redirect_to @booking.ride_post, notice: "Booking accepted! Passenger seat confirmed.", status: :see_other
   rescue Bookings::AcceptService::Error => e
-    redirect_to @booking.ride_post, alert: e.message, status: :see_other
+    redirect_to @booking.ride_post, alert: "#{e.message}. Refresh the ride to check its current status.", status: :see_other
   end
 
   # PATCH /bookings/:id/decline
@@ -37,7 +37,7 @@ class BookingsController < ApplicationController
     Bookings::DeclineService.call(@booking, actor: Current.user)
     redirect_to @booking.ride_post, notice: "Booking request declined.", status: :see_other
   rescue Bookings::DeclineService::Error => e
-    redirect_to @booking.ride_post, alert: e.message, status: :see_other
+    redirect_to @booking.ride_post, alert: "#{e.message}. Refresh the ride to check its current status.", status: :see_other
   end
 
   # PATCH /bookings/:id/cancel
@@ -45,7 +45,7 @@ class BookingsController < ApplicationController
     Bookings::CancelService.call(@booking, actor: Current.user)
     redirect_to @booking.ride_post, notice: "Booking has been canceled.", status: :see_other
   rescue Bookings::CancelService::Error => e
-    redirect_to @booking.ride_post, alert: e.message, status: :see_other
+    redirect_to @booking.ride_post, alert: "#{e.message}. Refresh the ride to check its current status.", status: :see_other
   end
 
   private

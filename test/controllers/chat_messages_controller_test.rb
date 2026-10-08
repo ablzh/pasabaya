@@ -75,7 +75,7 @@ class ChatMessagesControllerTest < ActionDispatch::IntegrationTest
     assert_response :unprocessable_content
     assert_includes response.body, "Messaging for this trip has closed."
     assert_includes response.body, "Philippine time (UTC+8)"
-    assert_includes response.body, "Chat writes are closed 24 hours after the booking cutoff"
+    assert_includes response.body, "Messaging for this trip has closed. You can still read the available chat history."
   end
 
   test "cannot post message when chat is expired and redirects with alert" do
@@ -122,6 +122,6 @@ class ChatMessagesControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :unprocessable_content
     assert_includes response.body, "Trip canceled &amp; messaging has closed."
-    assert_includes response.body, "Chat writes are closed 24 hours after trip cancellation"
+    assert_includes response.body, "Messaging has closed after this trip’s cancellation. You can still read the available chat history."
   end
 end

@@ -48,7 +48,7 @@ module Forms
       ))
 
       assert_selector "p", text: "can't be blank"
-      assert_selector "p.text-red-600"
+      assert_selector "p.text-red-700"
     end
 
     def test_displays_helper_text

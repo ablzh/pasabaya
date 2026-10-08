@@ -133,7 +133,7 @@ class RidePostsController < ApplicationController
     if published
       redirect_to user_path(Current.user), notice: "Ride published.", status: :see_other
     else
-      redirect_to user_path(Current.user), alert: @ride_post.errors.full_messages.to_sentence, status: :see_other
+      redirect_to user_path(Current.user), alert: model_error_feedback(@ride_post, title: "Your ride wasn’t published. Edit the ride and check its details."), status: :see_other
     end
   end
 
@@ -141,7 +141,7 @@ class RidePostsController < ApplicationController
     RidePosts::CloseRequestsService.call(@ride_post, actor: Current.user)
     redirect_to @ride_post, notice: "Seat requests closed. Confirmed passengers and trip chat are unchanged.", status: :see_other
   rescue RidePosts::CloseRequestsService::Error => e
-    redirect_to @ride_post, alert: e.message, status: :see_other
+    redirect_to @ride_post, alert: "#{e.message}. Refresh the ride to check its current status.", status: :see_other
   end
 
   # DELETE /ride_posts/1 or /ride_posts/1.json
@@ -153,7 +153,7 @@ class RidePostsController < ApplicationController
       end
     else
       respond_to do |format|
-        format.html { redirect_to @ride_post, alert: @ride_post.errors.full_messages.to_sentence, status: :see_other }
+        format.html { redirect_to @ride_post, alert: model_error_feedback(@ride_post, title: "Your ride wasn’t deleted."), status: :see_other }
         format.json { render json: @ride_post.errors, status: :unprocessable_content }
       end
     end
@@ -168,7 +168,7 @@ class RidePostsController < ApplicationController
     end
   rescue RidePosts::CancelService::Error => e
     respond_to do |format|
-      format.html { redirect_to @ride_post, alert: e.message, status: :see_other }
+      format.html { redirect_to @ride_post, alert: "#{e.message}. Refresh the ride to check its current status.", status: :see_other }
       format.json { render json: { error: e.message }, status: :unprocessable_content }
     end
   end

@@ -7,5 +7,5 @@
       data: {
         controller: "select",
         action: "turbo:before-render@document->select#teardown turbo:render@document->select#connect turbo:before-cache@document->select#teardown"
-      } %>
+      }, **@input_attributes %>
 </div>

@@ -9,14 +9,14 @@ class Email::ConfirmationsController < ApplicationController
       end
 
       unless user.confirm_email
-        redirect_to root_path, alert: "The confirmation link is invalid or has expired."
+        redirect_to root_path, alert: "The confirmation link is invalid or has expired. Request a new email confirmation in Account Settings."
         return
       end
 
       target_path = authenticated? ? settings_profile_path : new_session_path
       redirect_to target_path, notice: "Email address confirmed!"
     else
-      redirect_to root_path, alert: "The confirmation link is invalid or has expired."
+      redirect_to root_path, alert: "The confirmation link is invalid or has expired. Request a new email confirmation in Account Settings."
     end
   end
 end

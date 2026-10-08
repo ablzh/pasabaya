@@ -18,7 +18,7 @@ class RouteSubscriptionsController < ApplicationController
     if @subscription.persisted?
       redirect_back fallback_location: ride_posts_path, notice: "You will be notified when a matching ride is posted.", status: :see_other
     else
-      redirect_back fallback_location: ride_posts_path, alert: @subscription.errors.full_messages.to_sentence, status: :see_other
+      redirect_back fallback_location: ride_posts_path, alert: model_error_feedback(@subscription, title: "Your route alert wasn’t created. Check the cities and departure date in your search."), status: :see_other
     end
   end
 

@@ -31,7 +31,7 @@ class RidePostsControllerTest < ActionDispatch::IntegrationTest
       post ride_posts_url, params: { intent: "draft", ride_post: { notes: "a" * 301 } }
     end
     assert_response :unprocessable_content
-    assert_select "p", text: "is too long (maximum is 300 characters)"
+    assert_select "p", text: "Keep your notes to 300 characters or fewer."
   end
 
   test "owner sees their trip notes without their own driver introduction" do
@@ -351,7 +351,7 @@ class RidePostsControllerTest < ActionDispatch::IntegrationTest
 
     patch cancel_ride_post_url(@ride_post)
     assert_redirected_to ride_post_url(@ride_post)
-    assert_equal "Cannot cancel this trip", flash[:alert]
+    assert_equal "Cannot cancel this trip. Refresh the ride to check its current status.", flash[:alert]
   ensure
     RidePosts::CancelService.define_singleton_method(:call, original_call)
   end

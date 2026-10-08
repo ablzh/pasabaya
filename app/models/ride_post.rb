@@ -362,7 +362,7 @@ class RidePost < ApplicationRecord
   end
 
   def driver_must_not_be_deleted
-    errors.add(:user, "has been deleted") if user&.deleted?
+    errors.add(:user, :deleted_account, message: "has been deleted") if user&.deleted?
   end
 
   def refresh_chat_after_cancellation
@@ -378,22 +378,22 @@ class RidePost < ApplicationRecord
 
   def check_destruction_allowed
     if trip_reviews.exists? || no_show_incidents.exists?
-      errors.add(:base, "Cannot delete a ride with trip reviews or incident history.")
+      errors.add(:base, :review_history, message: "Cannot delete a ride with trip reviews or incident history.")
       throw :abort
     end
 
     if bookings.accepted.exists?
-      errors.add(:base, "Cannot delete a ride with accepted bookings. Please cancel the trip instead.")
+      errors.add(:base, :accepted_bookings, message: "Cannot delete a ride with accepted bookings. Please cancel the trip instead.")
       throw :abort
     end
 
     if historical_reviewable_participation?
-      errors.add(:base, "Cannot delete a departed ride with historical participation. Trip records must be preserved for review eligibility.")
+      errors.add(:base, :historical_participation, message: "Cannot delete a departed ride with historical participation. Trip records must be preserved for review eligibility.")
       throw :abort
     end
 
     if chat_readable?
-      errors.add(:base, "Cannot delete a ride while its conversation is retained.")
+      errors.add(:base, :retained_chat, message: "Cannot delete a ride while its conversation is retained.")
       throw :abort
     end
 
@@ -419,7 +419,7 @@ class RidePost < ApplicationRecord
         if exact_departure_time.blank?
           self.departure_time = nil
         elsif !exact_departure_time.to_s.match?(/\A(?:[01]\d|2[0-3]):[0-5]\d(?::[0-5]\d)?\z/)
-          errors.add(:departure_time, "must be a valid time (HH:MM)")
+          errors.add(:departure_time, :invalid_time, message: "must be a valid time (HH:MM)")
         else
           parsed = Time.zone.local(departure_date.year, departure_date.month, departure_date.day, *exact_departure_time.split(":").map(&:to_i))
           self.departure_time = parsed if departure_time != parsed
@@ -494,7 +494,7 @@ class RidePost < ApplicationRecord
   end
 
   def route_must_have_distinct_locations
-    errors.add(:destination, "must differ from origin") if origin_id.present? && origin_id == destination_id
+    errors.add(:destination, :same_location, message: "must differ from origin") if origin_id.present? && origin_id == destination_id
   end
 
   def departure_date_cannot_be_in_the_past
@@ -503,7 +503,7 @@ class RidePost < ApplicationRecord
     return unless new_record? || publishing? || will_save_change_to_departure_date?
 
     if departure_date < Date.current
-      errors.add(:departure_date, "can't be in the past")
+      errors.add(:departure_date, :past_date, message: "can't be in the past")
     end
   end
 
@@ -513,37 +513,37 @@ class RidePost < ApplicationRecord
     return unless new_record? || publishing? || will_save_change_to_departure_time?
 
     if departure_time <= Time.current
-      errors.add(:departure_time, "can't be in the past")
+      errors.add(:departure_time, :past_time, message: "can't be in the past")
     end
   end
 
   def bookable_offering_requirements
     if departure_date.blank?
-      errors.add(:departure_date, "is required for published ride offers")
+      errors.add(:departure_date, :required_for_publication, message: "is required for published ride offers")
     end
 
     if departure_choice.blank?
-      errors.add(:departure_choice, "is required for published ride offers")
+      errors.add(:departure_choice, :required_for_publication, message: "is required for published ride offers")
     end
 
     if departure_time.blank? && (departure_choice.blank? || exact_time?)
-      errors.add(:departure_time, "is required for published ride offers")
+      errors.add(:departure_time, :required_for_publication, message: "is required for published ride offers")
     end
 
     if expected_arrival_at.present?
       if exact_time? && departure_time.present? && expected_arrival_at <= departure_time
-        errors.add(:expected_arrival_at, "must be after departure time")
+        errors.add(:expected_arrival_at, :before_departure, message: "must be after departure time")
       elsif !exact_time? && departure_date.present? && expected_arrival_at < departure_date.in_time_zone("Asia/Manila").beginning_of_day
-        errors.add(:expected_arrival_at, "must be on or after departure date")
+        errors.add(:expected_arrival_at, :before_departure_date, message: "must be on or after departure date")
       end
     end
 
     if remaining_seats.nil? || (publishing? && active? && remaining_seats <= 0)
-      errors.add(:remaining_seats, "must be confirmed for published ride offers")
+      errors.add(:remaining_seats, :unconfirmed_capacity, message: "must be confirmed for published ride offers")
     end
 
     if user.present? && publishing? && !user.eligible_for_offering?
-      errors.add(:user, "is not eligible to publish ride offers")
+      errors.add(:user, :ineligible_driver, message: "is not eligible to publish ride offers")
     end
   end
 
@@ -557,16 +557,16 @@ class RidePost < ApplicationRecord
 
     if changed_locked_fields.any?
       if has_accepted
-        errors.add(:base, "Cannot modify route, schedule, capacity, or audience while accepted bookings exist")
+        errors.add(:base, :accepted_bookings_locked, message: "Cannot modify route, schedule, capacity, or audience while accepted bookings exist")
       else
-        errors.add(:base, "Cannot modify route, schedule, capacity, or audience for trips with historical participation")
+        errors.add(:base, :historical_trip_locked, message: "Cannot modify route, schedule, capacity, or audience for trips with historical participation")
       end
     end
 
     if has_accepted && will_save_change_to_remaining_seats?
       max_allowed = [ seats - bookings.accepted.count, 0 ].max
       if remaining_seats > max_allowed
-        errors.add(:remaining_seats, "cannot exceed available capacity (#{max_allowed}) while accepted bookings exist")
+        errors.add(:remaining_seats, :exceeds_capacity, message: "cannot exceed available capacity (#{max_allowed}) while accepted bookings exist", count: max_allowed)
       end
     end
   end
@@ -575,7 +575,7 @@ class RidePost < ApplicationRecord
     return unless user && community_id
 
     unless user.verified_member_of?(community_id)
-      errors.add(:community, "requires an active verified membership")
+      errors.add(:community, :unverified_membership, message: "requires an active verified membership")
     end
   end
 
@@ -583,7 +583,7 @@ class RidePost < ApplicationRecord
     return unless user
 
     unless user.female?
-      errors.add(:ladies_only, "can only be offered by female drivers")
+      errors.add(:ladies_only, :ineligible_driver, message: "can only be offered by female drivers")
     end
   end
 end

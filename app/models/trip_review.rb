@@ -33,9 +33,9 @@ class TripReview < ApplicationRecord
     return unless ride_post && reported_user_id
 
     if driver_no_show? && reported_user_id != ride_post.user_id
-      errors.add(:outcome, "must describe a passenger when reviewing a passenger")
+      errors.add(:outcome, :passenger_outcome, message: "must describe a passenger when reviewing a passenger")
     elsif passenger_no_show? && reported_user_id == ride_post.user_id
-      errors.add(:outcome, "must describe a driver when reviewing the driver")
+      errors.add(:outcome, :driver_outcome, message: "must describe a driver when reviewing the driver")
     end
   end
 
@@ -48,13 +48,13 @@ class TripReview < ApplicationRecord
 
   def reporter_must_be_eligible
     if reporter && (reporter.deleted? || reporter.banned_at.present?)
-      errors.add(:reporter, "is not eligible to submit reviews")
+      errors.add(:reporter, :ineligible_reporter, message: "is not eligible to submit reviews")
     end
   end
 
   def reporter_and_reported_must_be_different
     if reporter_id.present? && reported_user_id.present? && reporter_id == reported_user_id
-      errors.add(:reported_user, "cannot be yourself")
+      errors.add(:reported_user, :self_review, message: "cannot be yourself")
     end
   end
 
@@ -62,11 +62,11 @@ class TripReview < ApplicationRecord
     return unless ride_post && reporter && reported_user
 
     unless ride_post.participant?(reporter)
-      errors.add(:reporter, "must be a driver or accepted passenger on this trip")
+      errors.add(:reporter, :not_participant, message: "must be a driver or accepted passenger on this trip")
     end
 
     unless ride_post.participant?(reported_user)
-      errors.add(:reported_user, "must be a driver or accepted passenger on this trip")
+      errors.add(:reported_user, :not_participant, message: "must be a driver or accepted passenger on this trip")
     end
   end
 
@@ -74,9 +74,9 @@ class TripReview < ApplicationRecord
     return unless ride_post
 
     if ride_post.booking_cutoff_at.present? && Time.current < ride_post.booking_cutoff_at
-      errors.add(:base, "Reviews and no-show reports cannot be submitted before trip departure")
+      errors.add(:base, :before_departure, message: "Reviews and no-show reports cannot be submitted before trip departure")
     elsif !ride_post.reviewable_trip?
-      errors.add(:base, "Reviews require a departed ride offer")
+      errors.add(:base, :not_departed, message: "Reviews require a departed ride offer")
     end
   end
 end

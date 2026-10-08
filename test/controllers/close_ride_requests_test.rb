@@ -33,7 +33,7 @@ class CloseRideRequestsTest < ActionDispatch::IntegrationTest
     assert_no_difference "Booking.count" do
       post ride_post_bookings_url(ride)
     end
-    assert_match /not available for booking/, flash[:alert]
+    assert_includes flash[:feedback_errors], "This ride is no longer accepting seat requests. Find another ride."
     assert_raises(Bookings::AcceptService::InvalidStateError) do
       Bookings::AcceptService.call(pending, actor: ride.user)
     end

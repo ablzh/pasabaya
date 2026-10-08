@@ -40,10 +40,9 @@ class CommunityMembershipsControllerTest < ActionDispatch::IntegrationTest
     assert_no_emails do
       post community_memberships_url(@community), params: { institutional_email: "cand@otherdomain.com" }
     end
-    assert_response :see_other
-    assert_redirected_to community_url(@community)
-    follow_redirect!
-    assert_match(/must match the community domain/, response.body)
+    assert_response :unprocessable_content
+    assert_select "#institutional_email_error", text: "Use your Hub email address ending in @accenture.com."
+    assert_select "input#institutional_email[value='cand@otherdomain.com']"
   end
 
   test "verify confirms membership with valid token" do

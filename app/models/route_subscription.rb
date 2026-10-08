@@ -74,20 +74,20 @@ class RouteSubscription < ApplicationRecord
   end
 
   def user_must_not_be_deleted
-    errors.add(:user, "is not eligible to request route alerts") if user&.deleted?
+    errors.add(:user, :deleted_account, message: "is not eligible to request route alerts") if user&.deleted?
   end
 
   def locations_must_differ
     return unless origin_id && destination_id
 
-    errors.add(:destination, "must differ from origin") if origin_id == destination_id
+    errors.add(:destination, :same_location, message: "must differ from origin") if origin_id == destination_id
   end
 
   def departure_date_cannot_be_in_the_past
     return if departure_date.blank?
 
     if departure_date < Date.current
-      errors.add(:departure_date, "can't be in the past")
+      errors.add(:departure_date, :past_date, message: "can't be in the past")
     end
   end
 end

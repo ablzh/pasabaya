@@ -82,7 +82,7 @@ class ChatMessage < ApplicationRecord
     return unless ride_post && user_id
 
     unless ride_post.user_authorized_for_chat?(user)
-      errors.add(:base, "Only the driver and confirmed passengers can participate in trip chat")
+      errors.add(:base, :not_participant, message: "Only the driver and confirmed passengers can participate in trip chat")
     end
   end
 
@@ -91,9 +91,9 @@ class ChatMessage < ApplicationRecord
 
     unless ride_post.chat_writable?
       if ride_post.canceled?
-        errors.add(:base, "Chat writes are closed 24 hours after trip cancellation")
+        errors.add(:base, :cancellation_closed, message: "Chat writes are closed 24 hours after trip cancellation")
       else
-        errors.add(:base, "Chat writes are closed 24 hours after the booking cutoff")
+        errors.add(:base, :messaging_closed, message: "Chat writes are closed 24 hours after the booking cutoff")
       end
     end
   end

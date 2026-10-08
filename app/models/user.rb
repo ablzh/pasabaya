@@ -6,6 +6,8 @@ class User < ApplicationRecord
   validate :registration_attestation, on: :registration
 
   has_secure_password
+  validates :password, :password_confirmation, presence: true, on: %i[password_change password_reset]
+  validates :unconfirmed_email, presence: true, on: :email_change
   has_many :sessions, dependent: :destroy
   has_many :ride_posts, dependent: :destroy
   has_many :bookings, foreign_key: :passenger_id, dependent: :destroy, inverse_of: :passenger
@@ -188,13 +190,13 @@ class User < ApplicationRecord
 
   def registration_attestation
     unless registration_acceptance == "1"
-      errors.add(:base, "You must be at least 18 years old and agree to the Terms of Service and Privacy Policy to register.")
+      errors.add(:base, :registration_acceptance, message: "You must be at least 18 years old and agree to the Terms of Service and Privacy Policy to register.")
     end
   end
 
   def reject_updates_after_deletion
     if User.lock.find(id).deleted?
-      errors.add(:base, "This account has been deleted.")
+      errors.add(:base, :deleted_account, message: "This account has been deleted.")
       throw :abort
     end
   end
@@ -203,13 +205,13 @@ class User < ApplicationRecord
     return if email_address.blank?
 
     if email_address.downcase.end_with?("@deleted.pasabaya.app")
-      errors.add(:email_address, "is reserved and cannot be registered")
+      errors.add(:email_address, :reserved_email, message: "is reserved and cannot be registered")
     end
   end
 
   def acceptable_facebook_profile_url
     if facebook_profile_url.present? && !safe_facebook_profile_url?
-      errors.add(:facebook_profile_url, "must be an HTTPS Facebook profile URL")
+      errors.add(:facebook_profile_url, :facebook_url, message: "must be an HTTPS Facebook profile URL")
     end
   end
 
@@ -218,13 +220,13 @@ class User < ApplicationRecord
 
     # 1. Enforce size limit (e.g., max 5MB to save server storage)
     if avatar.blob.byte_size > 5.megabytes
-      errors.add(:avatar, "is too large (must be under 5MB)")
+      errors.add(:avatar, :file_too_large, message: "is too large (must be under 5MB)")
     end
 
     # 2. Enforce file types (images only)
     acceptable_types = [ "image/jpeg", "image/png", "image/webp" ]
     unless acceptable_types.include?(avatar.content_type)
-      errors.add(:avatar, "must be a JPEG, PNG, or WEBP image")
+      errors.add(:avatar, :unsupported_image, message: "must be a JPEG, PNG, or WEBP image")
     end
 
     validate_avatar_image if errors[:avatar].empty? && attachment_changes["avatar"]
@@ -243,12 +245,12 @@ class User < ApplicationRecord
       avatar.blob.open { |file| Vips::Image.new_from_file(file.path).avg }
     end
   rescue Vips::Error, ActiveStorage::IntegrityError
-    errors.add(:avatar, "must be a readable JPEG, PNG, or WEBP image")
+    errors.add(:avatar, :unreadable_image, message: "must be a readable JPEG, PNG, or WEBP image")
   end
 
   def unconfirmed_email_uniqueness
     if unconfirmed_email.present? && User.exists?(email_address: unconfirmed_email)
-      errors.add(:unconfirmed_email, "is already taken")
+      errors.add(:unconfirmed_email, :email_taken, message: "is already taken")
     end
   end
 

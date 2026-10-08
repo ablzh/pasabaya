@@ -20,7 +20,7 @@ class AbuseProtectionSystemTest < ApplicationSystemTestCase
     assert User.exists?(email_address: "browser-signup@example.test")
   end
 
-  test "chat throttling shows a toast and preserves the unsent draft" do
+  test "chat throttling shows a persistent warning and preserves the unsent draft" do
     ride = ride_posts(:one)
     passenger = users(:two)
     bookings(:one).update_columns(status: Booking.statuses[:accepted], accepted_at: Time.current)
@@ -42,7 +42,7 @@ class AbuseProtectionSystemTest < ApplicationSystemTestCase
 
       fill_in "Coordination message", with: "Keep this draft"
       click_button "Send"
-      assert_text "Too many requests. Please wait and try again."
+      assert_text "Too many messages. Please wait before trying again."
       assert_field "Coordination message", with: "Keep this draft"
       assert_no_selector ".chat-message", text: "Keep this draft"
       assert_not ChatMessage.exists?(user: passenger, body: "Keep this draft")

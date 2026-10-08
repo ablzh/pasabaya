@@ -1,20 +1,22 @@
 <div id="chat_message_form" class="p-3 sm:p-4 bg-white dark:bg-neutral-900 border-t border-neutral-100 dark:border-neutral-800">
+  <div id="chat_request_feedback"></div>
   <% if ride_post.chat_writable? %>
-    <%= form_with(model: [ ride_post, chat_message || ride_post.chat_messages.build ], class: "flex flex-wrap items-center gap-2") do |f| %>
-      <% if chat_message&.errors&.any? %>
-        <div class="text-xs text-red-500 mb-2 w-full">
-          <%= chat_message.errors.full_messages.to_sentence %>
-        </div>
-      <% end %>
+    <%= form_with(model: [ ride_post, chat_message || ride_post.chat_messages.build ], class: "form-field flex flex-wrap items-center gap-2") do |f| %>
+      <%= render Forms::ErrorSummary::Component.new(record: chat_message, form: f,
+        title: "Your message wasn’t sent. Check the highlighted fields.") if chat_message %>
+      <% body_error = chat_message && form_error(chat_message, :body) %>
       <%= f.label :body, "Coordination message", class: "sr-only" %>
       <%= f.text_field :body,
                        placeholder: "Type a coordination message...",
                        required: true,
                        maxlength: 1000,
                        autocomplete: "off",
-                       aria: { label: "Coordination message" },
+                       aria: { label: "Coordination message", invalid: body_error.present? ? "true" : nil, describedby: body_error.present? ? "chat_message_body_error" : nil },
                        data: { chat_scroll_target: "input" },
                        class: "flex-1 min-w-0 px-4 py-2.5 rounded-xl text-base sm:text-sm bg-neutral-50 dark:bg-neutral-800 text-neutral-900 dark:text-white border border-neutral-200 dark:border-neutral-700 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition" %>
+      <% if body_error %>
+        <p id="chat_message_body_error" class="w-full text-sm text-red-700 dark:text-red-400 order-last"><%= body_error %></p>
+      <% end %>
       <button type="submit" class="min-h-11 min-w-11 inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-semibold bg-blue-600 hover:bg-blue-700 text-white cursor-pointer transition shadow-xs shrink-0">
         <span>Send</span>
         <svg class="size-3.5" viewBox="0 0 20 20" fill="currentColor">
@@ -26,7 +28,7 @@
     <div class="text-xs text-neutral-500 dark:text-neutral-400 text-center py-2 space-y-1">
       <% if chat_message&.errors&.any? %>
         <div class="text-xs text-red-500 mb-2 w-full text-left">
-          <%= chat_message.errors.full_messages.to_sentence %>
+          <%= safe_join(form_error_entries(chat_message).map { |entry| entry[:error].to_s }, tag.br) %>
         </div>
       <% end %>
       <p class="font-medium text-neutral-700 dark:text-neutral-300">

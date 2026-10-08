@@ -19,6 +19,7 @@ class HotwireNativeSystemTest < ApplicationSystemTestCase
 
     fill_in "Password", with: "password"
     click_button "Sign in"
+    assert_selector "#native_navigation a[href='/notifications']"
     assert_current_path trips_path
     assert_title "My Trips"
     within "#native_navigation" do

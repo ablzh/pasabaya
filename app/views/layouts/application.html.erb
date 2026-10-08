@@ -166,6 +166,8 @@
 <%= turbo_stream_from [ Current.user, :notifications ], channel: NotificationsChannel if authenticated? %>
 
 <main class="app-content container mx-auto px-4 mt-8 flex-grow">
+  <div id="request_feedback"></div>
+  <%= render "shared/flash_errors" %>
   <%= yield %>
 </main>
 

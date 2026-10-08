@@ -18,7 +18,7 @@ class ResponsiveUxTest < ApplicationSystemTestCase
     page.execute_script("window.formRenders = 0; document.addEventListener('turbo:render', () => window.formRenders++)")
     2.times do
       submit_and_wait("Publish ride")
-      assert_text "Community can't be blank"
+      assert_text "Choose a Hub for this ride."
       assert_routes
       reopen_routes
     end
@@ -138,7 +138,7 @@ class ResponsiveUxTest < ApplicationSystemTestCase
     fill_in "Available passenger seats", with: 1
     select "Community / Closed Hub Only", from: "Visibility"
     click_button "Publish ride"
-    assert_selector "#error_explanation"
+    assert_selector "[data-form-errors-summary]"
     assert_selector "label", text: "Departure Date", exact_text: true
     assert_routes
     select "Public (Everyone)", from: "Visibility"
@@ -155,6 +155,7 @@ class ResponsiveUxTest < ApplicationSystemTestCase
     fill_in "Email Address", with: users(:one).email_address
     fill_in "Password", with: "password"
     click_button "Sign in"
+    assert_selector "[data-notification-count]", visible: :all
     assert_current_path root_path
   end
 
@@ -182,7 +183,7 @@ class ResponsiveUxTest < ApplicationSystemTestCase
     page.document.synchronize do
       raise Capybara::ExpectationNotMet unless page.evaluate_script("window.formRenders") > renders
     end
-    assert_selector "#error_explanation"
+    assert_selector "[data-form-errors-summary]"
   end
 
   def theme!(theme)

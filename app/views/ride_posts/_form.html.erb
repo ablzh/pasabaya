@@ -1,32 +1,25 @@
 <% grouped_locations = local_assigns[:grouped_locations] || Location.grouped_by_region %>
 <%= form_with(model: ride_post, class: "w-full space-y-6") do |form| %>
-  <% if ride_post.errors.any? %>
-    <div id="error_explanation" class="bg-red-50 dark:bg-red-900/10 text-red-600 px-4 py-3 font-medium rounded-xl mt-3 mb-6 border border-red-100 dark:border-red-900/20">
-      <h2 class="text-sm font-bold uppercase tracking-wider mb-2"><%= pluralize(ride_post.errors.count, "error") %> prohibited this post from being saved:</h2>
-      <ul class="list-disc ml-6 text-sm opacity-90">
-        <% ride_post.errors.each do |error| %>
-          <li><%= error.full_message %></li>
-        <% end %>
-      </ul>
-    </div>
-  <% end %>
+  <%= render Forms::ErrorSummary::Component.new(record: ride_post, form: form,
+    title: params[:intent] == "publish" ? "We couldn’t publish your ride. Check the highlighted fields." : "Your ride wasn’t saved. Check the highlighted fields.",
+    targets: { departure_choice: form.field_id(:departure_choice, :morning), user: nil, ladies_only: form.field_id(:ladies_only) }) %>
 
   <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-    <p class="col-span-full text-sm text-neutral-500">Offer seats as a driver. Choose a departure date and an approximate choice or exact time, then confirm passenger seats to publish. Expected arrival is optional. Save a private draft while planning.</p>
+    <p class="col-span-full text-sm text-neutral-500">Offer seats as a driver. Choose a departure date and schedule, or select Exact Time. Enter the number of passenger seats to publish. Expected arrival is optional. You can save an incomplete ride as a private draft.</p>
 
     <!-- Origin Location -->
     <%= render(Forms::Component.new(
       label: "Leaving from (City)",
       name: "ride_post[origin_id]",
       id: form.field_id(:origin_id),
-      error: ride_post.errors[:origin].first || ride_post.errors[:origin_id].first
-    )) do %>
+      error: form_error(ride_post, :origin_id)
+    )) do |field| %>
       <%= render Combobox::Component.new(
                  name: "ride_post[origin_id]",
                  id: "ride_post_origin_id",
                  grouped_options: grouped_locations,
                  selected: ride_post.origin_id,
-                 placeholder: "Select a city...") %>
+                 placeholder: "Select a city...", input_attributes: field.input_attributes) %>
     <% end %>
 
     <!-- Destination Location -->
@@ -34,14 +27,14 @@
       label: "Going to (City)",
       name: "ride_post[destination_id]",
       id: form.field_id(:destination_id),
-      error: ride_post.errors[:destination].first || ride_post.errors[:destination_id].first
-    )) do %>
+      error: form_error(ride_post, :destination_id)
+    )) do |field| %>
       <%= render Combobox::Component.new(
                  name: "ride_post[destination_id]",
                  id: "ride_post_destination_id",
                  grouped_options: grouped_locations,
                  selected: ride_post.destination_id,
-                 placeholder: "Select a city...") %>
+                 placeholder: "Select a city...", input_attributes: field.input_attributes) %>
     <% end %>
 
     <!-- Departure Date -->
@@ -49,11 +42,11 @@
       label: "Departure Date",
       name: "ride_post[departure_date]",
       id: form.field_id(:departure_date),
-      error: ride_post.errors[:departure_date].first
-    )) do %>
+      error: form_error(ride_post, :departure_date)
+    )) do |field| %>
       <%= form.date_field :departure_date,
                           class: "block w-full rounded-xl border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-base sm:text-sm text-neutral-900 dark:text-white focus:ring-blue-500 focus:border-blue-500 transition-all py-3 px-4",
-                          min: Date.current.to_fs(:db) %>
+                          min: Date.current.to_fs(:db), **field.input_attributes %>
     <% end %>
 
     <!-- Expected Arrival Time -->
@@ -61,29 +54,28 @@
       label: "Expected Arrival Time (optional)",
       name: :expected_arrival_at,
       id: form.field_id(:expected_arrival_at),
-      error: ride_post.errors[:expected_arrival_at].first
-    )) do %>
+      error: form_error(ride_post, :expected_arrival_at)
+    )) do |field| %>
       <%= form.datetime_field :expected_arrival_at,
                               class: "block w-full rounded-xl border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-base sm:text-sm text-neutral-900 dark:text-white focus:ring-blue-500 focus:border-blue-500 transition-all py-3 px-4",
-                              min: Time.current.strftime("%Y-%m-%dT%H:%M") %>
+                              min: Time.current.strftime("%Y-%m-%dT%H:%M"), **field.input_attributes %>
     <% end %>
 
     <!-- Departure Choice -->
-    <div class="col-span-full space-y-3" data-controller="departure-choice">
-      <div class="flex items-center justify-between">
-        <label class="block text-sm font-semibold text-neutral-900 dark:text-neutral-100">
-          Departure Schedule
-        </label>
-        <% if ride_post.errors[:departure_choice].any? %>
-          <span class="text-xs text-red-600 dark:text-red-400 font-medium"><%= ride_post.errors[:departure_choice].first %></span>
-        <% end %>
-      </div>
+    <fieldset class="col-span-full min-w-0 space-y-3 rounded-xl" data-controller="departure-choice"
+      <%= tag.attributes(aria: { invalid: form_error(ride_post, :departure_choice).present? ? "true" : nil, describedby: form_error(ride_post, :departure_choice).present? ? "ride_post_departure_choice_error" : nil }) %>>
+      <legend class="block text-sm font-semibold text-neutral-900 dark:text-neutral-100">Departure Schedule</legend>
+      <% if form_error(ride_post, :departure_choice) %>
+        <p id="ride_post_departure_choice_error" class="text-sm text-red-700 dark:text-red-400"><%= form_error(ride_post, :departure_choice) %></p>
+      <% end %>
 
       <div class="grid grid-cols-2 sm:grid-cols-3 gap-2.5 sm:gap-3">
         <!-- Morning -->
         <label class="relative min-w-0 flex flex-col p-2.5 sm:p-3.5 rounded-2xl border cursor-pointer transition-all border-neutral-200 dark:border-neutral-700 bg-neutral-50/50 dark:bg-neutral-800/40 hover:bg-blue-50/50 dark:hover:bg-blue-950/20 has-checked:border-blue-500 has-checked:bg-blue-50/70 dark:has-checked:bg-blue-950/30">
           <div class="flex flex-wrap sm:flex-nowrap items-center gap-1.5 sm:gap-2 mb-1.5">
-            <%= form.radio_button :departure_choice, :morning, data: { action: "change->departure-choice#change" }, class: "size-4 shrink-0 text-blue-600 focus:ring-blue-500" %>
+            <%= form.radio_button :departure_choice, :morning, data: { action: "change->departure-choice#change" }, class: "size-4 shrink-0 text-blue-600 focus:ring-blue-500",
+              aria: { invalid: form_error(ride_post, :departure_choice).present? ? "true" : nil, describedby: form_error(ride_post, :departure_choice).present? ? "ride_post_departure_choice_error" : nil },
+              "data-form-error-rule": form_error(ride_post, :departure_choice).present? ? "required" : nil %>
             <svg class="hidden sm:block size-4.5 text-amber-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v2.25m6.364.386-1.591 1.591M21 12h-2.25m-.386 6.364-1.591-1.591M12 18.75V21m-4.773-4.227-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0Z" />
             </svg>
@@ -95,7 +87,9 @@
         <!-- Afternoon -->
         <label class="relative min-w-0 flex flex-col p-2.5 sm:p-3.5 rounded-2xl border cursor-pointer transition-all border-neutral-200 dark:border-neutral-700 bg-neutral-50/50 dark:bg-neutral-800/40 hover:bg-blue-50/50 dark:hover:bg-blue-950/20 has-checked:border-blue-500 has-checked:bg-blue-50/70 dark:has-checked:bg-blue-950/30">
           <div class="flex flex-wrap sm:flex-nowrap items-center gap-1.5 sm:gap-2 mb-1.5">
-            <%= form.radio_button :departure_choice, :afternoon, data: { action: "change->departure-choice#change" }, class: "size-4 shrink-0 text-blue-600 focus:ring-blue-500" %>
+            <%= form.radio_button :departure_choice, :afternoon, data: { action: "change->departure-choice#change" }, class: "size-4 shrink-0 text-blue-600 focus:ring-blue-500",
+              aria: { invalid: form_error(ride_post, :departure_choice).present? ? "true" : nil, describedby: form_error(ride_post, :departure_choice).present? ? "ride_post_departure_choice_error" : nil },
+              "data-form-error-rule": form_error(ride_post, :departure_choice).present? ? "required" : nil %>
             <svg class="hidden sm:block size-4.5 text-orange-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" d="M12 18a6 6 0 1 0 0-12 6 6 0 0 0 0 12ZM2.25 12h1.5m16.5 0h1.5m-15.364-6.364 1.06 1.06m12.728 0 1.06-1.06M12 2.25v1.5" />
             </svg>
@@ -107,7 +101,9 @@
         <!-- Evening -->
         <label class="relative min-w-0 flex flex-col p-2.5 sm:p-3.5 rounded-2xl border cursor-pointer transition-all border-neutral-200 dark:border-neutral-700 bg-neutral-50/50 dark:bg-neutral-800/40 hover:bg-blue-50/50 dark:hover:bg-blue-950/20 has-checked:border-blue-500 has-checked:bg-blue-50/70 dark:has-checked:bg-blue-950/30">
           <div class="flex flex-wrap sm:flex-nowrap items-center gap-1.5 sm:gap-2 mb-1.5">
-            <%= form.radio_button :departure_choice, :evening, data: { action: "change->departure-choice#change" }, class: "size-4 shrink-0 text-blue-600 focus:ring-blue-500" %>
+            <%= form.radio_button :departure_choice, :evening, data: { action: "change->departure-choice#change" }, class: "size-4 shrink-0 text-blue-600 focus:ring-blue-500",
+              aria: { invalid: form_error(ride_post, :departure_choice).present? ? "true" : nil, describedby: form_error(ride_post, :departure_choice).present? ? "ride_post_departure_choice_error" : nil },
+              "data-form-error-rule": form_error(ride_post, :departure_choice).present? ? "required" : nil %>
             <svg class="hidden sm:block size-4.5 text-indigo-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v2.25m6.364.386-1.591 1.591M21 12h-2.25M12 18.75V21M3 12h2.25m.386-6.364 1.591 1.591M3 17.25h18M5.25 21h13.5" />
             </svg>
@@ -119,7 +115,9 @@
         <!-- Night -->
         <label class="relative min-w-0 flex flex-col p-2.5 sm:p-3.5 rounded-2xl border cursor-pointer transition-all border-neutral-200 dark:border-neutral-700 bg-neutral-50/50 dark:bg-neutral-800/40 hover:bg-blue-50/50 dark:hover:bg-blue-950/20 has-checked:border-blue-500 has-checked:bg-blue-50/70 dark:has-checked:bg-blue-950/30">
           <div class="flex flex-wrap sm:flex-nowrap items-center gap-1.5 sm:gap-2 mb-1.5">
-            <%= form.radio_button :departure_choice, :night, data: { action: "change->departure-choice#change" }, class: "size-4 shrink-0 text-blue-600 focus:ring-blue-500" %>
+            <%= form.radio_button :departure_choice, :night, data: { action: "change->departure-choice#change" }, class: "size-4 shrink-0 text-blue-600 focus:ring-blue-500",
+              aria: { invalid: form_error(ride_post, :departure_choice).present? ? "true" : nil, describedby: form_error(ride_post, :departure_choice).present? ? "ride_post_departure_choice_error" : nil },
+              "data-form-error-rule": form_error(ride_post, :departure_choice).present? ? "required" : nil %>
             <svg class="hidden sm:block size-4.5 text-purple-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" d="M21.752 15.002A9.72 9.72 0 0 1 18 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 0 0 3 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 0 0 9.002-5.998Z" />
             </svg>
@@ -131,7 +129,9 @@
         <!-- Exact Time -->
         <label class="relative min-w-0 flex flex-col p-2.5 sm:p-3.5 rounded-2xl border cursor-pointer transition-all border-neutral-200 dark:border-neutral-700 bg-neutral-50/50 dark:bg-neutral-800/40 hover:bg-blue-50/50 dark:hover:bg-blue-950/20 has-checked:border-blue-500 has-checked:bg-blue-50/70 dark:has-checked:bg-blue-950/30">
           <div class="flex flex-wrap sm:flex-nowrap items-center gap-1.5 sm:gap-2 mb-1.5">
-            <%= form.radio_button :departure_choice, :exact_time, data: { action: "change->departure-choice#change" }, class: "size-4 shrink-0 text-blue-600 focus:ring-blue-500" %>
+            <%= form.radio_button :departure_choice, :exact_time, data: { action: "change->departure-choice#change" }, class: "size-4 shrink-0 text-blue-600 focus:ring-blue-500",
+              aria: { invalid: form_error(ride_post, :departure_choice).present? ? "true" : nil, describedby: form_error(ride_post, :departure_choice).present? ? "ride_post_departure_choice_error" : nil },
+              "data-form-error-rule": form_error(ride_post, :departure_choice).present? ? "required" : nil %>
             <svg class="hidden sm:block size-4.5 text-blue-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
             </svg>
@@ -143,7 +143,9 @@
         <!-- Flexible -->
         <label class="relative min-w-0 flex flex-col p-2.5 sm:p-3.5 rounded-2xl border cursor-pointer transition-all border-neutral-200 dark:border-neutral-700 bg-neutral-50/50 dark:bg-neutral-800/40 hover:bg-blue-50/50 dark:hover:bg-blue-950/20 has-checked:border-blue-500 has-checked:bg-blue-50/70 dark:has-checked:bg-blue-950/30">
           <div class="flex flex-wrap sm:flex-nowrap items-center gap-1.5 sm:gap-2 mb-1.5">
-            <%= form.radio_button :departure_choice, :flexible, data: { action: "change->departure-choice#change" }, class: "size-4 shrink-0 text-blue-600 focus:ring-blue-500" %>
+            <%= form.radio_button :departure_choice, :flexible, data: { action: "change->departure-choice#change" }, class: "size-4 shrink-0 text-blue-600 focus:ring-blue-500",
+              aria: { invalid: form_error(ride_post, :departure_choice).present? ? "true" : nil, describedby: form_error(ride_post, :departure_choice).present? ? "ride_post_departure_choice_error" : nil },
+              "data-form-error-rule": form_error(ride_post, :departure_choice).present? ? "required" : nil %>
             <svg class="hidden sm:block size-4.5 text-emerald-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25H12" />
             </svg>
@@ -160,14 +162,14 @@
           helper_text: "Choose exact departure time (including midnight–06:00)",
           name: :exact_departure_time,
           id: form.field_id(:exact_departure_time),
-          error: ride_post.errors[:departure_time].first
-        )) do %>
+          error: form_error(ride_post, :exact_departure_time)
+        )) do |field| %>
           <%= form.time_field :exact_departure_time,
                               value: ride_post.exact_departure_time || ride_post.departure_time&.strftime("%H:%M"),
-                              class: "block w-full sm:w-64 rounded-xl border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-base sm:text-sm text-neutral-900 dark:text-white focus:ring-blue-500 focus:border-blue-500 transition-all py-3 px-4" %>
+                              class: "block w-full sm:w-64 rounded-xl border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-base sm:text-sm text-neutral-900 dark:text-white focus:ring-blue-500 focus:border-blue-500 transition-all py-3 px-4", **field.input_attributes %>
         <% end %>
       </div>
-    </div>
+    </fieldset>
 
     <!-- Seats Available/Needed -->
     <%= render(Forms::Component.new(
@@ -175,12 +177,12 @@
       helper_text: "Passenger places offered in your car; this count excludes the driver.",
       name: :seats,
       id: form.field_id(:seats),
-      error: ride_post.errors[:seats].first
-    )) do %>
+      error: form_error(ride_post, :seats)
+    )) do |field| %>
       <div class="flex items-center gap-2" data-controller="seat-stepper">
         <button type="button" aria-label="Remove one passenger seat" title="Remove one passenger seat" data-action="seat-stepper#decrease" class="size-11 sm:size-12 shrink-0 inline-flex items-center justify-center rounded-xl font-bold text-lg border border-neutral-300 dark:border-neutral-700 bg-neutral-100 dark:bg-neutral-800 text-neutral-800 dark:text-neutral-200 hover:bg-neutral-200 dark:hover:bg-neutral-700 focus-visible:outline-2 focus-visible:outline-blue-600 transition select-none">−</button>
         <%= form.number_field :seats, min: 1, step: 1, data: { seat_stepper_target: "input" },
-            class: "block w-full min-w-0 rounded-xl border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-base sm:text-sm text-neutral-900 dark:text-white focus:ring-blue-500 focus:border-blue-500 py-3 px-4" %>
+            class: "block w-full min-w-0 rounded-xl border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-base sm:text-sm text-neutral-900 dark:text-white focus:ring-blue-500 focus:border-blue-500 py-3 px-4", **field.input_attributes %>
         <button type="button" aria-label="Add one passenger seat" title="Add one passenger seat" data-action="seat-stepper#increase" class="size-11 sm:size-12 shrink-0 inline-flex items-center justify-center rounded-xl font-bold text-lg border border-neutral-300 dark:border-neutral-700 bg-neutral-100 dark:bg-neutral-800 text-neutral-800 dark:text-neutral-200 hover:bg-neutral-200 dark:hover:bg-neutral-700 focus-visible:outline-2 focus-visible:outline-blue-600 transition select-none">+</button>
       </div>
     <% end %>
@@ -206,10 +208,10 @@
           label: "Visibility",
           name: :visibility,
           id: form.field_id(:visibility),
-          error: ride_post.errors[:visibility].first
-        )) do %>
+          error: form_error(ride_post, :visibility)
+        )) do |field| %>
           <%= form.select :visibility, [["Public (Everyone)", "public_ride"], ["Community / Closed Hub Only", "hub_only"]], {},
-              class: "block w-full rounded-xl border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-base sm:text-sm text-neutral-900 dark:text-white focus:ring-blue-500 focus:border-blue-500 transition-all py-3 px-4" %>
+              class: "block w-full rounded-xl border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-base sm:text-sm text-neutral-900 dark:text-white focus:ring-blue-500 focus:border-blue-500 transition-all py-3 px-4", **field.input_attributes %>
         <% end %>
 
         <% verified_communities = Current.user&.verified_communities || [] %>
@@ -217,10 +219,10 @@
           label: "Community Hub (for hub-only rides)",
           name: :community_id,
           id: form.field_id(:community_id),
-          error: ride_post.errors[:community_id].first || ride_post.errors[:community].first
-        )) do %>
+          error: form_error(ride_post, :community_id)
+        )) do |field| %>
           <%= form.collection_select :community_id, verified_communities, :id, :name, { include_blank: "Select your community..." },
-              class: "block w-full rounded-xl border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-base sm:text-sm text-neutral-900 dark:text-white focus:ring-blue-500 focus:border-blue-500 transition-all py-3 px-4" %>
+              class: "block w-full rounded-xl border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-base sm:text-sm text-neutral-900 dark:text-white focus:ring-blue-500 focus:border-blue-500 transition-all py-3 px-4", **field.input_attributes %>
         <% end %>
       </div>
 
@@ -238,11 +240,11 @@
       id: form.field_id(:notes),
       helper_text: ride_post.persisted? && ride_post.notes.to_s.length > 300 ? "Existing longer notes may be kept unchanged; edited notes must be 300 characters or fewer." : "Optional. Up to 300 characters.",
       classes: "col-span-full",
-      error: ride_post.errors[:notes].first
-    )) do %>
+      error: form_error(ride_post, :notes)
+    )) do |field| %>
       <%= form.text_area :notes, rows: 4, maxlength: (300 unless ride_post.persisted? && ride_post.notes.to_s.length > 300),
           class: "block w-full rounded-xl border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-base sm:text-sm text-neutral-900 dark:text-white focus:ring-blue-500 focus:border-blue-500 transition-all py-3 px-4", 
-          placeholder: "e.g., I have a small dog, specific pick-up point near landmark, luggage notes..." %>
+          placeholder: "e.g., I have a small dog, specific pick-up point near landmark, luggage notes...", **field.input_attributes %>
     <% end %>
   </div>
 

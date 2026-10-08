@@ -23,7 +23,7 @@ class ChatMessagesController < ApplicationController
             locals: { ride_post: @ride_post, chat_message: @chat_message }
           ), status: :unprocessable_content
         end
-        format.html { redirect_to ride_post_path(@ride_post, tab: "chat"), alert: @chat_message.errors.full_messages.to_sentence, status: :see_other }
+        format.html { redirect_to ride_post_path(@ride_post, tab: "chat"), alert: model_error_feedback(@chat_message, title: "Your message wasn’t sent. Check the message and try again."), status: :see_other }
       end
     end
   end
