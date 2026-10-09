@@ -34,6 +34,9 @@
 
 # Ignore key files for decrypting credentials and more.
 /config/*.key
+/config/*.local.yml
+/config/kamal-backup.local.yml
+
 
 # Ignore RubyMine settings
 .idea/

@@ -21,6 +21,11 @@ Location:
       enabled: false
 
 RidePost:
+  # The immutable internal occurrence key is protected by the database and
+  # transactional materialization; a per-row validator would repeat lookups.
+  index_ride_posts_on_ride_schedule_id_and_schedule_date:
+    UniqueIndexChecker:
+      enabled: false
   # Location rides associations are retained when locations exist; prevent cascade deletes on shared locations
   destination:
     MissingDependentDestroyChecker:
@@ -36,6 +41,22 @@ RidePost:
     ColumnPresenceChecker:
       enabled: false
     NumericalityConstraintChecker:
+      enabled: false
+
+RideSchedule:
+  # Referenced routes, hubs and original drafts are preserved with restrictive
+  # foreign keys rather than cascade deletion of recurring offers and history.
+  origin:
+    MissingDependentDestroyChecker:
+      enabled: false
+  destination:
+    MissingDependentDestroyChecker:
+      enabled: false
+  community:
+    MissingDependentDestroyChecker:
+      enabled: false
+  source_ride_post:
+    MissingDependentDestroyChecker:
       enabled: false
 
 RouteSubscription:

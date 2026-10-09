@@ -13,15 +13,16 @@ class RidePostsController < ApplicationController
   # GET /ride_posts or /ride_posts.json
   def index
     if params.key?(:origin_id) || params.key?(:destination_id) || params.key?(:community_id) || params.key?(:ladies_only) || params.key?(:departure_date)
-      @ride_posts = RidePost.active.upcoming
+      @ride_posts = RidePost.active.upcoming.accepting_schedule_requests
                             .visible_to(Current.user)
-                            .includes(:origin, :destination, :community, user: { avatar_attachment: :blob })
+                            .includes(:origin, :destination, :community, :ride_schedule, user: { avatar_attachment: :blob })
                             .order(departure_date: :asc, departure_time: :asc)
                             .filter_by_origin(params[:origin_id])
                             .filter_by_destination(params[:destination_id])
                             .filter_by_community(params[:community_id])
                             .filter_by_ladies_only(params[:ladies_only])
                             .filter_by_departure_date(params[:departure_date])
+      @ride_posts = @ride_posts.one_per_schedule if params[:departure_date].blank?
 
       if @origin && @destination
         setup_route_meta_tags
@@ -74,10 +75,20 @@ class RidePostsController < ApplicationController
 
   # GET /ride_posts/new
   def new
-    @ride_post = Current.user.ride_posts.build
+    if params[:ride_type] == "regular"
+      @ride_schedule = Current.user.ride_schedules.build
+      if params[:source_ride_post_id].present?
+        source = Current.user.ride_posts.find(params[:source_ride_post_id])
+        @ride_schedule.assign_attributes(source.attributes.slice(*RideSchedule::OFFER_FIELDS))
+        @ride_schedule.source_ride_post = source
+      end
+    else
+      @ride_post = Current.user.ride_posts.build
+    end
     if params[:community_id].present?
-      @ride_post.community = Current.user.verified_communities.find(params[:community_id])
-      @ride_post.visibility = :hub_only
+      offer = @ride_schedule || @ride_post
+      offer.community = Current.user.verified_communities.find(params[:community_id])
+      offer.visibility = :hub_only
     end
   end
 
@@ -87,6 +98,8 @@ class RidePostsController < ApplicationController
 
   # POST /ride_posts or /ride_posts.json
   def create
+    return create_regular_ride if params[:ride_type] == "regular"
+
     @ride_post = Current.user.ride_posts.build(ride_post_params)
     @ride_post.status = params[:intent] == "publish" ? :active : :draft if @ride_post.offering?
 
@@ -174,6 +187,26 @@ class RidePostsController < ApplicationController
   end
 
   private
+
+  def create_regular_ride
+    @ride_schedule = Current.user.ride_schedules.build
+    attributes = params.expect(ride_post: [
+      :origin_id, :destination_id, :departure_choice, :exact_departure_time,
+      :seats, :notes, :ladies_only, :visibility, :community_id, :end_date,
+      :source_ride_post_id, { weekday_ids: [] }
+    ]).to_h
+    attributes["departure_clock"] = attributes.delete("exact_departure_time")
+    attributes["status"] = :active if params[:intent] == "publish"
+    RideSchedules::ConfigureService.call(schedule: @ride_schedule, actor: Current.user, attributes: attributes)
+    notice = @ride_schedule.draft? ? "Regular ride saved as a private draft." : "Regular schedule saved. Passengers book each departure separately."
+    redirect_to @ride_schedule, notice: notice, status: :see_other
+  rescue ActiveRecord::RecordInvalid => e
+    @ride_schedule.errors.add(:base, e.record.errors.full_messages.to_sentence) if e.record != @ride_schedule
+    render :new, status: :unprocessable_content
+  rescue RideSchedules::ConfigureService::Error => e
+    @ride_schedule.errors.add(:base, e.message)
+    render :new, status: :unprocessable_content
+  end
 
   # Use callbacks to share common setup or constraints between actions.
   def set_ride_post

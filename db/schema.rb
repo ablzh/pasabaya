@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_05_121000) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_08_150100) do
   create_table "account_deletion_tombstones", force: :cascade do |t|
     t.string "anonymized_email", null: false
     t.bigint "avatar_blob_id"
@@ -193,6 +193,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_05_121000) do
     t.integer "post_type", default: 0, null: false
     t.integer "remaining_seats"
     t.datetime "requests_closed_at"
+    t.integer "ride_schedule_id"
+    t.date "schedule_date"
     t.integer "seats"
     t.integer "status", default: 0, null: false
     t.datetime "updated_at", null: false
@@ -202,13 +204,45 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_05_121000) do
     t.index ["departure_date", "departure_choice"], name: "index_ride_posts_on_departure_date_and_departure_choice"
     t.index ["destination_id"], name: "index_ride_posts_on_destination_id"
     t.index ["origin_id"], name: "index_ride_posts_on_origin_id"
+    t.index ["ride_schedule_id", "schedule_date"], name: "index_ride_posts_on_ride_schedule_id_and_schedule_date", unique: true
     t.index ["user_id"], name: "index_ride_posts_on_user_id"
+    t.check_constraint "(ride_schedule_id IS NULL AND schedule_date IS NULL) OR (ride_schedule_id IS NOT NULL AND schedule_date IS NOT NULL AND schedule_date = departure_date)", name: "check_ride_posts_schedule_date"
     t.check_constraint "post_type = 0", name: "check_ride_posts_driver_offers_only"
     t.check_constraint "remaining_seats IS NULL OR (remaining_seats >= 0 AND remaining_seats <= seats)", name: "check_ride_posts_offering_inventory"
+    t.check_constraint "ride_schedule_id IS NULL OR departure_date IS NOT NULL", name: "check_scheduled_departures_have_date"
     t.check_constraint "seats > 0", name: "check_ride_posts_seats_positive"
-    t.check_constraint "status = 4 OR (departure_date IS NOT NULL AND departure_choice IS NOT NULL)", name: "check_ride_posts_departure_presence"
     t.check_constraint "status = 4 OR seats IS NOT NULL", name: "check_ride_posts_seats_presence"
+    t.check_constraint "status IN (2, 3, 4) OR (departure_date IS NOT NULL AND departure_choice IS NOT NULL)", name: "check_ride_posts_departure_presence"
     t.check_constraint "visibility != 1 OR community_id IS NOT NULL", name: "check_ride_posts_hub_only_requires_community"
+  end
+
+  create_table "ride_schedules", force: :cascade do |t|
+    t.integer "community_id"
+    t.datetime "created_at", null: false
+    t.integer "departure_choice"
+    t.string "departure_clock"
+    t.integer "destination_id"
+    t.date "end_date"
+    t.boolean "ladies_only", default: false, null: false
+    t.text "notes"
+    t.integer "origin_id"
+    t.integer "seats"
+    t.integer "source_ride_post_id"
+    t.integer "status", default: 0, null: false
+    t.datetime "updated_at", null: false
+    t.integer "user_id", null: false
+    t.integer "visibility", default: 0, null: false
+    t.integer "weekdays_mask", default: 0, null: false
+    t.index ["community_id"], name: "index_ride_schedules_on_community_id"
+    t.index ["destination_id"], name: "index_ride_schedules_on_destination_id"
+    t.index ["origin_id"], name: "index_ride_schedules_on_origin_id"
+    t.index ["source_ride_post_id"], name: "index_ride_schedules_on_source_ride_post_id", unique: true
+    t.index ["status", "end_date"], name: "index_ride_schedules_on_status_and_end_date"
+    t.index ["user_id"], name: "index_ride_schedules_on_user_id"
+    t.check_constraint "seats IS NULL OR seats > 0", name: "check_ride_schedules_seats"
+    t.check_constraint "status IN (0, 1, 2, 3)", name: "check_ride_schedules_status"
+    t.check_constraint "visibility != 1 OR community_id IS NOT NULL", name: "check_ride_schedules_hub_requires_community"
+    t.check_constraint "weekdays_mask BETWEEN 0 AND 127", name: "check_ride_schedules_weekdays"
   end
 
   create_table "route_subscriptions", force: :cascade do |t|
@@ -303,7 +337,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_05_121000) do
   add_foreign_key "ride_posts", "communities", on_delete: :nullify
   add_foreign_key "ride_posts", "locations", column: "destination_id"
   add_foreign_key "ride_posts", "locations", column: "origin_id"
+  add_foreign_key "ride_posts", "ride_schedules"
   add_foreign_key "ride_posts", "users"
+  add_foreign_key "ride_schedules", "communities"
+  add_foreign_key "ride_schedules", "locations", column: "destination_id"
+  add_foreign_key "ride_schedules", "locations", column: "origin_id"
+  add_foreign_key "ride_schedules", "ride_posts", column: "source_ride_post_id"
+  add_foreign_key "ride_schedules", "users"
   add_foreign_key "route_subscriptions", "communities", on_delete: :nullify
   add_foreign_key "route_subscriptions", "locations", column: "destination_id"
   add_foreign_key "route_subscriptions", "locations", column: "origin_id"

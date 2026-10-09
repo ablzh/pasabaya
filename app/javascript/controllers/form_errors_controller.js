@@ -28,8 +28,8 @@ export default class extends Controller {
 
   correct(event) {
     const input = event.target
-    if (input.type === "radio" && input.name === "ride_post[departure_choice]" && input.value !== "exact_time") {
-      const exactTime = this.form.querySelector("#ride_post_exact_departure_time")
+    if (input.type === "radio" && input.name.endsWith("[departure_choice]") && input.value !== "exact_time") {
+      const exactTime = this.form.querySelector('[data-ride-creation-target="time"]')
       if (exactTime) this.clearField(exactTime)
     }
     if (input.type === "password" && !input.id.endsWith("_confirmation")) {
@@ -50,7 +50,7 @@ export default class extends Controller {
 
   clearField(input) {
     const fieldId = input.type === "radio" ? this.form.querySelector(`input[name="${input.name}"]`).id : input.id
-    const errorId = input.type === "radio" ? "ride_post_departure_choice_error" : `${fieldId}_error`
+    const errorId = input.type === "radio" ? input.closest("fieldset").dataset.formErrorId : `${fieldId}_error`
     document.getElementById(errorId)?.remove()
     const controls = input.type === "radio" ? Array.from(input.closest("fieldset").querySelectorAll("input[type=radio]")).concat(input.closest("fieldset")) : [input, input.tomselect?.control, input.tomselect?.control_input].filter(Boolean)
     controls.forEach((control) => {

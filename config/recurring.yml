@@ -10,6 +10,9 @@
 #     schedule: at 5am every day
 
 production:
+  refresh_regular_departures:
+    class: RideScheduleRefreshJob
+    schedule: every hour at minute 5
   retry_deleted_avatar_purges:
     command: "AccountDeletionTombstone.where.not(avatar_blob_id: nil).find_each(&:enqueue_avatar_purge)"
     schedule: every hour at minute 20

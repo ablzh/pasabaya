@@ -4,6 +4,8 @@ class RidePost < ApplicationRecord
   belongs_to :origin, class_name: "Location", optional: true
   belongs_to :destination, class_name: "Location", optional: true
   belongs_to :community, optional: true
+  belongs_to :ride_schedule, optional: true
+  attr_readonly :ride_schedule_id, :schedule_date
 
   has_many :bookings, dependent: :destroy
   has_many :notifications, as: :notifiable
@@ -38,7 +40,7 @@ class RidePost < ApplicationRecord
 
   attr_accessor :exact_departure_time
 
-  before_validation :refresh_driver_for_edit, if: :driver_edit?
+  before_validation :refresh_driver_for_edit, if: -> { driver_edit? && !Array(validation_context).include?(:schedule_generation) }
   validate :driver_must_not_be_deleted, if: :driver_edit?
 
   validate :departure_date_cannot_be_in_the_past
@@ -59,6 +61,7 @@ class RidePost < ApplicationRecord
   validate :driver_must_be_female_for_ladies_only, if: -> { ladies_only? && !canceled? && !completed? && (publishing? || will_save_change_to_ladies_only?) }
   validate :bookable_offering_requirements, if: -> { offering? && !draft? && !canceled? && !completed? }
   validate :lock_attributes_when_accepted_bookings_exist, on: :update
+  validate :scheduled_departure_date_is_fixed
 
   before_validation :sync_departure_fields
   before_validation :initialize_remaining_seats, on: :create
@@ -117,6 +120,17 @@ class RidePost < ApplicationRecord
     where("ride_posts.departure_time > ? OR (ride_posts.departure_time IS NULL AND (ride_posts.departure_date >= ? OR ride_posts.departure_date IS NULL))", Time.current, Date.current)
   }
 
+  scope :accepting_schedule_requests, -> {
+    left_joins(:ride_schedule).where(
+      "ride_posts.ride_schedule_id IS NULL OR (ride_schedules.status = ? AND ride_posts.requests_closed_at IS NULL AND ride_posts.departure_date BETWEEN ? AND ?)",
+      RideSchedule.statuses[:active], Date.current, Date.current + RideSchedule::BOOKING_DAYS - 1
+    )
+  }
+
+  scope :one_per_schedule, -> {
+    where("ride_posts.ride_schedule_id IS NULL OR (ride_posts.ride_schedule_id, ride_posts.departure_date) IN (?)", select(:ride_schedule_id, Arel.sql("MIN(ride_posts.departure_date)")).where.not(ride_schedule_id: nil).group(:ride_schedule_id))
+  }
+
   def to_param
     return id.to_s unless origin_id && destination_id
 
@@ -130,10 +144,11 @@ class RidePost < ApplicationRecord
   end
 
   def self.popular_routes(limit = 12)
-    route_counts = publicly_visible.active.upcoming.group(:origin_id, :destination_id)
-                         .order(Arel.sql("count(*) DESC"))
+    listing_key = "CASE WHEN ride_posts.ride_schedule_id IS NULL THEN 'ride:' || ride_posts.id ELSE 'schedule:' || ride_posts.ride_schedule_id END"
+    route_counts = publicly_visible.active.upcoming.accepting_schedule_requests.group(:origin_id, :destination_id)
+                         .order(Arel.sql("COUNT(DISTINCT #{listing_key}) DESC"))
                          .limit(limit)
-                         .count
+                         .count(Arel.sql("DISTINCT #{listing_key}"))
 
     return [] if route_counts.empty?
 
@@ -164,11 +179,15 @@ class RidePost < ApplicationRecord
   end
 
   def bookable?
-    offering? && active? && requests_closed_at.nil? && remaining_seats.to_i > 0 && booking_cutoff_at.present? && booking_cutoff_at > Time.current
+    offering? && active? && requests_closed_at.nil? && remaining_seats.to_i > 0 && booking_cutoff_at.present? && booking_cutoff_at > Time.current && schedule_accepts_requests?
+  end
+
+  def schedule_accepts_requests?
+    ride_schedule_id.nil? || ride_schedule&.accepts_requests_for?(departure_date)
   end
 
   def booking_requests_closed?
-    requests_closed_at.present? || (booking_cutoff_at.present? && Time.current >= booking_cutoff_at)
+    requests_closed_at.present? || !schedule_accepts_requests? || (booking_cutoff_at.present? && Time.current >= booking_cutoff_at)
   end
 
   def full?
@@ -377,6 +396,14 @@ class RidePost < ApplicationRecord
   end
 
   def check_destruction_allowed
+    if has_attribute?(:ride_schedule_id) && RideSchedule.exists?(source_ride_post_id: id)
+      errors.add(:base, :schedule_source, message: "This draft is the original record of a regular schedule and must be preserved.")
+      throw :abort
+    end
+    if has_attribute?(:ride_schedule_id) && ride_schedule_id.present?
+      errors.add(:base, :scheduled_departure, message: "Cancel a scheduled departure instead of deleting it, so it stays excluded from the schedule.")
+      throw :abort
+    end
     if trip_reviews.exists? || no_show_incidents.exists?
       errors.add(:base, :review_history, message: "Cannot delete a ride with trip reviews or incident history.")
       throw :abort
@@ -407,7 +434,7 @@ class RidePost < ApplicationRecord
   end
 
   def sync_remaining_seats_with_capacity
-    if offering? && !bookings.accepted.exists? && will_save_change_to_seats?
+    if offering? && will_save_change_to_seats? && !current_bookings_include?(:accepted)
       self.remaining_seats = seats
       self.status = :active if fulfilled? && remaining_seats.to_i > 0
     end
@@ -548,16 +575,21 @@ class RidePost < ApplicationRecord
   end
 
   def lock_attributes_when_accepted_bookings_exist
-    has_accepted = bookings.accepted.exists?
-    has_historical = historical_reviewable_participation?
-    return unless has_accepted || has_historical
-
     locked_fields = %w[origin_id destination_id departure_date departure_choice departure_time expected_arrival_at seats post_type visibility ladies_only community_id]
+    return if (changes.keys & (locked_fields + [ "remaining_seats" ])).empty?
+
+    has_accepted = current_bookings_include?(:accepted)
+    has_pending = ride_schedule_id.present? && current_bookings_include?(:pending)
+    has_historical = historical_reviewable_participation?
+    return unless has_accepted || has_pending || has_historical
+
     changed_locked_fields = (changes.keys & locked_fields)
 
     if changed_locked_fields.any?
       if has_accepted
         errors.add(:base, :accepted_bookings_locked, message: "Cannot modify route, schedule, capacity, or audience while accepted bookings exist")
+      elsif has_pending
+        errors.add(:base, :pending_bookings_locked, message: "Cannot modify a regular departure's conditions while seat requests are pending")
       else
         errors.add(:base, :historical_trip_locked, message: "Cannot modify route, schedule, capacity, or audience for trips with historical participation")
       end
@@ -568,6 +600,20 @@ class RidePost < ApplicationRecord
       if remaining_seats > max_allowed
         errors.add(:remaining_seats, :exceeds_capacity, message: "cannot exceed available capacity (#{max_allowed}) while accepted bookings exist", count: max_allowed)
       end
+    end
+  end
+
+  def scheduled_departure_date_is_fixed
+    if ride_schedule_id.present? && departure_date != schedule_date
+      errors.add(:departure_date, "cannot be moved for a regular departure; cancel it and post a separate ride")
+    end
+  end
+
+  def current_bookings_include?(state)
+    if Array(validation_context).include?(:schedule_generation) && bookings.loaded?
+      bookings.any? { |booking| booking.status == state.to_s }
+    else
+      bookings.where(status: state).exists?
     end
   end
 

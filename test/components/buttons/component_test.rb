@@ -11,6 +11,11 @@ module Buttons
       assert_selector "button[type='button']"
     end
 
+    def test_submit_button_sends_the_selected_form_intent
+      render_inline(Buttons::Component.new(text: "Publish ride", type: "submit", name: "intent", value: "publish"))
+      assert_selector "button[type='submit'][name='intent'][value='publish']", text: "Publish ride"
+    end
+
     def test_renders_with_custom_block_content
       render_inline(Buttons::Component.new) do
         "<span>Custom Block Content</span>".html_safe

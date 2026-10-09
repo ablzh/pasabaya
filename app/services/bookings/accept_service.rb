@@ -55,6 +55,10 @@ module Bookings
           raise InvalidStateError, "The driver has closed seat requests"
         end
 
+        unless ride.schedule_accepts_requests?
+          raise InvalidStateError, "This regular schedule is not accepting requests for this date"
+        end
+
         if ride.booking_cutoff_at.blank? || ride.booking_cutoff_at <= Time.current
           raise InvalidStateError, "Cannot accept bookings for rides in the past"
         end

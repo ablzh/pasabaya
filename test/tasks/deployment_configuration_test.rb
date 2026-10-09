@@ -41,4 +41,9 @@ class DeploymentConfigurationTest < ActiveSupport::TestCase
       assert_equal "test-file-key", output
     end
   end
+
+  test "local kamal backup configuration is ignored by git" do
+    _output, status = Open3.capture2("git", "check-ignore", "-q", "config/kamal-backup.local.yml")
+    assert_predicate status, :success?
+  end
 end
