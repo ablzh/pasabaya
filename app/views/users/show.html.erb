@@ -63,7 +63,7 @@
     <% if Current.user == @user %>
       <div class="flex items-center gap-3 border-b border-neutral-200 dark:border-neutral-800 mb-6">
         <%= link_to posts_path, class: "pb-3 px-1 text-sm font-semibold transition-colors border-b-2 #{active_tab == 'posts' ? 'border-neutral-900 text-neutral-900 dark:border-white dark:text-white' : 'border-transparent text-neutral-500 hover:text-neutral-700 dark:text-neutral-400 dark:hover:text-neutral-200'}" do %>
-          My Posts (<%= @ride_posts.count %>)
+          My Posts (<%= @ride_posts.count + @ride_schedules.count { |schedule| schedule.active? || schedule.paused? } %>)
         <% end %>
         <%= link_to bookings_path, class: "pb-3 px-1 text-sm font-semibold transition-colors border-b-2 #{active_tab == 'bookings' ? 'border-neutral-900 text-neutral-900 dark:border-white dark:text-white' : 'border-transparent text-neutral-500 hover:text-neutral-700 dark:text-neutral-400 dark:hover:text-neutral-200'}" do %>
           Joined Trips &amp; Bookings (<%= @passenger_bookings.count %>)
@@ -156,6 +156,16 @@
         <% end %>
       </div>
       <% if Current.user == @user %>
+        <section id="profile-regular-rides" class="mt-8 space-y-3">
+          <h2 class="text-xl font-bold text-neutral-900 dark:text-white">Regular schedules</h2>
+          <%= link_to "Post a regular ride", new_ride_post_path(ride_type: "regular"), class: "text-blue-700 dark:text-blue-300 underline" %>
+          <% @ride_schedules.each do |schedule| %>
+            <div class="rounded-xl border border-neutral-200 dark:border-neutral-700 p-4">
+              <%= link_to "#{schedule.origin&.name || 'Choose origin'} → #{schedule.destination&.name || 'Choose destination'}", ride_schedule_path(schedule), class: "font-semibold text-blue-700 dark:text-blue-300" %>
+              <p><%= schedule.schedule_display %> • <%= schedule.status.humanize %></p>
+            </div>
+          <% end %>
+        </section>
         <section id="profile-drafts" class="mt-8 space-y-3">
           <h2 class="text-xl font-bold text-neutral-900 dark:text-white">Drafts</h2>
           <p class="text-sm text-neutral-500">Only you can see drafts. Add a route, future departure and passenger seats before publishing.</p>

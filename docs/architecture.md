@@ -11,6 +11,26 @@ publishing requires a valid future departure and a complete offer. Closing reque
 prevents new bookings without canceling accepted participation. Cancellation is a
 separate event with its own chat coordination deadline.
 
+`RideSchedule` is a recurring driver offer with weekdays and Philippine departure
+time, optional end date, and draft/active/paused/archived states. Publishing without
+an end date explicitly repeats until paused or ended. Its materializer maintains
+the next 14 Manila calendar dates, also refreshing when an authorized viewer opens
+the schedule. Each occurrence remains a normal `RidePost` with independent seats,
+conditions, audience, chat and reviews. A unique schedule/date key and retained
+canceled records prevent regeneration of a skipped date; occurrence dates cannot
+be moved. Missed refreshes only create future departures, never historical ones.
+
+Schedule edits reconcile only untouched future occurrences. Pending and accepted
+requests, manually closed departures, canceled dates and history preserve their
+existing conditions. A pause atomically expires pending requests and closes new
+admission while honoring accepted participation. Resume preserves manual closures
+and does not revive expired requests or canceled dates. Ending a series explicitly
+cancels future departures using the same cancellation transition as a single ride.
+Both request creation and acceptance enforce schedule admission inside the primary
+SQLite transaction. Account deletion and audience eligibility loss stop future
+generation; deletion also scrubs schedule notes. Legacy undated drafts require
+owner-confirmed conversion; no migration invents a recurrence or publishes drafts.
+
 `Booking` is one passenger's seat request. Pending requests do not consume seats.
 Acceptance consumes one seat, and cancellation of accepted participation restores
 it. A passenger can have only one pending or accepted request for a ride. Acceptance

@@ -15,15 +15,19 @@ class UsersController < ApplicationController
   private
 
   def load_activity
-    @ride_posts = @user.ride_posts.includes(:origin, :destination, :community, user: { avatar_attachment: :blob }).order(created_at: :desc)
+    @ride_posts = @user.ride_posts.includes(:origin, :destination, :community, :ride_schedule, :bookings, user: { avatar_attachment: :blob }).order(created_at: :desc)
     if Current.user == @user
       rides = @ride_posts.to_a
-      @draft_ride_posts = rides.select(&:draft?)
-      @past_ride_posts = rides.select { |ride| ride.canceled? || ride.completed? }
+      @ride_schedules = @user.ride_schedules.includes(:origin, :destination).order(created_at: :desc)
+      converted_ids = @ride_schedules.filter_map(&:source_ride_post_id)
+      @draft_ride_posts = rides.select { |ride| ride.draft? && !converted_ids.include?(ride.id) }
+      @past_ride_posts = rides.select { |ride| (ride.canceled? || ride.completed?) && (ride.ride_schedule_id.nil? || ride.bookings.any?) }
       published_rides = rides.select(&:published?)
       @ride_posts, @departed_ride_posts = published_rides.partition { |ride| ride.booking_cutoff_at.present? && ride.booking_cutoff_at > Time.current }
+      @ride_posts = @ride_posts.reject { |ride| ride.ride_schedule_id.present? }
+      @departed_ride_posts = @departed_ride_posts.reject { |ride| ride.ride_schedule_id.present? && ride.bookings.empty? }
     else
-      @ride_posts = @ride_posts.where(status: [ :active, :fulfilled ]).upcoming.visible_to(Current.user)
+      @ride_posts = @ride_posts.where(status: [ :active, :fulfilled ]).upcoming.accepting_schedule_requests.visible_to(Current.user).one_per_schedule
     end
 
     if authenticated? && Current.user == @user

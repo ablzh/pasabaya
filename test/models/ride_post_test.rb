@@ -356,7 +356,7 @@ class RidePostTest < ActiveSupport::TestCase
   end
 
   test "exact time booking closes at specified departure time" do
-    departure = 2.hours.from_now
+    departure = 2.hours.from_now.change(usec: 0)
     ride = RidePost.create!(
       user: users(:one),
       origin: locations(:one),
@@ -369,10 +369,14 @@ class RidePostTest < ActiveSupport::TestCase
       status: :active
     )
 
-    assert_equal departure, ride.booking_cutoff_at
+    assert_equal departure, ride.reload.booking_cutoff_at
     assert ride.bookable?
 
-    travel_to departure + 1.minute do
+    travel_to departure - 1.second do
+      assert ride.bookable?
+    end
+
+    travel_to departure do
       assert_not ride.bookable?
     end
   end

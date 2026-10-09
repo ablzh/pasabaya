@@ -1,0 +1,48 @@
+<div class="max-w-3xl mx-auto px-4 py-10 space-y-6">
+  <h1 class="text-3xl font-bold"><%= @ride_schedule.origin&.name || "Choose origin" %> → <%= @ride_schedule.destination&.name || "Choose destination" %></h1>
+  <p class="font-semibold">Regular ride • <%= @ride_schedule.schedule_display %></p>
+  <p>Each booking is for one departure. Seats are counted separately for every date. All times are Philippine time (UTC+8).</p>
+  <p><%= @ride_schedule.end_date ? "Repeats through #{@ride_schedule.end_date.to_fs(:long)}." : "Repeats until paused or ended." %></p>
+  <% if @ride_schedule.notes.present? %><p class="whitespace-pre-wrap"><%= @ride_schedule.notes %></p><% end %>
+  <% if @ride_schedule.hub_only? %><p>Verified members of <%= @ride_schedule.community&.name %> only.</p><% end %>
+  <% if @ride_schedule.ladies_only? %><p>Ladies only.</p><% end %>
+  <% if Current.user&.id == @ride_schedule.user_id %>
+    <div class="flex flex-wrap gap-4">
+      <% unless @ride_schedule.archived? %>
+        <%= link_to "Edit schedule", edit_ride_schedule_path(@ride_schedule), class: "text-blue-700 dark:text-blue-300 underline" %>
+      <% end %>
+      <% if @ride_schedule.active? %>
+        <%= button_to "Pause schedule", pause_ride_schedule_path(@ride_schedule), method: :patch, class: "text-blue-700 dark:text-blue-300 underline" %>
+      <% elsif @ride_schedule.paused? %>
+        <%= button_to "Resume schedule", resume_ride_schedule_path(@ride_schedule), method: :patch, class: "text-blue-700 dark:text-blue-300 underline" %>
+      <% end %>
+      <% if @ride_schedule.active? || @ride_schedule.paused? %>
+        <%= button_to "Cancel all future departures", cancel_future_ride_schedule_path(@ride_schedule), method: :patch, data: { turbo_confirm: "End this schedule and cancel all future departures, including confirmed bookings? Passengers will be notified." }, class: "text-red-700 dark:text-red-300 underline" %>
+      <% end %>
+    </div>
+  <% end %>
+  <% if @ride_schedule.draft? %>
+    <p role="status">Private draft — confirm the schedule to publish departures.</p>
+  <% elsif @ride_schedule.paused? %>
+    <p role="status">Schedule paused. Confirmed departures remain scheduled; new requests are closed.</p>
+  <% elsif @ride_schedule.archived? %>
+    <p role="status">This regular schedule has ended.</p>
+  <% end %>
+  <h2 class="text-xl font-bold">Upcoming departures</h2>
+  <% if @departures.empty? %>
+    <p>No upcoming departures are currently available.</p>
+  <% end %>
+  <% @departures.each do |ride| %>
+    <div id="<%= dom_id ride %>" class="rounded-xl border border-neutral-200 dark:border-neutral-700 p-4 space-y-2">
+      <p class="font-semibold"><%= ride.departure_display %></p>
+      <p><%= ride.origin.name %> → <%= ride.destination.name %> • <%= pluralize(ride.remaining_seats, "seat") %> available on this departure</p>
+      <% if ride.canceled? %><p>Cancelled — this date stays excluded from the schedule.</p><% end %>
+      <%= link_to "View departure on #{ride.departure_date.to_fs(:long)}", ride_post_path(ride), class: "text-blue-700 dark:text-blue-300 underline" %>
+      <% if Current.user&.id == @ride_schedule.user_id && !ride.canceled? %>
+        <%= button_to "Cancel this departure", cancel_ride_post_path(ride), method: :patch, data: { turbo_confirm: "Cancel only this departure? Its passengers will be notified." }, class: "text-red-700 dark:text-red-300 underline" %>
+      <% elsif !ride.bookable? %>
+        <p>Requests closed for this departure.</p>
+      <% end %>
+    </div>
+  <% end %>
+</div>

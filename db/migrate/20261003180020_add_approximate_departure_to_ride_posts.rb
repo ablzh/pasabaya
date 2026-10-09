@@ -12,7 +12,15 @@ class AddApproximateDepartureToRidePosts < ActiveRecord::Migration[8.1]
       WHERE departure_time IS NOT NULL;
     SQL
 
-    add_check_constraint :ride_posts, "status = 4 OR (departure_date IS NOT NULL AND departure_choice IS NOT NULL)", name: "check_ride_posts_departure_presence"
+    # Before booking existed, fulfilled meant a finished offer. Preserve undated
+    # legacy history as completed rather than inventing a departure date.
+    execute <<-SQL.squish
+      UPDATE ride_posts SET status = 3
+      WHERE status = 1 AND departure_time IS NULL
+        AND NOT EXISTS (SELECT 1 FROM bookings WHERE bookings.ride_post_id = ride_posts.id);
+    SQL
+
+    add_check_constraint :ride_posts, "status IN (2, 3, 4) OR (departure_date IS NOT NULL AND departure_choice IS NOT NULL)", name: "check_ride_posts_departure_presence"
   end
 
   def down

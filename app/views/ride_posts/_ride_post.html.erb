@@ -38,12 +38,15 @@
              classes: "relative h-full flex flex-col [&>div:last-child]:mt-auto",
              padding: :sm)) do |card| %>
     <% card.with_body do %>
-      <%= link_to ride_post_path(ride_post), class: "absolute inset-0 z-10 rounded-xl focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-blue-600", aria: { label: "View ride: #{ride_post.origin&.name || 'Choose origin'} to #{ride_post.destination&.name || 'Choose destination'}" } do %>
+      <%= link_to ride_post.ride_schedule&.authorized_viewer?(Current.user) && params[:departure_date].blank? ? ride_schedule_path(ride_post.ride_schedule_id) : ride_post_path(ride_post), class: "absolute inset-0 z-10 rounded-xl focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-blue-600", aria: { label: "View ride: #{ride_post.origin&.name || 'Choose origin'} to #{ride_post.destination&.name || 'Choose destination'}" } do %>
         <span class="sr-only">View ride details</span>
       <% end %>
       <%# Top Row: Badge + Badges + Seats %>
       <div class="flex justify-between items-start mb-3 gap-2">
         <div class="flex min-w-0 flex-wrap items-center gap-1.5">
+          <% if ride_post.ride_schedule_id.present? %>
+            <%= render Badge::Component.new(text: "Regular", variant: :blue, size: :sm, pill: true) %>
+          <% end %>
           <% if ride_post.draft? || ride_post.canceled? || ride_post.completed? %>
             <span class="text-[10px] font-bold uppercase tracking-wider text-neutral-500"><%= ride_post.completed? ? "Past" : ride_post.status.humanize %></span>
           <% end %>

@@ -44,15 +44,16 @@ module Users
     attr_reader :user
 
     def cancel_active_commitments!
+      user.ride_schedules.active.find_each do |schedule|
+        RideSchedules::TransitionService.call(schedule: schedule, actor: user, action: :pause)
+      end
       # Cancel pending and accepted passenger bookings
       user.bookings.active.find_each do |b|
         Bookings::CancelService.call(b, actor: user)
       end
 
       # Cancel active and fulfilled driver rides
-      user.ride_posts.where(status: %i[active fulfilled]).find_each do |ride|
-        RidePosts::CancelService.call(ride, actor: user)
-      end
+      RidePosts::CancelService.call_many(user.ride_posts.where(status: %i[active fulfilled]), actor: user)
     end
 
     def scrub_user_profile!(deleted_at)
@@ -78,10 +79,9 @@ module Users
     end
 
     def deidentify_retained_history!
+      user.ride_schedules.update_all(notes: nil)
       # Scrub free-form notes from all departed ride offers created by this user
-      user.ride_posts.where.not(notes: nil).find_each do |ride|
-        ride.update_columns(notes: nil)
-      end
+      user.ride_posts.where.not(notes: nil).update_all(notes: nil)
 
       # Scrub passenger pickup notes from all bookings made by this user
       user.bookings.where.not(pickup_notes: nil).find_each do |booking|

@@ -10,6 +10,7 @@ class User < ApplicationRecord
   validates :unconfirmed_email, presence: true, on: :email_change
   has_many :sessions, dependent: :destroy
   has_many :ride_posts, dependent: :destroy
+  has_many :ride_schedules, dependent: :restrict_with_error
   has_many :bookings, foreign_key: :passenger_id, dependent: :destroy, inverse_of: :passenger
   has_many :canceled_bookings, class_name: "Booking", foreign_key: :canceled_by_id, dependent: :nullify, inverse_of: :canceled_by
   has_many :received_notifications, class_name: "Notification", foreign_key: :recipient_id, dependent: :destroy, inverse_of: :recipient
@@ -65,6 +66,7 @@ class User < ApplicationRecord
   before_destroy :cancel_active_commitments, prepend: true
   before_update :reject_updates_after_deletion
   after_update_commit :withdraw_ineligible_participation, if: :saved_change_to_gender?
+  after_update_commit :pause_ineligible_schedules, if: -> { saved_change_to_banned_at? || saved_change_to_booking_freeze_until? }
 
   enum :gender, { unspecified: 0, female: 1, male: 2, non_binary: 3 }, default: :unspecified
 
@@ -156,7 +158,7 @@ class User < ApplicationRecord
   end
 
   def active_trips_count
-    driver_count = ride_posts.where(status: [ :active, :fulfilled ]).upcoming.count
+    driver_count = ride_posts.where(status: [ :active, :fulfilled ]).upcoming.one_per_schedule.count
     passenger_count = bookings.accepted.joins(:ride_post).where(ride_posts: { status: [ :active, :fulfilled ] }).merge(RidePost.upcoming).count
     driver_count + passenger_count
   end
@@ -255,17 +257,28 @@ class User < ApplicationRecord
   end
 
   def cancel_active_commitments
+    ride_schedules.active.find_each { |schedule| RideSchedules::TransitionService.call(schedule: schedule, actor: self, action: :pause) }
     bookings.active.find_each do |b|
       Bookings::CancelService.call(b, actor: self)
     end
 
-    ride_posts.where(status: [ :active, :fulfilled ]).find_each do |ride|
-      RidePosts::CancelService.call(ride, actor: self)
+    RidePosts::CancelService.call_many(ride_posts.where(status: [ :active, :fulfilled ]), actor: self)
+  end
+
+  def pause_ineligible_schedules
+    return if eligible_for_offering?
+
+    ride_schedules.active.find_each do |schedule|
+      RideSchedules::TransitionService.call(schedule: schedule, actor: self, action: :pause)
     end
   end
 
   def withdraw_ineligible_participation
     return if female?
+
+    ride_schedules.active.where(ladies_only: true).find_each do |schedule|
+      RideSchedules::TransitionService.call(schedule: schedule, actor: self, action: :pause)
+    end
 
     # Cancel passenger bookings on ladies-only rides
     bookings.joins(:ride_post)
@@ -277,11 +290,7 @@ class User < ApplicationRecord
     end
 
     # Cancel driver offers for ladies-only rides
-    ride_posts.where(ladies_only: true)
-              .upcoming
-              .where(status: [ :active, :fulfilled ])
-              .find_each do |ride|
-      RidePosts::CancelService.call(ride, actor: self)
-    end
+    RidePosts::CancelService.call_many(ride_posts.where(ladies_only: true)
+      .upcoming.where(status: [ :active, :fulfilled ]), actor: self)
   end
 end

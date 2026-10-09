@@ -16,6 +16,16 @@ en:
         expected_arrival_at: Expected arrival
         community: Hub
         ladies_only: Ladies Only carpool
+      ride_schedule:
+        origin: Departure city
+        destination: Destination city
+        seats: Passenger seats per departure
+        weekday_ids: Days of the week
+        departure_choice: Departure schedule
+        departure_clock: Departure time
+        community: Hub
+        end_date: End date
+        ladies_only: Ladies Only carpool
       trip_review:
         reported_user: Participant
         outcome: Trip outcome

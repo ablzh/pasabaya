@@ -1,0 +1,5 @@
+<div class="max-w-2xl mx-auto px-4 py-10 space-y-6">
+  <h1 class="text-3xl font-bold">Edit Regular Ride</h1>
+  <p>Changes apply to future departures without requests. Departures with pending or confirmed passengers keep their existing conditions.</p>
+  <%= render "ride_schedules/form", ride_schedule: @ride_schedule, grouped_locations: @grouped_locations, communities: @communities %>
+</div>

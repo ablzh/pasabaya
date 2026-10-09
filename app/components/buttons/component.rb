@@ -19,6 +19,8 @@ module Buttons
     # @param full_width [Boolean] Whether button should take full width
     # @param href [String] If provided, renders as an anchor tag instead of button
     # @param type [String] Button type attribute: "button" (default), "submit", "reset"
+    # @param name [String] Optional field name submitted by the clicked button
+    # @param value [String] Optional value submitted by the clicked button
     # @param classes [String] Additional CSS classes for the wrapper
     # @param data [Hash] Data attributes for the button
     def initialize(
@@ -36,6 +38,8 @@ module Buttons
       href: nil,
       target: nil,
       type: "button",
+      name: nil,
+      value: nil,
       classes: nil,
       data: {}
     )
@@ -58,6 +62,8 @@ module Buttons
       @href = href
       @target = target
       @type = type
+      @name = name
+      @value = value
       @classes = classes
       @data = data
     end
@@ -91,6 +97,8 @@ module Buttons
         attrs[:'aria-disabled'] = @disabled if @disabled
       else
         attrs[:type] = @type
+        attrs[:name] = @name if @name.present?
+        attrs[:value] = @value unless @value.nil?
         attrs[:disabled] = @disabled if @disabled
       end
 

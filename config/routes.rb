@@ -6,6 +6,13 @@ Rails.application.routes.draw do
   end
 
   resources :chats, only: [ :index ]
+  resources :ride_schedules, path: "regular-rides", only: [ :show, :edit, :update ] do
+    member do
+      patch :pause
+      patch :resume
+      patch :cancel_future
+    end
+  end
   resources :users, only: [ :show ]
   get "trips", to: "users#trips", as: :trips
   get "rides/from-:origin_slug-to-:destination_slug", to: "ride_posts#index", as: :route_rides

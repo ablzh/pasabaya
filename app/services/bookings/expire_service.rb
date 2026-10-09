@@ -38,6 +38,29 @@ module Bookings
         expire_single_booking(target.id)
       elsif target.is_a?(RidePost)
         expire_ride_post_bookings(target.id)
+      elsif target.is_a?(RideSchedule)
+        expire_schedule_bookings(target.id)
+      end
+    end
+
+    def expire_schedule_bookings(schedule_id)
+      ActiveRecord::Base.transaction do
+        schedule = RideSchedule.lock.find(schedule_id)
+        return unless schedule.paused?
+
+        pending = Booking.pending.joins(:ride_post).where(ride_posts: { ride_schedule_id: schedule.id }).to_a
+        return if pending.empty?
+
+        keys = pending.map { |booking| "booking_expired:#{booking.id}" }
+        existing_keys = Notification.where(delivery_key: keys).pluck(:delivery_key).to_set
+        Booking.where(id: pending.map(&:id), status: :pending).update_all(status: Booking.statuses[:expired], updated_at: Time.current)
+        pending.each do |booking|
+          key = "booking_expired:#{booking.id}"
+          next if existing_keys.include?(key)
+
+          Notification.create!(delivery_key: key, recipient_id: booking.passenger_id, notifiable: booking,
+            event_name: "booking.expired", delivery_status: :pending)
+        end
       end
     end
 

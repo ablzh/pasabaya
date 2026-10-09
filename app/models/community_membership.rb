@@ -63,6 +63,10 @@ class CommunityMembership < ApplicationRecord
     transaction do
       update!(revoked_at: Time.current)
 
+      user.ride_schedules.active.hub_only.where(community_id: community_id).find_each do |schedule|
+        RideSchedules::TransitionService.call(schedule: schedule, actor: user, action: :pause)
+      end
+
       # 1. Cancel upcoming passenger bookings in this community
       affected_bookings = Booking.joins(:ride_post)
                                  .where(passenger_id: user_id, status: [ :pending, :accepted ])
@@ -74,12 +78,8 @@ class CommunityMembership < ApplicationRecord
       end
 
       # 2. Cancel driver's upcoming hub-only rides (both active and fulfilled) for this community
-      user.ride_posts.hub_only.where(community_id: community_id)
-                             .upcoming
-                             .where(status: [ :active, :fulfilled ])
-                             .find_each do |ride|
-        RidePosts::CancelService.new(ride, actor: user).call
-      end
+      RidePosts::CancelService.call_many(user.ride_posts.hub_only.where(community_id: community_id)
+        .upcoming.where(status: [ :active, :fulfilled ]), actor: user)
     end
   end
 

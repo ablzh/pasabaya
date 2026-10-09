@@ -12,6 +12,8 @@ module FormErrorsHelper
     if record.is_a?(RidePost)
       { origin: :origin_id, destination: :destination_id, departure_time: :exact_departure_time,
         remaining_seats: :seats, community: :community_id }.fetch(attribute, attribute)
+    elsif record.is_a?(RideSchedule)
+      { origin: :origin_id, destination: :destination_id, community: :community_id }.fetch(attribute, attribute)
     elsif record.is_a?(NoShowIncident)
       { decision_reason: :reason }.fetch(attribute, attribute)
     elsif record.is_a?(TripReview)
