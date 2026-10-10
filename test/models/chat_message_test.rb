@@ -31,7 +31,7 @@ class ChatMessageTest < ActiveSupport::TestCase
     # Booking is pending (not accepted)
     msg = @ride.chat_messages.build(user: @passenger, body: "Can I join?")
     assert_not msg.valid?
-    assert_includes msg.errors[:base], "Only the driver and confirmed passengers can participate in trip chat"
+    assert msg.errors.of_kind?(:base, :not_participant)
   end
 
   test "cannot write message more than 24 hours after departure" do
@@ -40,7 +40,7 @@ class ChatMessageTest < ActiveSupport::TestCase
 
     msg = @ride.chat_messages.build(user: @driver, body: "Thanks for the ride!")
     assert_not msg.valid?
-    assert_includes msg.errors[:base], "Chat writes are closed 24 hours after the booking cutoff"
+    assert msg.errors.of_kind?(:base, :messaging_closed)
   end
 
   test "purge_expired! removes all messages in expired conversations and preserves retained conversations" do

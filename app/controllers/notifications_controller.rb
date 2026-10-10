@@ -43,15 +43,4 @@ class NotificationsController < ApplicationController
       redirect_to ride_posts_path, notice: "The trip is no longer available."
     end
   end
-
-  # PATCH /notifications/:id/mark_as_read
-  def mark_as_read
-    @notification = Current.user.received_notifications.find(params[:id])
-    @notification.mark_as_read!
-
-    respond_to do |format|
-      format.html { redirect_back fallback_location: notifications_path, status: :see_other }
-      format.turbo_stream
-    end
-  end
 end

@@ -15,7 +15,7 @@ class LifecycleCreationSafetyTest < ActiveSupport::TestCase
 
     booking = Booking.new(ride_post: stale_ride, passenger: @passenger)
     assert_not booking.save
-    assert_includes booking.errors[:ride_post], "is not available for booking"
+    assert booking.errors.of_kind?(:ride_post, :unavailable_ride)
     assert_not @ride.bookings.pending.exists?
   end
 
@@ -25,7 +25,7 @@ class LifecycleCreationSafetyTest < ActiveSupport::TestCase
 
     booking = Booking.new(ride_post: stale_ride, passenger: @passenger)
     assert_not booking.save
-    assert_includes booking.errors[:ride_post], "is not available for booking"
+    assert booking.errors.of_kind?(:ride_post, :unavailable_ride)
   end
 
   test "a loaded passenger cannot save pickup notes after account deletion" do
@@ -34,7 +34,7 @@ class LifecycleCreationSafetyTest < ActiveSupport::TestCase
 
     booking = Booking.new(ride_post: @ride, passenger: stale_passenger, pickup_notes: "My private pickup address")
     assert_not booking.save
-    assert_includes booking.errors[:passenger], "is not eligible to request seats"
+    assert booking.errors.of_kind?(:passenger, :ineligible_passenger)
     assert_not Booking.exists?(passenger_id: @passenger.id, pickup_notes: "My private pickup address")
   end
 
@@ -45,7 +45,7 @@ class LifecycleCreationSafetyTest < ActiveSupport::TestCase
       ride = RidePost.new(user: stale_driver, origin: @origin, destination: @destination,
         seats: 2, departure_time: 2.days.from_now, status: status, notes: "My private driving notes")
       assert_not ride.save
-      assert_includes ride.errors[:user], "has been deleted"
+      assert ride.errors.of_kind?(:user, :deleted_account)
     end
   end
 
@@ -54,7 +54,7 @@ class LifecycleCreationSafetyTest < ActiveSupport::TestCase
     assert Users::AnonymizeService.call(users(:one))
 
     assert_not stale_ride.update(notes: "My private address")
-    assert_includes stale_ride.errors[:user], "has been deleted"
+    assert stale_ride.errors.of_kind?(:user, :deleted_account)
     assert_nil @ride.reload.notes
   end
 
@@ -77,7 +77,7 @@ class LifecycleCreationSafetyTest < ActiveSupport::TestCase
 
     review = TripReview.new(ride_post: @ride, reporter: stale_passenger, reported_user: users(:one), notes: "My private trip notes")
     assert_not review.save
-    assert_includes review.errors[:reporter], "is not eligible to submit reviews"
+    assert review.errors.of_kind?(:reporter, :ineligible_reporter)
   end
 
   test "a review about a deleted participant preserves its outcome without restoring notes" do
@@ -100,7 +100,7 @@ class LifecycleCreationSafetyTest < ActiveSupport::TestCase
 
     subscription = RouteSubscription.new(user: stale_passenger, origin: @origin, destination: @destination)
     assert_not subscription.save
-    assert_includes subscription.errors[:user], "is not eligible to request route alerts"
+    assert subscription.errors.of_kind?(:user, :deleted_account)
     assert_empty @passenger.route_subscriptions
   end
 
@@ -112,7 +112,7 @@ class LifecycleCreationSafetyTest < ActiveSupport::TestCase
     membership = CommunityMembership.new(user: stale_passenger, community: community,
       institutional_email: "private-person@#{community.domain}")
     assert_not membership.save
-    assert_includes membership.errors[:user], "is not eligible to join communities"
+    assert membership.errors.of_kind?(:user, :deleted_account)
     assert_empty @passenger.community_memberships
   end
 end

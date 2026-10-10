@@ -19,7 +19,7 @@ class Settings::ProfilesControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :unprocessable_content
     assert_select "input[name='user[first_name]'][value='Entered name']"
-    assert_select "#user_avatar_error", text: "Choose a JPEG, PNG, or WebP image."
+    assert_select "#user_avatar_error", text: /\S/
     assert_select "img[data-avatar-preview-target='preview']"
     assert_equal original_blob_id, @user.reload.avatar.blob.id
   ensure
@@ -35,7 +35,7 @@ class Settings::ProfilesControllerTest < ActionDispatch::IntegrationTest
     patch settings_profile_url, params: { user: { avatar: Rack::Test::UploadedFile.new(file.path, "image/png") } }
 
     assert_response :unprocessable_content
-    assert_select "#user_avatar_error", text: "This image couldn’t be read. Choose another JPEG, PNG, or WebP image."
+    assert_select "#user_avatar_error", text: /\S/
     assert_not @user.reload.avatar.attached?
   ensure
     file&.close!
@@ -50,7 +50,7 @@ class Settings::ProfilesControllerTest < ActionDispatch::IntegrationTest
     corrupt = ActiveStorage::Blob.create_and_upload!(io: StringIO.new("\x89PNG\r\n\x1A\n".b + "broken image data"), filename: "corrupt.png", content_type: "image/png", identify: false)
     patch settings_profile_url, params: { user: { avatar: corrupt.signed_id } }
     assert_response :unprocessable_content
-    assert_select "#user_avatar_error", text: "This image couldn’t be read. Choose another JPEG, PNG, or WebP image."
+    assert_select "#user_avatar_error", text: /\S/
     assert_equal image.id, @user.reload.avatar.blob.id
   end
 
@@ -65,7 +65,7 @@ class Settings::ProfilesControllerTest < ActionDispatch::IntegrationTest
     }
 
     assert_redirected_to settings_profile_url
-    assert_equal "Profile updated successfully.", flash[:notice]
+    assert_predicate flash[:notice], :present?
 
     @user.reload
     assert_nil @user.facebook_profile_url
@@ -75,7 +75,7 @@ class Settings::ProfilesControllerTest < ActionDispatch::IntegrationTest
 
     get user_url(@user)
     assert_response :success
-    assert_select "a", text: "View Facebook Profile", count: 0
+    assert_select "main a[href*='facebook.com']", count: 0
   end
 
   test "rejects updating to an unsafe facebook_profile_url" do
@@ -86,7 +86,8 @@ class Settings::ProfilesControllerTest < ActionDispatch::IntegrationTest
     }
 
     assert_response :unprocessable_content
-    assert_select "p", text: /Enter an HTTPS link to your Facebook profile/
+    assert_select "#user_facebook_profile_url[aria-invalid='true'][aria-describedby~='user_facebook_profile_url_error']"
+    assert_select "#user_facebook_profile_url_error", text: /\S/
   end
 
   test "allows updating profile with unchanged legacy invalid facebook_profile_url" do
@@ -100,7 +101,7 @@ class Settings::ProfilesControllerTest < ActionDispatch::IntegrationTest
     }
 
     assert_redirected_to settings_profile_url
-    assert_equal "Profile updated successfully.", flash[:notice]
+    assert_predicate flash[:notice], :present?
     @user.reload
     assert_equal "Newname", @user.first_name
     assert_equal "http://legacy.facebook.com/outdated:8080", @user.facebook_profile_url

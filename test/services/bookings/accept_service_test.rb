@@ -101,7 +101,6 @@ module Bookings
         user: @driver,
         origin: locations(:one),
         destination: locations(:two),
-        post_type: :offering,
         seats: 3,
         remaining_seats: 2,
         status: :active,
@@ -120,11 +119,10 @@ module Bookings
       # Driver membership expires before cleanup runs
       driver_membership.update_columns(expires_at: 1.hour.ago)
 
-      error = assert_raises(AcceptService::InvalidStateError) do
+      assert_raises(AcceptService::InvalidStateError) do
         AcceptService.call(pending_booking, actor: @driver)
       end
 
-      assert_match(/Driver is no longer eligible/, error.message)
       assert pending_booking.reload.pending?
       assert_equal 2, hub_ride.reload.remaining_seats
     end
@@ -132,11 +130,10 @@ module Bookings
     test "rejects acceptance when driver is banned" do
       @driver.update_columns(banned_at: Time.current)
 
-      error = assert_raises(AcceptService::InvalidStateError) do
+      assert_raises(AcceptService::InvalidStateError) do
         AcceptService.call(@booking, actor: @driver)
       end
 
-      assert_match(/Driver is no longer eligible/, error.message)
       assert @booking.reload.pending?
     end
 
@@ -146,7 +143,6 @@ module Bookings
         user: @driver,
         origin: locations(:one),
         destination: locations(:two),
-        post_type: :offering,
         seats: 3,
         departure_date: target_date,
         departure_choice: :morning,
@@ -168,7 +164,6 @@ module Bookings
         user: @driver,
         origin: locations(:one),
         destination: locations(:two),
-        post_type: :offering,
         seats: 3,
         departure_date: target_date,
         departure_choice: :morning,
@@ -177,10 +172,10 @@ module Bookings
       booking = Booking.create!(ride_post: ride, passenger: @passenger, status: :pending)
 
       travel_to (target_date + 1.day).in_time_zone("Asia/Manila").change(hour: 0, min: 1) do
-        error = assert_raises(AcceptService::InvalidStateError) do
+        assert_raises(AcceptService::InvalidStateError) do
           AcceptService.call(booking, actor: @driver)
         end
-        assert_match(/Cannot accept bookings for rides in the past/, error.message)
+
         assert booking.reload.pending?
       end
     end

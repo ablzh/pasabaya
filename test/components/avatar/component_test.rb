@@ -25,29 +25,23 @@ module Avatar
       assert_selector "span", text: "JD"
     end
 
-    def test_renders_online_presence
-      render_inline(Avatar::Component.new(
-        alt: "Jane Doe",
-        fallback: "JD",
-        status: :online
-      ))
-
-      assert_selector "span.sr-only", text: "Online"
-    end
-
     def test_preserves_default_dimensions_for_responsive_or_partial_overrides
-      [ "sm:size-12", "w-12", "h-12" ].each do |classes|
-        render_inline(Avatar::Component.new(alt: "Jane Doe", classes: classes))
+      default_avatar = render_inline(Avatar::Component.new(alt: "Jane Doe")).at_css("span[role='img']")
+      default_dimensions = default_avatar["class"].split.grep(/\Asize-/)
+      assert_not_empty default_dimensions
 
-        assert_selector "span.size-10[role='img']"
+      [ "sm:size-12", "w-12", "h-12" ].each do |classes|
+        avatar = render_inline(Avatar::Component.new(alt: "Jane Doe", classes: classes)).at_css("span[role='img']")
+
+        default_dimensions.each { |dimension| assert_includes avatar["class"].split, dimension }
+        assert_includes avatar["class"].split, classes
       end
     end
 
     def test_unconditional_size_override_replaces_default_dimensions
-      render_inline(Avatar::Component.new(alt: "Jane Doe", classes: "size-6"))
+      avatar = render_inline(Avatar::Component.new(alt: "Jane Doe", classes: "size-6")).at_css("span[role='img']")
 
-      assert_selector "span.size-6[role='img']"
-      assert_no_selector "span.size-10[role='img']"
+      assert_equal [ "size-6" ], avatar["class"].split.grep(/\Asize-/)
     end
   end
 end

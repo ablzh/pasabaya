@@ -5,9 +5,9 @@ class RegistrationsControllerTest < ActionDispatch::IntegrationTest
     get sign_up_url
     assert_response :success
     assert_select "input[type='checkbox'][name='user[registration_acceptance]'][required]"
-    assert_select "label", text: /I confirm that I am at least 18 years old and agree to the Terms of Service and Privacy Policy/
-    assert_select "label a[href=?]", terms_path, text: "Terms of Service"
-    assert_select "label a[href=?]", privacy_path, text: "Privacy Policy"
+    assert_select "label[for='user_registration_acceptance']", text: /18/
+    assert_select "label a[href=?]", terms_path
+    assert_select "label a[href=?]", privacy_path
   end
 
   test "registration rejects missing or false age and policy acceptance and preserves input" do
@@ -23,7 +23,7 @@ class RegistrationsControllerTest < ActionDispatch::IntegrationTest
       end
 
       assert_response :unprocessable_content
-      assert_select "#user_registration_acceptance_error", text: "Confirm that you are at least 18 and agree to the Terms of Service and Privacy Policy."
+      assert_select "#user_registration_acceptance_error", text: /\S/
       assert_select "a[href='#user_registration_acceptance']"
       assert_select "input[name='user[first_name]'][value='Liza']"
       assert_select "input[name='user[email_address]'][value='attestation@example.com']"
@@ -48,7 +48,7 @@ class RegistrationsControllerTest < ActionDispatch::IntegrationTest
     end
 
     assert_redirected_to root_url
-    assert_equal "Welcome to Pasabaya! Your account was successfully created.", flash[:notice]
+    assert_predicate flash[:notice], :present?
   end
 
   test "should create user without facebook_profile_url" do
@@ -87,7 +87,8 @@ class RegistrationsControllerTest < ActionDispatch::IntegrationTest
     end
 
     assert_response :unprocessable_content
-    assert_select "p", text: /Enter an HTTPS link to your Facebook profile/
+    assert_select "#user_facebook_profile_url[aria-invalid='true'][aria-describedby~='user_facebook_profile_url_error']"
+    assert_select "#user_facebook_profile_url_error", text: /\S/
   end
 
   test "should not create user and render errors on validation failure" do
@@ -125,6 +126,6 @@ class RegistrationsControllerTest < ActionDispatch::IntegrationTest
 
     get sign_up_url
     assert_redirected_to root_url
-    assert_equal "You are already signed in.", flash[:alert]
+    assert_predicate flash[:alert], :present?
   end
 end

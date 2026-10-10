@@ -20,7 +20,6 @@ class TripReviewsControllerTest < ActionDispatch::IntegrationTest
       user: @driver,
       origin: @origin,
       destination: @destination,
-      post_type: :offering,
       seats: 3,
       remaining_seats: 2,
       status: :active,
@@ -95,7 +94,7 @@ class TripReviewsControllerTest < ActionDispatch::IntegrationTest
       }
     end
     assert_response :unprocessable_content
-    assert_select "#trip_review_outcome_error", text: "Choose an outcome that describes the passenger."
+    assert_select "#trip_review_outcome_error", text: /\S/
   end
 
   test "passenger can review after the driver cancels a departed trip without retaining chat access" do
@@ -136,15 +135,15 @@ class TripReviewsControllerTest < ActionDispatch::IntegrationTest
       }
     end
     assert_response :unprocessable_content
-    assert_select "li", text: /Could not save the incident report/
+    assert_select "[data-form-errors-summary] li", text: /\S/
   ensure
     NoShowIncident.define_singleton_method(:find_or_create_by!, original) if original
   end
   test "draft undated ride and empty departed offer cannot open or submit reviews" do
     sign_in_as(@driver)
     [ { status: :draft, departure_time: nil },
-      { status: :active, post_type: :offering, departure_time: nil },
-      { status: :active, post_type: :offering, departure_time: 2.hours.ago } ].each do |attributes|
+      { status: :active, departure_time: nil },
+      { status: :active, departure_time: 2.hours.ago } ].each do |attributes|
       @ride_post.update_columns(attributes)
       @booking.update_columns(status: Booking.statuses[:pending])
       get new_ride_post_review_url(@ride_post)

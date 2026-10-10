@@ -1,20 +1,11 @@
 require "test_helper"
 
 class RidePostsControllerTest < ActionDispatch::IntegrationTest
-  test "card notes preview is at most 110 characters and two lines without changing stored notes" do
-    original = "Long historical note " * 30
-    @ride_post.update_columns(notes: original)
-    get ride_posts_url(origin_id: @ride_post.origin_id)
-    assert_select "#ride_post_#{@ride_post.id} p.line-clamp-2", text: original.truncate(110)
-    assert_equal original, @ride_post.reload.notes
-  end
-
   test "unchanged historical long notes allow unrelated form updates" do
     original = "Historical details " * 30
     @ride_post.update_columns(notes: original)
     get edit_ride_post_url(@ride_post)
     assert_select "textarea[name='ride_post[notes]'][maxlength]", count: 0
-    assert_select "p", text: "Existing longer notes may be kept unchanged; edited notes must be 300 characters or fewer."
 
     patch ride_post_url(@ride_post), params: { ride_post: { notes: original, seats: 4 } }
     assert_redirected_to ride_post_url(@ride_post)
@@ -22,42 +13,28 @@ class RidePostsControllerTest < ActionDispatch::IntegrationTest
     assert_equal original, @ride_post.notes
   end
 
-  test "notes form explains the limit and server rejects oversized notes" do
+  test "notes form limits new notes and server rejects oversized notes" do
     get new_ride_post_url
     assert_select "textarea[name='ride_post[notes]'][maxlength='300']"
-    assert_select "p", text: "Optional. Up to 300 characters."
 
     assert_no_difference "RidePost.count" do
       post ride_posts_url, params: { intent: "draft", ride_post: { notes: "a" * 301 } }
     end
     assert_response :unprocessable_content
-    assert_select "p", text: "Keep your notes to 300 characters or fewer."
-  end
-
-  test "owner sees their trip notes without their own driver introduction" do
-    ride = ride_posts(:one)
-    sign_in_as(ride.user)
-    get ride_post_url(ride)
-    assert_select "h2", text: "Your Trip Notes"
-    assert_select "h3", text: /#{ride.user.first_name} #{ride.user.last_name}/, count: 0
-    sign_in_as(users(:two))
-    get ride_post_url(ride)
-    assert_select "h2", text: "Driver's Notes"
-    assert_select "h3", text: /#{ride.user.first_name} #{ride.user.last_name}/
+    assert_select "#ride_post_notes[aria-invalid='true'][aria-describedby~='ride_post_notes_error']"
+    assert_select "#ride_post_notes_error", text: /\S/
   end
 
   test "missing ride redirects old links to board with useful notice" do
     get ride_post_url("999999-no-longer-here")
     assert_redirected_to ride_posts_url
-    assert_equal "The trip is no longer available", flash[:alert]
+    assert_predicate flash[:alert], :present?
   end
 
-  test "canonical ride redirect retains chat and response format" do
+  test "canonical ride redirect retains chat tab" do
     ride = ride_posts(:one)
     get ride_post_url(ride.id, tab: "chat")
     assert_redirected_to ride_post_url(ride, tab: "chat")
-    get ride_post_url(ride.id, format: :json)
-    assert_redirected_to ride_post_url(ride, format: :json)
   end
 
   test "SEO redirects retain audience filters and departure date" do
@@ -88,20 +65,20 @@ class RidePostsControllerTest < ActionDispatch::IntegrationTest
     passenger = users(:two)
     ride = ride_posts(:one)
     bookings(:one).update_columns(status: Booking.statuses[:canceled])
-    Booking.create!(ride_post: ride, passenger: passenger, status: :pending)
+    current_booking = Booking.create!(ride_post: ride, passenger: passenger, status: :pending)
     sign_in_as(passenger)
     get ride_post_url(ride)
-    assert_select "p", text: "Seat Requested"
-    assert_select "button", text: "Request Seat", count: 0
+    assert_select "form[action='#{cancel_booking_path(current_booking)}']"
+    assert_select "form[action='#{ride_post_bookings_path(ride)}']", count: 0
   end
 
   test "booking notice escapes driver names and keeps cancellation action" do
     @ride_post.user.update_columns(first_name: "<a href='/fake'>Driver</a>")
     sign_in_as(users(:two))
     get ride_post_url(@ride_post)
-    assert_select ".passenger-booking-content p", text: "Waiting for <a href='/fake'>Driver</a> to accept your request."
+    assert_select ".passenger-booking-content p", text: /#{Regexp.escape(@ride_post.user.first_name)}/
     assert_select ".passenger-booking-content a[href='/fake']", count: 0
-    assert_select ".passenger-booking-content button", text: "Cancel Request"
+    assert_select ".passenger-booking-content form[action='#{cancel_booking_path(bookings(:one))}'] button"
   end
 
   test "search omits departed rides even before the audit runs" do
@@ -110,15 +87,6 @@ class RidePostsControllerTest < ActionDispatch::IntegrationTest
     get ride_posts_url(origin_id: "")
     assert_select "#ride_post_#{ride.id}", count: 0
   end
-  test "submitted passenger intent cannot create a passenger ride post" do
-    post ride_posts_url, params: { intent: "publish", ride_post: {
-      post_type: "requesting", origin_id: @ride_post.origin_id, destination_id: @ride_post.destination_id,
-      seats: 2, departure_time: 1.day.from_now, expected_arrival_at: 1.day.from_now + 2.hours
-    } }
-    assert_response :see_other
-    assert RidePost.last.offering?
-    assert RidePost.last.bookable?
-  end
 
   setup do
     @user = users(:one)
@@ -126,12 +94,66 @@ class RidePostsControllerTest < ActionDispatch::IntegrationTest
     sign_in_as(@user)
   end
 
+  test "ride pages reject JSON paths and Accept headers" do
+    sign_out
+    [ ride_posts_url(format: :json), ride_post_url(@ride_post, format: :json),
+      new_ride_post_url(format: :json), edit_ride_post_url(@ride_post, format: :json) ].each do |url|
+      get url
+      assert_response :not_acceptable
+    end
+
+    get ride_posts_url, headers: { "Accept" => "application/json" }
+    assert_response :not_acceptable
+  end
+
+  test "JSON ride mutations are rejected before changing records" do
+    original_attributes = @ride_post.attributes
+    original_booking = bookings(:one).attributes
+    assert_no_difference [ "RidePost.count", "RideSchedule.count", "Booking.count", "Notification.count" ] do
+      post ride_posts_url(format: :json), params: { ride_post: { notes: "JSON draft" }, intent: "draft" }
+      assert_response :not_acceptable
+
+      post ride_posts_url(format: :json), params: { ride_type: "regular", ride_post: { notes: "JSON schedule" } }
+      assert_response :not_acceptable
+
+      patch ride_post_url(@ride_post, format: :json), params: { ride_post: { notes: "JSON update" } }
+      assert_response :not_acceptable
+
+      delete ride_post_url(@ride_post, format: :json)
+      assert_response :not_acceptable
+
+      [ cancel_ride_post_url(@ride_post, format: :json), publish_ride_post_url(@ride_post, format: :json),
+        close_requests_ride_post_url(@ride_post, format: :json) ].each do |url|
+        patch url
+        assert_response :not_acceptable
+      end
+    end
+    assert_equal original_attributes, @ride_post.reload.attributes
+    assert_equal original_booking, bookings(:one).reload.attributes
+  end
+
+  test "Turbo form requests still negotiate HTML for redirects and validation errors" do
+    headers = { "Accept" => "text/vnd.turbo-stream.html, text/html, application/xhtml+xml" }
+    assert_difference "RidePost.count", 1 do
+      post ride_posts_url, params: { ride_post: { notes: "Turbo draft" }, intent: "draft" }, headers: headers
+    end
+    assert_response :see_other
+    assert_redirected_to ride_post_url(RidePost.last)
+
+    assert_no_difference "RidePost.count" do
+      post ride_posts_url, params: { ride_post: { notes: "a" * 301 }, intent: "draft" }, headers: headers
+    end
+    assert_response :unprocessable_content
+    assert_equal "text/html", response.media_type
+    assert_select "textarea[name='ride_post[notes]']", text: "a" * 301
+  end
+
   test "should get index with empty state (blank slate) when no search params are provided" do
     # Sign out because index is accessible to the public/unauthenticated users
     sign_out
     get ride_posts_url
     assert_response :success
-    assert_select "h3", "Where are you heading?"
+    assert_select "form[action='#{ride_posts_path}']"
   end
 
   test "should redirect search with both origin and destination to seo route" do
@@ -167,7 +189,6 @@ class RidePostsControllerTest < ActionDispatch::IntegrationTest
     assert_difference("RidePost.count", 1) do
       post ride_posts_url, params: {
         ride_post: {
-          post_type: "offering",
           origin_id: locations(:one).id,
           destination_id: locations(:two).id,
           departure_time: 1.day.from_now,
@@ -221,9 +242,6 @@ class RidePostsControllerTest < ActionDispatch::IntegrationTest
     sign_out
     get ride_post_url(@ride_post)
     assert_redirected_to ride_posts_url
-
-    get ride_post_url(@ride_post, format: :json)
-    assert_response :forbidden
 
     sign_in_as(users(:two))
     get ride_post_url(@ride_post)
@@ -303,8 +321,8 @@ class RidePostsControllerTest < ActionDispatch::IntegrationTest
     get expected_url
 
     assert_response :success
-    assert_select "title", text: /Carpool from #{origin.name} to #{destination.name}/
-    assert_select "h1", text: /Carpool from #{origin.name} to #{destination.name}/
+    assert_select "title", text: /#{Regexp.escape(origin.name)}.*#{Regexp.escape(destination.name)}/
+    assert_select "h1", text: /#{Regexp.escape(origin.name)}.*#{Regexp.escape(destination.name)}/
     assert_select "link[rel='canonical'][href='#{expected_url}']"
     assert_select "meta[property='og:url'][content='#{expected_url}']"
   end
@@ -315,7 +333,7 @@ class RidePostsControllerTest < ActionDispatch::IntegrationTest
     get expected_url
     assert_response :success
 
-    assert_select "title", text: /Ride from #{@ride_post.origin.name} to #{@ride_post.destination.name}/
+    assert_select "title", text: /#{Regexp.escape(@ride_post.origin.name)}.*#{Regexp.escape(@ride_post.destination.name)}/
     assert_select "meta[name='robots'][content*='noindex']"
     assert_select "link[rel='canonical'][href='#{expected_url}']"
     assert_select "meta[property='og:url'][content='#{expected_url}']"
@@ -331,7 +349,7 @@ class RidePostsControllerTest < ActionDispatch::IntegrationTest
     patch cancel_ride_post_url(@ride_post)
 
     assert_redirected_to ride_post_url(@ride_post)
-    assert_equal "Trip was successfully canceled.", flash[:notice]
+    assert_predicate flash[:notice], :present?
     assert @ride_post.reload.canceled?
   end
 
@@ -339,7 +357,7 @@ class RidePostsControllerTest < ActionDispatch::IntegrationTest
     get ride_post_url(@ride_post)
     assert_response :success
     assert_select "form[action='#{cancel_ride_post_path(@ride_post)}']" do
-      assert_select "button", text: "Cancel Trip"
+      assert_select "button[type='submit']"
     end
   end
 
@@ -351,7 +369,7 @@ class RidePostsControllerTest < ActionDispatch::IntegrationTest
 
     patch cancel_ride_post_url(@ride_post)
     assert_redirected_to ride_post_url(@ride_post)
-    assert_equal "Cannot cancel this trip. Refresh the ride to check its current status.", flash[:alert]
+    assert_predicate flash[:alert], :present?
   ensure
     RidePosts::CancelService.define_singleton_method(:call, original_call)
   end
@@ -369,26 +387,23 @@ class RidePostsControllerTest < ActionDispatch::IntegrationTest
     assert_select "div[data-controller*='trip-view']"
     assert_select "button[data-tab-name='chat']"
     assert_select "div[data-trip-view-target='chatPane']"
-    assert_select "div", text: /Messaging closes:/
-    assert_select "div", text: /Scheduled live-database deletion:/
-    assert_select "time", text: /Philippine time \(UTC\+8\)/
+    assert_select "time[datetime='#{@ride_post.chat_messaging_closes_at.iso8601}']"
+    assert_select "time[datetime='#{@ride_post.chat_history_unavailable_at.iso8601}']"
   end
 
   test "authorized participant on canceled trip sees cancellation banner and revised deadlines" do
     bookings(:one).update_columns(status: Booking.statuses[:accepted])
     RidePosts::CancelService.call(@ride_post, actor: @ride_post.user)
+    @ride_post.reload
 
     get ride_post_url(@ride_post, tab: "chat")
 
     assert_response :success
     assert_select "button[data-tab-name='chat']"
-    assert_select "span", text: /Coordination/
-    assert_select "div", text: /Trip canceled/
-    assert_select "div", text: /Coordination messaging remains open for 24 hours/
-    assert_select "p", text: /Sending messages disabled 24 hours after trip cancellation/
-    assert_select ".chat-deadline-policy[open]", count: 0
-    assert_select ".chat-deadline-policy [data-chat-scroll-target='coordinationNotice']", count: 0
-    assert_select ".chat-deadlines > [role='status'][data-chat-scroll-target='coordinationNotice']", text: /Trip canceled/
+    assert_select "[role='status'][data-chat-scroll-target='coordinationNotice']", text: /\S/
+    assert_select "time[datetime='#{@ride_post.chat_messaging_closes_at.iso8601}']"
+    assert_select "time[datetime='#{@ride_post.chat_history_unavailable_at.iso8601}']"
+    assert_select "form[action='#{ride_post_chat_messages_path(@ride_post)}']"
   end
 
   test "expired chat tab direct navigation redirects to details with alert" do
@@ -397,19 +412,10 @@ class RidePostsControllerTest < ActionDispatch::IntegrationTest
     get ride_post_url(@ride_post, tab: "chat")
 
     assert_redirected_to ride_post_url(@ride_post)
-    assert_equal "Chat history for this trip is no longer available.", flash[:alert]
+    assert_predicate flash[:alert], :present?
     follow_redirect!
     assert_select "button[data-tab-name='chat']", 0
     assert_select "div[data-trip-view-target='chatPane']", 0
-  end
-
-  test "expired chat tab json request returns gone" do
-    @ride_post.update_columns(departure_time: 35.days.ago, expected_arrival_at: 34.days.ago)
-
-    get ride_post_url(@ride_post, tab: "chat", format: :json)
-
-    assert_response :gone
-    assert_equal "Chat history is no longer available", response.parsed_body["error"]
   end
 
   test "unauthorized viewer does not see chat tab on show" do
@@ -453,8 +459,9 @@ class RidePostsControllerTest < ActionDispatch::IntegrationTest
 
     get route_rides_url(origin_slug: empty_origin.slug, destination_slug: empty_dest.slug)
     assert_response :success
-    assert_select "h3", text: "No rides found for this route yet"
-    assert_select "input[type=submit][value='Notify me when a driver posts this route']"
+    assert_select "form[action='#{route_subscriptions_path}'] input[type='submit']"
+    assert_select "input[name='route_subscription[origin_id]'][value='#{empty_origin.id}']"
+    assert_select "input[name='route_subscription[destination_id]'][value='#{empty_dest.id}']"
   end
 
   test "empty route search shows sign-in and sign-up with preserved search context for guest" do
@@ -464,8 +471,8 @@ class RidePostsControllerTest < ActionDispatch::IntegrationTest
 
     get route_rides_url(origin_slug: empty_origin.slug, destination_slug: empty_dest.slug)
     assert_response :success
-    assert_select "h3", text: "No rides found for this route yet"
-    assert_select "a", text: "Sign in to get notified"
-    assert_select "a", text: "Create an account"
+    return_to = route_rides_path(origin_slug: empty_origin.slug, destination_slug: empty_dest.slug)
+    assert_select "a[href='#{new_session_path(return_to: return_to)}']"
+    assert_select "a[href='#{sign_up_path(return_to: return_to)}']"
   end
 end

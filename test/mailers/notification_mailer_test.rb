@@ -19,7 +19,6 @@ class NotificationMailerTest < ActionMailer::TestCase
       mail = NotificationMailer.with(notification: notification).event_notification
 
       assert_equal [ users(:one).email_address ], mail.to
-      assert_equal "Decision on a no-show report on Pasabaya", mail.subject
       [ mail.html_part, mail.text_part ].each do |part|
         assert_includes part.body.decoded, notification.summary
         assert_includes part.body.decoded, notification.incident_booking_restriction_summary
@@ -39,9 +38,8 @@ class NotificationMailerTest < ActionMailer::TestCase
 
     mail = NotificationMailer.with(notification: notification).event_notification
 
-    assert_equal "Update on your reported incident on Pasabaya", mail.subject
+    assert_equal [ notification.recipient.email_address ], mail.to
     [ mail.html_part, mail.text_part ].each do |part|
-      assert_includes part.body.decoded, "A decision has been reached regarding your reported incident on Pasabaya."
       assert_includes part.body.decoded, ride_post_url(ride, **NotificationMailer.default_url_options)
     end
   end

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_08_150100) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_09_120000) do
   create_table "account_deletion_tombstones", force: :cascade do |t|
     t.string "anonymized_email", null: false
     t.bigint "avatar_blob_id"
@@ -190,7 +190,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_08_150100) do
     t.boolean "ladies_only", default: false, null: false
     t.text "notes"
     t.integer "origin_id"
-    t.integer "post_type", default: 0, null: false
     t.integer "remaining_seats"
     t.datetime "requests_closed_at"
     t.integer "ride_schedule_id"
@@ -207,7 +206,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_08_150100) do
     t.index ["ride_schedule_id", "schedule_date"], name: "index_ride_posts_on_ride_schedule_id_and_schedule_date", unique: true
     t.index ["user_id"], name: "index_ride_posts_on_user_id"
     t.check_constraint "(ride_schedule_id IS NULL AND schedule_date IS NULL) OR (ride_schedule_id IS NOT NULL AND schedule_date IS NOT NULL AND schedule_date = departure_date)", name: "check_ride_posts_schedule_date"
-    t.check_constraint "post_type = 0", name: "check_ride_posts_driver_offers_only"
     t.check_constraint "remaining_seats IS NULL OR (remaining_seats >= 0 AND remaining_seats <= seats)", name: "check_ride_posts_offering_inventory"
     t.check_constraint "ride_schedule_id IS NULL OR departure_date IS NOT NULL", name: "check_scheduled_departures_have_date"
     t.check_constraint "seats > 0", name: "check_ride_posts_seats_positive"

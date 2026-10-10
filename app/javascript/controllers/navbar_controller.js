@@ -132,11 +132,6 @@ export default class extends Controller {
     links[(next + links.length) % links.length]?.focus();
   }
 
-  // Stubs for optional template-registered events
-  handlePointerEnter() {}
-  handlePointerMove() {}
-  handlePointerLeave() {}
-  cancelClose() {}
   handleTriggerKeydown(event) {
     if (!["ArrowDown", "ArrowUp"].includes(event.key)) return;
     event.preventDefault();

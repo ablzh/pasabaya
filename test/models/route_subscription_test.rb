@@ -19,7 +19,7 @@ class RouteSubscriptionTest < ActiveSupport::TestCase
 
     sub = RouteSubscription.new(user: @user, origin: @origin, destination: @origin)
     assert_not sub.valid?
-    assert_includes sub.errors[:destination], "must differ from origin"
+    assert sub.errors.of_kind?(:destination, :same_location)
   end
 
   test "cannot subscribe to a past departure date" do
@@ -30,7 +30,7 @@ class RouteSubscriptionTest < ActiveSupport::TestCase
       departure_date: 1.day.ago.to_date
     )
     assert_not sub.valid?
-    assert_includes sub.errors[:departure_date], "can't be in the past"
+    assert sub.errors.of_kind?(:departure_date, :past_date)
   end
 
   test "prevents duplicate active subscriptions for same user and search filters" do
@@ -48,7 +48,7 @@ class RouteSubscriptionTest < ActiveSupport::TestCase
       departure_date: 2.days.from_now.to_date
     )
     assert_not sub2.valid?
-    assert_includes sub2.errors[:user_id], "already has an active route alert for this search"
+    assert sub2.errors.of_kind?(:user_id, :taken)
 
     # Canceling the first allows creating a new one
     sub1.cancel!

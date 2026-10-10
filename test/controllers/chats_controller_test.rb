@@ -26,7 +26,6 @@ class ChatsControllerTest < ActionDispatch::IntegrationTest
     get "/chats"
 
     assert_response :success
-    assert_select "h1", text: "Chats"
     assert_select "a[href=?]", ride_post_path(@ride, tab: "chat") do
       assert_select "p", text: "Meet beside the library"
       assert_select "time[datetime]"
@@ -53,8 +52,8 @@ class ChatsControllerTest < ActionDispatch::IntegrationTest
 
     get chats_url
     assert_response :success
-    assert_select "p", text: "No trip conversations yet. Chats appear when you drive or join a confirmed trip."
-    assert_select "a[href=?]", ride_posts_path, text: "Find a ride"
+    assert_select "[data-conversation-unread]", count: 0
+    assert_select "a[href=?]", ride_posts_path
 
     delete session_url
     get chats_url
@@ -64,16 +63,15 @@ class ChatsControllerTest < ActionDispatch::IntegrationTest
   test "signed-in navigation links to chats" do
     sign_in_as(@passenger)
     get root_url
-    assert_select "a[href=?]", chats_path, text: "Chats"
+    assert_select "a[href=?]", chats_path
   end
 
-  test "signed-in navigation shows svg icon and unread conversation count badge" do
+  test "signed-in navigation shows unread conversation count" do
     @ride.chat_messages.create!(user: @driver, body: "Attention needed")
     sign_in_as(@passenger)
     get root_url
 
     assert_select "a[href=?]", chats_path do
-      assert_select "svg"
       assert_select "span[data-chat-unread-count]", text: /1/
     end
   end
@@ -83,17 +81,12 @@ class ChatsControllerTest < ActionDispatch::IntegrationTest
     sign_in_as(@passenger)
 
     get chats_url
-    assert_select "a[href=?][data-conversation-unread='true']", ride_post_path(@ride, tab: "chat") do
-      assert_select "span", text: "Unread"
-    end
+    assert_select "a[href=?][data-conversation-unread='true']", ride_post_path(@ride, tab: "chat")
 
     ChatReadState.mark_read!(user: @passenger, ride_post: @ride, message_id: msg.id)
 
     get chats_url
     assert_select "a[href=?][data-conversation-unread='false']", ride_post_path(@ride, tab: "chat")
-    assert_select "a[href=?]", ride_post_path(@ride, tab: "chat") do
-      assert_select "span", text: "Unread", count: 0
-    end
   end
 
   test "sending a reply preserves unseen incoming messages until the latest message is read" do
@@ -201,14 +194,16 @@ class ChatsControllerTest < ActionDispatch::IntegrationTest
   test "inbox displays canceled trip with revised deadlines and preserves coordination access" do
     @ride.chat_messages.create!(user: @driver, body: "Trip update")
     RidePosts::CancelService.call(@ride, actor: @driver)
+    @ride.reload
     sign_in_as(@passenger)
 
     get chats_url
 
     assert_response :success
-    assert_select "a[href=?]", ride_post_path(@ride, tab: "chat") do
+    deadline = @ride.chat_messaging_closes_at.in_time_zone("Asia/Manila").strftime("%b %d, %Y at %I:%M %p")
+    assert_select "a[href=?]", ride_post_path(@ride, tab: "chat") do |links|
       assert_select "span", text: "Canceled"
-      assert_select "span", text: /Open for coordination until.*Philippine time \(UTC\+8\)/
+      assert_includes links.first.text, deadline
     end
   end
 

@@ -49,7 +49,7 @@ class RideSchedulesControllerTest < ActionDispatch::IntegrationTest
       post ride_posts_url, params: { ride_type: "regular", ride_post: @params.merge(weekday_ids: []), intent: "publish" }
     end
     assert_response :unprocessable_content
-    assert_select "p", text: /must include at least one day/
+    assert_select "#ride_post_weekday_ids_error", text: /\S/
   end
 
   test "other users cannot change the schedule or convert another driver draft" do

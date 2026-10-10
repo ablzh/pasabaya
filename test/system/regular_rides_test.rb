@@ -27,10 +27,8 @@ class RegularRidesTest < ApplicationSystemTestCase
     assert_field "Available passenger seats", with: "3"
     choose "Regular"
     assert_checked_field "Monday"
-    page.save_screenshot(Rails.root.join("tmp/screenshots/ride-creation-regular.png"), full: true)
     click_button "Publish regular ride"
     assert_text "Regular schedule saved"
-    assert_text "Each booking is for one departure"
     schedule = users(:one).ride_schedules.last
     assert_equal "Meet near the station", schedule.notes
     assert_equal locations(:one).id, schedule.origin_id
@@ -102,7 +100,6 @@ class RegularRidesTest < ApplicationSystemTestCase
     assert_selector "#ride_post_exact_departure_time_error"
     assert_selector "#ride_post_weekday_ids_error"
     assert page.evaluate_script("document.documentElement.scrollWidth <= window.innerWidth")
-    page.save_screenshot(Rails.root.join("tmp/screenshots/ride-creation-mobile-validation.png"), full: true)
     page.execute_script("document.querySelector('#ride_post_origin_id').tomselect.setValue(arguments[0])", locations(:one).id.to_s)
     page.execute_script("document.querySelector('#ride_post_destination_id').tomselect.setValue(arguments[0])", locations(:two).id.to_s)
     click_button "Weekdays"

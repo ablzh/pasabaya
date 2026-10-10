@@ -6,20 +6,13 @@ class NotificationsControllerTest < ActionDispatch::IntegrationTest
     @notification = notifications(:one)
   end
 
-  test "avatar contains the accessible notification badge and a compact profile menu" do
+  test "account menu exposes the unread notification count accessibly" do
     sign_in_as(@user)
     get root_url
-    assert_select "nav > div > ul a[href='#{notifications_path}']", count: 0
-    assert_select "button[aria-label='Account menu'][aria-describedby='account-notification-count'] [data-notification-count] span[aria-label='1 unread notification']", text: "1"
-    assert_select "#profile-content a", count: 5
-    { "Profile" => user_path(@user), "Settings" => settings_profile_path,
-      "Notifications" => notifications_path, "Hubs" => communities_path, "Sign out" => session_path }.each do |label, path|
-      assert_select "#profile-content a[href='#{path}']", text: /#{label}/
-    end
-    assert_select "#profile-content a[href='#{trips_path}']", count: 0
-    assert_select "#profile-content a.sm\\:hidden[href='#{communities_path}']", text: "Hubs"
-    assert_select "nav a[href='#{communities_path}']"
-    assert_select "nav a[href='#{chats_path}']"
+    unread_count = @user.received_notifications.unread.count
+    assert_select "[aria-describedby='account-notification-count']"
+    assert_select "#account-notification-count [aria-label='#{ActionController::Base.helpers.pluralize(unread_count, "unread notification")}']", text: unread_count.to_s
+    assert_select "a[href='#{notifications_path}']"
   end
 
   test "authenticated user can view their notifications" do
@@ -44,21 +37,12 @@ class NotificationsControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to new_session_url
   end
 
-  test "marking a notification read with HTML redirects using GET" do
-    sign_in_as(@user)
-    patch mark_as_read_notification_url(@notification)
-    assert_response :see_other
-    assert_redirected_to notifications_url
-    assert @notification.reload.read?
-  end
-
   test "viewing a notification when notifiable was deleted redirects to rides index" do
     sign_in_as(@user)
     ride = RidePost.create!(
       user: users(:two),
       origin: locations(:one),
       destination: locations(:two),
-      post_type: :offering,
       seats: 2,
       departure_time: 2.days.from_now,
       expected_arrival_at: 2.days.from_now + 2.hours,
@@ -77,7 +61,7 @@ class NotificationsControllerTest < ActionDispatch::IntegrationTest
 
     assert orphan_notification.reload.read?
     assert_redirected_to ride_posts_url
-    assert_equal "The trip is no longer available.", flash[:notice]
+    assert_predicate flash[:notice], :present?
   end
 
   test "recipient can read the decision without private moderation evidence" do
@@ -90,8 +74,7 @@ class NotificationsControllerTest < ActionDispatch::IntegrationTest
     assert notification.reload.read?
     assert_includes response.headers["Cache-Control"], "no-store"
     assert_includes response.headers["Cache-Control"], "private"
-    assert_select "h1", text: "No-show report decision"
-    assert_includes response.body, "A no-show report about your participation was upheld."
+    assert_includes response.body, notification.summary
     assert_includes response.body, notification.incident_booking_restriction_summary
     assert_includes response.body, locations(:one).name
     assert_includes response.body, locations(:two).name
@@ -133,8 +116,8 @@ class NotificationsControllerTest < ActionDispatch::IntegrationTest
     get notification_url(notification)
 
     assert_response :success
-    assert_select "[role='status']", text: /A later decision replaced this update.*Current incident outcome: Dismissed/m
-    assert_includes response.body, "A no-show report about your participation was upheld."
+    assert_select "[role='status']", text: /#{Regexp.escape(incident.status.humanize)}/
+    assert_includes response.body, notification.summary
     assert_not_includes response.body, "PRIVATE REVISED REASON"
   end
 
@@ -145,7 +128,7 @@ class NotificationsControllerTest < ActionDispatch::IntegrationTest
     get notifications_url
 
     assert_response :success
-    assert_select "#notification_#{notification.id}", text: /A no-show report about your participation was dismissed\./
+    assert_select "#notification_#{notification.id}", text: /#{Regexp.escape(notification.summary)}/
     assert_not_includes response.body, "PRIVATE MODERATION REASON"
   end
 
@@ -157,7 +140,7 @@ class NotificationsControllerTest < ActionDispatch::IntegrationTest
     get notification_url(notification)
 
     assert_response :success
-    assert_includes response.body, "A no-show report about your participation was dismissed."
+    assert_includes response.body, notification.summary
     assert_not_includes response.body, "PRIVATE MODERATION REASON"
   end
 

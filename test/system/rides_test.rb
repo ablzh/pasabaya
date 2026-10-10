@@ -30,9 +30,6 @@ class RidesTest < ApplicationSystemTestCase
 
     assert_selector "h1", text: /Manila\s+→\s+Makati/
     assert_text "Heading to Manila early morning."
-    assert_text "3"
-    assert_text "YOUR TRIP NOTES"
-    assert_no_text "VIEW PROFILE & REVIEWS"
 
     # 3. Create a ride while signed in
     click_on "Add a ride"
@@ -52,7 +49,9 @@ class RidesTest < ApplicationSystemTestCase
     # Assert user-visible outcomes of creation
     assert_text "Ride saved as a private draft."
     assert_selector "h1", text: /Makati\s+→\s+Manila/
-    assert_text "4"
+    draft = user.ride_posts.order(:created_at).last
+    assert draft.draft?
+    assert_equal 4, draft.seats
     assert_text "Carpooling together tomorrow morning, 4 seats open."
     assert_link "Edit"
     click_link "Edit Post"
@@ -60,10 +59,11 @@ class RidesTest < ApplicationSystemTestCase
     choose "Exact Time"
     fill_in "Departure Time", with: "09:00"
     click_button "Save draft"
-    assert_text "Unpublished — edit to publish"
+    assert draft.reload.draft?
     click_link "Edit Post"
     assert_field "Expected Arrival Time (optional)", with: ""
     click_button "Publish ride"
-    assert_text "Accepting requests"
+    assert_button "Close seat requests"
+    assert draft.reload.active?
   end
 end

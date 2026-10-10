@@ -28,7 +28,7 @@ Rails.application.routes.draw do
     resources :reviews, only: [ :new, :create ], controller: "trip_reviews"
   end
 
-  resources :bookings, only: [ :show ] do
+  resources :bookings, only: [] do
     member do
       patch :accept
       patch :decline
@@ -42,9 +42,6 @@ Rails.application.routes.draw do
     collection do
       patch :mark_all_as_read
     end
-    member do
-      patch :mark_as_read
-    end
   end
 
   resources :communities, only: [ :index, :show ] do
@@ -52,8 +49,8 @@ Rails.application.routes.draw do
   end
   get "community_memberships/verify/:token", to: "community_memberships#verify", as: :verify_community_membership
 
-  resource :session
-  resources :passwords, param: :token
+  resource :session, only: [ :new, :create, :destroy ]
+  resources :passwords, param: :token, only: [ :new, :create, :edit, :update ]
 
   namespace :settings do
     resource :profile, only: [ :show, :update ]

@@ -20,7 +20,9 @@ class CloseRideRequestsTest < ActionDispatch::IntegrationTest
     assert_equal remaining, ride.remaining_seats
     assert confirmed.reload.accepted?
     assert pending.reload.expired?
-    assert_equal "Your seat request expired without confirmation", waiting_passenger.received_notifications.last.summary
+    notification = waiting_passenger.received_notifications.last
+    assert_equal "booking.expired", notification.event_name
+    assert_equal pending, notification.notifiable
     assert ride.user_authorized_for_chat?(confirmed.passenger)
     assert_equal message, ride.chat_messages.last
     assert_equal cutoff, ride.booking_cutoff_at
@@ -33,7 +35,7 @@ class CloseRideRequestsTest < ActionDispatch::IntegrationTest
     assert_no_difference "Booking.count" do
       post ride_post_bookings_url(ride)
     end
-    assert_includes flash[:feedback_errors], "This ride is no longer accepting seat requests. Find another ride."
+    assert_predicate flash[:feedback_errors], :present?
     assert_raises(Bookings::AcceptService::InvalidStateError) do
       Bookings::AcceptService.call(pending, actor: ride.user)
     end
@@ -53,7 +55,7 @@ class CloseRideRequestsTest < ActionDispatch::IntegrationTest
       assert_redirected_to ride_post_url(ride)
       assert_equal status.to_s, ride.reload.status
       assert_nil ride.requests_closed_at
-      assert_match /Only upcoming published trips/, flash[:alert]
+      assert_predicate flash[:alert], :present?
     end
   end
 

@@ -220,6 +220,22 @@ class AbuseProtectionTest < ActionDispatch::IntegrationTest
     end
   end
 
+  test "ride offer quota returns Turbo feedback without creating another ride" do
+    sign_in_as(users(:two))
+    attributes = { ride_post: { notes: "Draft" }, intent: "draft" }
+
+    with_rate_limit_cache do
+      10.times { post ride_posts_path, params: attributes }
+      assert_no_difference "RidePost.count" do
+        post ride_posts_path, params: attributes,
+          headers: { "Accept" => "text/vnd.turbo-stream.html, text/html, application/xhtml+xml" }
+      end
+      assert_response :too_many_requests
+      assert_equal "text/vnd.turbo-stream.html", response.media_type
+      assert_select "turbo-stream[action='update'][target='request_feedback']", text: /\S/
+    end
+  end
+
   private
 
   def registration_attributes

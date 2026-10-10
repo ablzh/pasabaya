@@ -17,7 +17,7 @@ class ChatDeadlineTransitionsTest < ApplicationSystemTestCase
     visit ride_post_path(@ride, tab: "chat")
     assert_selector "#chat_message_form input"
     assert_no_selector "#chat_message_form input", wait: 12
-    assert_text "Messaging for this trip has closed."
+    assert_selector ".trip-chat[data-chat-scroll-writable-value='false']"
     assert_text "Retained private discussion"
   end
 
@@ -26,7 +26,7 @@ class ChatDeadlineTransitionsTest < ApplicationSystemTestCase
     visit ride_post_path(@ride, tab: "chat")
     assert_text "Retained private discussion"
     assert_no_text "Retained private discussion", wait: 12
-    assert_text "Chat history for this trip is no longer available."
+    assert_no_selector "#trip-chat-pane"
     assert_no_selector "#chat_message_form input"
   end
 
@@ -34,11 +34,11 @@ class ChatDeadlineTransitionsTest < ApplicationSystemTestCase
     page.driver.resize(320, 420)
     @ride.update_columns(status: RidePost.statuses[:canceled], canceled_at: 24.hours.ago + 8.seconds)
     visit ride_post_path(@ride, tab: "chat")
-    assert_text "Coordination messaging remains open for 24 hours following cancellation."
+    notice = find("[data-chat-scroll-target='coordinationNotice']").text
     assert_no_selector ".chat-deadline-policy[open]"
     assert_no_selector "#chat_message_form input", wait: 12
-    assert_text "Trip canceled. Messaging is closed."
-    assert_no_text "Coordination messaging remains open"
+    assert_not_equal notice, find("[data-chat-scroll-target='coordinationNotice']").text
+    assert_selector ".trip-chat[data-chat-scroll-writable-value='false']"
     assert_text "Retained private discussion"
   end
 
@@ -46,7 +46,7 @@ class ChatDeadlineTransitionsTest < ApplicationSystemTestCase
     visit ride_post_path(@ride, tab: "chat")
     assert_selector "#chat_message_form input"
     RidePosts::CancelService.call(@ride, actor: users(:one))
-    assert_text "Coordination messaging remains open for 24 hours following cancellation."
+    assert_selector "[data-chat-scroll-target='coordinationNotice'][role='status']"
     find(".chat-deadlines summary").click
     assert_selector ".chat-deadlines time[datetime='#{@ride.reload.chat_messaging_closes_at.iso8601}']"
     assert_selector "#chat_message_form input"

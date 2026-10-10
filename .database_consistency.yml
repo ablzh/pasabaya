@@ -34,9 +34,6 @@ RidePost:
     MissingDependentDestroyChecker:
       enabled: false
   # Existing columns without database NOT NULL / CHECK constraints; model validates presence & numericality
-  post_type:
-    ColumnPresenceChecker:
-      enabled: false
   seats:
     ColumnPresenceChecker:
       enabled: false

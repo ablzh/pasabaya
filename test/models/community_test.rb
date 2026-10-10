@@ -17,7 +17,7 @@ class CommunityTest < ActiveSupport::TestCase
   test "requires presence of name, slug, and domain" do
     community = Community.new
     assert_not community.valid?
-    assert_includes community.errors[:name], "can't be blank"
+    assert community.errors.of_kind?(:name, :blank)
   end
 
   test "enforces uniqueness of slug and domain" do
@@ -28,8 +28,8 @@ class CommunityTest < ActiveSupport::TestCase
       domain: existing.domain
     )
     assert_not duplicate.valid?
-    assert_includes duplicate.errors[:slug], "has already been taken"
-    assert_includes duplicate.errors[:domain], "has already been taken"
+    assert duplicate.errors.of_kind?(:slug, :taken)
+    assert duplicate.errors.of_kind?(:domain, :taken)
   end
 
   test "verified_members_count counts only active verified memberships" do

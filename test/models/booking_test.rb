@@ -6,7 +6,7 @@ class BookingTest < ActiveSupport::TestCase
     booking = Booking.new(ride_post: ride, passenger: ride.user)
 
     assert_not booking.valid?
-    assert_includes booking.errors[:base], "Drivers cannot request seats on their own ride"
+    assert booking.errors.of_kind?(:base, :own_ride)
   end
 
   test "frozen user cannot request a seat" do
@@ -16,7 +16,7 @@ class BookingTest < ActiveSupport::TestCase
 
     booking = Booking.new(ride_post: ride, passenger: passenger)
     assert_not booking.valid?
-    assert_includes booking.errors[:passenger], "is not eligible to request seats"
+    assert booking.errors.of_kind?(:passenger, :ineligible_passenger)
   end
 
   test "cannot book ride if ride is not bookable" do
@@ -25,7 +25,7 @@ class BookingTest < ActiveSupport::TestCase
 
     booking = Booking.new(ride_post: ride, passenger: users(:two))
     assert_not booking.valid?
-    assert_includes booking.errors[:ride_post], "is not available for booking"
+    assert booking.errors.of_kind?(:ride_post, :unavailable_ride)
   end
 
   test "cannot have duplicate active bookings for the same passenger and ride" do
@@ -45,7 +45,7 @@ class BookingTest < ActiveSupport::TestCase
     assert_no_difference "Booking.count" do
       assert_not booking.destroy
     end
-    assert_includes booking.errors[:base], "Cannot delete booking with historical participation. Records must be preserved for review eligibility."
+    assert booking.errors.of_kind?(:base, :historical_participation)
 
     # Also after late cancellation
     booking.update_columns(status: Booking.statuses[:canceled], canceled_at: 1.hour.ago)

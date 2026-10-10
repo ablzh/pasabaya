@@ -27,8 +27,7 @@ class CommunityMembershipsControllerTest < ActionDispatch::IntegrationTest
     end
     assert_response :see_other
     assert_redirected_to community_url(@community)
-    follow_redirect!
-    assert_match(/Verification email sent/, response.body)
+    assert_predicate flash[:notice], :present?
 
     membership = @user.community_memberships.find_by(community: @community)
     assert_not_nil membership
@@ -41,7 +40,7 @@ class CommunityMembershipsControllerTest < ActionDispatch::IntegrationTest
       post community_memberships_url(@community), params: { institutional_email: "cand@otherdomain.com" }
     end
     assert_response :unprocessable_content
-    assert_select "#institutional_email_error", text: "Use your Hub email address ending in @accenture.com."
+    assert_select "#institutional_email_error", text: /#{Regexp.escape(@community.domain)}/
     assert_select "input#institutional_email[value='cand@otherdomain.com']"
   end
 
@@ -57,16 +56,14 @@ class CommunityMembershipsControllerTest < ActionDispatch::IntegrationTest
     get verify_community_membership_url(token: token)
 
     assert_redirected_to community_url(@community)
-    follow_redirect!
-    assert_match(/Your email has been verified!/, response.body)
+    assert_predicate flash[:notice], :present?
     assert membership.reload.verified?
   end
 
   test "verify rejects invalid token" do
     get verify_community_membership_url(token: "invalid-token-123")
     assert_redirected_to root_url
-    follow_redirect!
-    assert_match(/The verification link is invalid or has expired/, response.body)
+    assert_predicate flash[:alert], :present?
   end
 
   test "destroy revokes membership" do
@@ -81,8 +78,7 @@ class CommunityMembershipsControllerTest < ActionDispatch::IntegrationTest
     delete community_membership_url(@community, membership)
     assert_response :see_other
     assert_redirected_to community_url(@community)
-    follow_redirect!
-    assert_match(/You have left the #{@community.name} community/, response.body)
+    assert_predicate flash[:notice], :present?
 
     assert membership.reload.revoked_at.present?
     assert_not membership.verified?

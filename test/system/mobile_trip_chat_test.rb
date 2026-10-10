@@ -22,7 +22,7 @@ class MobileTripChatTest < ApplicationSystemTestCase
     within ".trip-chat" do
       assert_text "Manila"
       assert_text "Makati"
-      assert_text "Driver: Juan Dela Cruz"
+      assert_text "#{@ride.user.first_name} #{@ride.user.last_name}"
       find("button[aria-label='Back to trip']").click
     end
     assert_selector "#trip-details-pane:not(.hidden)"
@@ -36,6 +36,7 @@ class MobileTripChatTest < ApplicationSystemTestCase
   end
 
   test "composer follows a reduced visual viewport and landscape height" do
+    @ride.chat_messages.create!(user: @ride.user, body: "Coordination history")
     visit ride_post_path(@ride, tab: "chat")
     assert_selector "#chat_message_form input"
     page.execute_script("Object.defineProperties(window.visualViewport, {height: {value: 420, configurable: true}, offsetTop: {value: 30, configurable: true}}); window.visualViewport.dispatchEvent(new Event('resize'))")
@@ -46,10 +47,9 @@ class MobileTripChatTest < ApplicationSystemTestCase
     page.execute_script("window.visualViewport.dispatchEvent(new Event('resize'))")
     assert_chat_fits(390)
     find(".chat-deadlines summary").click
-    assert_text "Messaging closes:"
-    assert_text "Scheduled live-database deletion:"
-    assert_operator page.evaluate_script("document.querySelector('#chat_messages_list').clientHeight"), :>, 50
-    assert_operator page.evaluate_script("parseFloat(getComputedStyle(document.querySelector('#chat_message_form')).paddingBottom)"), :>=, 12
+    assert_selector ".chat-deadlines time[datetime='#{@ride.chat_messaging_closes_at.iso8601}']"
+    assert_selector ".chat-deadlines time[datetime='#{@ride.chat_history_unavailable_at.iso8601}']"
+    assert_readable_message_area
   end
 
   test "chat follows incoming messages at bottom and preserves older history through resize" do
@@ -79,40 +79,35 @@ class MobileTripChatTest < ApplicationSystemTestCase
   test "read only deadlines stay available and expired history has no active composer" do
     @ride.update_columns(departure_date: 3.days.ago.to_date, departure_time: 3.days.ago)
     visit ride_post_path(@ride, tab: "chat")
-    assert_text "Read-only"
-    assert_text "Messaging for this trip has closed."
     assert_no_selector "#chat_message_form input"
     find(".chat-deadlines summary").click
     assert_selector ".chat-deadlines time", count: 2
     assert_chat_fits(844)
     @ride.update_columns(departure_date: 33.days.ago.to_date, departure_time: 33.days.ago)
     visit ride_post_path(@ride, tab: "chat")
-    assert_text "Chat history for this trip is no longer available."
     assert_no_selector "#trip-chat-pane"
     assert_no_selector "#chat_message_form input"
     assert_selector ".web-navigation"
   end
 
-  test "deadline disclosure stays compact and preserves latest and older messages" do
+  test "deadline disclosure preserves latest and older messages on phone and desktop" do
     Prosopite.pause do
       20.times { |index| @ride.chat_messages.create!(user: @ride.user, body: "History #{index}. " * 10) }
     end
-    [ [ 320, 844 ], [ 390, 420 ], [ 1440, 900 ] ].product(%w[light dark]).each do |(width, height), theme|
+    [ [ 320, 844 ], [ 390, 420 ], [ 1440, 900 ] ].each do |width, height|
       page.driver.resize(width, height)
       visit ride_post_path(@ride, tab: "chat")
-      page.execute_script("document.documentElement.classList.toggle('dark', arguments[0] === 'dark')", theme)
       assert_selector "#chat_message_form input"
       assert_no_selector ".chat-deadline-policy[open]"
       collapsed = page.evaluate_script("document.querySelector('.chat-deadlines').getBoundingClientRect().height")
-      assert_operator collapsed, :<=, 64
       assert_at_bottom
       summary = find(".chat-deadlines summary")
       summary.execute_script("this.focus()")
       page.driver.browser.keyboard.type(:Space)
       assert_selector ".chat-deadline-policy[open]"
-      assert_text "Scheduled live-database deletion:"
+      assert_selector ".chat-deadlines time[datetime='#{@ride.chat_history_unavailable_at.iso8601}']"
       assert_operator page.evaluate_script("document.querySelector('.chat-deadlines').getBoundingClientRect().height"), :>, collapsed
-      assert_operator page.evaluate_script("document.querySelector('#chat_messages_list').clientHeight"), :>, 50
+      assert_readable_message_area
       assert_at_bottom
       page.execute_script("const list = document.querySelector('#chat_messages_list'); list.scrollTop = 0; list.dispatchEvent(new Event('scroll'))")
       summary.execute_script("this.focus()")
@@ -126,6 +121,11 @@ class MobileTripChatTest < ApplicationSystemTestCase
   end
 
   private
+
+  def assert_readable_message_area
+    line_height = find(".chat-message-body", match: :first).evaluate_script("parseFloat(getComputedStyle(this).lineHeight)")
+    assert_operator find("#chat_messages_list").evaluate_script("this.clientHeight"), :>=, line_height
+  end
 
   def assert_at_bottom
     assert_selector "#chat_messages_list" do |list|

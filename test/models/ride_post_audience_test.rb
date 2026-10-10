@@ -21,7 +21,6 @@ class RidePostAudienceTest < ActiveSupport::TestCase
       user: @male_driver,
       origin: @origin,
       destination: @destination,
-      post_type: :offering,
       seats: 3,
       remaining_seats: 3,
       status: :active,
@@ -31,7 +30,7 @@ class RidePostAudienceTest < ActiveSupport::TestCase
       expected_arrival_at: 1.day.from_now + 2.hours
     )
     assert_not ride.valid?
-    assert_includes ride.errors[:community], "can't be blank"
+    assert ride.errors.of_kind?(:community, :blank)
   end
 
   test "hub-only ride requires driver to be verified member of that community" do
@@ -41,7 +40,6 @@ class RidePostAudienceTest < ActiveSupport::TestCase
       user: @male_driver,
       origin: @origin,
       destination: @destination,
-      post_type: :offering,
       seats: 3,
       remaining_seats: 3,
       status: :active,
@@ -51,7 +49,7 @@ class RidePostAudienceTest < ActiveSupport::TestCase
       expected_arrival_at: 1.day.from_now + 2.hours
     )
     assert_not ride.valid?
-    assert_includes ride.errors[:community], "requires an active verified membership"
+    assert ride.errors.of_kind?(:community, :unverified_membership)
   end
 
   test "ladies-only ride requires driver to be female" do
@@ -59,7 +57,6 @@ class RidePostAudienceTest < ActiveSupport::TestCase
       user: @male_driver, # male driver
       origin: @origin,
       destination: @destination,
-      post_type: :offering,
       seats: 3,
       remaining_seats: 3,
       status: :active,
@@ -68,7 +65,7 @@ class RidePostAudienceTest < ActiveSupport::TestCase
       expected_arrival_at: 1.day.from_now + 2.hours
     )
     assert_not ride.valid?
-    assert_includes ride.errors[:ladies_only], "can only be offered by female drivers"
+    assert ride.errors.of_kind?(:ladies_only, :ineligible_driver)
   end
 
   test "visible_to scopes rides correctly across guest, male, and female community members" do
@@ -77,7 +74,6 @@ class RidePostAudienceTest < ActiveSupport::TestCase
       user: @male_driver,
       origin: @origin,
       destination: @destination,
-      post_type: :offering,
       seats: 3,
       remaining_seats: 3,
       status: :active,
@@ -91,7 +87,6 @@ class RidePostAudienceTest < ActiveSupport::TestCase
       user: @female_driver,
       origin: @origin,
       destination: @destination,
-      post_type: :offering,
       seats: 3,
       remaining_seats: 3,
       status: :active,
@@ -106,7 +101,6 @@ class RidePostAudienceTest < ActiveSupport::TestCase
       user: @male_driver,
       origin: @origin,
       destination: @destination,
-      post_type: :offering,
       seats: 3,
       remaining_seats: 3,
       status: :active,
@@ -140,7 +134,6 @@ class RidePostAudienceTest < ActiveSupport::TestCase
       user: @female_driver,
       origin: @origin,
       destination: @destination,
-      post_type: :offering,
       seats: 3,
       remaining_seats: 3,
       status: :active,
@@ -153,14 +146,13 @@ class RidePostAudienceTest < ActiveSupport::TestCase
     # Male passenger tries to book ladies-only ride
     booking = Booking.new(ride_post: ladies_ride, passenger: @male_driver)
     assert_not booking.valid?
-    assert_includes booking.errors[:base], "You are not eligible to book this ride"
+    assert booking.errors.of_kind?(:base, :ineligible_passenger)
 
     # Non-member passenger tries to book hub-only ride
     hub_ride = RidePost.create!(
       user: @male_driver,
       origin: @origin,
       destination: @destination,
-      post_type: :offering,
       seats: 3,
       remaining_seats: 3,
       status: :active,
@@ -171,6 +163,6 @@ class RidePostAudienceTest < ActiveSupport::TestCase
     )
     booking2 = Booking.new(ride_post: hub_ride, passenger: @female_driver) # not member of Accenture
     assert_not booking2.valid?
-    assert_includes booking2.errors[:base], "You are not eligible to book this ride"
+    assert booking2.errors.of_kind?(:base, :ineligible_passenger)
   end
 end

@@ -73,9 +73,8 @@ class ChatMessagesControllerTest < ActionDispatch::IntegrationTest
     end
 
     assert_response :unprocessable_content
-    assert_includes response.body, "Messaging for this trip has closed."
-    assert_includes response.body, "Philippine time (UTC+8)"
-    assert_includes response.body, "Messaging for this trip has closed. You can still read the available chat history."
+    assert_select "#chat_message_form form", count: 0
+    assert_select "#chat_message_form time[datetime='#{@ride.chat_history_unavailable_at.iso8601}']"
   end
 
   test "cannot post message when chat is expired and redirects with alert" do
@@ -90,7 +89,7 @@ class ChatMessagesControllerTest < ActionDispatch::IntegrationTest
     end
 
     assert_redirected_to ride_post_url(@ride)
-    assert_equal "Chat history for this trip is no longer available.", flash[:alert]
+    assert_predicate flash[:alert], :present?
   end
 
   test "confirmed passenger can post message on canceled trip during coordination window" do
@@ -112,6 +111,7 @@ class ChatMessagesControllerTest < ActionDispatch::IntegrationTest
     @booking.update_columns(status: Booking.statuses[:accepted])
     RidePosts::CancelService.call(@ride, actor: @driver)
     @ride.update_columns(canceled_at: 25.hours.ago)
+    @ride.reload
     sign_in_as(@passenger)
 
     assert_no_difference "ChatMessage.count" do
@@ -121,7 +121,7 @@ class ChatMessagesControllerTest < ActionDispatch::IntegrationTest
     end
 
     assert_response :unprocessable_content
-    assert_includes response.body, "Trip canceled &amp; messaging has closed."
-    assert_includes response.body, "Messaging has closed after this trip’s cancellation. You can still read the available chat history."
+    assert_select "#chat_message_form form", count: 0
+    assert_select "#chat_message_form time[datetime='#{@ride.chat_history_unavailable_at.iso8601}']"
   end
 end

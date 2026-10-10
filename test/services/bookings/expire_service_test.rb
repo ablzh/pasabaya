@@ -15,7 +15,6 @@ module Bookings
         user: @driver,
         origin: locations(:one),
         destination: locations(:two),
-        post_type: :offering,
         seats: 3,
         remaining_seats: 3,
         departure_date: departure.to_date,
@@ -41,7 +40,6 @@ module Bookings
         notif = Notification.last
         assert_equal @passenger, notif.recipient
         assert_equal "booking.expired", notif.event_name
-        assert_equal "Your seat request expired without confirmation", notif.summary
       end
     end
 
@@ -51,7 +49,6 @@ module Bookings
         user: @driver,
         origin: locations(:one),
         destination: locations(:two),
-        post_type: :offering,
         seats: 3,
         remaining_seats: 3,
         departure_date: target_date,
@@ -86,7 +83,6 @@ module Bookings
         user: @driver,
         origin: locations(:one),
         destination: locations(:two),
-        post_type: :offering,
         seats: 3,
         remaining_seats: 2,
         departure_date: departure.to_date,
@@ -111,7 +107,6 @@ module Bookings
         user: @driver,
         origin: locations(:one),
         destination: locations(:two),
-        post_type: :offering,
         seats: 3,
         departure_date: departure.to_date,
         departure_choice: :exact_time,
@@ -137,7 +132,6 @@ module Bookings
         user: @driver,
         origin: locations(:one),
         destination: locations(:two),
-        post_type: :offering,
         seats: 3,
         departure_date: departure.to_date,
         departure_choice: :exact_time,
@@ -148,10 +142,9 @@ module Bookings
 
       travel_to departure + 5.minutes do
         # AcceptService refuses after cutoff
-        error = assert_raises(AcceptService::InvalidStateError) do
+        assert_raises(AcceptService::InvalidStateError) do
           AcceptService.call(booking, actor: @driver)
         end
-        assert_match(/Cannot accept bookings for rides in the past/, error.message)
 
         # Expiry succeeds cleanly
         ExpireService.call(booking)

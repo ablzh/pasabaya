@@ -82,8 +82,7 @@ class HotwireNativeTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select "title", text: "Profile"
     assert_select "h1[data-profile-name]", text: "#{user.first_name} #{user.last_name}"
-    assert_select "h1.profile-name", text: "#{user.first_name} #{user.last_name}"
-    assert_select "div", text: /No upcoming driver offers listed at the moment/
+    assert_select "[id^='ride_post_']", count: 0
   end
 
   test "native screens have one short title and preserve fallback actions" do
@@ -105,7 +104,7 @@ class HotwireNativeTest < ActionDispatch::IntegrationTest
     get trips_url(id: users(:two).id), headers: NATIVE_HEADERS
     assert_response :success
     assert_select "title", text: "My Trips"
-    assert_select "h1", text: /Juan/
+    assert_select "h1", text: /#{Regexp.escape(users(:one).first_name)}/
     assert_select "a[href='#{trips_path(tab: 'bookings')}']"
     assert_select "#native_navigation form[action='#{session_path}']"
     assert_select "meta[name='turbo-cache-control'][content='no-cache']"

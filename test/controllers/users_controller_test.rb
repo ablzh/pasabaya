@@ -18,8 +18,8 @@ class UsersControllerTest < ActionDispatch::IntegrationTest
     get user_url(passenger)
 
     assert_response :success
-    assert_select "a[href='#{user_path(passenger, tab: 'posts')}']", text: /My Posts/
-    assert_select "a[href='#{user_path(passenger, tab: 'bookings')}']", text: /Joined Trips/
+    assert_select "a[href='#{user_path(passenger, tab: 'posts')}']"
+    assert_select "a[href='#{user_path(passenger, tab: 'bookings')}']"
   end
 
   test "legacy unsafe Facebook URLs are not rendered as links" do
@@ -40,7 +40,7 @@ class UsersControllerTest < ActionDispatch::IntegrationTest
     get user_url(passenger, tab: "bookings")
 
     assert_response :success
-    assert_select "a[href='#{ride_post_path(booking.ride_post, tab: 'chat')}']", text: /Trip Chat/
+    assert_select "a[href='#{ride_post_path(booking.ride_post, tab: 'chat')}']"
   end
 
   test "stranger viewing someone else's profile only sees public active posts" do
@@ -51,7 +51,7 @@ class UsersControllerTest < ActionDispatch::IntegrationTest
     get user_url(driver)
 
     assert_response :success
-    assert_select "h2", text: "Active Posts"
+    assert_select "#ride_post_#{ride_posts(:one).id}"
     assert_select "a[href='#{user_path(driver, tab: 'bookings')}']", count: 0
   end
 

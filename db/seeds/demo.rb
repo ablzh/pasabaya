@@ -75,7 +75,6 @@ if manila && quezon_city
   driver.ride_posts.find_or_create_by!(
     origin: manila,
     destination: quezon_city,
-    post_type: :offering,
     seats: 4,
     status: :draft,
     notes: "I travel daily for work. Clean car, non-smokers preferred. Meetup at Taft Avenue."
