@@ -68,7 +68,7 @@ module Admin
       assert_equal "noindex, nofollow", response.headers["X-Robots-Tag"]
       assert_select "meta[name='turbo-cache-control'][content='no-cache']"
       assert_select "meta[name='turbo-visit-control'][content='reload']"
-      assert_select "script[src*='umami']", count: 0
+      assert_select "script[data-goatcounter], script[src*='gc.zgo.at'], script[src*='goatcounter'], script[src*='umami']", count: 0
 
       sign_in_as(@passenger)
       get root_path

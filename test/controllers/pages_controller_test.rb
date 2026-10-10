@@ -23,6 +23,7 @@ class PagesControllerTest < ActionDispatch::IntegrationTest
     assert_select "li", text: /At the history deadline.*inaccessible.*scheduled for permanent deletion/
     assert_select "li", text: /Queue delays.*physical deletion/
     assert_select "li", text: /canceled while messaging is open.*24 hours after cancellation/
+    assert_select "li", text: /GoatCounter \(goatcounter\.com\)/
   end
 
   test "terms page is available with contact and booking restriction disclosures" do
