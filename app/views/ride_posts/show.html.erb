@@ -9,7 +9,7 @@
     <% end %>
 
     <% if @ride_post.draft? && Current.user == @ride_post.user %>
-      <%= render Alert::Component.new(title: "Private Draft", description: "Edit this draft to confirm your route, departure date, approximate choice or exact time, and passenger seats. Expected arrival is optional. Choose Publish ride when ready to accept bookings.", variant: :warning, classes: "mb-6") %>
+      <%= render Alert::Component.new(title: "Private Draft", description: "Edit this draft to confirm your route, departure date, approximate choice or exact time, and passenger seats. Choose Publish ride when ready to accept bookings.", variant: :warning, classes: "mb-6") %>
     <% end %>
 
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -105,17 +105,11 @@
                 <% end %>
               </p>
             <% end %>
-            <% if @ride_post.expected_arrival_at.present? %>
-              <p class="text-xs text-neutral-400 mt-1">Arrival: <%= @ride_post.expected_arrival_at.strftime("%a, %b %d, %Y • %I:%M %p %Z") %></p>
-            <% end %>
           <% elsif @ride_post.departure_time.present? %>
             <p class="text-base sm:text-lg font-bold text-neutral-900 dark:text-white">
               <%= @ride_post.departure_time.strftime("%a, %b %d, %Y") %>
             </p>
             <p class="text-sm text-blue-600 dark:text-blue-400 font-semibold"><%= @ride_post.departure_time.strftime("%I:%M %p") %></p>
-            <% if @ride_post.expected_arrival_at.present? %>
-              <p class="text-xs text-neutral-400 mt-1">Arrival: <%= @ride_post.expected_arrival_at.strftime("%a, %b %d, %Y • %I:%M %p %Z") %></p>
-            <% end %>
           <% else %>
             <p class="text-base sm:text-lg font-bold text-neutral-900 dark:text-white">
               Regular / Flexible

@@ -192,7 +192,6 @@ class RidePostsControllerTest < ActionDispatch::IntegrationTest
           origin_id: locations(:one).id,
           destination_id: locations(:two).id,
           departure_time: 1.day.from_now,
-          expected_arrival_at: 1.day.from_now + 2.hours,
           seats: 3,
           notes: "Leaving early morning"
         }
@@ -407,7 +406,7 @@ class RidePostsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "expired chat tab direct navigation redirects to details with alert" do
-    @ride_post.update_columns(departure_time: 35.days.ago, expected_arrival_at: 34.days.ago)
+    @ride_post.update_columns(departure_time: 35.days.ago)
 
     get ride_post_url(@ride_post, tab: "chat")
 
@@ -428,8 +427,8 @@ class RidePostsControllerTest < ActionDispatch::IntegrationTest
 
   test "index filters by departure_date" do
     target_date = 2.days.from_now.to_date
-    @ride_post.update!(departure_time: target_date.in_time_zone("Asia/Manila").change(hour: 8), expected_arrival_at: nil)
-    ride_posts(:two).update!(departure_time: (target_date + 4.days).in_time_zone("Asia/Manila"), expected_arrival_at: nil)
+    @ride_post.update!(departure_time: target_date.in_time_zone("Asia/Manila").change(hour: 8))
+    ride_posts(:two).update!(departure_time: (target_date + 4.days).in_time_zone("Asia/Manila"))
 
     get ride_posts_url(departure_date: target_date.to_s)
     assert_response :success

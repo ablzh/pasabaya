@@ -16,8 +16,7 @@ class NoShowIncidentTest < ActiveSupport::TestCase
       seats: 3,
       remaining_seats: 3,
       status: :active,
-      departure_time: 1.day.from_now,
-      expected_arrival_at: 1.day.from_now + 2.hours
+      departure_time: 1.day.from_now
     )
   end
 
@@ -67,8 +66,7 @@ class NoShowIncidentTest < ActiveSupport::TestCase
       seats: 3,
       remaining_seats: 3,
       status: :active,
-      departure_time: 2.days.from_now,
-      expected_arrival_at: 2.days.from_now + 2.hours
+      departure_time: 2.days.from_now
     )
     NoShowIncident.create!(
       ride_post: old_ride,
@@ -85,8 +83,7 @@ class NoShowIncidentTest < ActiveSupport::TestCase
       seats: 3,
       remaining_seats: 3,
       status: :active,
-      departure_time: 3.days.from_now,
-      expected_arrival_at: 3.days.from_now + 2.hours
+      departure_time: 3.days.from_now
     )
     NoShowIncident.create!(
       ride_post: pending_ride,

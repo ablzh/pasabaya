@@ -69,14 +69,13 @@ class FormFeedbackTest < ActionDispatch::IntegrationTest
     assert_response :see_other
   end
 
-  test "ride feedback explains route arrival notes and seat rules and retains inputs" do
+  test "ride feedback explains route notes and seat rules and retains inputs" do
     route = { origin_id: @origin.id, destination_id: @origin.id,
       departure_date: Date.tomorrow.to_s, departure_choice: "exact_time", exact_departure_time: "12:00",
-      expected_arrival_at: "#{Date.tomorrow}T11:00", seats: "0", notes: "x" * 301 }
+      seats: "0", notes: "x" * 301 }
     post ride_posts_url, params: { intent: "publish", ride_post: route }
     assert_response :unprocessable_content
     assert_select "#ride_post_destination_id_error", text: /\S/
-    assert_select "#ride_post_expected_arrival_at_error", text: /\S/
     assert_select "#ride_post_notes_error", text: /\S/
     assert_select "#ride_post_seats_error", text: /\S/
     assert_select "#ride_post_notes_hint", text: /\S/

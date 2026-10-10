@@ -45,7 +45,6 @@ class Users::AnonymizeServiceTest < ActiveSupport::TestCase
       destination: locations(:two),
       seats: 3,
       departure_time: 2.days.from_now,
-      expected_arrival_at: 2.days.from_now + 2.hours,
       remaining_seats: 3,
       status: :active
     )
@@ -65,7 +64,7 @@ class Users::AnonymizeServiceTest < ActiveSupport::TestCase
       status: :accepted,
       pickup_notes: "Personal pickup instructions: call 0917-123-4567"
     )
-    ride.update_columns(departure_time: 2.hours.ago, expected_arrival_at: 1.hour.ago)
+    ride.update_columns(departure_time: 2.hours.ago)
 
     review = TripReview.create!(
       ride_post: ride,
@@ -90,12 +89,11 @@ class Users::AnonymizeServiceTest < ActiveSupport::TestCase
       destination: locations(:two),
       seats: 2,
       departure_time: 3.days.from_now,
-      expected_arrival_at: 3.days.from_now + 2.hours,
       remaining_seats: 2,
       status: :active,
       notes: "My private route notes: meeting at home address"
     )
-    my_departed_ride.update_columns(departure_time: 3.days.ago, expected_arrival_at: 3.days.ago + 2.hours, status: RidePost.statuses[:completed])
+    my_departed_ride.update_columns(departure_time: 3.days.ago, status: RidePost.statuses[:completed])
 
     Users::AnonymizeService.call(@user)
 
@@ -110,7 +108,7 @@ class Users::AnonymizeServiceTest < ActiveSupport::TestCase
     @user.sessions.create!(ip_address: "127.0.0.1", user_agent: "TestAgent")
 
     ride = ride_posts(:one)
-    ride.update_columns(departure_time: 1.day.from_now, expected_arrival_at: 1.day.from_now + 2.hours)
+    ride.update_columns(departure_time: 1.day.from_now)
     Booking.create!(ride_post: ride, passenger: @user, status: :accepted)
     ride.chat_messages.create!(user: @user, body: "Private chat message")
 
@@ -174,7 +172,7 @@ class Users::AnonymizeServiceTest < ActiveSupport::TestCase
   test "scrubs reviews and incidents about the deleted passenger without changing same-name reports" do
     ride = ride_posts(:one)
     Booking.create!(ride_post: ride, passenger: @user, status: :accepted)
-    ride.update_columns(departure_time: 2.hours.ago, expected_arrival_at: 1.hour.ago)
+    ride.update_columns(departure_time: 2.hours.ago)
     review = TripReview.create!(ride_post: ride, reporter: ride.user, reported_user: @user,
                                outcome: :passenger_no_show, notes: "Their phone is 0917-123-4567")
     incident = NoShowIncident.create!(ride_post: ride, user: @user, occurred_at: ride.departure_time,

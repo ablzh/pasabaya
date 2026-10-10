@@ -12,7 +12,7 @@ class ChatRetentionJobTest < ActiveJob::TestCase
 
   test "purges messages when ride chat is expired" do
     msg = @ride.chat_messages.create!(user: @driver, body: "Expired chat message")
-    @ride.update_columns(departure_time: 35.days.ago, expected_arrival_at: 34.days.ago)
+    @ride.update_columns(departure_time: 35.days.ago)
 
     assert_difference("ChatMessage.count", -1) do
       ChatRetentionJob.perform_now(@ride.id)
@@ -23,7 +23,7 @@ class ChatRetentionJobTest < ActiveJob::TestCase
 
   test "does not purge messages when ride chat is not yet expired" do
     msg = @ride.chat_messages.create!(user: @driver, body: "Retained chat message")
-    @ride.update_columns(departure_time: 2.days.ago, expected_arrival_at: 1.day.ago)
+    @ride.update_columns(departure_time: 2.days.ago)
 
     assert_no_difference("ChatMessage.count") do
       ChatRetentionJob.perform_now(@ride.id)

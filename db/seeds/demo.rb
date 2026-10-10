@@ -88,7 +88,6 @@ if manila && quezon_city
     ride.remaining_seats = 3
     ride.status = :active
     ride.departure_time = 3.days.from_now
-    ride.expected_arrival_at = ride.departure_time + 5.hours
   end
 
   puts "Ride posts seeded successfully!"

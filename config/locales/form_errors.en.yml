@@ -13,7 +13,6 @@ en:
         seats: Available passenger seats
         remaining_seats: Available passenger seats
         departure_choice: Departure schedule
-        expected_arrival_at: Expected arrival
         community: Hub
         ladies_only: Ladies Only carpool
       ride_schedule:
@@ -92,9 +91,6 @@ en:
           past_time: Choose a departure time in the future.
           required_for_publication: Enter a departure time.
           invalid_time: Enter a valid departure time.
-        expected_arrival_at:
-          before_departure: Choose an arrival time after departure.
-          before_departure_date: Choose an arrival on or after the departure date.
         remaining_seats:
           unconfirmed_capacity: Confirm the available passenger seats before publishing.
           exceeds_capacity: Only %{count} passenger seats remain after confirmed bookings.

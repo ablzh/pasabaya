@@ -9,7 +9,7 @@ class ReviewChatSafetyTest < ActiveSupport::TestCase
   end
 
   test "late open cancellation grants 24 hours of coordination" do
-    @ride.update_columns(departure_time: 23.hours.ago, expected_arrival_at: nil)
+    @ride.update_columns(departure_time: 23.hours.ago)
     RidePosts::CancelService.call(@ride, actor: @driver)
     assert_equal @ride.reload.canceled_at + 24.hours, @ride.chat_messaging_closes_at
   end

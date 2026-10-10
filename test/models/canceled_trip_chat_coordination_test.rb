@@ -54,7 +54,7 @@ class CanceledTripChatCoordinationTest < ActiveSupport::TestCase
 
   test "cancellation never reopens chat whose messaging window is already closed" do
     # Trip departed 26 hours ago -> messaging window closed 2 hours ago
-    @ride.update_columns(departure_time: 26.hours.ago, expected_arrival_at: 25.hours.ago)
+    @ride.update_columns(departure_time: 26.hours.ago)
     assert_not @ride.chat_writable?
 
     RidePosts::CancelService.call(@ride, actor: @driver)
@@ -66,7 +66,7 @@ class CanceledTripChatCoordinationTest < ActiveSupport::TestCase
 
   test "cancellation never restores history that has become unavailable" do
     # Trip departed 35 days ago -> history expired 4 days ago
-    @ride.update_columns(departure_time: 35.days.ago, expected_arrival_at: 34.days.ago)
+    @ride.update_columns(departure_time: 35.days.ago)
     assert @ride.chat_expired?
 
     # Even if canceled now, history must stay expired

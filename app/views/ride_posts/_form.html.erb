@@ -69,20 +69,6 @@
                             id: form.field_id(:departure_date), data: { ride_creation_target: "date" }, class: "block w-full rounded-xl border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-base sm:text-sm text-neutral-900 dark:text-white focus:ring-blue-500 focus:border-blue-500 transition-all py-3 px-4",
                             min: Date.current.to_fs(:db), **field.input_attributes %>
       <% end %>
-
-      <!-- Expected Arrival Time -->
-      <%= render(Forms::Component.new(
-        label: "Expected Arrival Time (optional)",
-        name: :expected_arrival_at,
-        id: form.field_id(:expected_arrival_at),
-        error: form_error(ride_post, :expected_arrival_at)
-      )) do |field| %>
-        <%= datetime_field_tag "#{form.object_name}[expected_arrival_at]", regular ? nil : ride_post.expected_arrival_at&.strftime("%Y-%m-%dT%H:%M"),
-                                id: form.field_id(:expected_arrival_at), class: "block w-full rounded-xl border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-base sm:text-sm text-neutral-900 dark:text-white focus:ring-blue-500 focus:border-blue-500 transition-all py-3 px-4",
-                                min: Time.current.strftime("%Y-%m-%dT%H:%M"), **field.input_attributes %>
-      <% end %>
-
-      <p class="col-span-full text-sm text-neutral-500">Expected arrival is optional.</p>
     </fieldset>
 
     <fieldset class="col-span-full min-w-0 space-y-4" data-ride-creation-target="regularFields" <%= tag.attributes(hidden: !regular, disabled: !regular) %>>

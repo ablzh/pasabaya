@@ -63,7 +63,7 @@ class ChatMessagesControllerTest < ActionDispatch::IntegrationTest
 
   test "cannot post message after messaging deadline and form reflects expiry" do
     @booking.update_columns(status: Booking.statuses[:accepted])
-    @ride.update_columns(departure_time: 25.hours.ago, expected_arrival_at: 24.hours.ago)
+    @ride.update_columns(departure_time: 25.hours.ago)
     sign_in_as(@passenger)
 
     assert_no_difference "ChatMessage.count" do
@@ -79,7 +79,7 @@ class ChatMessagesControllerTest < ActionDispatch::IntegrationTest
 
   test "cannot post message when chat is expired and redirects with alert" do
     @booking.update_columns(status: Booking.statuses[:accepted])
-    @ride.update_columns(departure_time: 35.days.ago, expected_arrival_at: 34.days.ago)
+    @ride.update_columns(departure_time: 35.days.ago)
     sign_in_as(@passenger)
 
     assert_no_difference "ChatMessage.count" do

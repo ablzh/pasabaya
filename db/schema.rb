@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_09_120000) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_10_120000) do
   create_table "account_deletion_tombstones", force: :cascade do |t|
     t.string "anonymized_email", null: false
     t.bigint "avatar_blob_id"
@@ -186,7 +186,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_09_120000) do
     t.date "departure_date"
     t.datetime "departure_time"
     t.integer "destination_id"
-    t.datetime "expected_arrival_at"
     t.boolean "ladies_only", default: false, null: false
     t.text "notes"
     t.integer "origin_id"

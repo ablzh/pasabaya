@@ -23,11 +23,10 @@ class TripReviewTest < ActiveSupport::TestCase
       seats: 3,
       remaining_seats: 2,
       status: :active,
-      departure_time: 1.day.from_now,
-      expected_arrival_at: 1.day.from_now + 2.hours
+      departure_time: 1.day.from_now
     )
     @booking = Booking.create!(ride_post: @ride_post, passenger: @passenger, status: :accepted)
-    @ride_post.update_columns(departure_time: 2.hours.ago, expected_arrival_at: 1.hour.ago)
+    @ride_post.update_columns(departure_time: 2.hours.ago)
   end
 
   test "cannot review future trips before departure" do
@@ -38,8 +37,7 @@ class TripReviewTest < ActiveSupport::TestCase
       seats: 3,
       remaining_seats: 2,
       status: :active,
-      departure_time: 1.day.from_now,
-      expected_arrival_at: 1.day.from_now + 2.hours
+      departure_time: 1.day.from_now
     )
     Booking.create!(ride_post: future_ride, passenger: @passenger, status: :accepted)
 

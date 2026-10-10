@@ -39,7 +39,7 @@ class BookingTest < ActiveSupport::TestCase
     ride = ride_posts(:one)
     booking = bookings(:one)
     booking.update_columns(status: Booking.statuses[:accepted], accepted_at: 3.hours.ago)
-    ride.update_columns(departure_time: 2.hours.ago, expected_arrival_at: 1.hour.ago)
+    ride.update_columns(departure_time: 2.hours.ago)
 
     assert booking.historical_reviewable?
     assert_no_difference "Booking.count" do

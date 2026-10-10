@@ -116,8 +116,7 @@ class CommunityMembershipTest < ActiveSupport::TestCase
       status: :active,
       visibility: :hub_only,
       community: @community,
-      departure_time: 2.days.from_now,
-      expected_arrival_at: 2.days.from_now + 2.hours
+      departure_time: 2.days.from_now
     )
     booking = Booking.create!(ride_post: driver_ride, passenger: @user, status: :pending)
 
@@ -131,8 +130,7 @@ class CommunityMembershipTest < ActiveSupport::TestCase
       status: :active,
       visibility: :hub_only,
       community: @community,
-      departure_time: 3.days.from_now,
-      expected_arrival_at: 3.days.from_now + 2.hours
+      departure_time: 3.days.from_now
     )
 
     # Revoke membership
@@ -197,8 +195,7 @@ class CommunityMembershipTest < ActiveSupport::TestCase
       status: :fulfilled,
       visibility: :hub_only,
       community: @community,
-      departure_time: 3.days.from_now,
-      expected_arrival_at: 3.days.from_now + 2.hours
+      departure_time: 3.days.from_now
     )
 
     membership.revoke!
@@ -241,8 +238,7 @@ class CommunityMembershipTest < ActiveSupport::TestCase
       status: :active,
       visibility: :hub_only,
       community: @community,
-      departure_time: 3.days.from_now,
-      expected_arrival_at: 3.days.from_now + 2.hours
+      departure_time: 3.days.from_now
     )
     booking = Booking.create!(ride_post: ride, passenger: passenger, status: :accepted)
 

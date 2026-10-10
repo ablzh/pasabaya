@@ -36,7 +36,7 @@ class ChatMessageTest < ActiveSupport::TestCase
 
   test "cannot write message more than 24 hours after departure" do
     @booking.update_columns(status: Booking.statuses[:accepted])
-    @ride.update_columns(departure_time: 25.hours.ago, expected_arrival_at: 23.hours.ago)
+    @ride.update_columns(departure_time: 25.hours.ago)
 
     msg = @ride.chat_messages.build(user: @driver, body: "Thanks for the ride!")
     assert_not msg.valid?
@@ -49,13 +49,13 @@ class ChatMessageTest < ActiveSupport::TestCase
     expired_old_msg = @ride.chat_messages.create!(user: @driver, body: "Expired old message")
     expired_recent_msg = @ride.chat_messages.create!(user: @driver, body: "Expired recent message")
     # Expired ride: cutoff was 35 days ago (history unavailable after 31 days)
-    @ride.update_columns(departure_time: 35.days.ago, expected_arrival_at: 34.days.ago)
+    @ride.update_columns(departure_time: 35.days.ago)
 
     # Retained ride: cutoff was 2 days ago (history retained for 29 more days)
     retained_ride = ride_posts(:two)
     Booking.create!(ride_post: retained_ride, passenger: users(:one), status: :accepted)
     retained_msg = retained_ride.chat_messages.create!(user: retained_ride.user, body: "Retained message")
-    retained_ride.update_columns(departure_time: 2.days.ago, expected_arrival_at: 1.day.ago)
+    retained_ride.update_columns(departure_time: 2.days.ago)
 
     assert_difference("ChatMessage.count", -2) do
       ChatMessage.purge_expired!
