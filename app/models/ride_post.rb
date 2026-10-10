@@ -501,7 +501,8 @@ class RidePost < ApplicationRecord
       saved_change_to_departure_time? ||
       saved_change_to_community_id? ||
       saved_change_to_visibility? ||
-      saved_change_to_ladies_only?
+      saved_change_to_ladies_only? ||
+      (saved_change_to_requests_closed_at? && requests_closed_at.nil?)
   end
 
   def schedule_route_alert

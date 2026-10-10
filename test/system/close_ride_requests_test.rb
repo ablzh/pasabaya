@@ -13,9 +13,28 @@ class CloseRideRequestsSystemTest < ApplicationSystemTestCase
     assert_current_path root_path
     visit ride_post_path(ride)
 
-    click_button "Close seat requests"
+    dismiss_confirm do
+      click_button "Close seat requests"
+    end
+    assert_button "Close seat requests"
+    assert_nil ride.reload.requests_closed_at
+
+    accept_confirm do
+      click_button "Close seat requests"
+    end
     assert_no_button "Close seat requests"
+    assert_button "Reopen seat requests"
     assert_button "Cancel Trip"
+
+    click_button "Reopen seat requests"
+    assert_button "Close seat requests"
+    assert_no_button "Reopen seat requests"
+    assert ride.reload.bookable?
+
+    accept_confirm do
+      click_button "Close seat requests"
+    end
+    assert_button "Reopen seat requests"
 
     find("#trip-chat-tab").click
     fill_in "Coordination message", with: "Our confirmed trip is still on"
