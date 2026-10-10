@@ -2,7 +2,6 @@
 
 one:
   user: one
-  post_type: offering
   origin: one
   destination: two
   departure_date: <%= 1.day.from_now.to_date.to_fs(:db) %>
@@ -16,7 +15,6 @@ one:
 
 two:
   user: two
-  post_type: offering
   origin: two
   destination: one
   departure_date: <%= 2.days.from_now.to_date.to_fs(:db) %>

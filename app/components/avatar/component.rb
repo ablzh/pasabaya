@@ -32,6 +32,7 @@ module Avatar
     # @param alt [String] Accessible image description. Use an empty string only for decorative avatars.
     # @param src [String, nil] Image URL. When omitted, fallback initials are rendered.
     # @param fallback [String, nil] Explicit fallback text. Defaults to initials derived from alt.
+    # @param fallback_text_classes [String, nil] Fallback font and color classes. Defaults to size-specific neutral text.
     # @param size [Symbol] Avatar size: :xs, :sm, :md, :lg, :xl
     # @param status [Symbol, nil] Optional status. Currently supports :online.
     # @param status_label [String] Screen-reader label for the status indicator.
@@ -43,6 +44,7 @@ module Avatar
       alt:,
       src: nil,
       fallback: nil,
+      fallback_text_classes: nil,
       size: :md,
       status: nil,
       status_label: "Online",
@@ -55,6 +57,7 @@ module Avatar
       @alt = alt.to_s
       @src = src
       @fallback = fallback
+      @fallback_text_classes = fallback_text_classes
       @size = normalize_size(size)
       @status = normalize_status(status)
       @status_label = status_label
@@ -96,8 +99,8 @@ module Avatar
 
     def fallback_classes
       [
-        "flex size-full items-center justify-center rounded-full font-medium uppercase text-neutral-600 dark:text-neutral-300",
-        FALLBACK_TEXT_CLASSES.fetch(@size)
+        "flex size-full items-center justify-center rounded-full uppercase",
+        @fallback_text_classes || "font-medium text-neutral-600 dark:text-neutral-300 #{FALLBACK_TEXT_CLASSES.fetch(@size)}"
       ].join(" ")
     end
 

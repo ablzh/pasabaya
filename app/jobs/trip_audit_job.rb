@@ -7,7 +7,7 @@ class TripAuditJob < ApplicationJob
     ride_post = RidePost.find_by(id: ride_post_id)
     return unless ride_post
     ride_post.with_lock do
-      return if ride_post.canceled? || ride_post.draft? || !ride_post.offering?
+      return if ride_post.canceled? || ride_post.draft?
 
       completion_time = ride_post.automatic_completion_at
       return unless completion_time.present? && Time.current >= completion_time

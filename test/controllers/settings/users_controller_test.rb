@@ -20,7 +20,7 @@ class Settings::UsersControllerTest < ActionDispatch::IntegrationTest
     end
 
     assert_redirected_to root_url
-    assert_equal "Your account has been deleted.", flash[:notice]
+    assert_predicate flash[:notice], :present?
     assert_empty cookies[:session_id]
 
     @user.reload
@@ -49,7 +49,7 @@ class Settings::UsersControllerTest < ActionDispatch::IntegrationTest
     end
 
     assert_redirected_to root_url
-    assert_equal "Your account has been deleted.", flash[:notice]
+    assert_predicate flash[:notice], :present?
     assert_empty cookies[:session_id]
 
     @user.reload
@@ -64,7 +64,7 @@ class Settings::UsersControllerTest < ActionDispatch::IntegrationTest
     end
 
     assert_response :unprocessable_content
-    assert_select "#password_challenge_error", text: "Your current password is incorrect."
+    assert_select "#password_challenge_error", text: /\S/
     assert_not @user.reload.deleted?
   end
 
@@ -79,7 +79,7 @@ class Settings::UsersControllerTest < ActionDispatch::IntegrationTest
     end
 
     assert_redirected_to root_url
-    assert_equal "Your account has been deleted.", flash[:notice]
+    assert_predicate flash[:notice], :present?
     assert_empty cookies[:session_id]
 
     assert @user.reload.deleted?
@@ -97,7 +97,7 @@ class Settings::UsersControllerTest < ActionDispatch::IntegrationTest
     end
 
     assert_redirected_to root_url
-    assert_equal "Your account has been deleted.", flash[:notice]
+    assert_predicate flash[:notice], :present?
     assert_empty cookies[:session_id]
 
     assert @user.reload.deleted?

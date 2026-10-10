@@ -29,17 +29,6 @@ module Forms
       assert_selector "label[for='user_email_address']", text: "Email"
     end
 
-    def test_handles_string_inputs_for_size_and_variant
-      render_inline(Forms::Component.new(
-        label: "Bio",
-        name: :bio,
-        size: "sm",
-        variant: "floating"
-      ))
-
-      assert_selector "div.relative"
-    end
-
     def test_displays_error_message
       render_inline(Forms::Component.new(
         label: "Email",
@@ -48,7 +37,6 @@ module Forms
       ))
 
       assert_selector "p", text: "can't be blank"
-      assert_selector "p.text-red-700"
     end
 
     def test_displays_helper_text

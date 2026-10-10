@@ -20,7 +20,6 @@ class TripReviewTest < ActiveSupport::TestCase
       user: @driver,
       origin: @origin,
       destination: @destination,
-      post_type: :offering,
       seats: 3,
       remaining_seats: 2,
       status: :active,
@@ -36,7 +35,6 @@ class TripReviewTest < ActiveSupport::TestCase
       user: @driver,
       origin: @origin,
       destination: @destination,
-      post_type: :offering,
       seats: 3,
       remaining_seats: 2,
       status: :active,
@@ -52,7 +50,7 @@ class TripReviewTest < ActiveSupport::TestCase
       outcome: :passenger_no_show
     )
     assert_not review.valid?
-    assert_includes review.errors[:base], "Reviews and no-show reports cannot be submitted before trip departure"
+    assert review.errors.of_kind?(:base, :before_departure)
   end
 
   test "valid review between trip participants" do
@@ -74,17 +72,17 @@ class TripReviewTest < ActiveSupport::TestCase
       outcome: :completed
     )
     assert_not review.valid?
-    assert_includes review.errors[:reported_user], "cannot be yourself"
+    assert review.errors.of_kind?(:reported_user, :self_review)
   end
 
   test "no show categories must match the reported participant role" do
     review = TripReview.new(ride_post: @ride_post, reporter: @driver, reported_user: @passenger, outcome: :driver_no_show)
     assert_not review.valid?
-    assert_includes review.errors[:outcome], "must describe a passenger when reviewing a passenger"
+    assert review.errors.of_kind?(:outcome, :passenger_outcome)
 
     review = TripReview.new(ride_post: @ride_post, reporter: @passenger, reported_user: @driver, outcome: :passenger_no_show)
     assert_not review.valid?
-    assert_includes review.errors[:outcome], "must describe a driver when reviewing the driver"
+    assert review.errors.of_kind?(:outcome, :driver_outcome)
     review.outcome = :driver_no_show
     assert review.valid?
   end
@@ -97,7 +95,7 @@ class TripReviewTest < ActiveSupport::TestCase
       outcome: :completed
     )
     assert_not review.valid?
-    assert_includes review.errors[:reported_user], "must be a driver or accepted passenger on this trip"
+    assert review.errors.of_kind?(:reported_user, :not_participant)
 
     review2 = TripReview.new(
       ride_post: @ride_post,
@@ -106,7 +104,7 @@ class TripReviewTest < ActiveSupport::TestCase
       outcome: :completed
     )
     assert_not review2.valid?
-    assert_includes review2.errors[:reporter], "must be a driver or accepted passenger on this trip"
+    assert review2.errors.of_kind?(:reporter, :not_participant)
   end
 
   test "enforces single review per reporter and subject per trip" do
@@ -124,7 +122,7 @@ class TripReviewTest < ActiveSupport::TestCase
       outcome: :passenger_no_show
     )
     assert_not duplicate.valid?
-    assert_includes duplicate.errors[:ride_post_id], "has already been reviewed by this user for this trip"
+    assert duplicate.errors.of_kind?(:ride_post_id, :taken)
   end
   {
     "undated rides" => { departure_time: nil },
@@ -134,7 +132,7 @@ class TripReviewTest < ActiveSupport::TestCase
       @ride_post.update_columns(attributes)
       review = TripReview.new(ride_post: @ride_post, reporter: @driver, reported_user: @passenger)
       assert_not review.valid?
-      assert_includes review.errors[:base], "Reviews require a departed ride offer"
+      assert review.errors.of_kind?(:base, :not_departed)
     end
   end
 end

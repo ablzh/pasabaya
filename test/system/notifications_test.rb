@@ -49,14 +49,14 @@ class NotificationsSystemTest < ApplicationSystemTestCase
     click_button "Sign in"
     assert_current_path root_path
     visit notifications_path
-    assert_text "No notifications yet."
+    assert_selector "#notifications_empty"
     assert_selector "turbo-cable-stream-source[connected]", visible: :all
 
     notification = Notification.create!(recipient: user, notifiable: ride_posts(:one),
                                         event_name: "booking.accepted", delivery_key: "first_streamed_notification")
     notification.deliver!
-    assert_selector "#notifications_list .notification", text: "Your seat request has been confirmed!"
-    assert_no_text "No notifications yet."
+    assert_selector "#notifications_list #notification_#{notification.id}"
+    assert_no_selector "#notifications_empty"
     assert_selector "button[aria-label='Account menu'] [data-notification-count] span[aria-label='1 unread notification']", text: "1"
     assert_selector "#profile-content [data-notification-count] span[aria-label='1 unread notification']", text: "1", visible: :all
 

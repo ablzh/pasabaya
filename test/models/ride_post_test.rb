@@ -22,23 +22,12 @@ class RidePostTest < ActiveSupport::TestCase
     assert ride.save
     ride.notes = "a" * 301
     assert_not ride.save
-    assert_includes ride.errors[:notes], "is too long (maximum is 300 characters)"
+    assert ride.errors.of_kind?(:notes, :too_long)
 
     fresh = ride_posts(:one).dup
     fresh.notes = "a" * 301
     assert_not fresh.save
-    assert_includes fresh.errors[:notes], "is too long (maximum is 300 characters)"
-  end
-
-  test "passenger ride posts are invalid while driver offers remain supported" do
-    ride = ride_posts(:one).dup
-    ride.post_type = :requesting
-    assert_not ride.valid?
-    assert_includes ride.errors[:post_type], "is not included in the list"
-  end
-
-  test "database rejects passenger post intent even when model validation is bypassed" do
-    assert_raises(ActiveRecord::StatementInvalid) { ride_posts(:one).update_columns(post_type: 1) }
+    assert fresh.errors.of_kind?(:notes, :too_long)
   end
 
   test "sold out offers preserve positive capacity" do
@@ -68,7 +57,7 @@ class RidePostTest < ActiveSupport::TestCase
 
   test "publishing requires distinct route future exact departure and available passenger seats" do
     ride = RidePost.new(user: users(:one), origin_id: ride_posts(:one).origin_id,
-                        destination_id: ride_posts(:one).origin_id, post_type: :offering,
+                        destination_id: ride_posts(:one).origin_id,
                         status: :active, seats: 3, remaining_seats: 0, departure_time: 1.hour.ago)
     assert_not ride.valid?
     assert ride.errors[:destination].present?
@@ -81,7 +70,7 @@ class RidePostTest < ActiveSupport::TestCase
   end
 
   test "an incomplete private draft can be saved but cannot publish without route departure and seats" do
-    ride = RidePost.new(user: users(:one), post_type: :offering, status: :draft)
+    ride = RidePost.new(user: users(:one), status: :draft)
     assert ride.save, ride.errors.full_messages.to_sentence
     assert_not ride.bookable?
     ride.status = :active
@@ -97,7 +86,7 @@ class RidePostTest < ActiveSupport::TestCase
     ride_post.departure_time = 1.hour.ago
 
     assert_not ride_post.valid?
-    assert_includes ride_post.errors[:departure_time], "can't be in the past"
+    assert ride_post.errors.of_kind?(:departure_time, :past_time)
   end
 
   test "historical ride remains updateable if departure time is not changed" do
@@ -115,7 +104,6 @@ class RidePostTest < ActiveSupport::TestCase
       user: users(:one),
       origin: locations(:one),
       destination: locations(:two),
-      post_type: :offering,
       status: :active,
       seats: 3,
       departure_time: 1.day.from_now,
@@ -123,7 +111,7 @@ class RidePostTest < ActiveSupport::TestCase
       remaining_seats: 3
     )
     assert_not ride.valid?
-    assert_includes ride.errors[:expected_arrival_at], "must be after departure time"
+    assert ride.errors.of_kind?(:expected_arrival_at, :before_departure)
 
     ride.expected_arrival_at = 1.day.from_now + 2.hours
     assert ride.valid?
@@ -141,7 +129,7 @@ class RidePostTest < ActiveSupport::TestCase
     # Schedule cannot be updated
     ride.departure_time = 3.days.from_now
     assert_not ride.valid?
-    assert_includes ride.errors[:base], "Cannot modify route, schedule, capacity, or audience while accepted bookings exist"
+    assert ride.errors.of_kind?(:base, :accepted_bookings_locked)
   end
 
   test "cannot manually modify remaining_seats while accepted bookings exist" do
@@ -153,7 +141,8 @@ class RidePostTest < ActiveSupport::TestCase
     # Driver attempts to reset remaining_seats back to full capacity
     ride.remaining_seats = ride.seats
     assert_not ride.valid?
-    assert_includes ride.errors[:remaining_seats], "cannot exceed available capacity (2) while accepted bookings exist"
+    assert ride.errors.of_kind?(:remaining_seats, :exceeds_capacity)
+    assert_includes ride.errors.details[:remaining_seats], { error: :exceeds_capacity, count: 2 }
   end
 
   test "draft offers require ownership to view" do
@@ -212,7 +201,7 @@ class RidePostTest < ActiveSupport::TestCase
       assert_not ride.destroy
     end
 
-    assert_includes ride.errors[:base], "Cannot delete a ride with accepted bookings. Please cancel the trip instead."
+    assert ride.errors.of_kind?(:base, :accepted_bookings)
   end
 
   test "deleting ride with trip reviews is restricted" do
@@ -229,7 +218,7 @@ class RidePostTest < ActiveSupport::TestCase
     )
 
     assert_not ride.destroy
-    assert_includes ride.errors[:base], "Cannot delete a ride with trip reviews or incident history."
+    assert ride.errors.of_kind?(:base, :review_history)
   end
 
   test "departed ride with historical participation cannot be deleted or have route/schedule edited after cancellation" do
@@ -251,20 +240,20 @@ class RidePostTest < ActiveSupport::TestCase
     other_location = locations(:one)
     ride.destination = other_location
     assert_not ride.save
-    assert_includes ride.errors[:base], "Cannot modify route, schedule, capacity, or audience for trips with historical participation"
+    assert ride.errors.of_kind?(:base, :historical_trip_locked)
 
     # Schedule changes to move trip to the future must fail
     ride.reload
     ride.departure_time = 1.day.from_now
     assert_not ride.save
-    assert_includes ride.errors[:base], "Cannot modify route, schedule, capacity, or audience for trips with historical participation"
+    assert ride.errors.of_kind?(:base, :historical_trip_locked)
 
     # Hard deletion must fail and preserve records
     ride.reload
     assert_no_difference "RidePost.count" do
       assert_not ride.destroy
     end
-    assert_includes ride.errors[:base], "Cannot delete a departed ride with historical participation. Trip records must be preserved for review eligibility."
+    assert ride.errors.of_kind?(:base, :historical_participation)
 
     # Booking must still exist and be intact
     assert Booking.exists?(booking.id)
@@ -277,7 +266,6 @@ class RidePostTest < ActiveSupport::TestCase
       origin: locations(:one),
       destination: locations(:two),
       seats: 3,
-      post_type: :offering,
       status: :draft
     )
     assert draft.destroy
@@ -291,7 +279,6 @@ class RidePostTest < ActiveSupport::TestCase
       departure_time: 2.days.from_now,
       expected_arrival_at: 2.days.from_now + 3.hours,
       remaining_seats: 3,
-      post_type: :offering,
       status: :active
     )
     RidePosts::CancelService.call(future_ride, actor: users(:one))
@@ -318,7 +305,6 @@ class RidePostTest < ActiveSupport::TestCase
       origin: locations(:one),
       destination: locations(:two),
       seats: 3,
-      post_type: :offering,
       departure_date: Date.current + 2.days,
       departure_choice: :morning,
       status: :active
@@ -337,7 +323,6 @@ class RidePostTest < ActiveSupport::TestCase
       origin: locations(:one),
       destination: locations(:two),
       seats: 3,
-      post_type: :offering,
       departure_date: target_date,
       departure_choice: :morning,
       status: :active
@@ -362,7 +347,6 @@ class RidePostTest < ActiveSupport::TestCase
       origin: locations(:one),
       destination: locations(:two),
       seats: 3,
-      post_type: :offering,
       departure_date: departure.to_date,
       departure_choice: :exact_time,
       departure_time: departure,
@@ -387,7 +371,6 @@ class RidePostTest < ActiveSupport::TestCase
       origin: locations(:one),
       destination: locations(:two),
       seats: 3,
-      post_type: :offering,
       departure_date: Date.current + 2.days,
       departure_choice: :afternoon,
       status: :active
@@ -396,12 +379,12 @@ class RidePostTest < ActiveSupport::TestCase
 
     ride.departure_choice = :evening
     assert_not ride.valid?
-    assert_includes ride.errors[:base], "Cannot modify route, schedule, capacity, or audience while accepted bookings exist"
+    assert ride.errors.of_kind?(:base, :accepted_bookings_locked)
 
     ride.reload
     ride.departure_date = Date.current + 3.days
     assert_not ride.valid?
-    assert_includes ride.errors[:base], "Cannot modify route, schedule, capacity, or audience while accepted bookings exist"
+    assert ride.errors.of_kind?(:base, :accepted_bookings_locked)
   end
 
   test "review eligibility for approximate vs exact departure" do
@@ -411,7 +394,6 @@ class RidePostTest < ActiveSupport::TestCase
       origin: locations(:one),
       destination: locations(:two),
       seats: 3,
-      post_type: :offering,
       departure_date: target_date,
       departure_choice: :morning,
       status: :active
@@ -423,7 +405,6 @@ class RidePostTest < ActiveSupport::TestCase
       origin: locations(:one),
       destination: locations(:two),
       seats: 3,
-      post_type: :offering,
       departure_date: target_date,
       departure_choice: :exact_time,
       departure_time: exact_time,

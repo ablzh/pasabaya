@@ -12,7 +12,7 @@ module RouteSubscriptions
 
     def call
       ride_post.reload if ride_post&.persisted?
-      return unless ride_post&.offering? && ride_post.published? && ride_post.bookable?
+      return unless ride_post&.published? && ride_post.bookable?
 
       candidates = RouteSubscription.active.where(
         origin_id: ride_post.origin_id,

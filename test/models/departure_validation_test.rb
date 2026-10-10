@@ -6,7 +6,7 @@ class DepartureValidationTest < ActiveSupport::TestCase
     ride = RidePost.new(user: users(:one), origin_id: route.origin_id, destination_id: route.destination_id, seats: 3,
                         departure_date: Date.yesterday, departure_choice: :morning, status: :active)
     assert_not ride.valid?
-    assert_equal 1, ride.errors.full_messages.count { |message| message == "Departure date can't be in the past" }
+    assert_equal 1, ride.errors.where(:departure_date, :past_date).size
   end
 
   test "publishing an elapsed exact departure reports the time error once" do
@@ -14,6 +14,6 @@ class DepartureValidationTest < ActiveSupport::TestCase
     ride = RidePost.new(user: users(:one), origin_id: route.origin_id, destination_id: route.destination_id, seats: 3,
                         departure_time: 1.hour.ago, status: :active)
     assert_not ride.valid?
-    assert_equal [ "can't be in the past" ], ride.errors[:departure_time]
+    assert_equal [ :past_time ], ride.errors.details[:departure_time].pluck(:error)
   end
 end

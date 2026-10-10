@@ -13,7 +13,6 @@ class TripAuditJobTest < ActiveJob::TestCase
       user: @driver,
       origin: @origin,
       destination: @destination,
-      post_type: :offering,
       seats: 3,
       remaining_seats: 2,
       status: :active,

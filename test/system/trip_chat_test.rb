@@ -12,12 +12,12 @@ class TripChatTest < ApplicationSystemTestCase
     sign_in(users(:two))
     visit ride_post_path(ride)
     click_button "Request Seat"
-    assert_text "Seat Requested"
+    assert_button "Cancel Request"
 
     using_session(:driver) do
       visit ride_post_path(ride)
       click_button "Accept"
-      assert_text "Booking accepted!"
+      assert_button "Cancel Seat"
       find("#trip-details-tab").send_keys(:right)
       assert_selector '#trip-chat-tab[aria-selected="true"][tabindex="0"]'
       assert_selector "turbo-cable-stream-source[connected]", visible: :all
@@ -25,19 +25,19 @@ class TripChatTest < ApplicationSystemTestCase
 
     visit ride_post_path(ride, tab: "chat")
     assert_selector "turbo-cable-stream-source[connected]", visible: :all, count: 2
-    assert_text "No messages yet."
+    assert_selector "#chat_messages_empty"
     assert page.evaluate_script("document.querySelector('#chat_message_form').getBoundingClientRect().bottom <= window.innerHeight"), "The phone composer must fit below the page header"
 
     using_session(:driver) do
       fill_in "Coordination message", with: "Meet at the station"
       click_button "Send"
       assert_selector '.chat-message[data-own-message="true"]', text: "Meet at the station"
-      assert_no_text "No messages yet."
+      assert_no_selector "#chat_messages_empty"
     end
 
     assert_selector '.chat-message[data-own-message="false"]', text: "Meet at the station"
-    assert_selector ".chat-message-author", text: "Juan"
-    assert_no_text "No messages yet."
+    assert_selector ".chat-message-author", text: ride.user.first_name
+    assert_no_selector "#chat_messages_empty"
     fill_in "Coordination message", with: "I will be there"
     click_button "Send"
     assert_selector '.chat-message[data-own-message="true"]', text: "I will be there"

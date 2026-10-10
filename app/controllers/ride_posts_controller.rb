@@ -1,4 +1,5 @@
 class RidePostsController < ApplicationController
+  prepend_before_action :require_html_response
   before_action :require_authentication, except: %i[ index show ]
   before_action :set_ride_post, only: :show
   before_action :set_user_ride_post, only: %i[ edit update destroy cancel publish close_requests ]
@@ -10,7 +11,7 @@ class RidePostsController < ApplicationController
     by: -> { Current.user.id }, with: :reject_rate_limited_request
 
 
-  # GET /ride_posts or /ride_posts.json
+  # GET /rides
   def index
     if params.key?(:origin_id) || params.key?(:destination_id) || params.key?(:community_id) || params.key?(:ladies_only) || params.key?(:departure_date)
       @ride_posts = RidePost.active.upcoming.accepting_schedule_requests
@@ -42,26 +43,20 @@ class RidePostsController < ApplicationController
     end
   end
 
-  # GET /ride_posts/1 or /ride_posts/1.json
+  # GET /rides/:id
   def show
     unless @ride_post.authorized_viewer?(Current.user)
-      respond_to do |format|
-        format.html { redirect_to ride_posts_path, alert: "You are not authorized to view this restricted ride." }
-        format.json { render json: { error: "Forbidden" }, status: :forbidden }
-      end
+      redirect_to ride_posts_path, alert: "You are not authorized to view this restricted ride."
       return
     end
 
     if params[:id] != @ride_post.to_param
-      redirect_to ride_post_path(@ride_post, tab: params[:tab].presence, format: params[:format]), status: :moved_permanently
-      return # Use return to stop execution after redirecting
+      redirect_to ride_post_path(@ride_post, tab: params[:tab].presence), status: :moved_permanently
+      return
     end
 
     if params[:tab] == "chat" && @ride_post.chat_expired?
-      respond_to do |format|
-        format.html { redirect_to ride_post_path(@ride_post), alert: "Chat history for this trip is no longer available." }
-        format.json { render json: { error: "Chat history is no longer available" }, status: :gone }
-      end
+      redirect_to ride_post_path(@ride_post), alert: "Chat history for this trip is no longer available."
       return
     end
 
@@ -73,7 +68,7 @@ class RidePostsController < ApplicationController
     @chat_messages = @ride_post.chat_messages.includes(user: { avatar_attachment: :blob }).order(created_at: :desc, id: :desc).limit(100).to_a.reverse if @ride_post.user_authorized_for_chat?(Current.user)
   end
 
-  # GET /ride_posts/new
+  # GET /rides/new
   def new
     if params[:ride_type] == "regular"
       @ride_schedule = Current.user.ride_schedules.build
@@ -92,44 +87,34 @@ class RidePostsController < ApplicationController
     end
   end
 
-  # GET /ride_posts/1/edit
+  # GET /rides/:id/edit
   def edit
   end
 
-  # POST /ride_posts or /ride_posts.json
+  # POST /rides
   def create
     return create_regular_ride if params[:ride_type] == "regular"
 
     @ride_post = Current.user.ride_posts.build(ride_post_params)
-    @ride_post.status = params[:intent] == "publish" ? :active : :draft if @ride_post.offering?
+    @ride_post.status = params[:intent] == "publish" ? :active : :draft
 
-    respond_to do |format|
-      if @ride_post.save
-        notice = @ride_post.draft? ? "Ride saved as a private draft. Choose Publish ride when ready." : "Ride post was successfully created."
-        format.html { redirect_to @ride_post, notice: notice, status: :see_other }
-        format.json { render :show, status: :created, location: @ride_post }
-      else
-        format.html { render :new, status: :unprocessable_content }
-        format.json { render json: @ride_post.errors, status: :unprocessable_content }
-      end
+    if @ride_post.save
+      notice = @ride_post.draft? ? "Ride saved as a private draft. Choose Publish ride when ready." : "Ride post was successfully created."
+      redirect_to @ride_post, notice: notice, status: :see_other
+    else
+      render :new, status: :unprocessable_content
     end
   end
 
-  # PATCH/PUT /ride_posts/1 or /ride_posts/1.json
+  # PATCH/PUT /rides/:id
   def update
     @ride_post.assign_attributes(ride_post_params)
-    if @ride_post.offering?
-      @ride_post.status = :active if params[:intent] == "publish" && @ride_post.draft?
-    end
+    @ride_post.status = :active if params[:intent] == "publish" && @ride_post.draft?
 
-    respond_to do |format|
-      if @ride_post.save
-        format.html { redirect_to @ride_post, notice: "Ride post was successfully updated.", status: :see_other }
-        format.json { render :show, status: :ok, location: @ride_post }
-      else
-        format.html { render :edit, status: :unprocessable_content }
-        format.json { render json: @ride_post.errors, status: :unprocessable_content }
-      end
+    if @ride_post.save
+      redirect_to @ride_post, notice: "Ride post was successfully updated.", status: :see_other
+    else
+      render :edit, status: :unprocessable_content
     end
   end
 
@@ -157,36 +142,28 @@ class RidePostsController < ApplicationController
     redirect_to @ride_post, alert: "#{e.message}. Refresh the ride to check its current status.", status: :see_other
   end
 
-  # DELETE /ride_posts/1 or /ride_posts/1.json
+  # DELETE /rides/:id
   def destroy
     if @ride_post.destroy
-      respond_to do |format|
-        format.html { redirect_to ride_posts_path, notice: "Ride post was successfully destroyed.", status: :see_other }
-        format.json { head :no_content }
-      end
+      redirect_to ride_posts_path, notice: "Ride post was successfully destroyed.", status: :see_other
     else
-      respond_to do |format|
-        format.html { redirect_to @ride_post, alert: model_error_feedback(@ride_post, title: "Your ride wasn’t deleted."), status: :see_other }
-        format.json { render json: @ride_post.errors, status: :unprocessable_content }
-      end
+      redirect_to @ride_post, alert: model_error_feedback(@ride_post, title: "Your ride wasn’t deleted."), status: :see_other
     end
   end
 
   # PATCH /rides/1/cancel
   def cancel
     RidePosts::CancelService.call(@ride_post, actor: Current.user)
-    respond_to do |format|
-      format.html { redirect_to @ride_post, notice: "Trip was successfully canceled.", status: :see_other }
-      format.json { head :no_content }
-    end
+    redirect_to @ride_post, notice: "Trip was successfully canceled.", status: :see_other
   rescue RidePosts::CancelService::Error => e
-    respond_to do |format|
-      format.html { redirect_to @ride_post, alert: "#{e.message}. Refresh the ride to check its current status.", status: :see_other }
-      format.json { render json: { error: e.message }, status: :unprocessable_content }
-    end
+    redirect_to @ride_post, alert: "#{e.message}. Refresh the ride to check its current status.", status: :see_other
   end
 
   private
+
+  def require_html_response
+    head :not_acceptable unless request.negotiate_mime([ Mime[:html] ])
+  end
 
   def create_regular_ride
     @ride_schedule = Current.user.ride_schedules.build
@@ -274,7 +251,7 @@ class RidePostsController < ApplicationController
       end
 
     title_text = "Ride from #{(@ride_post.origin&.name || "Choose origin")} to #{(@ride_post.destination&.name || "Choose destination")}"
-    desc_text = "#{@ride_post.user.first_name} is #{@ride_post.post_type} a ride. " \
+    desc_text = "#{@ride_post.user.first_name} is offering a ride. " \
       "Departure: #{formatted_time}. " \
       "Total seats: #{@ride_post.seats}. " \
       "View profiles before traveling. Seat requests need driver approval; accepted participants coordinate in private in-app chat."

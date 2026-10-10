@@ -3,7 +3,7 @@
 class BookingsController < ApplicationController
   before_action :require_authentication
   before_action :set_ride_post, only: :create
-  before_action :set_booking, only: %i[ show accept decline cancel ]
+  before_action :set_booking, only: %i[ accept decline cancel ]
   rate_limit to: 20, within: 1.minute, name: "account", only: :create,
     by: -> { Current.user.id }, with: :reject_rate_limited_request
 
@@ -13,15 +13,6 @@ class BookingsController < ApplicationController
     redirect_to @booking.ride_post, notice: "Seat requested! The driver has been notified.", status: :see_other
   rescue ActiveRecord::RecordInvalid => e
     redirect_to @ride_post, alert: model_error_feedback(e.record, title: "Your seat wasn’t requested. Check this ride’s availability and your account restrictions."), status: :see_other
-  end
-
-  # GET /bookings/:id
-  def show
-    if @booking.passenger_id == Current.user.id || @booking.ride_post.user_id == Current.user.id
-      redirect_to @booking.ride_post
-    else
-      redirect_to ride_posts_path, alert: "Only the passenger and driver can view this seat request. Open a ride you can access."
-    end
   end
 
   # PATCH /bookings/:id/accept

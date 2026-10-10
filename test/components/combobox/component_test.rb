@@ -17,8 +17,10 @@ module Combobox
         assert_selector "optgroup[label='Metro Manila'] option[value='12'][selected]", text: "Quezon City"
         assert_selector "optgroup[label='Metro Manila'] option[value='13']", text: "Manila"
       end
-      assert_equal "turbo:before-render@document->select#teardown turbo:render@document->select#connect turbo:before-cache@document->select#teardown",
-                   rendered.at_css("select")["data-action"]
+      actions = rendered.at_css("select")["data-action"].split
+      %w[turbo:before-render@document->select#teardown turbo:render@document->select#connect turbo:before-cache@document->select#teardown].each do |action|
+        assert_includes actions, action
+      end
     end
   end
 end

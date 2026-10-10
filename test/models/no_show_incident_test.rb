@@ -13,7 +13,6 @@ class NoShowIncidentTest < ActiveSupport::TestCase
       user: @driver,
       origin: @origin,
       destination: @destination,
-      post_type: :offering,
       seats: 3,
       remaining_seats: 3,
       status: :active,
@@ -48,7 +47,7 @@ class NoShowIncidentTest < ActiveSupport::TestCase
       occurred_at: Time.current
     )
     assert_not duplicate.valid?
-    assert_includes duplicate.errors[:ride_post_id], "already has an incident recorded for this trip"
+    assert duplicate.errors.of_kind?(:ride_post_id, :taken)
   end
 
   test "recent strikes scope respects 60-day window and upheld status" do
@@ -65,7 +64,6 @@ class NoShowIncidentTest < ActiveSupport::TestCase
       user: @driver,
       origin: @origin,
       destination: @destination,
-      post_type: :offering,
       seats: 3,
       remaining_seats: 3,
       status: :active,
@@ -84,7 +82,6 @@ class NoShowIncidentTest < ActiveSupport::TestCase
       user: @driver,
       origin: @origin,
       destination: @destination,
-      post_type: :offering,
       seats: 3,
       remaining_seats: 3,
       status: :active,

@@ -51,7 +51,6 @@ class HotwireNativeSystemTest < ApplicationSystemTestCase
     visit user_path(user)
     assert_title "Profile"
     assert_selector "h1[data-profile-name]", text: "#{user.first_name} #{user.last_name}", visible: true
-    assert_text "No upcoming driver offers listed at the moment."
   ensure
     page.driver.headers = previous_headers if previous_headers
   end

@@ -47,7 +47,7 @@ module Navbar
       end
 
       def trigger_actions
-        "click->navbar#toggleMenu pointerenter->navbar#handlePointerEnter pointermove->navbar#handlePointerMove pointerleave->navbar#handlePointerLeave keydown->navbar#handleTriggerKeydown"
+        "click->navbar#toggleMenu keydown->navbar#handleTriggerKeydown"
       end
 
       def align_value

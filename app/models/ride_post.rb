@@ -17,7 +17,6 @@ class RidePost < ApplicationRecord
 
   before_destroy :check_destruction_allowed, prepend: true
 
-  enum :post_type, { offering: 0 }, default: :offering, validate: true
   enum :status, { active: 0, fulfilled: 1, canceled: 2, completed: 3, draft: 4 }
   enum :visibility, { public_ride: 0, hub_only: 1 }, default: :public_ride
   enum :departure_choice, {
@@ -48,7 +47,6 @@ class RidePost < ApplicationRecord
   validates :seats, numericality: { only_integer: true, greater_than: 0 }, allow_nil: true
   validates :origin, :destination, :seats, presence: true, unless: :draft?
   validate :route_must_have_distinct_locations, unless: :draft?
-  validates :post_type, presence: true
   validates :notes, length: { maximum: 300 }, if: -> { new_record? || will_save_change_to_notes? }
   validates :status, presence: true
   validates :visibility, presence: true
@@ -59,7 +57,7 @@ class RidePost < ApplicationRecord
 
   validate :driver_must_be_verified_community_member, if: -> { hub_only? && !canceled? && !completed? && (publishing? || will_save_change_to_community_id? || will_save_change_to_visibility?) }
   validate :driver_must_be_female_for_ladies_only, if: -> { ladies_only? && !canceled? && !completed? && (publishing? || will_save_change_to_ladies_only?) }
-  validate :bookable_offering_requirements, if: -> { offering? && !draft? && !canceled? && !completed? }
+  validate :bookable_offering_requirements, if: -> { !draft? && !canceled? && !completed? }
   validate :lock_attributes_when_accepted_bookings_exist, on: :update
   validate :scheduled_departure_date_is_fixed
 
@@ -179,7 +177,7 @@ class RidePost < ApplicationRecord
   end
 
   def bookable?
-    offering? && active? && requests_closed_at.nil? && remaining_seats.to_i > 0 && booking_cutoff_at.present? && booking_cutoff_at > Time.current && schedule_accepts_requests?
+    active? && requests_closed_at.nil? && remaining_seats.to_i > 0 && booking_cutoff_at.present? && booking_cutoff_at > Time.current && schedule_accepts_requests?
   end
 
   def schedule_accepts_requests?
@@ -191,7 +189,7 @@ class RidePost < ApplicationRecord
   end
 
   def full?
-    offering? && (fulfilled? || remaining_seats.to_i <= 0)
+    fulfilled? || remaining_seats.to_i <= 0
   end
 
   def authorized_viewer?(viewer, verified_community_ids: nil)
@@ -305,7 +303,7 @@ class RidePost < ApplicationRecord
   end
 
   def reviewable_trip?
-    offering? && !draft? && booking_cutoff_at.present? && booking_cutoff_at <= Time.current
+    !draft? && booking_cutoff_at.present? && booking_cutoff_at <= Time.current
   end
 
   def reviewable_by?(reviewer)
@@ -430,11 +428,11 @@ class RidePost < ApplicationRecord
   end
 
   def initialize_remaining_seats
-    self.remaining_seats ||= seats if offering? && seats.present?
+    self.remaining_seats ||= seats if seats.present?
   end
 
   def sync_remaining_seats_with_capacity
-    if offering? && will_save_change_to_seats? && !current_bookings_include?(:accepted)
+    if will_save_change_to_seats? && !current_bookings_include?(:accepted)
       self.remaining_seats = seats
       self.status = :active if fulfilled? && remaining_seats.to_i > 0
     end
@@ -466,7 +464,7 @@ class RidePost < ApplicationRecord
   end
 
   def should_schedule_audit?
-    offering? && published? && automatic_completion_at.present? && (saved_change_to_expected_arrival_at? || saved_change_to_departure_time? || saved_change_to_departure_date? || saved_change_to_departure_choice? || saved_change_to_status?)
+    published? && automatic_completion_at.present? && (saved_change_to_expected_arrival_at? || saved_change_to_departure_time? || saved_change_to_departure_date? || saved_change_to_departure_choice? || saved_change_to_status?)
   end
 
   def schedule_trip_audit
@@ -474,7 +472,7 @@ class RidePost < ApplicationRecord
   end
 
   def should_schedule_cutoff?
-    offering? && published? && booking_cutoff_at.present? && (saved_change_to_departure_time? || saved_change_to_departure_date? || saved_change_to_departure_choice? || saved_change_to_status?)
+    published? && booking_cutoff_at.present? && (saved_change_to_departure_time? || saved_change_to_departure_date? || saved_change_to_departure_choice? || saved_change_to_status?)
   end
 
   def schedule_booking_cutoff
@@ -482,7 +480,7 @@ class RidePost < ApplicationRecord
   end
 
   def should_schedule_chat_retention?
-    offering? && (published? || canceled?) && chat_history_unavailable_at.present? && (saved_change_to_departure_time? || saved_change_to_departure_date? || saved_change_to_departure_choice? || saved_change_to_status? || saved_change_to_canceled_at?)
+    (published? || canceled?) && chat_history_unavailable_at.present? && (saved_change_to_departure_time? || saved_change_to_departure_date? || saved_change_to_departure_choice? || saved_change_to_status? || saved_change_to_canceled_at?)
   end
 
   def schedule_chat_retention
@@ -490,7 +488,7 @@ class RidePost < ApplicationRecord
   end
 
   def should_schedule_route_alert?
-    return false unless offering? && published? && bookable?
+    return false unless published? && bookable?
 
     previously_new_record? ||
       saved_change_to_status? ||
@@ -575,7 +573,7 @@ class RidePost < ApplicationRecord
   end
 
   def lock_attributes_when_accepted_bookings_exist
-    locked_fields = %w[origin_id destination_id departure_date departure_choice departure_time expected_arrival_at seats post_type visibility ladies_only community_id]
+    locked_fields = %w[origin_id destination_id departure_date departure_choice departure_time expected_arrival_at seats visibility ladies_only community_id]
     return if (changes.keys & (locked_fields + [ "remaining_seats" ])).empty?
 
     has_accepted = current_bookings_include?(:accepted)

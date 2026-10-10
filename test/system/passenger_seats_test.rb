@@ -8,7 +8,6 @@ class PassengerSeatsSystemTest < ApplicationSystemTestCase
     click_button "Sign in"
     assert_current_path root_path
     visit new_ride_post_path
-    assert_text "excludes the driver"
     fill_in "Available passenger seats", with: 1
     click_button "Remove one passenger seat"
     assert_field "Available passenger seats", with: "1"

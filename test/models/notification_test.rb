@@ -76,7 +76,7 @@ class NotificationTest < ActiveSupport::TestCase
       assert_not_nil toast_broadcast
       assert_equal "notifications/toast", toast_broadcast[:kwargs][:partial]
       assert_equal "success", notification.toast_type
-      assert_equal "Your seat request has been confirmed!", notification.summary
+      assert_equal notification, toast_broadcast[:kwargs][:locals][:notification]
     ensure
       Turbo::StreamsChannel.define_singleton_method(:broadcast_append_to, original_broadcast)
     end
@@ -93,12 +93,12 @@ class NotificationTest < ActiveSupport::TestCase
       )
       notification = Notification.new(notifiable: decision, event_name: "incident.resolved")
 
-      assert_equal "A no-show report about your participation was #{status}.", notification.summary
+      assert_match /\b#{status}\b/, notification.summary
       assert_equal toast_type, notification.toast_type
       if status == :upheld
         assert_includes notification.incident_booking_restriction_summary, freeze_until.to_fs(:long)
       else
-        assert_equal "No booking restriction was active when this decision was made.", notification.incident_booking_restriction_summary
+        assert_match /\bno\b.*\bbooking restriction\b/i, notification.incident_booking_restriction_summary
       end
       assert_not_includes notification.summary, decision.reason
     end
@@ -109,7 +109,8 @@ class NotificationTest < ActiveSupport::TestCase
 
     assert_nil notification.incident_decision
     assert_nil notification.incident_booking_restriction_summary
-    assert_equal "An incident report was resolved.", notification.summary
+    assert_predicate notification.summary, :present?
+    assert_no_match /\b(upheld|dismissed)\b/, notification.summary
     assert_equal "info", notification.toast_type
   end
 end

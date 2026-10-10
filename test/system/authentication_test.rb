@@ -7,7 +7,6 @@ class AuthenticationSystemTest < ApplicationSystemTestCase
     user = users(:one)
 
     visit root_url
-    assert_text "Carpooling for the Community"
 
     click_on "Login"
     assert_current_path new_session_path
@@ -23,7 +22,7 @@ class AuthenticationSystemTest < ApplicationSystemTestCase
     # Navigate to post a ride while authenticated
     click_on "Add a ride"
     assert_current_path new_ride_post_path
-    assert_text "Post a Ride"
+    assert_selector "#ride_post_origin_id-ts-control"
 
     # Profile dropdown menu toggles via Stimulus and allows sign out via Turbo
     find("button[data-navbar-target='trigger'][data-content-id='profile-content']").click

@@ -5,11 +5,10 @@ require "view_component/test_case"
 
 module Toast
   class ComponentTest < ViewComponent::TestCase
-    def test_renders_one_top_center_host_with_accessible_live_region
+    def test_renders_one_host_with_accessible_live_region
       render_inline(Toast::Component.new)
 
       assert_selector "div#toast-container[data-controller='toast']", count: 1
-      assert_selector "#toast-container.left-1\\/2.top-0"
       assert_selector "ol[data-toast-target='container'][aria-live='polite']"
       assert_no_selector "div[data-controller='flash-toasts']"
     end

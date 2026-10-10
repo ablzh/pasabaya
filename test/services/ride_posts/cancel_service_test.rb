@@ -36,7 +36,6 @@ module RidePosts
         user: @driver,
         origin: locations(:one),
         destination: locations(:two),
-        post_type: :offering,
         seats: 3,
         remaining_seats: 3,
         status: :active,

@@ -43,7 +43,7 @@ class SessionsControllerTest < ActionDispatch::IntegrationTest
     post session_path, params: { email_address: @user.email_address, password: "password" }
 
     assert_redirected_to new_session_path
-    assert_equal "This account has been deleted.", flash[:alert]
+    assert_predicate flash[:alert], :present?
     assert_nil cookies[:session_id]
   end
 

@@ -43,7 +43,7 @@ class UserTest < ActiveSupport::TestCase
 
     user.facebook_profile_url = "https://evil.example.com/bad"
     assert_not user.valid?
-    assert_includes user.errors[:facebook_profile_url], "must be an HTTPS Facebook profile URL"
+    assert user.errors.of_kind?(:facebook_profile_url, :facebook_url)
   end
 
   # 3. Testing validations (positive path)
@@ -83,7 +83,6 @@ class UserTest < ActiveSupport::TestCase
       user: female_user,
       origin: origin,
       destination: dest,
-      post_type: :offering,
       seats: 2,
       remaining_seats: 2,
       status: :active,
@@ -105,7 +104,6 @@ class UserTest < ActiveSupport::TestCase
       user: other_driver,
       origin: origin,
       destination: dest,
-      post_type: :offering,
       seats: 2,
       remaining_seats: 2,
       status: :active,
@@ -178,7 +176,6 @@ class UserTest < ActiveSupport::TestCase
       user: driver,
       origin: locations(:one),
       destination: locations(:two),
-      post_type: :offering,
       seats: 3,
       departure_time: 2.days.from_now,
       expected_arrival_at: 2.days.from_now + 2.hours,
@@ -204,7 +201,7 @@ class UserTest < ActiveSupport::TestCase
       password: "password123"
     )
     assert_not user.valid?
-    assert_includes user.errors[:email_address], "is reserved and cannot be registered"
+    assert user.errors.of_kind?(:email_address, :reserved_email)
   end
 
   test "active_trips_count tallies active driver rides and accepted passenger bookings" do

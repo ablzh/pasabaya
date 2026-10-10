@@ -38,7 +38,7 @@ class CommunityMembershipTest < ActiveSupport::TestCase
       institutional_email: "student@updiliman.edu.ph"
     )
     assert_not mismatched.valid?
-    assert_includes mismatched.errors[:institutional_email], "must match the community domain (@up.edu.ph)"
+    assert mismatched.errors.of_kind?(:institutional_email, :wrong_domain)
   end
 
   test "rejects institutional email with mismatched domain" do
@@ -48,7 +48,7 @@ class CommunityMembershipTest < ActiveSupport::TestCase
       institutional_email: "new_user@gmail.com"
     )
     assert_not membership.valid?
-    assert_includes membership.errors[:institutional_email], "must match the community domain (@accenture.com)"
+    assert membership.errors.of_kind?(:institutional_email, :wrong_domain)
   end
 
   test "rejects duplicate membership for same user and community" do
@@ -59,7 +59,7 @@ class CommunityMembershipTest < ActiveSupport::TestCase
       institutional_email: "another_juan@accenture.com"
     )
     assert_not duplicate.valid?
-    assert_includes duplicate.errors[:user_id], "is already a member of this community"
+    assert duplicate.errors.of_kind?(:user_id, :taken)
   end
 
   test "enforces globally unique institutional email when verified" do
@@ -72,7 +72,7 @@ class CommunityMembershipTest < ActiveSupport::TestCase
       verified_at: Time.current
     )
     assert_not membership.valid?
-    assert_includes membership.errors[:institutional_email], "is already registered and verified by another user"
+    assert membership.errors.of_kind?(:institutional_email, :taken)
   end
 
   test "generates verification token and verifies successfully" do
@@ -111,7 +111,6 @@ class CommunityMembershipTest < ActiveSupport::TestCase
       user: driver,
       origin: origin,
       destination: dest,
-      post_type: :offering,
       seats: 3,
       remaining_seats: 3,
       status: :active,
@@ -127,7 +126,6 @@ class CommunityMembershipTest < ActiveSupport::TestCase
       user: @user,
       origin: origin,
       destination: dest,
-      post_type: :offering,
       seats: 2,
       remaining_seats: 2,
       status: :active,
@@ -194,7 +192,6 @@ class CommunityMembershipTest < ActiveSupport::TestCase
       user: @user,
       origin: origin,
       destination: dest,
-      post_type: :offering,
       seats: 1,
       remaining_seats: 0,
       status: :fulfilled,
@@ -239,7 +236,6 @@ class CommunityMembershipTest < ActiveSupport::TestCase
       user: driver,
       origin: origin,
       destination: dest,
-      post_type: :offering,
       seats: 3,
       remaining_seats: 2,
       status: :active,
