@@ -21,6 +21,7 @@ Rails.application.routes.draw do
       patch :cancel
       patch :publish
       patch :close_requests
+      patch :reopen_requests
     end
     resources :bookings, only: [ :create ]
     resources :chat_messages, only: [ :create ]

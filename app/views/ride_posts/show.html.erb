@@ -149,8 +149,15 @@
             <% if @ride_post.requests_closed_at.nil? && @ride_post.booking_cutoff_at&.future? %>
               <div class="space-y-2 max-w-xs">
                 <%= button_to "Close seat requests", close_requests_ride_post_path(@ride_post), method: :patch,
-                              class: "px-4 py-2 text-sm font-semibold rounded-xl border border-neutral-300 dark:border-neutral-700 text-neutral-800 dark:text-neutral-100 hover:bg-neutral-50 dark:hover:bg-neutral-800" %>
+                              data: { turbo_confirm: "Are you sure you want to close seat requests? This will stop new requests and expire any unanswered pending requests." },
+                              class: "px-4 py-2 text-sm font-semibold rounded-xl border border-neutral-300 dark:border-neutral-700 text-neutral-800 dark:text-neutral-100 hover:bg-neutral-50 dark:hover:bg-neutral-800 cursor-pointer" %>
                 <p class="text-xs text-neutral-500 dark:text-neutral-400">Stop new requests and expire unanswered ones. Confirmed passengers and trip chat remain available.</p>
+              </div>
+            <% elsif @ride_post.requests_closed_at.present? && @ride_post.booking_cutoff_at&.future? %>
+              <div class="space-y-2 max-w-xs">
+                <%= button_to "Reopen seat requests", reopen_requests_ride_post_path(@ride_post), method: :patch,
+                              class: "px-4 py-2 text-sm font-semibold rounded-xl border border-blue-600 dark:border-blue-500 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/30 cursor-pointer" %>
+                <p class="text-xs text-neutral-500 dark:text-neutral-400">Seat requests are closed. Reopen to allow passengers to request seats again.</p>
               </div>
             <% end %>
           </div>

@@ -77,4 +77,49 @@ class CloseRideRequestsTest < ActionDispatch::IntegrationTest
     patch ride_post_url(ride), params: { intent: "publish", ride_post: { notes: "Same trip" } }
     assert_not ride.reload.bookable?
   end
+
+  test "driver can reopen seat requests and UI prompts for confirmation" do
+    ride = ride_posts(:one)
+    sign_in_as(ride.user)
+
+    get ride_post_url(ride)
+    assert_select "button[data-turbo-confirm]", text: "Close seat requests"
+    assert_select "button", text: "Reopen seat requests", count: 0
+
+    patch "/rides/#{ride.to_param}/close_requests"
+    assert_redirected_to ride_post_url(ride)
+    follow_redirect!
+    assert_select "button", text: "Reopen seat requests"
+    assert_select "button", text: "Close seat requests", count: 0
+
+    patch "/rides/#{ride.to_param}/reopen_requests"
+    assert_redirected_to ride_post_url(ride)
+    assert_nil ride.reload.requests_closed_at
+    assert ride.bookable?
+    assert_equal "Seat requests reopened. Passengers can request seats again.", flash[:notice]
+
+    follow_redirect!
+    assert_select "button[data-turbo-confirm]", text: "Close seat requests"
+    assert_select "button", text: "Reopen seat requests", count: 0
+  end
+
+  test "reopening requests is restricted to the driver and cannot reopen canceled or completed trips" do
+    ride = ride_posts(:one)
+    ride.update_columns(requests_closed_at: Time.current)
+
+    sign_in_as(users(:two))
+    patch reopen_requests_ride_post_url(ride)
+    assert_response :not_found
+    assert_not_nil ride.reload.requests_closed_at
+
+    sign_in_as(ride.user)
+    %i[canceled completed draft].each do |status|
+      ride.update_columns(status: RidePost.statuses[status], requests_closed_at: Time.current)
+      patch reopen_requests_ride_post_url(ride)
+      assert_redirected_to ride_post_url(ride)
+      assert_equal status.to_s, ride.reload.status
+      assert_not_nil ride.requests_closed_at
+      assert_predicate flash[:alert], :present?
+    end
+  end
 end
