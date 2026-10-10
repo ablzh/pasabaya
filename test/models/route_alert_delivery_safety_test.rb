@@ -78,7 +78,7 @@ class RouteAlertDeliverySafetyTest < ActiveSupport::TestCase
     subscription = RouteSubscription.create!(user: @passenger, origin_id: @ride.origin_id, destination_id: @ride.destination_id, departure_date: @ride.departure_date)
     RouteSubscriptions::MatchService.call(@ride)
     notification = Notification.find_by!(route_subscription: subscription)
-    @ride.update!(departure_date: @ride.departure_date + 1, departure_choice: :morning, expected_arrival_at: nil)
+    @ride.update!(departure_date: @ride.departure_date + 1, departure_choice: :morning)
 
     assert_no_emails { NotificationDeliveryJob.perform_now(notification.id) }
     assert notification.reload.pending?

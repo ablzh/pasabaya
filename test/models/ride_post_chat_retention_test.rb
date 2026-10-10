@@ -21,12 +21,11 @@ class RidePostChatRetentionTest < ActiveSupport::TestCase
     assert_equal cutoff + 24.hours + 30.days, @ride.chat_history_unavailable_at
   end
 
-  test "chat messaging closes 24 hours after booking cutoff regardless of earlier automatic completion" do
-    # Trip completed 2 hours ago, but departure was 5 hours ago (booking cutoff 5 hours ago)
+  test "chat messaging closes 24 hours after booking cutoff regardless of earlier completion" do
+    # Trip completed, but departure was 5 hours ago (booking cutoff 5 hours ago)
     # 24h has NOT elapsed yet
     @ride.update_columns(
       departure_time: 5.hours.ago,
-      expected_arrival_at: 4.hours.ago,
       status: RidePost.statuses[:completed]
     )
 
@@ -36,8 +35,7 @@ class RidePostChatRetentionTest < ActiveSupport::TestCase
 
     # Now move past 24 hours after departure
     @ride.update_columns(
-      departure_time: 25.hours.ago,
-      expected_arrival_at: 24.hours.ago
+      departure_time: 25.hours.ago
     )
 
     assert_not @ride.chat_writable?, "Chat must not be writable after messaging deadline"
@@ -49,7 +47,6 @@ class RidePostChatRetentionTest < ActiveSupport::TestCase
     # History deadline is cutoff + 24 hours + 30 days = cutoff + 31 days
     @ride.update_columns(
       departure_time: 32.days.ago,
-      expected_arrival_at: 31.days.ago,
       status: RidePost.statuses[:completed]
     )
 
@@ -65,7 +62,7 @@ class RidePostChatRetentionTest < ActiveSupport::TestCase
     ride.bookings.delete_all
     new_time = 5.days.from_now
     assert_enqueued_with(job: ChatRetentionJob, at: new_time + 24.hours + 30.days) do
-      ride.update!(departure_time: new_time, expected_arrival_at: new_time + 2.hours)
+      ride.update!(departure_time: new_time)
     end
   end
 end

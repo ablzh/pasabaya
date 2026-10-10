@@ -181,7 +181,7 @@ class ChatsControllerTest < ActionDispatch::IntegrationTest
 
   test "inbox excludes expired conversations" do
     @ride.chat_messages.create!(user: @driver, body: "Old chat before expiry")
-    @ride.update_columns(departure_time: 35.days.ago, expected_arrival_at: 34.days.ago)
+    @ride.update_columns(departure_time: 35.days.ago)
     sign_in_as(@passenger)
 
     get chats_url

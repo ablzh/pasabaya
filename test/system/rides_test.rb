@@ -61,7 +61,7 @@ class RidesTest < ApplicationSystemTestCase
     click_button "Save draft"
     assert draft.reload.draft?
     click_link "Edit Post"
-    assert_field "Expected Arrival Time (optional)", with: ""
+    assert_no_field "Expected Arrival Time (optional)"
     click_button "Publish ride"
     assert_button "Close seat requests"
     assert draft.reload.active?

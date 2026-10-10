@@ -73,7 +73,7 @@ class ChatReadStateTest < ActiveSupport::TestCase
     assert_equal 1, @passenger.unread_chats_count
 
     # Expire chat history (past 30 days retention)
-    @ride.update_columns(departure_time: 35.days.ago, expected_arrival_at: 34.days.ago)
+    @ride.update_columns(departure_time: 35.days.ago)
     assert @ride.chat_expired?
 
     # Expired chat must not contribute to unread count

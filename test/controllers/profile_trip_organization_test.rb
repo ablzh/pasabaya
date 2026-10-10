@@ -4,11 +4,10 @@ class ProfileTripOrganizationTest < ActionDispatch::IntegrationTest
   test "draft management publishes explicitly and reports incomplete or elapsed drafts" do
     ride = ride_posts(:one)
     sign_in_as(ride.user)
-    ride.update_columns(status: RidePost.statuses[:draft], expected_arrival_at: nil)
+    ride.update_columns(status: RidePost.statuses[:draft])
     patch publish_ride_post_url(ride)
     assert_redirected_to user_url(ride.user)
     assert ride.reload.bookable?
-    assert_nil ride.expected_arrival_at
 
     ride.update_columns(status: RidePost.statuses[:draft], origin_id: nil, destination_id: nil, departure_time: nil, departure_date: nil)
     patch publish_ride_post_url(ride)

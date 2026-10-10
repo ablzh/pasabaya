@@ -18,8 +18,7 @@ class NoShowIncidents::AdjudicateServiceTest < ActiveSupport::TestCase
       seats: 3,
       remaining_seats: 3,
       status: :active,
-      departure_time: 1.day.from_now,
-      expected_arrival_at: 1.day.from_now + 2.hours
+      departure_time: 1.day.from_now
     )
   end
 
@@ -63,8 +62,7 @@ class NoShowIncidents::AdjudicateServiceTest < ActiveSupport::TestCase
       seats: 3,
       remaining_seats: 3,
       status: :active,
-      departure_time: 2.days.from_now,
-      expected_arrival_at: 2.days.from_now + 2.hours
+      departure_time: 2.days.from_now
     )
     inc2 = NoShowIncident.create!(ride_post: ride2, user: @user, status: :pending, occurred_at: 5.days.ago)
     adjudicate(inc2, status: :upheld)
@@ -80,8 +78,7 @@ class NoShowIncidents::AdjudicateServiceTest < ActiveSupport::TestCase
       seats: 3,
       remaining_seats: 3,
       status: :active,
-      departure_time: 3.days.from_now,
-      expected_arrival_at: 3.days.from_now + 2.hours
+      departure_time: 3.days.from_now
     )
     inc3 = NoShowIncident.create!(ride_post: ride3, user: @user, status: :pending, occurred_at: 1.day.ago)
     adjudicate(inc3, status: :upheld)

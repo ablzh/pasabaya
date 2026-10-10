@@ -34,7 +34,7 @@ class Settings::UsersControllerTest < ActionDispatch::IntegrationTest
     driver = users(:one)
     ride = ride_posts(:one)
     Booking.create!(ride_post: ride, passenger: @user, status: :accepted)
-    ride.update_columns(departure_time: 2.hours.ago, expected_arrival_at: 1.hour.ago)
+    ride.update_columns(departure_time: 2.hours.ago)
 
     review = TripReview.create!(
       ride_post: ride,
@@ -71,7 +71,7 @@ class Settings::UsersControllerTest < ActionDispatch::IntegrationTest
   test "anonymizes account when driver has departed ride with historical participation" do
     ride = ride_posts(:one)
     booking = bookings(:one)
-    ride.update_columns(user_id: @user.id, departure_time: 2.hours.ago, expected_arrival_at: 1.hour.ago)
+    ride.update_columns(user_id: @user.id, departure_time: 2.hours.ago)
     booking.update_columns(status: Booking.statuses[:accepted], accepted_at: 3.hours.ago)
 
     assert_no_difference "User.count" do
@@ -90,7 +90,7 @@ class Settings::UsersControllerTest < ActionDispatch::IntegrationTest
     ride = ride_posts(:one)
     booking = bookings(:one)
     booking.update_columns(passenger_id: @user.id, status: Booking.statuses[:accepted], accepted_at: 3.hours.ago)
-    ride.update_columns(departure_time: 2.hours.ago, expected_arrival_at: 1.hour.ago)
+    ride.update_columns(departure_time: 2.hours.ago)
 
     assert_no_difference "User.count" do
       delete settings_user_url, params: { password_challenge: "password" }

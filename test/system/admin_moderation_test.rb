@@ -10,7 +10,7 @@ class AdminModerationSystemTest < ApplicationSystemTestCase
     passenger = users(:two)
     ride = ride_posts(:one)
     bookings(:one).update_columns(status: Booking.statuses[:accepted], accepted_at: 3.hours.ago)
-    ride.update_columns(departure_time: 2.hours.ago, expected_arrival_at: 1.hour.ago)
+    ride.update_columns(departure_time: 2.hours.ago)
     review = TripReview.create!(ride_post: ride, reporter: driver, reported_user: passenger,
       outcome: :passenger_no_show, notes: "Waited at the pickup point for twenty minutes.")
     incident = NoShowIncident.create!(ride_post: ride, user: passenger, occurred_at: 2.hours.ago)

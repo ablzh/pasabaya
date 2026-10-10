@@ -13,7 +13,7 @@ class ChatDeadlineTransitionsTest < ApplicationSystemTestCase
   end
 
   test "already open discussion switches to read only when messaging ends" do
-    @ride.update_columns(departure_time: 24.hours.ago + 8.seconds, expected_arrival_at: nil)
+    @ride.update_columns(departure_time: 24.hours.ago + 8.seconds)
     visit ride_post_path(@ride, tab: "chat")
     assert_selector "#chat_message_form input"
     assert_no_selector "#chat_message_form input", wait: 12
@@ -22,7 +22,7 @@ class ChatDeadlineTransitionsTest < ApplicationSystemTestCase
   end
 
   test "already open history disappears at retention deadline" do
-    @ride.update_columns(departure_time: 31.days.ago + 8.seconds, expected_arrival_at: nil)
+    @ride.update_columns(departure_time: 31.days.ago + 8.seconds)
     visit ride_post_path(@ride, tab: "chat")
     assert_text "Retained private discussion"
     assert_no_text "Retained private discussion", wait: 12

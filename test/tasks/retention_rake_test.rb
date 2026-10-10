@@ -23,12 +23,12 @@ class RetentionRakeTest < ActiveSupport::TestCase
     booking.update_columns(status: Booking.statuses[:accepted])
     old_msg = ride.chat_messages.create!(user: ride.user, body: "Old message")
     recent_msg = ride.chat_messages.create!(user: ride.user, body: "Recent message")
-    ride.update_columns(departure_time: 35.days.ago, expected_arrival_at: 34.days.ago)
+    ride.update_columns(departure_time: 35.days.ago)
 
     retained_ride = ride_posts(:two)
     Booking.create!(ride_post: retained_ride, passenger: users(:one), status: :accepted)
     retained_msg = retained_ride.chat_messages.create!(user: retained_ride.user, body: "Retained message")
-    retained_ride.update_columns(departure_time: 2.days.ago, expected_arrival_at: 1.day.ago)
+    retained_ride.update_columns(departure_time: 2.days.ago)
 
     membership = community_memberships(:one)
     membership.update_columns(verified_at: 1.month.ago, expires_at: 1.day.ago, revoked_at: nil)

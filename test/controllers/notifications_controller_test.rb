@@ -45,7 +45,6 @@ class NotificationsControllerTest < ActionDispatch::IntegrationTest
       destination: locations(:two),
       seats: 2,
       departure_time: 2.days.from_now,
-      expected_arrival_at: 2.days.from_now + 2.hours,
       status: :active
     )
     orphan_notification = Notification.create!(

@@ -41,8 +41,7 @@ module RidePosts
         status: :active,
         visibility: :hub_only,
         community: community,
-        departure_time: 3.days.from_now,
-        expected_arrival_at: 3.days.from_now + 2.hours
+        departure_time: 3.days.from_now
       )
 
       driver_membership.update_columns(expires_at: 1.day.ago)

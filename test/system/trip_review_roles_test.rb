@@ -7,7 +7,7 @@ class TripReviewRolesTest < ApplicationSystemTestCase
     other = User.create!(email_address: "other-reviewee@example.test", password: "password", first_name: "Other", last_name: "Passenger")
     bookings(:one).update_columns(status: Booking.statuses[:accepted], accepted_at: 2.hours.ago)
     Booking.create!(ride_post: ride, passenger: other, status: :accepted)
-    ride.update_columns(departure_time: 1.hour.ago, expected_arrival_at: Time.current)
+    ride.update_columns(departure_time: 1.hour.ago)
     visit new_session_path
     fill_in "Email Address", with: passenger.email_address
     fill_in "Password", with: "password"

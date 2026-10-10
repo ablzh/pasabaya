@@ -198,7 +198,7 @@ class RidePostsController < ApplicationController
   # Only allow a list of trusted parameters through.
   def ride_post_params
     params.expect(ride_post: [
-      :origin_id, :destination_id, :departure_date, :departure_choice, :exact_departure_time, :departure_time, :expected_arrival_at,
+      :origin_id, :destination_id, :departure_date, :departure_choice, :exact_departure_time, :departure_time,
       :seats, :notes,
       :ladies_only, :visibility, :community_id
     ])

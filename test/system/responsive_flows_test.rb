@@ -9,7 +9,6 @@ class ResponsiveFlowsTest < ApplicationSystemTestCase
     assert_current_path root_path
 
     offer = ride_posts(:one)
-    offer.update_columns(expected_arrival_at: offer.departure_time + 1.day)
     bookings(:one).update_columns(status: Booking.statuses[:accepted])
     [ 320, 1440 ].each do |width|
       page.driver.resize(width, width < 768 ? 844 : 1024)
@@ -22,7 +21,6 @@ class ResponsiveFlowsTest < ApplicationSystemTestCase
       assert_fits
       visit ride_post_path(offer)
       assert_link "Maria Clara", href: user_path(users(:two))
-      assert_text offer.expected_arrival_at.strftime("%a, %b %d, %Y")
       assert_fits
     end
   end

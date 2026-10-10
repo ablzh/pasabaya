@@ -87,8 +87,7 @@ class UserTest < ActiveSupport::TestCase
       remaining_seats: 2,
       status: :active,
       ladies_only: true,
-      departure_time: 2.days.from_now,
-      expected_arrival_at: 2.days.from_now + 2.hours
+      departure_time: 2.days.from_now
     )
 
     # 2. Passenger booking on another ladies-only ride
@@ -108,8 +107,7 @@ class UserTest < ActiveSupport::TestCase
       remaining_seats: 2,
       status: :active,
       ladies_only: true,
-      departure_time: 3.days.from_now,
-      expected_arrival_at: 3.days.from_now + 2.hours
+      departure_time: 3.days.from_now
     )
     passenger_booking = Booking.create!(ride_post: other_ride, passenger: female_user, status: :pending)
 
@@ -178,7 +176,6 @@ class UserTest < ActiveSupport::TestCase
       destination: locations(:two),
       seats: 3,
       departure_time: 2.days.from_now,
-      expected_arrival_at: 2.days.from_now + 2.hours,
       status: :active
     )
     Booking.create!(ride_post: ride, passenger: passenger, status: :accepted)

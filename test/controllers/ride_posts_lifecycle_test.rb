@@ -32,7 +32,7 @@ class RidePostsLifecycleTest < ActionDispatch::IntegrationTest
     assert_response :redirect
   end
 
-  test "draft editing never publishes and an explicit publish permits optional arrival" do
+  test "draft editing never publishes and an explicit publish activates ride" do
     sign_in_as(users(:one))
     attributes = { seats: 3, origin_id: ride_posts(:one).origin_id, destination_id: ride_posts(:one).destination_id, departure_time: 1.day.from_now }
     post ride_posts_url, params: { ride_post: attributes, intent: "draft" }
@@ -45,10 +45,8 @@ class RidePostsLifecycleTest < ActionDispatch::IntegrationTest
     patch ride_post_url(ride), params: { ride_post: attributes, intent: "publish" }
     assert_response :see_other
     assert ride.reload.bookable?
-    assert_nil ride.expected_arrival_at
     get edit_ride_post_url(ride)
-    assert_select "input#ride_post_expected_arrival_at"
-    assert_select "input#ride_post_expected_arrival_at[required]", count: 0
+    assert_select "input#ride_post_expected_arrival_at", count: 0
   end
 
   test "guest booking entry follows lifecycle and availability" do
@@ -84,17 +82,6 @@ class RidePostsLifecycleTest < ActionDispatch::IntegrationTest
       booking.update_columns(status: Booking.statuses[status])
       get ride_post_url(booking.ride_post)
       assert_select "a[href='#{user_path(booking.passenger)}']", text: "#{booking.passenger.first_name} #{booking.passenger.last_name}", count: 1
-    end
-  end
-
-  test "same day overnight and year rollover arrivals retain their complete dates" do
-    sign_in_as(users(:one))
-    ride = ride_posts(:one)
-    departure = Time.zone.local(Time.current.year + 1, 12, 30, 9)
-    [ departure + 3.hours, departure + 1.day, departure + 3.days ].each do |arrival|
-      ride.update_columns(departure_time: departure, expected_arrival_at: arrival)
-      get ride_post_url(ride)
-      assert_select "p", text: /#{Regexp.escape(arrival.strftime("%a, %b %d, %Y • %I:%M %p %Z"))}/
     end
   end
 

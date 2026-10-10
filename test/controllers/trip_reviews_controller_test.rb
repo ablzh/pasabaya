@@ -23,8 +23,7 @@ class TripReviewsControllerTest < ActionDispatch::IntegrationTest
       seats: 3,
       remaining_seats: 2,
       status: :active,
-      departure_time: 1.day.from_now,
-      expected_arrival_at: 1.day.from_now + 2.hours
+      departure_time: 1.day.from_now
     )
     @booking = Booking.create!(ride_post: @ride_post, passenger: @passenger, status: :accepted)
   end
@@ -51,7 +50,7 @@ class TripReviewsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "new succeeds for participant after trip departure" do
-    @ride_post.update_columns(departure_time: 2.hours.ago, expected_arrival_at: 1.hour.ago)
+    @ride_post.update_columns(departure_time: 2.hours.ago)
     sign_in_as(@driver)
     get new_ride_post_review_url(@ride_post)
     assert_response :success
@@ -59,7 +58,7 @@ class TripReviewsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "create saves review and creates incident on no-show" do
-    @ride_post.update_columns(departure_time: 2.hours.ago, expected_arrival_at: 1.hour.ago)
+    @ride_post.update_columns(departure_time: 2.hours.ago)
     sign_in_as(@driver)
     assert_difference -> { TripReview.count }, 1 do
       assert_difference -> { NoShowIncident.count }, 1 do
@@ -99,7 +98,7 @@ class TripReviewsControllerTest < ActionDispatch::IntegrationTest
 
   test "passenger can review after the driver cancels a departed trip without retaining chat access" do
     @booking.update_columns(accepted_at: 35.days.ago)
-    @ride_post.update_columns(departure_time: 35.days.ago, expected_arrival_at: 34.days.ago)
+    @ride_post.update_columns(departure_time: 35.days.ago)
     RidePosts::CancelService.call(@ride_post, actor: @driver)
     @ride_post.update_columns(canceled_at: 35.days.ago)
 
@@ -122,7 +121,7 @@ class TripReviewsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "incident failure rolls back its review" do
-    @ride_post.update_columns(departure_time: 2.hours.ago, expected_arrival_at: 1.hour.ago)
+    @ride_post.update_columns(departure_time: 2.hours.ago)
     sign_in_as(@driver)
     original = NoShowIncident.method(:find_or_create_by!)
     NoShowIncident.define_singleton_method(:find_or_create_by!) do |*|

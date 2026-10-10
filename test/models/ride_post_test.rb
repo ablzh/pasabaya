@@ -10,7 +10,7 @@ class RidePostTest < ActiveSupport::TestCase
     assert_equal original, canceled.notes
 
     completed = ride_posts(:two)
-    completed.update_columns(notes: original, departure_time: 25.hours.ago, expected_arrival_at: nil)
+    completed.update_columns(notes: original, departure_time: 25.hours.ago)
     TripAuditJob.perform_now(completed.id)
     assert completed.reload.completed?
     assert_equal original, completed.notes
@@ -91,30 +91,12 @@ class RidePostTest < ActiveSupport::TestCase
 
   test "historical ride remains updateable if departure time is not changed" do
     ride = ride_posts(:one)
-    ride.update_columns(departure_time: 2.days.ago, expected_arrival_at: 2.days.ago + 2.hours)
+    ride.update_columns(departure_time: 2.days.ago)
 
     ride.reload
     ride.notes = "Updated historical coordination notes"
     assert ride.valid?
     assert ride.save
-  end
-
-  test "published offering requires arrival after departure and remaining seats" do
-    ride = RidePost.new(
-      user: users(:one),
-      origin: locations(:one),
-      destination: locations(:two),
-      status: :active,
-      seats: 3,
-      departure_time: 1.day.from_now,
-      expected_arrival_at: 1.day.from_now - 1.hour, # before departure
-      remaining_seats: 3
-    )
-    assert_not ride.valid?
-    assert ride.errors.of_kind?(:expected_arrival_at, :before_departure)
-
-    ride.expected_arrival_at = 1.day.from_now + 2.hours
-    assert ride.valid?
   end
 
   test "locks attributes when accepted bookings exist" do
@@ -208,7 +190,7 @@ class RidePostTest < ActiveSupport::TestCase
     ride = ride_posts(:one)
     booking = bookings(:one)
     booking.update_columns(status: Booking.statuses[:accepted])
-    ride.update_columns(departure_time: 2.hours.ago, expected_arrival_at: 1.hour.ago)
+    ride.update_columns(departure_time: 2.hours.ago)
 
     TripReview.create!(
       ride_post: ride,
@@ -225,7 +207,7 @@ class RidePostTest < ActiveSupport::TestCase
     ride = ride_posts(:one)
     booking = bookings(:one)
     booking.update_columns(status: Booking.statuses[:accepted], accepted_at: 3.hours.ago)
-    ride.update_columns(departure_time: 2.hours.ago, expected_arrival_at: 1.hour.ago)
+    ride.update_columns(departure_time: 2.hours.ago)
 
     # Cancel whole trip post-departure
     RidePosts::CancelService.call(ride, actor: ride.user)
@@ -277,7 +259,6 @@ class RidePostTest < ActiveSupport::TestCase
       destination: locations(:two),
       seats: 3,
       departure_time: 2.days.from_now,
-      expected_arrival_at: 2.days.from_now + 3.hours,
       remaining_seats: 3,
       status: :active
     )

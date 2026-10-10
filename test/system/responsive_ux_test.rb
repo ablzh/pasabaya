@@ -11,7 +11,6 @@ class ResponsiveUxTest < ApplicationSystemTestCase
     fill_in "Departure Date", with: 3.days.from_now.to_date
     choose "Exact Time"
     fill_in "Departure Time", with: "09:00"
-    fill_in "Expected Arrival Time", with: 3.days.from_now.strftime("%Y-%m-%dT12:00")
     select "Community / Closed Hub Only", from: "Visibility"
     page.execute_script("window.formRenders = 0; document.addEventListener('turbo:render', () => window.formRenders++)")
     2.times do

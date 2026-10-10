@@ -26,8 +26,7 @@ class RidePostAudienceTest < ActiveSupport::TestCase
       status: :active,
       visibility: :hub_only,
       community: nil,
-      departure_time: 1.day.from_now,
-      expected_arrival_at: 1.day.from_now + 2.hours
+      departure_time: 1.day.from_now
     )
     assert_not ride.valid?
     assert ride.errors.of_kind?(:community, :blank)
@@ -45,8 +44,7 @@ class RidePostAudienceTest < ActiveSupport::TestCase
       status: :active,
       visibility: :hub_only,
       community: unverified_community,
-      departure_time: 1.day.from_now,
-      expected_arrival_at: 1.day.from_now + 2.hours
+      departure_time: 1.day.from_now
     )
     assert_not ride.valid?
     assert ride.errors.of_kind?(:community, :unverified_membership)
@@ -61,8 +59,7 @@ class RidePostAudienceTest < ActiveSupport::TestCase
       remaining_seats: 3,
       status: :active,
       ladies_only: true,
-      departure_time: 1.day.from_now,
-      expected_arrival_at: 1.day.from_now + 2.hours
+      departure_time: 1.day.from_now
     )
     assert_not ride.valid?
     assert ride.errors.of_kind?(:ladies_only, :ineligible_driver)
@@ -78,8 +75,7 @@ class RidePostAudienceTest < ActiveSupport::TestCase
       remaining_seats: 3,
       status: :active,
       visibility: :public_ride,
-      departure_time: 2.days.from_now,
-      expected_arrival_at: 2.days.from_now + 2.hours
+      departure_time: 2.days.from_now
     )
 
     # 2. Ladies-only ride
@@ -92,8 +88,7 @@ class RidePostAudienceTest < ActiveSupport::TestCase
       status: :active,
       visibility: :public_ride,
       ladies_only: true,
-      departure_time: 2.days.from_now,
-      expected_arrival_at: 2.days.from_now + 2.hours
+      departure_time: 2.days.from_now
     )
 
     # 3. Hub-only ride (Accenture)
@@ -106,8 +101,7 @@ class RidePostAudienceTest < ActiveSupport::TestCase
       status: :active,
       visibility: :hub_only,
       community: @community,
-      departure_time: 2.days.from_now,
-      expected_arrival_at: 2.days.from_now + 2.hours
+      departure_time: 2.days.from_now
     )
 
     # Guest user (nil)
@@ -139,8 +133,7 @@ class RidePostAudienceTest < ActiveSupport::TestCase
       status: :active,
       visibility: :public_ride,
       ladies_only: true,
-      departure_time: 2.days.from_now,
-      expected_arrival_at: 2.days.from_now + 2.hours
+      departure_time: 2.days.from_now
     )
 
     # Male passenger tries to book ladies-only ride
@@ -158,8 +151,7 @@ class RidePostAudienceTest < ActiveSupport::TestCase
       status: :active,
       visibility: :hub_only,
       community: @community, # Accenture
-      departure_time: 2.days.from_now,
-      expected_arrival_at: 2.days.from_now + 2.hours
+      departure_time: 2.days.from_now
     )
     booking2 = Booking.new(ride_post: hub_ride, passenger: @female_driver) # not member of Accenture
     assert_not booking2.valid?

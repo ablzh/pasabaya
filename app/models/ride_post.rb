@@ -173,7 +173,7 @@ class RidePost < ApplicationRecord
   def automatic_completion_at
     return unless booking_cutoff_at
 
-    expected_arrival_at ? [ expected_arrival_at + 2.hours, booking_cutoff_at ].max : booking_cutoff_at + 24.hours
+    booking_cutoff_at + 24.hours
   end
 
   def bookable?
@@ -371,7 +371,7 @@ class RidePost < ApplicationRecord
   private
 
   def driver_edit?
-    new_record? || publishing? || (changes.keys & %w[user_id origin_id destination_id notes departure_date departure_choice departure_time expected_arrival_at seats visibility ladies_only community_id]).any?
+    new_record? || publishing? || (changes.keys & %w[user_id origin_id destination_id notes departure_date departure_choice departure_time seats visibility ladies_only community_id]).any?
   end
 
   def refresh_driver_for_edit
@@ -464,7 +464,7 @@ class RidePost < ApplicationRecord
   end
 
   def should_schedule_audit?
-    published? && automatic_completion_at.present? && (saved_change_to_expected_arrival_at? || saved_change_to_departure_time? || saved_change_to_departure_date? || saved_change_to_departure_choice? || saved_change_to_status?)
+    published? && automatic_completion_at.present? && (saved_change_to_departure_time? || saved_change_to_departure_date? || saved_change_to_departure_choice? || saved_change_to_status?)
   end
 
   def schedule_trip_audit
@@ -555,14 +555,6 @@ class RidePost < ApplicationRecord
       errors.add(:departure_time, :required_for_publication, message: "is required for published ride offers")
     end
 
-    if expected_arrival_at.present?
-      if exact_time? && departure_time.present? && expected_arrival_at <= departure_time
-        errors.add(:expected_arrival_at, :before_departure, message: "must be after departure time")
-      elsif !exact_time? && departure_date.present? && expected_arrival_at < departure_date.in_time_zone("Asia/Manila").beginning_of_day
-        errors.add(:expected_arrival_at, :before_departure_date, message: "must be on or after departure date")
-      end
-    end
-
     if remaining_seats.nil? || (publishing? && active? && remaining_seats <= 0)
       errors.add(:remaining_seats, :unconfirmed_capacity, message: "must be confirmed for published ride offers")
     end
@@ -573,7 +565,7 @@ class RidePost < ApplicationRecord
   end
 
   def lock_attributes_when_accepted_bookings_exist
-    locked_fields = %w[origin_id destination_id departure_date departure_choice departure_time expected_arrival_at seats visibility ladies_only community_id]
+    locked_fields = %w[origin_id destination_id departure_date departure_choice departure_time seats visibility ladies_only community_id]
     return if (changes.keys & (locked_fields + [ "remaining_seats" ])).empty?
 
     has_accepted = current_bookings_include?(:accepted)

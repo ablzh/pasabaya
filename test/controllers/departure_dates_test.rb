@@ -8,7 +8,7 @@ class DepartureDatesTest < ActionDispatch::IntegrationTest
 
     [ "25:99", "invalid", "08:00garbage" ].each do |time|
       patch ride_post_url(ride), params: {
-        ride_post: { departure_date: Date.tomorrow, departure_choice: :exact_time, exact_departure_time: time, expected_arrival_at: "" }
+        ride_post: { departure_date: Date.tomorrow, departure_choice: :exact_time, exact_departure_time: time }
       }
       assert_response :unprocessable_content
       assert_select "#ride_post_exact_departure_time_error", text: /\S/
@@ -23,7 +23,7 @@ class DepartureDatesTest < ActionDispatch::IntegrationTest
     original_departure = ride.departure_time
 
     patch ride_post_url(ride), params: {
-      ride_post: { departure_date: original_date + 1, departure_choice: :exact_time, exact_departure_time: "", expected_arrival_at: "" }
+      ride_post: { departure_date: original_date + 1, departure_choice: :exact_time, exact_departure_time: "" }
     }
     assert_response :unprocessable_content
     assert_equal original_date, ride.reload.departure_date
@@ -46,9 +46,9 @@ class DepartureDatesTest < ActionDispatch::IntegrationTest
   test "exact early morning and approximate offers appear on their Philippine departure date" do
     travel_to Time.zone.local(2026, 10, 4, 12) do
       exact = ride_posts(:one)
-      exact.update!(departure_date: Date.new(2026, 10, 5), exact_departure_time: "01:00", expected_arrival_at: nil)
+      exact.update!(departure_date: Date.new(2026, 10, 5), exact_departure_time: "01:00")
       approximate = ride_posts(:two)
-      approximate.update!(departure_date: Date.new(2026, 10, 5), departure_choice: :morning, expected_arrival_at: nil)
+      approximate.update!(departure_date: Date.new(2026, 10, 5), departure_choice: :morning)
 
       get ride_posts_url(departure_date: "2026-10-05")
       assert_response :success
