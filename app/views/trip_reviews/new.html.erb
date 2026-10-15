@@ -10,8 +10,8 @@
   </div>
 
   <%= render(Card::Component.new(rounded: :"2xl", padding: :lg)) do %>
-    <%= form_with(model: [@ride_post, @trip_review], url: ride_post_reviews_path(@ride_post), class: "space-y-6",
-        data: { controller: "trip-review", trip_review_driver_id_value: @ride_post.user_id }) do |form| %>
+    <%= form_with(model: [@ride_post, @trip_review], id: dom_id(@ride_post, :review_form), url: ride_post_reviews_path(@ride_post), class: "space-y-6",
+        data: { controller: "trip-review", trip_review_driver_id_value: @ride_post.user_id, action: "morph-draft:restored@document->trip-review#updateOutcomes" }) do |form| %>
       <%= render Forms::ErrorSummary::Component.new(record: @trip_review, form: form,
         title: "Your review wasn’t submitted. Check the highlighted fields.",
         targets: { reported_user_id: @possible_reviewees.count > 1 ? form.field_id(:reported_user_id) : nil }) %>

@@ -1,6 +1,7 @@
 <%= content_tag(:span, **wrapper_attributes) do %>
   <% if image? %>
     <%= tag.img(**image_attributes) %>
+    <span class="<%= fallback_classes %> hidden" aria-hidden="true"><%= fallback_text %></span>
   <% else %>
     <span class="<%= fallback_classes %>" aria-hidden="true"><%= fallback_text %></span>
   <% end %>

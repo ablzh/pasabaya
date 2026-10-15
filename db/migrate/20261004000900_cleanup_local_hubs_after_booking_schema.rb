@@ -4,6 +4,6 @@ class CleanupLocalHubsAfterBookingSchema < ActiveRecord::Migration[8.1]
   end
 
   def down
-    # Disposable local data cannot be restored by a rollback.
+    raise ActiveRecord::IrreversibleMigration, "Deleted disposable local hubs and their dependent records cannot be restored."
   end
 end

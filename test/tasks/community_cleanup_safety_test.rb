@@ -3,6 +3,11 @@ require Rails.root.join("db/migrate/20261003180040_retain_only_up_community")
 require Rails.root.join("db/migrate/20261004000900_cleanup_local_hubs_after_booking_schema")
 
 class CommunityCleanupSafetyTest < ActiveSupport::TestCase
+  test "data migrations reject rollback rather than reporting success" do
+    assert_raises(ActiveRecord::IrreversibleMigration) { RetainOnlyUpCommunity.new.down }
+    assert_raises(ActiveRecord::IrreversibleMigration) { CleanupLocalHubsAfterBookingSchema.new.down }
+  end
+
   %w[production staging].each do |environment|
     test "migration preserves non-UP hub data in #{environment}" do
       hub = communities(:one)

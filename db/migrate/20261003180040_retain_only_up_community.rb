@@ -17,6 +17,6 @@ class RetainOnlyUpCommunity < ActiveRecord::Migration[8.1]
   end
 
   def down
-    # Irreversible cleanup of local disposable test data
+    raise ActiveRecord::IrreversibleMigration, "The previous UP community name, slug, and hub type were not retained."
   end
 end

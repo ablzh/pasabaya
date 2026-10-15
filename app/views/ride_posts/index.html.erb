@@ -59,7 +59,7 @@
             </div>
           <% else %>
             <div class="mt-6 flex flex-col sm:flex-row items-center justify-center gap-4">
-              <%= form_with url: route_subscriptions_path, method: :post do |f| %>
+              <%= form_with url: route_subscriptions_path, method: :post, id: "route_subscription_form" do |f| %>
                 <%= f.hidden_field "route_subscription[origin_id]", value: @origin.id %>
                 <%= f.hidden_field "route_subscription[destination_id]", value: @destination.id %>
                 <%= f.hidden_field "route_subscription[departure_date]", value: params[:departure_date] %>

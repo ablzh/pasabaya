@@ -31,7 +31,7 @@
         <p class="text-xs text-neutral-500 mt-1">Once deleted, this ride will be permanently removed from the board.</p>
       </div>
 
-      <%= form_with model: @ride_post, method: :delete, data: { turbo_confirm: "Are you sure?" } do %>
+      <%= form_with model: @ride_post, method: :delete, id: dom_id(@ride_post, :delete_form), data: { turbo_confirm: "Are you sure?" } do %>
         <%= render Buttons::Component.new(
                    text: "Delete Post", 
                    variant: :destructive, 

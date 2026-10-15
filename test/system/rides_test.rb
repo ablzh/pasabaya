@@ -7,11 +7,7 @@ class RidesTest < ApplicationSystemTestCase
     user = users(:one)
 
     # Sign in
-    visit new_session_path
-    fill_in "Email Address", with: user.email_address
-    fill_in "Password", with: "password"
-    click_button "Sign in"
-    assert_current_path root_path
+    sign_in(user)
 
     # 1. Search for a ride
     click_link "Search"

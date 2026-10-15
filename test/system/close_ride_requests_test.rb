@@ -6,11 +6,7 @@ class CloseRideRequestsSystemTest < ApplicationSystemTestCase
     booking = bookings(:one)
     Bookings::AcceptService.call(booking, actor: ride.user)
 
-    visit new_session_path
-    fill_in "Email Address", with: ride.user.email_address
-    fill_in "Password", with: "password"
-    click_button "Sign in"
-    assert_current_path root_path
+    sign_in(ride.user)
     visit ride_post_path(ride)
 
     dismiss_confirm do

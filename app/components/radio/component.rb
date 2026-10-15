@@ -35,8 +35,8 @@ module Radio
       super()
       @label = label
       @name = name
-      @id = id || generate_id
       @value = value
+      @id = id.presence || generate_id
       @checked = checked
       @disabled = disabled
       @required = required
@@ -105,7 +105,9 @@ module Radio
     private
 
     def generate_id
-      "radio_#{SecureRandom.hex(4)}"
+      raise ArgumentError, "Provide a stable id or an input name and value; repeated controls need an explicit id" if @name.blank? || @value.nil?
+
+      "radio_#{Digest::SHA256.hexdigest([ @name.to_s, @value.to_s ].join("\0"))}"
     end
 
     def base_input_classes

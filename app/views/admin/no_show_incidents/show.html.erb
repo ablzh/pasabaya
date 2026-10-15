@@ -27,7 +27,7 @@
       <% if @incident.upheld? || @incident.dismissed? %>
         <p class="mt-2 text-sm text-neutral-600 dark:text-neutral-400">Current outcome: <%= @incident.status.humanize %>. Choose the other outcome to correct this decision; earlier reasoning stays in history.</p>
       <% end %>
-      <%= form_with url: admin_no_show_incident_path(@incident), scope: :no_show_incident, method: :patch, data: { turbo: false }, class: "mt-5 space-y-4" do |form| %>
+      <%= form_with url: admin_no_show_incident_path(@incident), scope: :no_show_incident, method: :patch, id: dom_id(@incident, :decision_form), data: { turbo: false }, class: "mt-5 space-y-4" do |form| %>
         <%= render Forms::ErrorSummary::Component.new(record: @incident, form: form,
           title: "Your decision wasn’t saved. Check the details below.",
           targets: { status: form.field_id(:status), reason: form.field_id(:reason) }) %>

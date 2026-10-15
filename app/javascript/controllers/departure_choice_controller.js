@@ -4,6 +4,10 @@ export default class extends Controller {
   static targets = ["exactTimeField"]
 
   connect() {
+    this.restoreDraft()
+  }
+
+  restoreDraft() {
     const checked = this.element.querySelector('input[type="radio"]:checked')
     this.toggle(checked ? checked.value : null)
   }

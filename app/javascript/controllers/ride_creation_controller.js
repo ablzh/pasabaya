@@ -1,7 +1,7 @@
 import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
-  static targets = ["typeGroup", "oneTimeFields", "regularFields", "endDateFields", "endDate", "weekday", "date", "departureChoice", "time", "seats", "seatsLabel", "publishButton", "summary"]
+  static targets = ["typeGroup", "oneTimeFields", "regularFields", "endDateFields", "endDateToggle", "endDate", "weekday", "date", "departureChoice", "time", "seats", "seatsLabel", "publishButton", "summary"]
   static values = { regular: Boolean }
 
   connect() {
@@ -10,6 +10,11 @@ export default class extends Controller {
 
   changeType() {
     this.updateType()
+  }
+
+  restoreDraft() {
+    this.updateType()
+    this.changeEndDate({ target: this.endDateToggleTarget.querySelector("input") })
   }
 
   updateType() {
@@ -52,6 +57,7 @@ export default class extends Controller {
   selectDays(days) {
     this.weekdayTargets.forEach(input => {
       input.checked = days.includes(input.value)
+      input.dispatchEvent(new Event("change", { bubbles: true }))
     })
     this.updateSummary()
   }

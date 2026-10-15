@@ -3,7 +3,7 @@
 <% has_active_filters = params[:origin_id].present? || params[:destination_id].present? || params[:departure_date].present? || params[:community_id].present? %>
 
 <div class="bg-white dark:bg-neutral-900 p-4 sm:p-6 rounded-3xl border border-neutral-100 dark:border-white/5 shadow-xs mb-10" data-controller="swap-inputs" data-search-panel>
-  <%= form_with url: ride_posts_path, method: :get, class: "space-y-4 text-left" do |form| %>
+  <%= form_with url: ride_posts_path, method: :get, id: "ride_search_form", class: "space-y-4 text-left" do |form| %>
 
     <div class="flex justify-end">
       <% if has_active_filters %>

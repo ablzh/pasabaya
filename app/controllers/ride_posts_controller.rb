@@ -194,7 +194,7 @@ class RidePostsController < ApplicationController
 
   # Use callbacks to share common setup or constraints between actions.
   def set_ride_post
-    @ride_post = RidePost.includes(:origin, :destination, :community).find_by(id: params.expect(:id).to_i)
+    @ride_post = RidePost.includes(:origin, :destination, :community, :ride_schedule).find_by(id: params.expect(:id).to_i)
     redirect_to ride_posts_path, alert: "The trip is no longer available" unless @ride_post
   end
 

@@ -2,7 +2,7 @@ require "application_system_test_case"
 
 class ResponsiveUxTest < ApplicationSystemTestCase
   test "route pickers preserve IDs and reopen through repeated create and edit failures" do
-    sign_in
+    sign_in(users(:one))
     page.driver.resize(390, 844)
     visit new_ride_post_path
     choose_city("ride_post_origin_id", "Manila")
@@ -99,7 +99,7 @@ class ResponsiveUxTest < ApplicationSystemTestCase
   end
 
   test "settings password labels focus their own inputs" do
-    sign_in
+    sign_in(users(:one))
     visit settings_profile_path
     %w[email_change password_change].each do |namespace|
       id = "#{namespace}_user_password_challenge"
@@ -109,15 +109,6 @@ class ResponsiveUxTest < ApplicationSystemTestCase
   end
 
   private
-
-  def sign_in
-    visit new_session_path
-    fill_in "Email Address", with: users(:one).email_address
-    fill_in "Password", with: "password"
-    click_button "Sign in"
-    assert_selector "[data-notification-count]", visible: :all
-    assert_current_path root_path
-  end
 
   def choose_city(id, name)
     find("##{id}-ts-control").click

@@ -84,6 +84,7 @@ module Avatar
       attributes[:src] = @src
       attributes[:alt] = @alt
       attributes[:class] = [ "size-full rounded-full object-cover", attributes[:class] ].compact.reject(&:blank?).join(" ")
+      attributes[:onerror] ||= "this.style.display='none'; this.nextElementSibling?.classList.remove('hidden');"
       attributes
     end
 

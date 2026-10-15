@@ -1,7 +1,7 @@
 <div id="chat_message_form" class="p-3 sm:p-4 bg-white dark:bg-neutral-900 border-t border-neutral-100 dark:border-neutral-800">
   <div id="chat_request_feedback"></div>
   <% if ride_post.chat_writable? %>
-    <%= form_with(model: [ ride_post, chat_message || ride_post.chat_messages.build ], class: "form-field flex flex-wrap items-center gap-2") do |f| %>
+    <%= form_with(model: [ ride_post, chat_message || ride_post.chat_messages.build ], id: dom_id(ride_post, :chat_composer), class: "form-field flex flex-wrap items-center gap-2") do |f| %>
       <%= render Forms::ErrorSummary::Component.new(record: chat_message, form: f,
         title: "Your message wasn’t sent. Check the highlighted fields.") if chat_message %>
       <% body_error = chat_message && form_error(chat_message, :body) %>

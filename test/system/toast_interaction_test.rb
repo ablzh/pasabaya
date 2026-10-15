@@ -38,11 +38,7 @@ class ToastInteractionTest < ApplicationSystemTestCase
   end
 
   test "streamed seat request View opens the correct ride" do
-    visit new_session_path
-    fill_in "Email Address", with: users(:one).email_address
-    fill_in "Password", with: "password"
-    click_button "Sign in"
-    assert_current_path root_path
+    sign_in(users(:one))
     assert_selector "turbo-cable-stream-source[connected]", visible: :all
     page.execute_script("Stimulus.getControllerForElementAndIdentifier(document.getElementById('toast-container'), 'toast').autoDismissDurationValue = 60000")
     notification = notifications(:one)
