@@ -40,7 +40,7 @@ module Forms
       super()
       @label = label
       @name = name
-      @id = id || (name ? name.to_s.gsub(/[\[\]]/, "_").gsub(/_+$/, "") : generate_id)
+      @id = id.presence || generate_id
       @required = required
       @disabled = disabled
       @helper_text = helper_text
@@ -158,7 +158,9 @@ module Forms
     private
 
     def generate_id
-      "form_field_#{SecureRandom.hex(4)}"
+      raise ArgumentError, "Provide a stable id or input name; repeated fields need an explicit id" if @name.blank?
+
+      @name.to_s.gsub(/[\[\]]/, "_").gsub(/_+$/, "")
     end
 
     attr_reader :label, :name, :id, :required, :disabled, :helper_text, :error, :size, :variant, :label_hidden

@@ -20,7 +20,7 @@ class HotwireNativeSystemTest < ApplicationSystemTestCase
     fill_in "Password", with: "password"
     click_button "Sign in"
     assert_selector "#native_navigation a[href='/notifications']"
-    assert_current_path trips_path
+    assert_signed_in(expected_path: trips_path)
     assert_title "My Trips"
     within "#native_navigation" do
       assert_link "Post a Ride"
@@ -42,11 +42,7 @@ class HotwireNativeSystemTest < ApplicationSystemTestCase
     user = users(:two)
     user.ride_posts.destroy_all
 
-    visit new_session_path
-    fill_in "Email Address", with: users(:one).email_address
-    fill_in "Password", with: "password"
-    click_button "Sign in"
-    assert_current_path root_path
+    sign_in(users(:one))
 
     visit user_path(user)
     assert_title "Profile"

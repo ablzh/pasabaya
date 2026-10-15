@@ -3,11 +3,7 @@ require "application_system_test_case"
 class NotificationsSystemTest < ApplicationSystemTestCase
   test "notification row and keyboard link open the target and mark it read" do
     page.driver.resize(320, 844)
-    visit new_session_path
-    fill_in "Email Address", with: users(:one).email_address
-    fill_in "Password", with: "password"
-    click_button "Sign in"
-    assert_current_path root_path
+    sign_in(users(:one))
     notification = notifications(:one)
     target_path = ride_post_path(notification.notifiable.ride_post)
     %i[row keyboard].each do |interaction|
@@ -27,11 +23,7 @@ class NotificationsSystemTest < ApplicationSystemTestCase
 
   test "mark all read updates an open notification list and every count" do
     user = users(:one)
-    visit new_session_path
-    fill_in "Email Address", with: user.email_address
-    fill_in "Password", with: "password"
-    click_button "Sign in"
-    assert_current_path root_path
+    sign_in(user)
     visit notifications_path
     assert_selector "turbo-cable-stream-source[connected]", visible: :all
     assert_selector "[data-unread-notification='true']"
@@ -43,11 +35,7 @@ class NotificationsSystemTest < ApplicationSystemTestCase
   test "first streamed notification replaces the empty state and updates unread badges" do
     user = users(:one)
     user.received_notifications.destroy_all
-    visit new_session_path
-    fill_in "Email Address", with: user.email_address
-    fill_in "Password", with: "password"
-    click_button "Sign in"
-    assert_current_path root_path
+    sign_in(user)
     visit notifications_path
     assert_selector "#notifications_empty"
     assert_selector "turbo-cable-stream-source[connected]", visible: :all

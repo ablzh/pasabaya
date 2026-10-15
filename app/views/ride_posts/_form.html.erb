@@ -5,8 +5,8 @@
 <% time_attribute = regular && !choose_ride_type ? :departure_clock : :exact_departure_time %>
 <% departure_clock = regular ? ride_post.departure_clock : (ride_post.exact_departure_time || ride_post.departure_time&.strftime("%H:%M")) %>
 <% schedule = regular ? ride_post : RideSchedule.new %>
-<%= form_with(model: ride_post, scope: scope, url: choose_ride_type ? ride_posts_path : polymorphic_path(ride_post), class: "w-full space-y-6",
-  data: { controller: "ride-creation", ride_creation_regular_value: regular, action: "input->ride-creation#updateSummary change->ride-creation#updateSummary" }) do |form| %>
+<%= form_with(model: ride_post, scope: scope, id: dom_id(ride_post, :form), url: choose_ride_type ? ride_posts_path : polymorphic_path(ride_post), class: "w-full space-y-6",
+  data: { controller: "ride-creation", ride_creation_regular_value: regular, action: "input->ride-creation#updateSummary change->ride-creation#updateSummary morph-draft:restored@document->ride-creation#restoreDraft" }) do |form| %>
   <% if choose_ride_type %>
     <fieldset class="min-w-0 space-y-3">
       <legend class="text-sm font-semibold text-neutral-900 dark:text-neutral-100">Ride type</legend>
@@ -97,7 +97,7 @@
           <%= render Buttons::Component.new(text: "Every day", variant: :ghost, size: :sm, data: { action: "ride-creation#selectEveryDay" }) %>
         </div>
       </fieldset>
-      <div data-action="change->ride-creation#changeEndDate">
+      <div data-ride-creation-target="endDateToggle" data-action="change->ride-creation#changeEndDate">
         <%= render Switch::Component.new(label: "Set an end date", id: form.field_id(:end_date_enabled), checked: schedule.end_date.present?) %>
       </div>
       <%= hidden_field_tag "#{form.object_name}[end_date]", "" %>
@@ -112,7 +112,7 @@
     </fieldset>
 
     <!-- Departure Choice -->
-    <fieldset class="col-span-full min-w-0 space-y-3 rounded-xl" data-controller="departure-choice" data-form-error-id="<%= form.field_id(:departure_choice) %>_error"
+    <fieldset class="col-span-full min-w-0 space-y-3 rounded-xl" data-controller="departure-choice" data-action="morph-draft:restored@document->departure-choice#restoreDraft" data-form-error-id="<%= form.field_id(:departure_choice) %>_error"
       <%= tag.attributes(aria: { invalid: form_error(ride_post, :departure_choice).present? ? "true" : nil, describedby: form_error(ride_post, :departure_choice).present? ? "#{form.field_id(:departure_choice)}_error" : nil }) %>>
       <legend class="block text-sm font-semibold text-neutral-900 dark:text-neutral-100">Departure Schedule</legend>
       <% if form_error(ride_post, :departure_choice) %>

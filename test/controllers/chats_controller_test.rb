@@ -19,6 +19,46 @@ class ChatsControllerTest < ActionDispatch::IntegrationTest
     assert_select "a[href=?]", ride_post_path(@ride, tab: "chat"), count: 1
   end
 
+  test "unbooked driver departures without confirmed passengers or messages are excluded from inbox" do
+    unbooked_ride = @driver.ride_posts.create!(
+      origin: locations(:one),
+      destination: locations(:two),
+      departure_date: 3.days.from_now.to_date,
+      departure_choice: :flexible,
+      seats: 3,
+      remaining_seats: 3,
+      status: :active
+    )
+    sign_in_as(@driver)
+
+    get chats_url
+
+    assert_response :success
+    assert_select "a[href=?]", ride_post_path(unbooked_ride, tab: "chat"), count: 0
+  end
+
+  test "regular ride conversation displays departure details and regular badge" do
+    schedule = @driver.ride_schedules.create!(
+      origin: locations(:one),
+      destination: locations(:two),
+      weekdays_mask: 3,
+      departure_choice: :flexible,
+      seats: 3,
+      status: :active
+    )
+    RidePost.where(id: @ride.id).update_all(ride_schedule_id: schedule.id, schedule_date: @ride.departure_date)
+    @ride.reload
+    sign_in_as(@driver)
+
+    get chats_url
+
+    assert_response :success
+    assert_select "a[href=?]", ride_post_path(@ride, tab: "chat") do
+      assert_select "span", text: "Regular"
+      assert_includes response.body, @ride.departure_display
+    end
+  end
+
   test "participant sees route latest preview and discussion link" do
     @ride.chat_messages.create!(user: @driver, body: "Meet beside the library")
     sign_in_as(@passenger)
@@ -176,7 +216,7 @@ class ChatsControllerTest < ActionDispatch::IntegrationTest
     end
 
     assert_equal baseline, inbox_query_count
-    assert_select "a[href*='tab=chat']", count: 6
+    assert_select "a[href*='tab=chat']", count: 5
   end
 
   test "inbox excludes expired conversations" do

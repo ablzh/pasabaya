@@ -1,5 +1,7 @@
 module RateLimitTestHelper
   def with_rate_limit_cache
+    original_enabled = Rack::Attack.enabled
+    Rack::Attack.enabled = true
     store = ActiveSupport::Cache::MemoryStore.new
     original_store = Rack::Attack.cache.store
     Rack::Attack.cache.store = store
@@ -12,5 +14,6 @@ module RateLimitTestHelper
     end
   ensure
     Rack::Attack.cache.store = original_store
+    Rack::Attack.enabled = original_enabled
   end
 end

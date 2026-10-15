@@ -187,7 +187,11 @@ class User < ApplicationRecord
 
   def chat_ride_candidates
     candidate_bookings = bookings.where("status = ? OR (status = ? AND accepted_at IS NOT NULL)", Booking.statuses[:accepted], Booking.statuses[:canceled])
-    RidePost.where(user: self).or(RidePost.where(id: candidate_bookings.select(:ride_post_id)))
+    active_driver_rides = RidePost.where(user: self).where(
+      "EXISTS (SELECT 1 FROM bookings WHERE bookings.ride_post_id = ride_posts.id AND (bookings.status = ? OR bookings.accepted_at IS NOT NULL)) OR EXISTS (SELECT 1 FROM chat_messages WHERE chat_messages.ride_post_id = ride_posts.id)",
+      Booking.statuses[:accepted]
+    )
+    active_driver_rides.or(RidePost.where(id: candidate_bookings.select(:ride_post_id)))
   end
 
   def registration_attestation

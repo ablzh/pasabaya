@@ -5,11 +5,7 @@ class ChatDeadlineTransitionsTest < ApplicationSystemTestCase
     @ride = ride_posts(:one)
     bookings(:one).update_columns(status: Booking.statuses[:accepted], accepted_at: 1.hour.ago)
     @ride.chat_messages.create!(user: users(:one), body: "Retained private discussion")
-    visit new_session_path
-    fill_in "Email Address", with: users(:two).email_address
-    fill_in "Password", with: "password"
-    click_button "Sign in"
-    assert_current_path root_path
+    sign_in(users(:two))
   end
 
   test "already open discussion switches to read only when messaging ends" do

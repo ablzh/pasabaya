@@ -15,7 +15,7 @@ class AuthenticationSystemTest < ApplicationSystemTestCase
     fill_in "Password", with: "password"
     click_button "Sign in"
 
-    assert_current_path root_path
+    assert_signed_in
     assert_no_link "Login"
     assert_no_link "Signup"
 

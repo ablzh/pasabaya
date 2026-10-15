@@ -2,7 +2,7 @@
   <h1 class="font-bold text-4xl text-neutral-900 dark:text-white mb-8 text-center">Create Your Account</h1>
 
   <%= render(Card::Component.new(rounded: :"3xl", padding: :lg)) do %>
-    <%= form_with model: @user, url: sign_up_path, class: "space-y-6" do |form| %>
+    <%= form_with model: @user, url: sign_up_path, id: "registration_form", class: "space-y-6" do |form| %>
       <div class="hidden" aria-hidden="true">
         <%= form.invisible_captcha :contact_reference %>
       </div>

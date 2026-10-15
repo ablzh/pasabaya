@@ -14,7 +14,7 @@ class NavbarSystemTest < ApplicationSystemTestCase
       assert_not page.evaluate_script("document.documentElement.scrollWidth > innerWidth")
     end
 
-    sign_in
+    sign_in(users(:one))
     [ 320, 1440 ].each do |width|
       page.driver.resize(width, 900)
       visit root_path
@@ -33,7 +33,7 @@ class NavbarSystemTest < ApplicationSystemTestCase
   end
 
   test "mobile hubs link opens from the account menu" do
-    sign_in
+    sign_in(users(:one))
     page.driver.resize(320, 900)
     visit root_path
     find("button[aria-label='Account menu']").click
@@ -42,7 +42,7 @@ class NavbarSystemTest < ApplicationSystemTestCase
   end
 
   test "profile menu supports keyboard focus escape outside dismissal and live resizing" do
-    sign_in
+    sign_in(users(:one))
     page.driver.resize(1440, 900)
     visit root_path
     trigger = find("button[aria-label='Account menu']")
@@ -72,15 +72,5 @@ class NavbarSystemTest < ApplicationSystemTestCase
     page.driver.browser.keyboard.type(:down)
     page.execute_script("document.querySelector('main a[href]').focus()")
     assert_selector "#profile-content[data-state='closed']", visible: :all
-  end
-
-  private
-
-  def sign_in
-    visit new_session_path
-    fill_in "Email Address", with: users(:one).email_address
-    fill_in "Password", with: "password"
-    click_button "Sign in"
-    assert_current_path root_path
   end
 end

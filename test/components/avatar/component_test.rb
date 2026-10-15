@@ -15,6 +15,17 @@ module Avatar
       assert_selector "img[alt='Jane Doe'][src='https://example.com/avatar.jpg']"
     end
 
+    def test_renders_avatar_with_image_and_hidden_fallback
+      render_inline(Avatar::Component.new(
+        alt: "Jane Doe",
+        src: "https://example.com/avatar.jpg",
+        size: :md
+      ))
+
+      assert_selector "img[onerror*='this.nextElementSibling']"
+      assert_selector "span[aria-hidden='true'].hidden", text: "JD"
+    end
+
     def test_renders_avatar_with_fallback_initials
       render_inline(Avatar::Component.new(
         alt: "Jane Doe",

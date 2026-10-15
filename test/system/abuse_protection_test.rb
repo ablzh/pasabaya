@@ -26,11 +26,7 @@ class AbuseProtectionSystemTest < ApplicationSystemTestCase
     bookings(:one).update_columns(status: Booking.statuses[:accepted], accepted_at: Time.current)
 
     with_rate_limit_cache do
-      visit new_session_path
-      fill_in "Email Address", with: passenger.email_address
-      fill_in "Password", with: "password"
-      click_button "Sign in"
-      assert_current_path root_path
+      sign_in(passenger)
       visit ride_post_path(ride, tab: "chat")
 
       30.times do |index|

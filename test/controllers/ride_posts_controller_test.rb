@@ -37,6 +37,25 @@ class RidePostsControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to ride_post_url(ride, tab: "chat")
   end
 
+  test "regular ride departure displays schedule banner with link to schedule" do
+    schedule = users(:one).ride_schedules.create!(
+      origin: locations(:one),
+      destination: locations(:two),
+      weekdays_mask: 3,
+      departure_choice: :flexible,
+      seats: 3,
+      status: :active
+    )
+    ride = ride_posts(:one)
+    RidePost.where(id: ride.id).update_all(ride_schedule_id: schedule.id, schedule_date: ride.departure_date)
+
+    get ride_post_url(ride)
+
+    assert_response :success
+    assert_select "a[href=?]", ride_schedule_path(schedule)
+    assert_includes response.body, "Part of regular schedule"
+  end
+
   test "SEO redirects retain audience filters and departure date" do
     origin = locations(:one)
     destination = locations(:two)

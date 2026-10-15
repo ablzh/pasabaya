@@ -78,4 +78,7 @@ Rails.application.configure do
       Prosopite.finish
     end
   end)
+
+  # Disable Rack::Attack in test environment to prevent throttling fast automated test suites
+  Rack::Attack.enabled = false
 end

@@ -178,7 +178,7 @@
 <%= render Toast::Component.new(flash: flash) %>
 <%= turbo_stream_from [ Current.user, :notifications ], channel: NotificationsChannel if authenticated? %>
 
-<main class="app-content container mx-auto px-4 mt-8 flex-grow">
+<main id="main_content" class="app-content container mx-auto px-4 mt-8 flex-grow" data-controller="morph-draft" data-action="input->morph-draft#record change->morph-draft#record turbo:before-morph-element->morph-draft#preserve turbo:submit-start->morph-draft#submitted submit->morph-draft#submitted reset->morph-draft#reset turbo:morph@document->morph-draft#refresh">
   <div id="request_feedback"></div>
   <%= render "shared/flash_errors" %>
   <%= yield %>

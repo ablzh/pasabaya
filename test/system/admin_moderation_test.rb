@@ -15,11 +15,7 @@ class AdminModerationSystemTest < ApplicationSystemTestCase
       outcome: :passenger_no_show, notes: "Waited at the pickup point for twenty minutes.")
     incident = NoShowIncident.create!(ride_post: ride, user: passenger, occurred_at: 2.hours.ago)
 
-    visit new_session_path
-    fill_in "Email Address", with: admin.email_address
-    fill_in "Password", with: "password"
-    click_button "Sign in"
-    assert_current_path root_path
+    sign_in(admin)
     find("button[aria-label='Account menu']").click
     click_link "Administration"
     assert_current_path admin_root_path

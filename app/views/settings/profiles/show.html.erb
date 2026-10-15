@@ -3,7 +3,7 @@
 
   <%# CARD 1: Profile Details %>
     <%= render(Card::Component.new(rounded: :"3xl", padding: :lg)) do %>
-      <%= form_with model: @user, url: settings_profile_path, method: :patch, class: "space-y-6" do |form| %>
+      <%= form_with model: @user, url: settings_profile_path, method: :patch, id: "profile_form", class: "space-y-6" do |form| %>
 
         <%= render Forms::ErrorSummary::Component.new(record: @user, form: form, title: "Your profile wasn’t saved. Check the highlighted fields.") if controller_name == "profiles" %>
 
@@ -96,7 +96,7 @@
   <%= render(Card::Component.new(rounded: :"3xl", padding: :lg)) do %>
     <h2 class="text-xl font-bold text-neutral-900 dark:text-white mb-6">Change Email Address</h2>
 
-    <%= form_with model: @user, url: settings_email_path, namespace: :email_change, method: :patch, class: "space-y-6" do |form| %>
+    <%= form_with model: @user, url: settings_email_path, namespace: :email_change, method: :patch, id: "email_change_form", class: "space-y-6" do |form| %>
       <%= render Forms::ErrorSummary::Component.new(record: @user, form: form, title: "Your email address wasn’t changed. Check the highlighted fields.") if controller_name == "emails" %>
 
       <div class="text-sm text-neutral-600 dark:text-neutral-400">
@@ -137,7 +137,7 @@
   <%= render(Card::Component.new(rounded: :"3xl", padding: :lg)) do %>
     <h2 class="text-xl font-bold text-neutral-900 dark:text-white mb-6">Change Password</h2>
 
-    <%= form_with model: @user, url: settings_password_path, namespace: :password_change, method: :patch, class: "space-y-6" do |form| %>
+    <%= form_with model: @user, url: settings_password_path, namespace: :password_change, method: :patch, id: "password_change_form", class: "space-y-6" do |form| %>
       <%= render Forms::ErrorSummary::Component.new(record: @user, form: form, title: "Your password wasn’t changed. Check the highlighted fields.") if controller_name == "passwords" %>
 
       <%= render(Forms::Component.new(
@@ -207,7 +207,7 @@
         </p>
       </div>
       <div class="shrink-0 w-full sm:w-auto">
-        <%= form_with url: settings_user_path, method: :delete, data: { turbo_confirm: "Are you sure you want to permanently delete your account?
+        <%= form_with url: settings_user_path, method: :delete, id: "account_deletion_form", data: { turbo_confirm: "Are you sure you want to permanently delete your account?
   All your rides will also be deleted." }, class: "space-y-4" do |form| %>
           <%= render Forms::ErrorSummary::Component.new(record: @user, form: form,
             title: "Your account wasn’t deleted. Check the highlighted field.") if controller_name == "users" %>

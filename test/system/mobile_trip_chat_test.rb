@@ -5,11 +5,7 @@ class MobileTripChatTest < ApplicationSystemTestCase
     @ride = ride_posts(:one)
     bookings(:one).update_columns(status: Booking.statuses[:accepted], accepted_at: 1.hour.ago)
     page.driver.resize(390, 844)
-    visit new_session_path
-    fill_in "Email Address", with: users(:two).email_address
-    fill_in "Password", with: "password"
-    click_button "Sign in"
-    assert_current_path root_path
+    sign_in(users(:two))
   end
 
   test "mobile discussion fills viewport and restores trip and desktop navigation" do

@@ -2,11 +2,7 @@ require "application_system_test_case"
 
 class ResponsiveFlowsTest < ApplicationSystemTestCase
   test "settings ride forms and details fit phone and desktop widths" do
-    visit new_session_path
-    fill_in "Email Address", with: users(:one).email_address
-    fill_in "Password", with: "password"
-    click_button "Sign in"
-    assert_current_path root_path
+    sign_in(users(:one))
 
     offer = ride_posts(:one)
     bookings(:one).update_columns(status: Booking.statuses[:accepted])

@@ -3,11 +3,7 @@ require "application_system_test_case"
 class RideCardsTest < ApplicationSystemTestCase
   test "card surface author and keyboard open the trip while owner Edit opens editing" do
     ride = ride_posts(:one)
-    visit new_session_path
-    fill_in "Email Address", with: users(:one).email_address
-    fill_in "Password", with: "password"
-    click_button "Sign in"
-    assert_current_path root_path
+    sign_in(users(:one))
 
     board = ride_posts_path(origin_id: ride.origin_id)
     visit board

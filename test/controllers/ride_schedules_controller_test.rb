@@ -29,6 +29,21 @@ class RideSchedulesControllerTest < ActionDispatch::IntegrationTest
     assert_equal 2, RidePost.popular_routes.find { |route| route[:origin].id == locations(:one).id }[:count]
   end
 
+  test "schedule show page groups upcoming departures and displays agenda details" do
+    post ride_posts_url, params: { ride_type: "regular", ride_post: @params, intent: "publish" }
+    schedule = @driver.ride_schedules.last
+
+    get ride_schedule_url(schedule)
+
+    assert_response :success
+    assert_select "h2", text: "Upcoming departures"
+    schedule.ride_posts.each do |departure|
+      assert_select "#ride_post_#{departure.id}" do
+        assert_select "a[href='#{ride_post_path(departure)}']"
+      end
+    end
+  end
+
   test "old undated draft conversion preserves the original and requires confirmation" do
     source = @driver.ride_posts.create!(status: :draft, origin: @origin, destination: @destination, seats: 3, notes: "Legacy flexible offer")
     get new_ride_post_url(ride_type: "regular", source_ride_post_id: source.id)

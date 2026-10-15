@@ -47,14 +47,4 @@ class TripChatTest < ApplicationSystemTestCase
       assert_selector '.chat-message[data-own-message="false"]', text: "I will be there"
     end
   end
-
-  private
-
-  def sign_in(user)
-    visit new_session_path
-    fill_in "Email Address", with: user.email_address
-    fill_in "Password", with: "password"
-    click_button "Sign in"
-    assert_current_path root_path
-  end
 end

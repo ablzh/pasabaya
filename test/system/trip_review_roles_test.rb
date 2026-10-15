@@ -8,11 +8,7 @@ class TripReviewRolesTest < ApplicationSystemTestCase
     bookings(:one).update_columns(status: Booking.statuses[:accepted], accepted_at: 2.hours.ago)
     Booking.create!(ride_post: ride, passenger: other, status: :accepted)
     ride.update_columns(departure_time: 1.hour.ago)
-    visit new_session_path
-    fill_in "Email Address", with: passenger.email_address
-    fill_in "Password", with: "password"
-    click_button "Sign in"
-    assert_current_path root_path
+    sign_in(passenger)
 
     visit new_ride_post_review_path(ride, reported_user_id: ride.user_id)
     assert_selector "option[value='passenger_no_show'][disabled]", visible: :all
