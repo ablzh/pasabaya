@@ -493,4 +493,50 @@ class RidePostsControllerTest < ActionDispatch::IntegrationTest
     assert_select "a[href='#{new_session_path(return_to: return_to)}']"
     assert_select "a[href='#{sign_up_path(return_to: return_to)}']"
   end
+
+  test "single location search shows partial route alert form for signed in user" do
+    sign_in_as(users(:two))
+    empty_origin = Location.create!(name: "Solo Origin", location_type: :city)
+
+    get ride_posts_url(origin_id: empty_origin.id)
+    assert_response :success
+    assert_select "form#route_subscription_partial_form"
+    assert_select "input[name='route_subscription[origin_id]'][value='#{empty_origin.id}']"
+    assert_select "select[name='route_subscription[destination_id]']"
+  end
+
+  test "freeform route query resolves locations and redirects or shows route alert" do
+    empty_origin = Location.create!(name: "Pasig", location_type: :city)
+    empty_dest = Location.create!(name: "Tagaytay", location_type: :city)
+
+    get ride_posts_url(q: "Pasig to Tagaytay")
+    assert_redirected_to route_rides_url(origin_slug: empty_origin.slug, destination_slug: empty_dest.slug)
+  end
+
+  test "unrecognized location searches show route suggestions instead of unrelated rides" do
+    %i[q query origin destination].each do |parameter|
+      get ride_posts_url(parameter => "zzzz_nonexistent_city")
+
+      assert_response :success
+      assert_select "#ride_posts [id^='ride_post_']", count: 0
+      assert_select "a[href='#{route_rides_path(origin_slug: locations(:one).slug, destination_slug: locations(:two).slug)}']"
+    end
+  end
+
+  test "a route with an unrecognized endpoint does not broaden the search" do
+    [ { q: "Manila to zzzz_nonexistent_city" }, { origin: "Manila", destination: "zzzz_nonexistent_city" } ].each do |search|
+      get ride_posts_url(search)
+
+      assert_response :success
+      assert_select "#ride_posts [id^='ride_post_']", count: 0
+      assert_select "form#route_subscription_partial_form"
+    end
+  end
+
+  test "unrecognized queries are not dropped by a route redirect" do
+    get ride_posts_url(q: "zzzz_nonexistent_city", origin_id: @ride_post.origin_id, destination_id: @ride_post.destination_id)
+
+    assert_response :success
+    assert_select "#ride_posts [id^='ride_post_']", count: 0
+  end
 end

@@ -117,6 +117,39 @@ class TripChatUnreadTest < ApplicationSystemTestCase
     end
   end
 
+  test "cancellation refresh preserves older history and unread messages in an open chat" do
+    Prosopite.pause do
+      30.times { |index| @ride.chat_messages.create!(user: @driver, body: "Earlier message #{index}. " * 6) }
+    end
+    ChatReadState.mark_read!(user: @passenger, ride_post: @ride, message_id: @ride.chat_messages.maximum(:id))
+
+    sign_in(@passenger)
+    visit ride_post_path(@ride, tab: "chat")
+    assert_selector "turbo-cable-stream-source[connected]", visible: :all, count: 2
+    assert_no_selector "[data-chat-unread-count] span", visible: :all
+
+    page.execute_script("const list = document.querySelector('#chat_messages_list'); list.scrollTop = 0; list.dispatchEvent(new Event('scroll'))")
+    @ride.chat_messages.create!(user: @driver, body: "Unread message while reading earlier history")
+    assert_selector ".chat-message", text: "Unread message while reading earlier history", visible: :all
+    assert_selector "[data-chat-unread-count]", text: "1", visible: :all
+    assert_equal 1, @passenger.reload.unread_chats_count
+
+    page.execute_script(<<~JS)
+      document.addEventListener('turbo:morph', () => {
+        requestAnimationFrame(() => requestAnimationFrame(() => {
+          document.documentElement.dataset.chatRefreshComplete = 'true';
+        }));
+      }, { once: true });
+    JS
+    RidePosts::CancelService.call(@ride, actor: @driver)
+    assert_selector "[data-chat-scroll-target='coordinationNotice'][role='status']"
+    assert_selector "html[data-chat-refresh-complete='true']", visible: :all
+
+    assert_in_delta 0, page.evaluate_script("document.querySelector('#chat_messages_list').scrollTop"), 1
+    assert_equal 1, @passenger.reload.unread_chats_count
+    assert_selector "[data-chat-unread-count]", text: "1", visible: :all
+  end
+
   test "a temporarily unavailable read endpoint can recover without a new message or page reload" do
     @ride.chat_messages.create!(user: @driver, body: "Please meet at the main gate")
     sign_in(@passenger)

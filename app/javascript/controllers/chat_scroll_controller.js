@@ -17,6 +17,7 @@ export default class extends Controller {
     this.boundOnResize = this.onResize.bind(this)
     this.lastMarkedMessageId = 0
     this.boundCheckDeadlines = this.checkDeadlines.bind(this)
+    this.boundOnChatOpened = this.onChatOpened.bind(this)
   }
 
   messageTargetConnected(message) {
@@ -46,6 +47,7 @@ export default class extends Controller {
     window.addEventListener("focus", this.boundCheckDeadlines)
     document.addEventListener("visibilitychange", this.boundCheckAndMarkRead)
     window.addEventListener("focus", this.boundCheckAndMarkRead)
+    document.addEventListener("trip-view:chatOpened", this.boundOnChatOpened)
     window.addEventListener("resize", this.boundOnResize)
     window.visualViewport?.addEventListener("resize", this.boundOnResize)
     window.visualViewport?.addEventListener("scroll", this.boundOnResize)
@@ -67,9 +69,17 @@ export default class extends Controller {
     window.removeEventListener("focus", this.boundCheckDeadlines)
     document.removeEventListener("visibilitychange", this.boundCheckAndMarkRead)
     window.removeEventListener("focus", this.boundCheckAndMarkRead)
+    document.removeEventListener("trip-view:chatOpened", this.boundOnChatOpened)
     window.removeEventListener("resize", this.boundOnResize)
     window.visualViewport?.removeEventListener("resize", this.boundOnResize)
     window.visualViewport?.removeEventListener("scroll", this.boundOnResize)
+  }
+
+  onChatOpened() {
+    requestAnimationFrame(() => {
+      this.scrollToBottom()
+      this.checkAndMarkRead()
+    })
   }
 
   messagingClosesAtValueChanged() {
@@ -117,7 +127,6 @@ export default class extends Controller {
     this.updateViewport()
     if (this.isForeground() && this.followLatest) {
       this.scrollToBottom()
-      this.checkAndMarkRead()
     }
   }
 
