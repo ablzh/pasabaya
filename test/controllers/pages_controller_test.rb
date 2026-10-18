@@ -9,6 +9,19 @@ class PagesControllerTest < ActionDispatch::IntegrationTest
     assert_select "a[href='#{route_rides_path(origin_slug: locations(:one).slug, destination_slug: locations(:two).slug)}']"
   end
 
+  test "home preserves the community introduction and explains available and upcoming features" do
+    get root_url
+    assert_response :success
+
+    assert_equal "Carpooling for the Community, Not for Profit.", css_select("#home-introduction h1").first.text.squish
+    assert_equal "A smarter, social way to find travel companions in the Philippines. No fees. No commissions. Just people helping people beat the traffic.", css_select("#home-introduction > p").first.text.squish
+    assert_select "a#home_passenger_start[href='#{ride_posts_path}']"
+    assert_select "a#home_regular_ride[href='#{new_ride_post_path(ride_type: 'regular')}']"
+    assert_select "a#home_community_hubs[href='#{communities_path}']"
+    assert_select "#home-chat", text: /Once a seat request is accepted.*private chat/m
+    assert_select "#home-apps", text: /Coming soon.*iOS and Android/m
+  end
+
   test "privacy page is available with contact and material privacy disclosures" do
     get privacy_url
     assert_response :success
