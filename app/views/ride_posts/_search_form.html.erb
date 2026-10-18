@@ -16,8 +16,8 @@
       <% end %>
     </div>
 
-    <%# Routes stay stacked at every width; date and action form one group. %>
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+    <%# Stretch both columns so the action aligns with the destination on desktop. %>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch">
       <div class="grid grid-cols-1 gap-3 items-center">
         <%# Origin Select %>
         <div class="row-start-1 min-w-0">
@@ -66,7 +66,7 @@
 
       </div>
 
-      <div class="space-y-4 min-w-0">
+      <div class="flex min-w-0 flex-col justify-between gap-4">
         <%# Date Field %>
         <div>
           <%= render(Forms::Component.new(

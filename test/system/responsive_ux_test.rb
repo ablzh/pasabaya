@@ -70,6 +70,9 @@ class ResponsiveUxTest < ApplicationSystemTestCase
         assert_operator measurements[control]["right"], :<=, measurements["panel"]["right"]
       end
       assert_not measurements["overflow"], "#{surface} #{width}px #{theme} overflow"
+      if width >= 768
+        assert_in_delta measurements["to"]["bottom"], measurements["button"]["bottom"], 2, "Search button should align with the destination field"
+      end
       find("#destination_id-ts-control").click
       assert_selector ".ts-dropdown", visible: true
       assert page.evaluate_script("(() => { const option = document.querySelector('#destination_id + .ts-wrapper .ts-dropdown .option'); const r = option.getBoundingClientRect(); return document.elementFromPoint(r.left + 5, r.top + 5).closest('.option') === option })()"), "Swap must not cover dropdown options"
