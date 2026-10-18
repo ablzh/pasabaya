@@ -98,6 +98,31 @@ class ResponsiveUxTest < ApplicationSystemTestCase
     assert_equal "", find("#departure_date").value
   end
 
+  test "partial route alert pickers are labeled and create subscriptions in both directions" do
+    passenger = users(:two)
+    empty_city = Location.create!(name: "Empty Alert City", location_type: :city)
+    expected_routes = []
+    sign_in(passenger)
+
+    [ [ :origin, "Destination", "destination" ], [ :destination, "Origin", "origin" ] ].each do |known_endpoint, label, missing_endpoint|
+      visit ride_posts_path("#{known_endpoint}_id" => empty_city.id)
+      control_id = "subscription_#{missing_endpoint}_id"
+      assert_selector "##{control_id}-ts-control[aria-labelledby]"
+      find("label", text: label, exact_text: true).click
+      assert page.evaluate_script("document.querySelector(arguments[0]).tomselect.wrapper.contains(document.activeElement)", "##{control_id}")
+
+      within "#route_subscription_partial_form" do
+        assert_selector "input[type='submit'][id]"
+        find(".ts-dropdown .option", text: locations(:one).name, exact_text: true).click
+        click_button "Notify me when a driver posts this route"
+      end
+      assert_text "You will be notified when a matching ride is posted."
+      expected_route = { "#{known_endpoint}_id" => empty_city.id, "#{missing_endpoint}_id" => locations(:one).id }
+      expected_routes << expected_route.values_at("origin_id", "destination_id")
+    end
+    assert_equal expected_routes.sort, passenger.route_subscriptions.active.pluck(:origin_id, :destination_id).sort
+  end
+
   test "settings password labels focus their own inputs" do
     sign_in(users(:one))
     visit settings_profile_path

@@ -13,6 +13,7 @@ class RideSchedulesControllerTest < ActionDispatch::IntegrationTest
   teardown { travel_back }
 
   test "publishing creates independent dates and search groups the schedule after filtering" do
+    ride_posts(:one).update_columns(departure_date: Date.new(2026, 10, 30), departure_time: Time.zone.local(2026, 10, 30, 8))
     post ride_posts_url, params: { ride_type: "regular", ride_post: @params, intent: "publish" }
     schedule = @driver.ride_schedules.last
     assert_redirected_to schedule

@@ -6,6 +6,7 @@ class RidePostsController < ApplicationController
   before_action :resume_session, only: [ :index, :show ]
   before_action :set_grouped_locations, only: %i[ index new edit create update ]
   before_action :resolve_route_slugs, only: :index
+  before_action :resolve_search_locations, only: :index
   before_action :redirect_to_seo_route, only: :index
   rate_limit to: 10, within: 10.minutes, name: "account", only: :create,
     by: -> { Current.user.id }, with: :reject_rate_limited_request
@@ -13,7 +14,7 @@ class RidePostsController < ApplicationController
 
   # GET /rides
   def index
-    if params.key?(:origin_id) || params.key?(:destination_id) || params.key?(:community_id) || params.key?(:ladies_only) || params.key?(:departure_date)
+    if params.key?(:origin_id) || params.key?(:destination_id) || params.key?(:community_id) || params.key?(:ladies_only) || params.key?(:departure_date) || params[:q].present? || params[:query].present? || params[:origin].present? || params[:destination].present?
       @ride_posts = RidePost.active.upcoming.accepting_schedule_requests
                             .visible_to(Current.user)
                             .includes(:origin, :destination, :community, :ride_schedule, user: { avatar_attachment: :blob })
@@ -23,6 +24,7 @@ class RidePostsController < ApplicationController
                             .filter_by_community(params[:community_id])
                             .filter_by_ladies_only(params[:ladies_only])
                             .filter_by_departure_date(params[:departure_date])
+      @ride_posts = @ride_posts.none if @unresolved_location_search
       @ride_posts = @ride_posts.one_per_schedule if params[:departure_date].blank?
 
       if @origin && @destination
@@ -37,6 +39,7 @@ class RidePostsController < ApplicationController
           )
         end
       end
+      @popular_routes = RidePost.popular_routes if @ride_posts.none?
     else
       @ride_posts = RidePost.none
       @popular_routes = RidePost.popular_routes
@@ -229,6 +232,66 @@ class RidePostsController < ApplicationController
     end
   end
 
+  def resolve_search_locations
+    query = (params[:q] || params[:query]).to_s.strip
+    if query.present?
+      if query =~ /\A(.+?)\s+(?:to|->|–|-)\s+(.+)\z/i
+        orig_match = Location.city.where("LOWER(name) = ?", $1.strip.downcase).first ||
+                     Location.city.where("LOWER(name) LIKE ?", "%#{$1.strip.downcase}%").first
+        dest_match = Location.city.where("LOWER(name) = ?", $2.strip.downcase).first ||
+                     Location.city.where("LOWER(name) LIKE ?", "%#{$2.strip.downcase}%").first
+        @unresolved_location_search = true unless orig_match && dest_match
+        if orig_match
+          @origin ||= orig_match
+          params[:origin_id] = orig_match.id
+        end
+        if dest_match
+          @destination ||= dest_match
+          params[:destination_id] = dest_match.id
+        end
+      else
+        matched = Location.city.where("LOWER(name) = ?", query.downcase).first ||
+                  Location.city.where("LOWER(name) LIKE ?", "%#{query.downcase}%").first
+        @unresolved_location_search = true unless matched
+        if matched
+          if params[:origin_id].blank? && @origin.nil?
+            @origin = matched
+            params[:origin_id] = matched.id
+          elsif params[:destination_id].blank? && @destination.nil?
+            @destination = matched
+            params[:destination_id] = matched.id
+          end
+        end
+      end
+    end
+
+    if params[:origin].present? && params[:origin_id].blank? && @origin.nil?
+      match = Location.city.where("LOWER(name) = ?", params[:origin].to_s.strip.downcase).first ||
+              Location.city.where("LOWER(name) LIKE ?", "%#{params[:origin].to_s.strip.downcase}%").first
+      @unresolved_location_search = true unless match
+      if match
+        @origin = match
+        params[:origin_id] = match.id
+      end
+    end
+
+    if params[:destination].present? && params[:destination_id].blank? && @destination.nil?
+      match = Location.city.where("LOWER(name) = ?", params[:destination].to_s.strip.downcase).first ||
+              Location.city.where("LOWER(name) LIKE ?", "%#{params[:destination].to_s.strip.downcase}%").first
+      @unresolved_location_search = true unless match
+      if match
+        @destination = match
+        params[:destination_id] = match.id
+      end
+    end
+
+    if (params[:origin_id].present? && @origin.nil?) || (params[:destination_id].present? && @destination.nil?)
+      locations = Location.where(id: [ params[:origin_id], params[:destination_id] ]).index_by(&:id)
+      @origin ||= locations[params[:origin_id].to_i]
+      @destination ||= locations[params[:destination_id].to_i]
+    end
+  end
+
   def setup_route_meta_tags
     route_url = route_rides_url(origin_slug: @origin.slug, destination_slug: @destination.slug)
     set_meta_tags(
@@ -279,6 +342,8 @@ class RidePostsController < ApplicationController
   end
 
   def redirect_to_seo_route
+    return if @unresolved_location_search
+
     if params[:origin_id].present? && params[:destination_id].present? && params[:origin_slug].blank? && request.format.html?
       locations = Location.where(id: [ params[:origin_id], params[:destination_id] ]).index_by(&:id)
       origin = locations[params[:origin_id].to_i]

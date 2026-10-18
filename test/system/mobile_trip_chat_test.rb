@@ -28,7 +28,19 @@ class MobileTripChatTest < ApplicationSystemTestCase
     assert_selector ".web-navigation"
     assert_selector ".web-footer"
     assert_selector "#chat_message_form input"
+    assert_no_selector "#trip-details-pane"
     assert_operator page.evaluate_script("document.querySelector('.trip-chat').getBoundingClientRect().height"), :<, 900
+
+    click_button "Trip Details"
+    assert_selector "#trip-details-pane"
+    assert_no_selector "#trip-chat-pane"
+    click_button "Live Chat"
+    assert_no_selector "#trip-details-pane"
+    assert_selector "#trip-chat-pane"
+
+    visit ride_post_path(@ride, tab: "chat")
+    assert_selector "#trip-chat-pane"
+    assert_no_selector "#trip-details-pane"
   end
 
   test "composer follows a reduced visual viewport and landscape height" do

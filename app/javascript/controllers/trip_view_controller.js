@@ -51,6 +51,7 @@ export default class extends Controller {
 
   switchTab(tab) {
     if (tab === "chat" && !this.hasChatPaneTarget) tab = "details"
+    const openingChat = tab === "chat" && this.selectedTab !== "chat"
     this.activeTabValue = tab
     this.selectedTab = tab
 
@@ -65,6 +66,9 @@ export default class extends Controller {
     if (this.hasChatPaneTarget) {
       if (tab === "chat") {
         this.chatPaneTarget.classList.remove("hidden")
+        if (openingChat) {
+          document.dispatchEvent(new CustomEvent("trip-view:chatOpened", { detail: { target: this.chatPaneTarget } }))
+        }
         window.dispatchEvent(new Event("resize"))
       } else {
         this.chatPaneTarget.classList.add("hidden")
