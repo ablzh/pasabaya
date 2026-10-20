@@ -1,6 +1,23 @@
 require "application_system_test_case"
 
 class ToastInteractionTest < ApplicationSystemTestCase
+  test "notifications leave account navigation usable on phone and desktop" do
+    sign_in(users(:one))
+    [ 320, 1400 ].each do |width|
+      page.driver.resize(width, 844)
+      visit root_path
+      page.execute_script <<~JS
+        Stimulus.getControllerForElementAndIdentifier(document.getElementById('toast-container'), 'toast').autoDismissDurationValue = 60000;
+        window.toast('Regular schedule saved', {type: 'success'});
+      JS
+      assert_selector '.toast-item[data-mounted="true"]', text: "Regular schedule saved"
+
+      find("button[aria-label='Account menu']").click
+      within("#profile-content") { click_link "Profile" }
+      assert_current_path user_path(users(:one))
+    end
+  end
+
   test "toast stacks fit phone and desktop and support expansion dismissal and actions" do
     page.driver.resize(320, 844)
     visit root_path
