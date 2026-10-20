@@ -76,6 +76,8 @@ bin/ci
 
 It checks Ruby style, ERB views and components, database consistency, the boundaries in `Archspec.rb`, known dependency vulnerabilities, application tests, browser flows, and seed loading. Seed regression tests cover replay idempotency and production exclusion of demo data. Security audits need network access; report any check that cannot run.
 
+GitHub Actions runs this same `bin/ci`; the checks are defined in `config/ci.rb`. Both runs prepare the test database and default to four test workers (`PARALLEL_WORKERS` overrides this). Browser and operating system differences can still expose bugs, and a passing run cannot rule out timing-dependent failures. Reproduce a failure with the test path and `--seed` printed in its output.
+
 Useful focused commands:
 
 ```bash
