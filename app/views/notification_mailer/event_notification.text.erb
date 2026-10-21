@@ -3,6 +3,13 @@ Hello <%= @recipient.first_name %>,
 <% case @event_name %>
 <% when "booking.requested" %>
 <%= @actor&.first_name || "A passenger" %> has requested a seat on your ride.
+<% if @ride %>
+
+Route: <%= @ride_route %>
+Departure: <%= @ride.departure_display %> (Philippine time)
+
+Open the ride to review the request and accept or decline it.
+<% end %>
 <% when "booking.accepted" %>
 Great news! Your seat request has been confirmed by the driver.
 <% when "booking.canceled" %>
@@ -26,8 +33,8 @@ You have a new update regarding your trip on Pasabaya.
 Open the update below to check whether a later decision has replaced it.
 
 View the decision: <%= notification_url(@notification) %>
-<% elsif @notifiable.is_a?(RidePost) %>
-Check the ride details here: <%= ride_post_url(@notifiable) %>
+<% elsif @ride %>
+<%= @event_name == "booking.requested" ? "Review seat request" : "Check the ride details here" %>: <%= ride_post_url(@ride) %>
 <% else %>
 Visit Pasabaya to check the latest updates: <%= root_url %>
 <% end %>

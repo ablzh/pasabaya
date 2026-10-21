@@ -117,6 +117,82 @@ enforce the intended Cloudflare-only access policy and trusted forwarding header
 Verify those rules externally before treating the origin as protected. Do not
 assume a repository host change applies network restrictions.
 
+### Legacy ride transition
+
+The October 20, 2026 snapshot has 14 active offers from 11 drivers. The one-off
+`script/legacy_rides_upgrade.rb` imports those reviewed records into 16 ordinary
+regular schedules, including the two return directions explicitly described by
+drivers. It is not invoked by schema migrations, requests, or recurring jobs.
+
+Run the import in the deployment environment after `db:migrate`, before reopening
+the updated app to users. Keep the original database backup. Source IDs, owners,
+routes, seats, creation timestamps and description hashes must still match the
+reviewed snapshot. Changed or already-booked sources stop the entire import for
+inspection. New posts and genuine private drafts outside this manifest stay private.
+
+```bash
+bin/rails legacy_rides:import
+EXECUTE=1 bin/rails legacy_rides:import
+```
+
+The first command previews and rolls back the entire import. The second saves it.
+Known schedules come from descriptions; unspecified days become Monday–Friday,
+and unspecified times become Flexible. Old calendar dates are preserved on the
+original records, while their recurring offers use the known Philippine clock
+time. For source 7 the departure starts at 17:30. Source 13 follows the description's
+Bulacan → Makati direction, Friday at 05:00. The original 17:30–18:00 and 05:00–06:00
+ranges remain in the full descriptions; the initial exact departure is the start
+of the range. Source 17 and its return run daily. All descriptions are preserved
+in full; list previews remain shortened.
+
+Schedules initially end 30 days after the import. For source 8, the operator
+explicitly instructed setting the reviewed owner's profile to female. The import
+applies that choice only while the profile is unspecified, retaining an existing
+female value and stopping for review if the user has selected a different value.
+It never infers gender from names or descriptions. Source 8 is published as a
+ladies-only schedule, Monday–Friday at 12:30, keeping the existing audience rules.
+The snapshot therefore produces 16 active schedules. They create bookable departures through
+the normal materializer; driver confirmation is still required for each seat request.
+
+After checking the deployed search, schedule editing and outgoing email setup,
+preview the campaign and explicitly send it:
+
+```bash
+bin/rails legacy_rides:notify
+EXECUTE=1 bin/rails legacy_rides:notify
+```
+
+The snapshot has 48 registered users, including 11 owners and 37 members without
+ride posts. The campaign records these account IDs at import and sends each
+eligible account exactly one of two messages:
+
+- The 11 owners receive `UserMailer#ride_upgrade`, listing only their imported
+  schedules, review links, current end dates and the defaults to check.
+- The other 37 members receive `UserMailer#platform_update`, explaining ride
+  search, seat requests, driver acceptance, private trip chat, and how to publish
+  one-time or regular offers. It makes no claim about transferred rides or expiry.
+
+The legacy subscribers table is empty, so there is no separate waitlist campaign.
+New registrations after this snapshot receive their normal welcome email and are
+excluded from this one-off campaign. Both mailers reload the current account and
+address, skipping deleted or banned users. An owner receives the personalized
+message instead of also receiving the general announcement.
+
+Preview HTML and text at `/rails/mailers/user_mailer/ride_upgrade` and
+`/rails/mailers/user_mailer/platform_update` in development with imported schedules.
+Neither import command sends emails. Notification preview sends nothing. The
+explicit send command delivers synchronously and records each success.
+
+Both commands use `storage/legacy_rides_upgrade.json` on the persistent volume,
+with an exclusive lock. Preserve this receipt with the database. Repeating the
+import retains schedules, return directions, driver edits and original expiry;
+repeating notification skips recorded successful sends. If receipt validation
+fails, stop and inspect the receipt and database together. If a transaction failed
+after writing the receipt but before commit, move that receipt aside only after
+verifying no schedules committed and no reviewed source was converted;
+then retry. If SMTP accepted a message but the process stopped before recording
+success, confirm delivery with the provider before retrying that recipient.
+
 ## Backups and operational checks
 
 `config/litestream.yml` configures primary database replication with a one-minute

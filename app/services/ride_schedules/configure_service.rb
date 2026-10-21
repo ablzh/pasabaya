@@ -12,7 +12,7 @@ module RideSchedules
         raise Error, "The schedule must belong to its driver" unless schedule.user_id == actor.id
         if schedule.source_ride_post_id.present?
           source = actor.ride_posts.lock.find(schedule.source_ride_post_id)
-          raise Error, "Only an undated private draft can be converted" unless source.draft? && source.departure_date.nil? && source.bookings.empty?
+          raise Error, "Only a private draft without bookings can be converted" unless source.draft? && source.bookings.empty?
         end
         schedule.save!
         MaterializeService.call(schedule)

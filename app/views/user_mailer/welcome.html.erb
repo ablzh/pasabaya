@@ -51,16 +51,6 @@
         color: #a3a3a3;
         margin-bottom: 24px;
       }
-      .btn-link {
-        display: inline-block;
-        background-color: #6366f1;
-        color: #ffffff !important;
-        padding: 12px 24px;
-        font-weight: 600;
-        text-decoration: none;
-        border-radius: 8px;
-        margin-bottom: 28px;
-      }
       .card {
         background-color: #262626;
         border: 1px solid #374151;
@@ -113,7 +103,7 @@
       <div class="container">
         <!-- Brand Header -->
         <div class="header">
-          <h1>Pasabaya.app 🚗</h1>
+          <h1>Pasabaya.app</h1>
         </div>
 
         <!-- Main Body Content -->
@@ -121,57 +111,61 @@
           <p class="greeting">Kumusta, <%= @user.first_name %>!</p>
 
           <p class="intro">
-            Welcome to Pasabaya! You've joined a community-driven space built to make carpooling simple, direct, and completely free in the Philippines. Together, we can share the road, split the costs, and help beat the daily traffic.
+            Welcome to Pasabaya! Find a ride or share the spare seats in your car with people traveling your route. Pasabaya is free to use and takes no booking fees or commissions.
           </p>
-
-          <!-- Main Call to Action Website Link -->
-          <div style="text-align: left;">
-            <a href="https://pasabaya.app" class="btn-link">Go to Pasabaya.app ➔</a>
-          </div>
 
           <!-- Getting Started -->
           <div class="card">
-            <h3 class="card-title">📋 Getting Started Checklist:</h3>
+            <h3 class="card-title">Getting Started</h3>
             <ul class="steps-list">
               <li>
-                <strong>Profile link:</strong> If you add an optional Facebook profile link, ensure it is accurate so other members can learn more about you. A supplied link does not verify identity.
+                <strong>Find a ride:</strong> Search by route and departure date, choose a departure, and request a passenger seat. Your seat is confirmed when the driver accepts your request.
               </li>
               <li>
-                <strong>Offer a Ride:</strong> Empty passenger seats on your commute? Post a ride offer specifying your departure time, route, and seat availability.
+                <strong>Coordinate your pickup:</strong> After your request is accepted, use private trip chat to agree on pickup details with the driver and confirmed passengers.
               </li>
               <li>
-                <strong>Request a Ride:</strong> Need a ride? Create a request so drivers traveling on your route can find you.
+                <strong>Offer your spare seats:</strong> Publish a one-time ride or a regular weekly schedule. Add your route, departure details, and passenger seats, then accept or decline incoming seat requests.
+              </li>
+              <li>
+                <strong>No matching ride yet?</strong> Set an optional route alert from your search. You will receive a one-time email and in-app alert when a matching ride with available seats appears.
+              </li>
+              <li>
+                <strong>Your profile:</strong> You can add an optional Facebook profile link to help other members learn more about you. A supplied link does not verify identity.
               </li>
             </ul>
+            <p><%= link_to "Find a ride", ride_posts_url, class: "card-action-link" %></p>
+            <p><%= link_to "Offer a ride", new_ride_post_url, class: "card-action-link" %></p>
+            <p style="margin-bottom: 0;"><%= link_to "Review your profile", settings_profile_url, class: "card-action-link" %></p>
           </div>
 
           <!-- Support / Questions -->
           <div class="card">
-            <h3 class="card-title">💬 Support & Questions</h3>
+            <h3 class="card-title">Support & Questions</h3>
             <p class="card-text">
-              Have a question, feedback, or need support? Send me a message directly on the Facebook page—we are here to help!
+              Have a question, feedback, or need support? Send me a message on the Facebook page. I am here to help!
             </p>
             <a href="https://www.facebook.com/people/Pasabayaapp-Carpooling-for-the-Community/61589209230043/" class="card-action-link" target="_blank" rel="noopener noreferrer">
-              👉 Message me on Facebook
+              Message me on Facebook
             </a>
           </div>
 
           <!-- Github Contribute -->
           <div class="card">
-            <h3 class="card-title">💻 Contribute to the App</h3>
+            <h3 class="card-title">Contribute to the App</h3>
             <p class="card-text">
               Pasabaya is an open-source project. If you're a developer or want to report bugs and suggest new features, check out our repository.
             </p>
             <a href="https://github.com/ablzh/pasabaya" class="card-action-link" target="_blank" rel="noopener noreferrer">
-              👉 Contribute on GitHub
+              Contribute on GitHub
             </a>
           </div>
 
           <!-- Trust & Safety Warning -->
           <div class="card" style="border-left: 4px solid #ef4444; background-color: #3b0712; border-color: #991b1b; margin-bottom: 0;">
-            <h3 class="card-title" style="color: #fca5a5;">🛡️ Stay Safe on the Road</h3>
+            <h3 class="card-title" style="color: #fca5a5;">Stay Safe on the Road</h3>
             <p style="margin: 0; font-size: 14px; color: #fecaca;">
-              Pasabaya is a digital bulletin board, not a transportation company. Always check the other person's Facebook profile details (account age, friends list, activity) before finalizing a trip, and meet in well-lit public spaces. Trust your instincts!
+              Review the ride details and available profile information before agreeing to travel. Agree on any shared travel costs before the trip, and meet at a public, well-lit pickup point.
             </p>
           </div>
         </div>

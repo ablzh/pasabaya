@@ -28,8 +28,11 @@ and does not revive expired requests or canceled dates. Ending a series explicit
 cancels future departures using the same cancellation transition as a single ride.
 Both request creation and acceptance enforce schedule admission inside the primary
 SQLite transaction. Account deletion and audience eligibility loss stop future
-generation; deletion also scrubs schedule notes. Legacy undated drafts require
-owner-confirmed conversion; no migration invents a recurrence or publishes drafts.
+generation; deletion also scrubs schedule notes. Normal draft conversion requires
+the owner and a source without bookings, preserving any original departure date.
+Schema migrations do not publish drafts. The separately invoked, reviewed legacy
+import uses the October 20 snapshot and explicit rollout defaults; see
+[the transition procedure](operations.md#legacy-ride-transition).
 
 `Booking` is one passenger's seat request. Pending requests do not consume seats.
 Acceptance consumes one seat, and cancellation of accepted participation restores

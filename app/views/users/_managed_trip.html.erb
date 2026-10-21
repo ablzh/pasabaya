@@ -5,7 +5,7 @@
   </div>
   <div class="flex flex-wrap items-center gap-3 text-sm">
     <% if ride.draft? %>
-      <% if ride.departure_date.nil? %>
+      <% if ride.bookings.empty? %>
         <%= link_to "Make regular", new_ride_post_path(ride_type: "regular", source_ride_post_id: ride.id), class: "font-semibold text-blue-700 dark:text-blue-300" %>
       <% end %>
       <%= link_to "Edit", edit_ride_post_path(ride), class: "font-semibold text-blue-700 dark:text-blue-300" %>

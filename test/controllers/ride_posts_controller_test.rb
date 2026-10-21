@@ -13,16 +13,16 @@ class RidePostsControllerTest < ActionDispatch::IntegrationTest
     assert_equal original, @ride_post.notes
   end
 
-  test "notes form limits new notes and server rejects oversized notes" do
+  test "notes form accepts and preserves the full description" do
     get new_ride_post_url
-    assert_select "textarea[name='ride_post[notes]'][maxlength='300']"
+    assert_select "textarea[name='ride_post[notes]'][maxlength]", count: 0
 
-    assert_no_difference "RidePost.count" do
-      post ride_posts_url, params: { intent: "draft", ride_post: { notes: "a" * 301 } }
+    notes = "Detailed pickup and luggage information. " * 30
+    assert_difference "RidePost.count", 1 do
+      post ride_posts_url, params: { intent: "draft", ride_post: { notes: notes } }
     end
-    assert_response :unprocessable_content
-    assert_select "#ride_post_notes[aria-invalid='true'][aria-describedby~='ride_post_notes_error']"
-    assert_select "#ride_post_notes_error", text: /\S/
+    assert_redirected_to ride_post_url(RidePost.last)
+    assert_equal notes, RidePost.last.notes
   end
 
   test "missing ride redirects old links to board with useful notice" do
@@ -160,11 +160,12 @@ class RidePostsControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to ride_post_url(RidePost.last)
 
     assert_no_difference "RidePost.count" do
-      post ride_posts_url, params: { ride_post: { notes: "a" * 301 }, intent: "draft" }, headers: headers
+      post ride_posts_url, params: { ride_post: { seats: 0, notes: "Turbo draft" }, intent: "draft" }, headers: headers
     end
     assert_response :unprocessable_content
     assert_equal "text/html", response.media_type
-    assert_select "textarea[name='ride_post[notes]']", text: "a" * 301
+    assert_select "#ride_post_seats[aria-invalid='true'][value='0']"
+    assert_select "textarea[name='ride_post[notes]']", text: "Turbo draft"
   end
 
   test "should get index with empty state (blank slate) when no search params are provided" do

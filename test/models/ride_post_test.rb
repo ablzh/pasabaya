@@ -16,18 +16,15 @@ class RidePostTest < ActiveSupport::TestCase
     assert_equal original, completed.notes
   end
 
-  test "new and changed notes allow 300 characters and reject 301" do
+  test "new and changed notes preserve the full description" do
     ride = ride_posts(:one).dup
-    ride.notes = "a" * 300
-    assert ride.save
-    ride.notes = "a" * 301
-    assert_not ride.save
-    assert ride.errors.of_kind?(:notes, :too_long)
+    original = "Detailed pickup and luggage information. " * 30
+    ride.update!(notes: original)
+    assert_equal original, ride.reload.notes
 
-    fresh = ride_posts(:one).dup
-    fresh.notes = "a" * 301
-    assert_not fresh.save
-    assert fresh.errors.of_kind?(:notes, :too_long)
+    updated = original + "Additional passenger preferences. " * 30
+    ride.update!(notes: updated)
+    assert_equal updated, ride.reload.notes
   end
 
   test "sold out offers preserve positive capacity" do
