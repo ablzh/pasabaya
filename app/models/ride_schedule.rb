@@ -18,7 +18,6 @@ class RideSchedule < ApplicationRecord
 
   validates :origin, :destination, :seats, :departure_choice, presence: true, unless: :draft?
   validates :seats, numericality: { only_integer: true, greater_than: 0 }, allow_nil: true
-  validates :notes, length: { maximum: 300 }
   validates :ladies_only, inclusion: { in: [ true, false ] }
   validates :weekdays_mask, numericality: { only_integer: true, greater_than_or_equal_to: 0, less_than: 128 }
   validates :source_ride_post_id, uniqueness: true, allow_nil: true

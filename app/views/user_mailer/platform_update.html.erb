@@ -1,0 +1,16 @@
+<div style="max-width: 600px; margin: 0 auto; font-family: Arial, sans-serif; color: #262626; line-height: 1.6;">
+  <h1 style="font-size: 24px;">A new way to share the ride</h1>
+  <p>Kumusta, <%= @user.first_name %>!</p>
+  <p>Pasabaya has been updated with weekly ride schedules, seat requests, and private trip chat. Sign in to explore what's new.</p>
+
+  <h2 style="font-size: 18px;">Find a ride</h2>
+  <p>Search by route and departure date, check the ride details, and request a passenger seat. Your seat is confirmed when the driver accepts your request. After acceptance, private trip chat lets the driver and confirmed passengers coordinate the pickup and other details.</p>
+  <p><%= link_to "Find a ride", ride_posts_url %></p>
+
+  <h2 style="font-size: 18px;">Offer your spare seats</h2>
+  <p>Create a one-time offer for a single journey or a regular ride for your weekly commute. Choose your route, days, departure time, and available passenger seats, then review incoming seat requests.</p>
+  <p><%= link_to "Offer a ride", new_ride_post_url %></p>
+
+  <p>If you'd like to hear about new matching offers, you can also set up an optional route alert from your ride search.</p>
+  <p>Thank you for sharing the road,<br>Artem, Founder of Pasabaya.app</p>
+</div>

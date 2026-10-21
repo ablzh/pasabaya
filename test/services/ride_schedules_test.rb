@@ -45,6 +45,17 @@ class RideSchedulesTest < ActiveSupport::TestCase
     assert_not @first.destroy
   end
 
+  test "full schedule descriptions survive updates and new departures" do
+    notes = "Detailed pickup and luggage information. " * 30
+    RideSchedules::ConfigureService.call(schedule: @schedule, actor: @driver, attributes: { notes: notes })
+    assert_equal notes, @schedule.reload.notes
+    assert_equal [ notes ], @schedule.ride_posts.pluck(:notes).uniq
+
+    travel_to Time.zone.local(2026, 10, 20, 10)
+    RideSchedules::MaterializeService.call(@schedule)
+    assert_equal notes, @schedule.ride_posts.find_by!(departure_date: Date.new(2026, 10, 26)).notes
+  end
+
   test "pause expires pending requests but preserves accepted seats and manual closures on resume" do
     accepted = Bookings::CreateService.call(ride_post: @first, passenger: @passenger)
     Bookings::AcceptService.call(accepted, actor: @driver)

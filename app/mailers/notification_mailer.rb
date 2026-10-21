@@ -7,10 +7,15 @@ class NotificationMailer < ApplicationMailer
     @actor = @notification.actor
     @notifiable = @notification.notifiable
     @event_name = @notification.event_name
+    @ride = @notifiable.is_a?(Booking) ? @notifiable.ride_post : (@notifiable if @notifiable.is_a?(RidePost))
+    if @ride
+      ActiveRecord::Associations::Preloader.new(records: [ @ride ], associations: [ :origin, :destination ]).call
+      @ride_route = [ @ride.origin&.name, @ride.destination&.name ].compact.join(" → ")
+    end
 
     subject = case @event_name
     when "booking.requested"
-                "New seat request on Pasabaya"
+                @ride_route.present? ? "New seat request: #{@ride_route} — Pasabaya" : "New seat request on Pasabaya"
     when "booking.accepted"
                 "Your seat request has been confirmed on Pasabaya"
     when "booking.expired"

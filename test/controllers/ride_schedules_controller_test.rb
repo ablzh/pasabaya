@@ -60,6 +60,29 @@ class RideSchedulesControllerTest < ActionDispatch::IntegrationTest
     assert_equal 1, RideSchedule.where(source_ride_post_id: source.id).count
   end
 
+  test "a dated private draft converts without changing its history and the schedule stays editable" do
+    source = @driver.ride_posts.create!(status: :draft, origin: @origin, destination: @destination, seats: 3, notes: "Legacy dated offer")
+    source.update_columns(departure_date: Date.new(2026, 7, 2), departure_time: Time.zone.local(2026, 7, 2, 8))
+    original = source.reload.attributes
+
+    get new_ride_post_url(ride_type: "regular", source_ride_post_id: source.id)
+    assert_response :success
+    assert_select "textarea", text: source.notes
+
+    post ride_posts_url, params: { ride_type: "regular", ride_post: @params.merge(source_ride_post_id: source.id, notes: source.notes), intent: "publish" }
+    schedule = @driver.ride_schedules.find_by!(source_ride_post_id: source.id)
+    assert_redirected_to schedule
+    assert_equal original, source.reload.attributes
+
+    patch ride_schedule_url(schedule), params: { ride_schedule: { notes: "Updated pickup details", departure_clock: "09:00" } }
+    assert_redirected_to schedule
+    assert_equal "Updated pickup details", schedule.reload.notes
+    assert_equal "09:00", schedule.departure_clock
+    assert_equal [ "Updated pickup details" ], schedule.ride_posts.pluck(:notes).uniq
+    assert_equal [ 9 ], schedule.ride_posts.map { |ride| ride.departure_time.hour }.uniq
+    assert_equal original, source.reload.attributes
+  end
+
   test "invalid publication reports errors without creating partial departures" do
     assert_no_difference [ "RideSchedule.count", "RidePost.count" ] do
       post ride_posts_url, params: { ride_type: "regular", ride_post: @params.merge(weekday_ids: []), intent: "publish" }

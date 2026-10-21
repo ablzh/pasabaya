@@ -5,6 +5,7 @@ class RegularRidesTest < ApplicationSystemTestCase
   teardown { travel_back }
 
   test "driver publishes a weekly schedule and a passenger books only one date" do
+    notes = "Meet near the station; please allow room for luggage. " * 12
     sign_in(users(:one))
     visit new_ride_post_path
     find("#ride_post_origin_id-ts-control").click
@@ -15,12 +16,12 @@ class RegularRidesTest < ApplicationSystemTestCase
     choose "Exact Time"
     fill_in "Departure Time", with: "08:00"
     fill_in "Available passenger seats", with: 3
-    fill_in "Details & Preferences", with: "Meet near the station"
+    fill_in "Details & Preferences", with: notes
     choose "Regular"
     assert_current_path new_ride_post_path
     assert_no_field "Departure Date"
     assert_field "Departure Time", with: "08:00"
-    assert_field "Details & Preferences", with: "Meet near the station"
+    assert_field "Details & Preferences", with: notes
     check "Monday"
     choose "One-time"
     assert_field "Departure Date", with: Date.tomorrow.to_s
@@ -30,7 +31,7 @@ class RegularRidesTest < ApplicationSystemTestCase
     click_button "Publish regular ride"
     assert_text "Regular schedule saved"
     schedule = users(:one).ride_schedules.last
-    assert_equal "Meet near the station", schedule.notes
+    assert_equal notes, schedule.notes
     assert_equal locations(:one).id, schedule.origin_id
     assert_equal locations(:two).id, schedule.destination_id
     departures = schedule.ride_posts.order(:departure_date).to_a
@@ -39,6 +40,7 @@ class RegularRidesTest < ApplicationSystemTestCase
     sign_out
     sign_in(users(:two))
     visit ride_schedule_path(schedule)
+    assert_text notes.strip
     click_link "View departure on #{departures.first.departure_date.to_fs(:long)}"
     click_button "Request Seat"
     assert_text "Seat requested!"
