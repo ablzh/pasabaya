@@ -19,10 +19,11 @@
             type="button"
             data-navbar-target="trigger"
             data-content-id="<%= mobile_menu_content_id %>"
+            aria-label="Navigation menu"
             aria-controls="<%= mobile_menu_content_id %>"
             aria-expanded="false"
             data-align="end"
-            data-action="click->navbar#toggleMenu pointerenter->navbar#handlePointerEnter pointermove->navbar#handlePointerMove pointerleave->navbar#handlePointerLeave keydown->navbar#handleTriggerKeydown"
+            data-action="click->navbar#toggleMenu keydown->navbar#handleTriggerKeydown"
             data-state="closed"
             class="<%= mobile_menu_button_classes %>"
           >
@@ -39,7 +40,6 @@
     <!-- Viewport Container -->
     <div
       data-navbar-target="viewport"
-      data-action="pointerenter->navbar#cancelClose pointerleave->navbar#handlePointerLeave"
       data-state="closed"
       class="<%= viewport_classes %>"
     >

@@ -1,0 +1,67 @@
+<div id="<%= dom_id(ride_post, :booking_card) %>">
+  <%= render(Card::Component.new(rounded: :"3xl", padding: :lg, shadow: :lg, classes: "text-neutral-900 dark:text-white")) do %>
+    <div class="passenger-booking-content w-full flex flex-col items-center text-center">
+      <% if Current.user.present? %>
+        <% if existing_booking&.pending? %>
+          <%= render Alert::Component.new(title: "Seat Requested", description: safe_join(["Waiting for ", ride_post.user.first_name, " to accept your request."]), variant: :warning, classes: "my-2 max-w-md w-full") %>
+          <div class="mt-4 flex flex-col items-center gap-2">
+            <p class="text-xs text-neutral-500 dark:text-neutral-400">Need to change your plans?</p>
+            <%= button_to "Cancel Request", cancel_booking_path(existing_booking), method: :patch, id: dom_id(existing_booking, :cancel), form: { id: dom_id(existing_booking, :cancel_form) }, data: { turbo_confirm: "Are you sure you want to withdraw your seat request?" }, class: "px-3.5 py-2 text-xs font-medium rounded-xl border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300 hover:text-red-600 dark:hover:text-red-400 hover:border-red-300 dark:hover:border-red-900/50 hover:bg-red-50/50 dark:hover:bg-red-950/20 transition-colors cursor-pointer" %>
+          </div>
+        <% elsif existing_booking&.accepted? %>
+          <%= render Alert::Component.new(title: "Seat Confirmed!", description: "Your seat is reserved on this carpool. Use Live Chat to coordinate pickup!", variant: :success, classes: "my-2 max-w-md w-full") %>
+          <div class="mt-4 flex flex-wrap justify-center gap-3">
+            <button id="<%= dom_id(ride_post, :open_chat) %>" type="button" data-action="trip-view#showChat" class="px-4 py-2 text-xs font-semibold rounded-xl bg-blue-600 text-white hover:bg-blue-700 transition-colors cursor-pointer">
+              Open Trip Chat
+            </button>
+            <%= button_to "Cancel Booking", cancel_booking_path(existing_booking), method: :patch, id: dom_id(existing_booking, :cancel), form: { id: dom_id(existing_booking, :cancel_form) }, data: { turbo_confirm: "Are you sure you want to cancel your seat?" }, class: "px-4 py-2 text-xs font-semibold rounded-xl bg-neutral-700 text-white hover:bg-neutral-600 transition-colors cursor-pointer" %>
+          </div>
+        <% elsif bookable %>
+          <% if !can_request %>
+            <% if ride_post.ladies_only? && !Current.user.female? %>
+              <%= render Alert::Component.new(title: "Ladies Only Carpool", description: "This ride is reserved for female passengers.", variant: :neutral, classes: "my-2 max-w-md w-full") %>
+            <% elsif ride_post.hub_only? && !Current.user.verified_member_of?(ride_post.community_id) %>
+              <%= render Alert::Component.new(title: "#{ride_post.community&.name} Hub Only", description: safe_join(["Please verify your institutional email in ", link_to("Hubs", communities_path, id: dom_id(ride_post, :booking_hubs), class: "underline font-semibold"), " to request a seat."]), variant: :neutral, classes: "my-2 max-w-md w-full") %>
+            <% elsif Current.user.booking_frozen? %>
+              <%= render Alert::Component.new(title: "Account Frozen", description: "Your account is temporarily unable to request new bookings.", variant: :error, classes: "my-2 max-w-md w-full") %>
+            <% end %>
+          <% else %>
+            <h2 class="text-lg font-bold mb-1">Request a Seat</h2>
+            <p class="text-neutral-600 dark:text-neutral-300 text-xs sm:text-sm mb-4 max-w-sm">
+              Request 1 seat on this carpool. The driver will review your profile to confirm.
+            </p>
+            <%= form_with(url: ride_post_bookings_path(ride_post), method: :post, id: dom_id(ride_post, :seat_request_form), class: "w-full max-w-sm space-y-3") do |f| %>
+              <%= f.label "booking[pickup_notes]", "Pickup notes", for: dom_id(ride_post, :pickup_notes), class: "sr-only" %>
+              <%= f.text_field "booking[pickup_notes]", id: dom_id(ride_post, :pickup_notes), placeholder: "Pickup point or small note (optional)...", class: "w-full px-4 py-2.5 rounded-xl text-sm bg-neutral-50 dark:bg-neutral-800 text-neutral-900 dark:text-white border border-neutral-200 dark:border-neutral-700 focus:ring-2 focus:ring-blue-500" %>
+              <div class="flex justify-center">
+                <%= render Buttons::Component.new(
+                           text: "Request Seat",
+                           id: dom_id(ride_post, :request_seat),
+                           type: "submit",
+                           style: :fancy,
+                           size: :lg) %>
+              </div>
+            <% end %>
+          <% end %>
+        <% else %>
+          <p class="text-neutral-600 dark:text-neutral-300 text-sm my-2"><%= ride_availability_text(ride_post) %></p>
+          <%= link_to "Find another ride", ride_posts_path, id: dom_id(ride_post, :find_another), class: "underline text-sm" %>
+        <% end %>
+      <% elsif bookable %>
+        <h2 class="text-lg font-bold mb-1">Join this Carpool</h2>
+        <p class="text-neutral-600 dark:text-neutral-300 text-xs sm:text-sm mb-5 max-w-sm">
+          Sign in to your Pasabaya account to request a seat on this carpool.
+        </p>
+        <%= render Buttons::Component.new(
+                   text: "Login to Request Seat",
+                   id: dom_id(ride_post, :login_to_request),
+                   href: new_session_path(return_to: request.path),
+                   style: :fancy,
+                   size: :lg) %>
+      <% else %>
+        <p class="text-neutral-600 dark:text-neutral-300 text-sm my-2"><%= ride_availability_text(ride_post) %></p>
+        <%= link_to "Find another ride", ride_posts_path, id: dom_id(ride_post, :find_another), class: "underline text-sm" %>
+      <% end %>
+    </div>
+  <% end %>
+</div>

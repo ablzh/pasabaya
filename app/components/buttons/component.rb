@@ -13,12 +13,15 @@ module Buttons
     # @param pill [Boolean] Whether to use pill shape (rounded-full) instead of rounded corners
     # @param disabled [Boolean] Whether the button is disabled
     # @param loading [Boolean] Whether to show loading spinner
-    # @param icon [String] Optional icon SVG HTML (placed before text by default)
+    # @param icon [ActiveSupport::SafeBuffer] Optional icon generated with Rails tag helpers
     # @param icon_position [Symbol] Icon position: :left (default), :right
     # @param icon_only [Boolean] Whether this is an icon-only button (no text)
     # @param full_width [Boolean] Whether button should take full width
     # @param href [String] If provided, renders as an anchor tag instead of button
+    # @param id [String] Stable DOM identifier for the control
     # @param type [String] Button type attribute: "button" (default), "submit", "reset"
+    # @param name [String] Optional field name submitted by the clicked button
+    # @param value [String] Optional value submitted by the clicked button
     # @param classes [String] Additional CSS classes for the wrapper
     # @param data [Hash] Data attributes for the button
     def initialize(
@@ -34,8 +37,11 @@ module Buttons
       icon_only: false,
       full_width: false,
       href: nil,
+      id: nil,
       target: nil,
       type: "button",
+      name: nil,
+      value: nil,
       classes: nil,
       data: {}
     )
@@ -56,8 +62,11 @@ module Buttons
       @icon_only = icon_only
       @full_width = full_width
       @href = href
+      @id = id
       @target = target
       @type = type
+      @name = name
+      @value = value
       @classes = classes
       @data = data
     end
@@ -79,18 +88,20 @@ module Buttons
 
     def tag_attributes
       attrs = {
+        id: @id,
         class: button_classes,
         data: @data
       }
 
       if @href.present?
         attrs[:href] = @href
-        attrs[:role] = "button"
         attrs[:target] = @target if @target.present?
         attrs[:rel] = "noopener noreferrer" if @target == "_blank"
         attrs[:'aria-disabled'] = @disabled if @disabled
       else
         attrs[:type] = @type
+        attrs[:name] = @name if @name.present?
+        attrs[:value] = @value unless @value.nil?
         attrs[:disabled] = @disabled if @disabled
       end
 
@@ -126,7 +137,7 @@ module Buttons
       end
 
       [
-        "inline-flex items-center justify-center gap-1.5 font-medium whitespace-nowrap",
+        "inline-flex items-center justify-center gap-1.5 max-w-full font-medium whitespace-normal text-center [overflow-wrap:anywhere]",
         transition,
         "select-none focus-visible:outline-2 focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
       ].compact.join(" ")

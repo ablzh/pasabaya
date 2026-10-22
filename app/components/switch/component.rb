@@ -40,8 +40,8 @@ module Switch
       super()
       @label = label
       @name = name
-      @id = id || generate_id
       @value = value
+      @id = id.presence || generate_id
       @checked = checked
       @disabled = disabled
       @required = required
@@ -154,7 +154,9 @@ module Switch
     end
 
     def generate_id
-      "switch_#{SecureRandom.hex(4)}"
+      raise ArgumentError, "Provide a stable id or input name; repeated controls need an explicit id" if @name.blank?
+
+      "switch_#{Digest::SHA256.hexdigest([ @name.to_s, @value.to_s ].join("\0"))}"
     end
 
     def base_track_classes

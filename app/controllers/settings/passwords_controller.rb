@@ -1,9 +1,10 @@
 class Settings::PasswordsController < Settings::BaseController
   def update
     @user = Current.user
-    if @user.update(password_params)
+    @user.assign_attributes(password_params)
+    if @user.save(context: :password_change)
       @user.sessions.where.not(id: Current.session.id).destroy_all
-      redirect_to settings_profile_path, notice: "Password changed successfully."
+      redirect_to settings_profile_path, notice: "Password changed successfully.", status: :see_other
     else
       render "settings/profiles/show", status: :unprocessable_content
     end

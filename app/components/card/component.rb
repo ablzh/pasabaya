@@ -10,9 +10,6 @@ module Card
     renders_one :header
     renders_one :body
     renders_one :footer
-    renders_one :image, lambda { |src:, alt: "", position: :top, aspect: nil, classes: nil|
-      ImageComponent.new(src: src, alt: alt, position: position, aspect: aspect, classes: classes)
-    }
 
     # @param variant [Symbol] Style variant: :default, :elevated, :well
     # @param padding [Symbol] Content padding: :none, :sm, :md, :lg
@@ -20,9 +17,7 @@ module Card
     # @param rounded [Symbol] Border radius: :none, :sm, :md, :lg, :xl, :full
     # @param border [Boolean] Show border
     # @param hoverable [Boolean] Add hover effects
-    # @param clickable [Boolean] Make entire card clickable (adds cursor and hover)
     # @param divide [Boolean] Add dividers between header, body, footer
-    # @param full_width_mobile [Boolean] Edge-to-edge on mobile
     # @param classes [String] Additional CSS classes
     def initialize(
       variant: :default,
@@ -31,9 +26,7 @@ module Card
       rounded: :xl,
       border: true,
       hoverable: false,
-      clickable: false,
       divide: false,
-      full_width_mobile: false,
       classes: nil
     )
       super()
@@ -47,9 +40,7 @@ module Card
       @rounded = ROUNDED.include?(normalized_rounded) ? normalized_rounded : :xl
       @border = border
       @hoverable = hoverable
-      @clickable = clickable
       @divide = divide
-      @full_width_mobile = full_width_mobile
       @classes = classes
     end
 
@@ -113,49 +104,28 @@ module Card
     end
 
     def rounded_classes
-      if @full_width_mobile
-        case @rounded
-        when :none then ""
-        when :sm then "sm:rounded-sm"
-        when :md then "sm:rounded-md"
-        when :lg then "sm:rounded-lg"
-        when :"2xl" then "sm:rounded-2xl"
-        when :"3xl" then "sm:rounded-3xl"
-        when :full then "sm:rounded-full"
-        else "sm:rounded-xl" # :xl
-        end
-      else
-        case @rounded
-        when :none then ""
-        when :sm then "rounded-sm"
-        when :md then "rounded-md"
-        when :lg then "rounded-lg"
-        when :"2xl" then "rounded-2xl"
-        when :"3xl" then "rounded-3xl"
-        when :full then "rounded-full"
-        else "rounded-xl" # :xl
-        end
+      case @rounded
+      when :none then ""
+      when :sm then "rounded-sm"
+      when :md then "rounded-md"
+      when :lg then "rounded-lg"
+      when :"2xl" then "rounded-2xl"
+      when :"3xl" then "rounded-3xl"
+      when :full then "rounded-full"
+      else "rounded-xl" # :xl
       end
     end
 
     def border_classes
       return "" unless @border
 
-      if @full_width_mobile
-        "border-y sm:border border-black/10 dark:border-white/10"
-      else
-        "border border-black/10 dark:border-white/10"
-      end
+      "border border-black/10 dark:border-white/10"
     end
 
     def hover_classes
-      return "" unless @hoverable || @clickable
+      return "" unless @hoverable
 
-      classes = []
-      classes << "transition-all duration-200"
-      classes << "hover:shadow-md dark:hover:shadow-neutral-900/50" if @hoverable
-      classes << "cursor-pointer hover:bg-neutral-50 dark:hover:bg-neutral-700/50" if @clickable
-      classes.join(" ")
+      "transition-all duration-200 hover:shadow-md dark:hover:shadow-neutral-900/50"
     end
 
     def divide_classes
@@ -201,45 +171,6 @@ module Card
       "bg-neutral-50 dark:bg-neutral-900/50"
     end
 
-    attr_reader :variant, :padding, :shadow, :rounded, :border, :hoverable, :clickable, :divide, :full_width_mobile
-
-    # Nested ImageComponent for card images
-    class ImageComponent < ViewComponent::Base
-      POSITIONS = %i[top bottom].freeze
-      ASPECTS = %i[auto square video wide].freeze
-      attr_reader :src, :alt, :position
-
-      def initialize(src:, alt: "", position: :top, aspect: nil, classes: nil)
-        super()
-        @src = src
-        @alt = alt
-        @position = POSITIONS.include?(position) ? position : :top
-        @aspect = aspect
-        @classes = classes
-      end
-
-      def wrapper_classes
-        [
-          aspect_classes,
-          "bg-neutral-200 dark:bg-neutral-700",
-          @classes
-        ].compact.reject(&:empty?).join(" ")
-      end
-
-      def image_classes
-        "w-full h-full object-center object-cover"
-      end
-
-      private
-
-      def aspect_classes
-        case @aspect
-        when :square then "aspect-square"
-        when :video then "aspect-video"
-        when :wide then "aspect-[21/9]"
-        else "" # auto - no fixed aspect
-        end
-      end
-    end
+    attr_reader :variant, :padding, :shadow, :rounded, :border, :hoverable, :divide
   end
 end

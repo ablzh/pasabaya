@@ -98,7 +98,7 @@
       <div class="container">
         <!-- Brand Header -->
         <div class="header">
-          <h1>Pasabaya.app 🚗</h1>
+          <h1>Pasabaya.app</h1>
         </div>
 
         <!-- Main Body Content -->
@@ -111,12 +111,12 @@
 
           <!-- Reset Button -->
           <div style="text-align: left;">
-            <%= link_to "Reset Password ➔", edit_password_url(@user.password_reset_token), class: "btn-link" %>
+            <%= link_to "Reset Password", edit_password_url(@user.password_reset_token), class: "btn-link" %>
           </div>
 
           <!-- Expiration Notice -->
           <div class="card">
-            <h3 class="card-title">⏳ Expiration Notice</h3>
+            <h3 class="card-title">Expiration Notice</h3>
             <p class="card-text">
               For security reasons, this password reset link will expire in <%= distance_of_time_in_words(0, @user.password_reset_token_expires_in) %>. After that, you will need to request a new link.
             </p>
@@ -124,7 +124,7 @@
 
           <!-- Security Note -->
           <div class="card" style="border-left: 4px solid #ef4444; background-color: #3b0712; border-color: #991b1b; margin-bottom: 0;">
-            <h3 class="card-title" style="color: #fca5a5;">🛡️ Didn't Request This?</h3>
+            <h3 class="card-title" style="color: #fca5a5;">Didn't Request This?</h3>
             <p class="card-text" style="color: #fecaca;">
               If you didn't request a password reset, you can safely ignore this email. Your password will remain unchanged and your account secure.
             </p>

@@ -1,0 +1,6 @@
+<span class="<%= wrapper_classes %>">
+  <%= content? ? content : @text %>
+  <% if @dot %>
+    <span class="<%= dot_classes %>" aria-hidden="true"></span>
+  <% end %>
+</span>

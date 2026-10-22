@@ -1,0 +1,26 @@
+{
+  "workflow": "restore_drill",
+  "recorded_at": "2026-10-21T13:02:44Z",
+  "environment": {
+    "ruby": "4.0.5",
+    "rails": "8.1.3.1",
+    "sqlite": "3.53.2",
+    "platform": "arm64-darwin25",
+    "rails_env": "test"
+  },
+  "data": "synthetic only",
+  "simulated_backup_age_seconds": 172801.84,
+  "backup_file_age_seconds": 1.099,
+  "restore_and_reconcile_seconds": 0.499,
+  "checks": {
+    "journal_preserved": true,
+    "account_anonymized": true,
+    "credentials_rejected": true,
+    "sessions_removed": true,
+    "deleted_messages_removed": true,
+    "expired_chat_removed": true,
+    "expired_chat_http_denied": true,
+    "unexpired_history_retained": true,
+    "historical_acceptance_retained": true
+  }
+}

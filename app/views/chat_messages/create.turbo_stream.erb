@@ -1,0 +1,2 @@
+<%= turbo_stream.append "chat_messages_list", partial: "chat_messages/chat_message", locals: { chat_message: @chat_message } %>
+<%= turbo_stream.replace "chat_message_form", partial: "chat_messages/form", locals: { ride_post: @ride_post, chat_message: @ride_post.chat_messages.build } %>

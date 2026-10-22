@@ -1,257 +1,220 @@
-<div class="flex flex-col items-center lg:px-8 font-sans">
+<% text_link_classes = "inline-flex min-h-11 items-center text-sm font-semibold text-indigo-600 underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-indigo-600 dark:text-indigo-400 dark:focus-visible:outline-indigo-400" %>
+<% primary_link_classes = "inline-flex min-h-11 items-center justify-center rounded-xl bg-indigo-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-indigo-700 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-indigo-600 dark:focus-visible:outline-indigo-400" %>
+<% secondary_link_classes = "inline-flex min-h-11 items-center justify-center rounded-xl border border-neutral-300 bg-white px-5 py-3 text-sm font-semibold text-neutral-800 transition hover:bg-neutral-50 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-indigo-600 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-200 dark:hover:bg-neutral-800 dark:focus-visible:outline-indigo-400" %>
 
+<div class="mx-auto max-w-6xl pb-12 font-sans sm:px-2 lg:px-8">
+  <header id="home-introduction" class="mt-8 mb-16 text-center sm:mb-20">
+    <span class="inline-block rounded-full bg-indigo-100 px-3 py-1.5 text-xs font-bold uppercase tracking-widest text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300">
+      Community Ride Board
+    </span>
+    <h1 class="mt-6 text-4xl font-extrabold leading-tight tracking-tight text-neutral-900 sm:text-5xl lg:text-7xl dark:text-white">
+      Carpooling for the Community, <br class="hidden lg:block">
+      <span class="text-indigo-600 dark:text-indigo-400">Not for Profit.</span>
+    </h1>
+    <p class="mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-neutral-600 sm:text-xl dark:text-neutral-400">
+      A smarter, social way to find travel companions in the Philippines. No fees. No commissions. Just people helping
+      people beat the traffic.
+    </p>
 
-  <div class="max-w-5xl w-full sm:px-6 lg:px-8">
-    <%# 1. Hero Section %>
-    <header class="text-center space-y-8 mb-16 mt-8">
-      <span class="inline-block py-1.5 text-xs font-bold tracking-widest text-indigo-700 uppercase bg-indigo-100 dark:bg-indigo-900/30 dark:text-indigo-300 rounded-full">
-        Community Ride Board
-      </span>
-      <h1 class="text-5xl font-extrabold text-neutral-900 dark:text-white tracking-tight sm:text-5xl md:text-7xl leading-tight">
-        Carpooling for the Community, <br class="hidden lg:block">
-        <span class="text-indigo-600 dark:text-indigo-400">Not for Profit.</span>
-      </h1>
-      <p class="max-w-2xl mx-auto text-xl text-neutral-600 dark:text-neutral-400 leading-relaxed">
-        A smarter, social way to find travel companions in the Philippines. No fees. No commissions. Just people helping
-        people beat the traffic.
-      </p>
+    <div id="find-a-ride" class="mx-auto mt-10 max-w-4xl scroll-mt-24 text-left">
+      <h2 class="mb-4 text-lg font-bold text-neutral-900 dark:text-white">Where are you heading?</h2>
+      <%= render "ride_posts/search_form", grouped_locations: @grouped_locations %>
+    </div>
+  </header>
 
-      <div class="max-w-4xl mx-auto pt-8">
-        <%= render "ride_posts/search_form", grouped_locations: @grouped_locations %>
-      </div>
+  <section id="how-to-start" aria-labelledby="home-start-heading" class="mb-16 scroll-mt-24 sm:mb-20">
+    <div class="mb-7 max-w-2xl">
+      <p class="mb-2 text-xs font-bold uppercase tracking-widest text-indigo-600 dark:text-indigo-400">Your first trip</p>
+      <h2 id="home-start-heading" class="text-3xl font-bold tracking-tight text-neutral-900 sm:text-4xl dark:text-white">How to get started</h2>
+      <p class="mt-3 leading-relaxed text-neutral-600 dark:text-neutral-400">Whether you need a seat or have one to share, here’s where to begin.</p>
+    </div>
 
-      <% if @popular_routes.present? && @popular_routes.any? %>
-        <div class="max-w-4xl mx-auto text-left">
-          <div class="bg-neutral-50 dark:bg-neutral-900/50 rounded-3xl p-6 sm:p-8 border border-neutral-100 dark:border-white/5">
-            <h2 class="text-lg font-bold text-neutral-900 dark:text-white mb-4 flex items-center gap-2">
-              <svg class="size-5 text-indigo-600 dark:text-indigo-400 shrink-0" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5C15 12.1569 13.6569 13.5 12 13.5C10.3431 13.5 9 12.1569 9 10.5C9 8.84315 10.3431 7.5 12 7.5C13.6569 7.5 15 8.84315 15 10.5Z" />
-                <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5C19.5 17.6421 12 21.75 12 21.75C12 21.75 4.5 17.6421 4.5 10.5C4.5 6.35786 7.85786 3 12 3C16.1421 3 19.5 6.35786 19.5 10.5Z" />
-              </svg>
-              Active Carpool Routes
-            </h2>
-            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-              <% @popular_routes.each do |route| %>
-                <%= link_to route_rides_path(origin_slug: route[:origin].slug, destination_slug: route[:destination].slug),
-                            class: "flex items-center justify-between p-3.5 bg-white dark:bg-neutral-900 rounded-2xl border border-neutral-100 dark:border-white/5 hover:border-indigo-500 dark:hover:border-indigo-500/50 hover:shadow-md transition group" do %>
-                  <div class="flex flex-col">
-                    <span class="text-sm font-medium text-neutral-700 dark:text-neutral-300 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition">
-                      <%= route[:origin].name %> → <%= route[:destination].name %>
-                    </span>
-                    <span class="text-xs text-neutral-400 mt-0.5">
-                      <%= pluralize(route[:count], "active listing") %>
-                    </span>
-                  </div>
-                  <span class="text-neutral-400 group-hover:translate-x-1 transition-transform text-sm">→</span>
-                <% end %>
-              <% end %>
-            </div>
-          </div>
-        </div>
+    <div class="grid gap-5 md:grid-cols-2">
+      <%= render Card::Component.new(rounded: :"3xl", padding: :lg, classes: "h-full") do %>
+        <h3 class="text-xl font-bold text-neutral-900 dark:text-white">Looking for a ride?</h3>
+        <p class="mt-2 text-sm leading-relaxed text-neutral-600 dark:text-neutral-400">Find a driver already heading your way.</p>
+        <ol class="mt-6 list-decimal space-y-4 pl-5 text-sm leading-relaxed text-neutral-600 marker:font-bold marker:text-indigo-600 dark:text-neutral-300 dark:marker:text-indigo-400">
+          <li class="pl-2"><strong class="font-semibold text-neutral-900 dark:text-white">Search your route.</strong> Choose your cities and, if you have one, a travel date.</li>
+          <li class="pl-2"><strong class="font-semibold text-neutral-900 dark:text-white">Read the offer.</strong> Check the departure, available seats, trip notes, and driver’s profile.</li>
+          <li class="pl-2"><strong class="font-semibold text-neutral-900 dark:text-white">Request a seat.</strong> Sign in and send your request. Your seat is confirmed when the driver accepts.</li>
+          <li class="pl-2"><strong class="font-semibold text-neutral-900 dark:text-white">Plan your pickup.</strong> Once accepted, join the private trip chat to coordinate with the group.</li>
+        </ol>
+        <%= link_to "Find a Ride", ride_posts_path, id: "home_passenger_start", class: "#{text_link_classes} mt-6" %>
       <% end %>
-    </header>
 
-    <%# Video Section %>
-    <section class="max-w-4xl mx-auto mb-24">
-      <div class="aspect-video rounded-3xl overflow-hidden shadow-2xl border border-neutral-200 dark:border-neutral-800">
-        <iframe
-          class="w-full h-full"
-          src="https://www.youtube.com/embed/zZxOvbtzMhE?si=tmHwyexQ-a-NNaq7"
-          title="YouTube video player"
-          frameborder="0"
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-          referrerpolicy="strict-origin-when-cross-origin"
-          allowfullscreen>
-        </iframe>
-      </div>
-    </section>
-
-    <%# 2. The Problem %>
-    <section class="max-w-3xl mx-auto mb-24">
-      <%= render(Card::Component.new(rounded: :"3xl", padding: :lg)) do %>
-        <h2 class="text-3xl font-bold text-neutral-900 dark:text-white mb-6">Why Pasabaya.app?</h2>
-        <div class="space-y-6 text-lg text-neutral-600 dark:text-neutral-400 leading-relaxed">
-          <p>
-            Traffic in the Philippines is a shared struggle. Public transport can be inconvenient for daily commutes of
-            tens of kilometers, and while Facebook groups or Reddit threads help people find rides, they aren't built
-            for it.
-          </p>
-          <p>With the recent declaration of an <strong>energy emergency</strong>, there is a clear need for us to be
-            more efficient and travel together. Pasabaya.app is just an organized tool to help you find someone
-            heading your way.</p>
-          <p class="font-medium text-indigo-600 dark:text-indigo-400 text-xl border-l-4 border-indigo-200 dark:border-indigo-900/50 pl-6 mt-8">
-            We took the "pasabay" culture you already know and gave it a better interface.
-          </p>
-        </div>
+      <%= render Card::Component.new(rounded: :"3xl", padding: :lg, classes: "h-full") do %>
+        <h3 class="text-xl font-bold text-neutral-900 dark:text-white">Have seats to share?</h3>
+        <p class="mt-2 text-sm leading-relaxed text-neutral-600 dark:text-neutral-400">Post the journey you’re already making.</p>
+        <ol class="mt-6 list-decimal space-y-4 pl-5 text-sm leading-relaxed text-neutral-600 marker:font-bold marker:text-indigo-600 dark:text-neutral-300 dark:marker:text-indigo-400">
+          <li class="pl-2"><strong class="font-semibold text-neutral-900 dark:text-white">Choose a ride type.</strong> Offer a one-time trip or set up a regular ride for the days you usually travel.</li>
+          <li class="pl-2"><strong class="font-semibold text-neutral-900 dark:text-white">Add the details.</strong> Enter your route, departure, and passenger seats. You can save a private draft until you’re ready.</li>
+          <li class="pl-2"><strong class="font-semibold text-neutral-900 dark:text-white">Review seat requests.</strong> Look at passenger profiles and accept or decline each request.</li>
+          <li class="pl-2"><strong class="font-semibold text-neutral-900 dark:text-white">Keep everyone in the loop.</strong> Use trip chat to agree on pickup and share any changes.</li>
+        </ol>
+        <%= link_to "Offer a Ride", new_ride_post_path, id: "home_driver_start", class: "#{text_link_classes} mt-6" %>
       <% end %>
-    </section>
+    </div>
+  </section>
 
-    <%# 3. How it Works %>
-    <section class="mb-24">
-      <h2 class="text-3xl font-bold text-neutral-900 dark:text-white mb-12 text-center max-w-2xl mx-auto">
-        It’s Social Networking, <br class="hidden sm:block">
-        Not a Transport Company.
-      </h2>
-      <div class="grid gap-8 md:grid-cols-3">
-        <%= render(Card::Component.new(rounded: :"3xl", padding: :lg, hoverable: true)) do %>
-          <div class="w-14 h-14 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 rounded-2xl flex items-center justify-center mb-6">
-            <svg class="size-8" width="32" height="32" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18.75C7.71719 18.75 13.0136 19.4812 18.0468 20.8512C18.7738 21.0491 19.5 20.5086 19.5 19.7551V18.75M3.75 4.5V5.25C3.75 5.66421 3.41421 6 3 6H2.25M2.25 6V5.625C2.25 5.00368 2.75368 4.5 3.375 4.5H20.25M2.25 6V15M20.25 4.5V5.25C20.25 5.66421 20.5858 6 21 6H21.75M20.25 4.5H20.625C21.2463 4.5 21.75 5.00368 21.75 5.625V15.375C21.75 15.9963 21.2463 16.5 20.625 16.5H20.25M21.75 15H21C20.5858 15 20.25 15.3358 20.25 15.75V16.5M20.25 16.5H3.75M3.75 16.5H3.375C2.75368 16.5 2.25 15.9963 2.25 15.375V15M3.75 16.5V15.75C3.75 15.3358 3.41421 15 3 15H2.25M15 10.5C15 12.1569 13.6569 13.5 12 13.5C10.3431 13.5 9 12.1569 9 10.5C9 8.84315 10.3431 7.5 12 7.5C13.6569 7.5 15 8.84315 15 10.5ZM18 10.5H18.0075V10.5075H18V10.5ZM6 10.5H6.0075V10.5075H6V10.5Z" />
-            </svg>
-          </div>
-          <h3 class="text-xl font-bold text-neutral-900 dark:text-white mb-4">Zero Payments</h3>
-          <p class="text-neutral-600 dark:text-neutral-400 leading-relaxed">
-            We don't handle money. No booking fees, no commissions, no hidden costs.
-          </p>
-        <% end %>
-
-        <%= render(Card::Component.new(rounded: :"3xl", padding: :lg, hoverable: true)) do %>
-          <div class="w-14 h-14 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 rounded-2xl flex items-center justify-center mb-6">
-            <svg class="size-8" width="32" height="32" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.7498L11.25 14.9998L15 9.74985M12 2.71411C9.8495 4.75073 6.94563 5.99986 3.75 5.99986C3.69922 5.99986 3.64852 5.99955 3.59789 5.99892C3.2099 7.17903 3 8.43995 3 9.74991C3 15.3414 6.82432 20.0397 12 21.3719C17.1757 20.0397 21 15.3414 21 9.74991C21 8.43995 20.7901 7.17903 20.4021 5.99892C20.3515 5.99955 20.3008 5.99986 20.25 5.99986C17.0544 5.99986 14.1505 4.75073 12 2.71411Z" />
-            </svg>
-          </div>
-          <h3 class="text-xl font-bold text-neutral-900 dark:text-white mb-4">Facebook-Verified</h3>
-          <p class="text-neutral-600 dark:text-neutral-400 leading-relaxed">
-            Connect with real people. Check profiles and mutual friends before you decide to ride together.
-          </p>
-        <% end %>
-
-        <%= render(Card::Component.new(rounded: :"3xl", padding: :lg, hoverable: true)) do %>
-          <div class="w-14 h-14 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 rounded-2xl flex items-center justify-center mb-6">
-            <svg class="size-8" width="32" height="32" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M15.0423 21.6718L13.6835 16.6007M13.6835 16.6007L11.1741 18.826L11.7425 9.35623L16.9697 17.2731L13.6835 16.6007ZM12 2.25V4.5M17.8336 4.66637L16.2426 6.25736M20.25 10.5H18M7.75736 14.7426L6.16637 16.3336M6 10.5H3.75M7.75736 6.25736L6.16637 4.66637" />
-            </svg>
-          </div>
-          <h3 class="text-xl font-bold text-neutral-900 dark:text-white mb-4">Simple Matching</h3>
-          <p class="text-neutral-600 dark:text-neutral-400 leading-relaxed">
-            No complex dispatching. Just a digital bulletin board with smart filters to find someone heading your way.
-          </p>
-        <% end %>
-      </div>
-    </section>
-
-    <%# 4. About the Creator %>
-    <section class="max-w-3xl mx-auto mb-24">
-      <div class="bg-neutral-900 dark:bg-black rounded-3xl p-6 sm:p-14 shadow-2xl text-white relative overflow-hidden border border-white/5">
-        <!-- Abstract shape decoration -->
-        <div class="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 rounded-full bg-indigo-600 opacity-20 blur-3xl"></div>
-        <div class="absolute bottom-0 left-0 -ml-16 -mb-16 w-48 h-48 rounded-full bg-blue-500 opacity-20 blur-3xl"></div>
-        <div class="relative z-10">
-          <h2 class="text-3xl font-bold mb-8 text-indigo-300">From a Student, For the People</h2>
-          <div class="space-y-6 text-lg text-neutral-300 leading-relaxed">
-            <p>
-              Hi, I’m <span class="text-white font-semibold">Artem Blazhievskii</span>, an MIS student at the University
-              of the Philippines Open University.
-            </p>
-            <p>
-              I’m building <span class="text-white font-semibold">Pasabaya.app</span> as an open-source volunteer
-              project to help solve a problem we all face. I am not a transport company; I am just a developer who
-              believes that technology should make our daily lives easier and more human.
-            </p>
-          </div>
+  <section id="home-chat" aria-labelledby="home-chat-heading" class="mb-16 grid items-center gap-8 rounded-3xl border border-indigo-100 bg-indigo-50/60 p-6 sm:mb-20 sm:p-8 lg:grid-cols-2 lg:gap-12 lg:p-10 dark:border-indigo-900/50 dark:bg-indigo-950/20">
+    <div class="min-w-0">
+      <p class="mb-2 text-xs font-bold uppercase tracking-widest text-indigo-600 dark:text-indigo-400">Private trip chat</p>
+      <h2 id="home-chat-heading" class="text-3xl font-bold tracking-tight text-neutral-900 sm:text-4xl dark:text-white">Sort out the pickup, together.</h2>
+      <p class="mt-4 leading-relaxed text-neutral-600 dark:text-neutral-300">Once a seat request is accepted, the driver and accepted passengers can talk in the trip’s private chat.</p>
+      <p class="mt-3 leading-relaxed text-neutral-600 dark:text-neutral-300">Agree on a meeting point, let the group know you’re on your way, or share a change of plans. Your trip conversations are also collected in Chats.</p>
+    </div>
+    <figure class="min-w-0 rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm sm:p-6 dark:border-neutral-700 dark:bg-neutral-900">
+      <figcaption class="mb-5 border-b border-neutral-100 pb-4 text-sm font-semibold text-neutral-700 dark:border-neutral-800 dark:text-neutral-300">An example trip conversation</figcaption>
+      <div class="space-y-4 text-sm leading-relaxed">
+        <div class="max-w-[90%]">
+          <p class="mb-1 text-xs font-medium text-neutral-500 dark:text-neutral-400">Driver</p>
+          <p class="rounded-2xl rounded-tl-sm bg-neutral-100 px-4 py-3 text-neutral-800 dark:bg-neutral-800 dark:text-neutral-200">Let’s meet by the main entrance. I’ll message here when I arrive.</p>
+        </div>
+        <div class="ml-auto max-w-[90%]">
+          <p class="mb-1 text-right text-xs font-medium text-neutral-500 dark:text-neutral-400">Passenger</p>
+          <p class="rounded-2xl rounded-tr-sm bg-indigo-600 px-4 py-3 text-white">Thanks! I’ll be there a few minutes early.</p>
         </div>
       </div>
-    </section>
+    </figure>
+  </section>
 
-    <%# 5. Safety & Trust Section %>
-    <section id="safety" class="max-w-4xl mx-auto mb-24">
-      <div class="bg-amber-50 dark:bg-amber-950/20 rounded-3xl p-6 sm:p-14 border border-amber-100 dark:border-amber-900/30 shadow-sm">
-        <div class="flex flex-col md:flex-row gap-10">
-          <div class="flex-1">
-            <h2 class="text-3xl font-bold text-neutral-900 dark:text-white mb-6 flex items-center gap-3">
-              <svg class="size-8 text-amber-600 dark:text-amber-400 shrink-0" width="32" height="32" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.7498L11.25 14.9998L15 9.74985M12 2.71411C9.8495 4.75073 6.94563 5.99986 3.75 5.99986C3.69922 5.99986 3.64852 5.99955 3.59789 5.99892C3.2099 7.17903 3 8.43995 3 9.74991C3 15.3414 6.82432 20.0397 12 21.3719C17.1757 20.0397 21 15.3414 21 9.74991C21 8.43995 20.7901 7.17903 20.4021 5.99892C20.3515 5.99955 20.3008 5.99986 20.25 5.99986C17.0544 5.99986 14.1505 4.75073 12 2.71411Z" />
-              </svg>
-              Safety First
-            </h2>
-            <div class="space-y-4 text-neutral-700 dark:text-neutral-300 leading-relaxed">
-              <p>
-                Pasabaya.app is a <strong>public bulletin board</strong>. We provide the tools to find matches, but the
-                actual coordination happens between you and the other person on Facebook.
-              </p>
-              <p class="font-medium text-amber-800 dark:text-amber-200">
-                You are responsible for your own safety. Always verify who you are traveling with.
-              </p>
-              <div class="pt-4 flex gap-3">
-                <%= render Buttons::Component.new(
-                      text: "Safety & Terms", 
-                      href: terms_path, 
-                      variant: :outline, 
-                      size: :sm) %>
-                <%= render Buttons::Component.new(
-                      text: "Privacy", 
-                      href: privacy_path, 
-                      variant: :ghost, 
-                      size: :sm) %>
-              </div>
-            </div>
-          </div>
-          <div class="flex-1 bg-white/50 dark:bg-neutral-800/50 rounded-2xl p-8 border border-amber-200/50 dark:border-amber-900/30">
-            <h3 class="font-bold text-neutral-900 dark:text-white mb-4 uppercase tracking-wider text-sm">Trust Checklist</h3>
-            <ul class="space-y-3">
-              <li class="flex items-start gap-3">
-                <svg class="size-5 text-green-600 dark:text-green-400 shrink-0 mt-0.5" width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
-                  <path fill-rule="evenodd" d="M16.7045 4.15347C17.034 4.4045 17.0976 4.87509 16.8466 5.20457L8.84657 15.7046C8.71541 15.8767 8.51627 15.9838 8.30033 15.9983C8.08439 16.0129 7.87271 15.9334 7.71967 15.7804L3.21967 11.2804C2.92678 10.9875 2.92678 10.5126 3.21967 10.2197C3.51256 9.92682 3.98744 9.92682 4.28033 10.2197L8.17351 14.1129L15.6534 4.29551C15.9045 3.96603 16.3751 3.90243 16.7045 4.15347Z" clip-rule="evenodd" />
-                </svg>
-                <span class="text-sm text-neutral-700 dark:text-neutral-300">Check their Facebook profile age and activity.</span>
-              </li>
-              <li class="flex items-start gap-3">
-                <svg class="size-5 text-green-600 dark:text-green-400 shrink-0 mt-0.5" width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
-                  <path fill-rule="evenodd" d="M16.7045 4.15347C17.034 4.4045 17.0976 4.87509 16.8466 5.20457L8.84657 15.7046C8.71541 15.8767 8.51627 15.9838 8.30033 15.9983C8.08439 16.0129 7.87271 15.9334 7.71967 15.7804L3.21967 11.2804C2.92678 10.9875 2.92678 10.5126 3.21967 10.2197C3.51256 9.92682 3.98744 9.92682 4.28033 10.2197L8.17351 14.1129L15.6534 4.29551C15.9045 3.96603 16.3751 3.90243 16.7045 4.15347Z" clip-rule="evenodd" />
-                </svg>
-                <span class="text-sm text-neutral-700 dark:text-neutral-300">Look for mutual friends or common groups.</span>
-              </li>
-              <li class="flex items-start gap-3">
-                <svg class="size-5 text-green-600 dark:text-green-400 shrink-0 mt-0.5" width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
-                  <path fill-rule="evenodd" d="M16.7045 4.15347C17.034 4.4045 17.0976 4.87509 16.8466 5.20457L8.84657 15.7046C8.71541 15.8767 8.51627 15.9838 8.30033 15.9983C8.08439 16.0129 7.87271 15.9334 7.71967 15.7804L3.21967 11.2804C2.92678 10.9875 2.92678 10.5126 3.21967 10.2197C3.51256 9.92682 3.98744 9.92682 4.28033 10.2197L8.17351 14.1129L15.6534 4.29551C15.9045 3.96603 16.3751 3.90243 16.7045 4.15347Z" clip-rule="evenodd" />
-                </svg>
-                <span class="text-sm text-neutral-700 dark:text-neutral-300"><strong>Never pay in advance.</strong> Coordination is free.</span>
-              </li>
-              <li class="flex items-start gap-3">
-                <svg class="size-5 text-green-600 dark:text-green-400 shrink-0 mt-0.5" width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
-                  <path fill-rule="evenodd" d="M16.7045 4.15347C17.034 4.4045 17.0976 4.87509 16.8466 5.20457L8.84657 15.7046C8.71541 15.8767 8.51627 15.9838 8.30033 15.9983C8.08439 16.0129 7.87271 15.9334 7.71967 15.7804L3.21967 11.2804C2.92678 10.9875 2.92678 10.5126 3.21967 10.2197C3.51256 9.92682 3.98744 9.92682 4.28033 10.2197L8.17351 14.1129L15.6534 4.29551C15.9045 3.96603 16.3751 3.90243 16.7045 4.15347Z" clip-rule="evenodd" />
-                </svg>
-                <span class="text-sm text-neutral-700 dark:text-neutral-300">Share your location with family/friends during the ride.</span>
-              </li>
-              <li class="flex items-start gap-3">
-                <svg class="size-5 text-green-600 dark:text-green-400 shrink-0 mt-0.5" width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
-                  <path fill-rule="evenodd" d="M16.7045 4.15347C17.034 4.4045 17.0976 4.87509 16.8466 5.20457L8.84657 15.7046C8.71541 15.8767 8.51627 15.9838 8.30033 15.9983C8.08439 16.0129 7.87271 15.9334 7.71967 15.7804L3.21967 11.2804C2.92678 10.9875 2.92678 10.5126 3.21967 10.2197C3.51256 9.92682 3.98744 9.92682 4.28033 10.2197L8.17351 14.1129L15.6534 4.29551C15.9045 3.96603 16.3751 3.90243 16.7045 4.15347Z" clip-rule="evenodd" />
-                </svg>
-                <span class="text-sm text-neutral-700 dark:text-neutral-300">Meet in well-lit, public locations for pickup.</span>
-              </li>
-            </ul>
-          </div>
-        </div>
+  <section id="home-features" aria-labelledby="home-features-heading" class="mb-16 sm:mb-20">
+    <div class="mb-7 max-w-2xl">
+      <h2 id="home-features-heading" class="text-3xl font-bold tracking-tight text-neutral-900 sm:text-4xl dark:text-white">A few things that help along the way</h2>
+      <p class="mt-3 leading-relaxed text-neutral-600 dark:text-neutral-400">For the everyday commute, the occasional trip, and the people you travel with.</p>
+    </div>
+    <div class="grid gap-5 md:grid-cols-6">
+      <article class="min-w-0 md:col-span-3">
+        <%= render Card::Component.new(rounded: :"2xl", padding: :lg, classes: "h-full") do %>
+          <h3 class="text-xl font-bold text-neutral-900 dark:text-white">Regular rides</h3>
+          <p class="mt-3 text-sm leading-relaxed text-neutral-600 dark:text-neutral-400">Travel the same route each week? Choose your weekdays and departure time once. Passengers request a seat for each individual trip, up to 14 days ahead.</p>
+          <%= link_to "Set up a regular ride", new_ride_post_path(ride_type: "regular"), id: "home_regular_ride", class: "#{text_link_classes} mt-4" %>
+        <% end %>
+      </article>
+      <article class="min-w-0 md:col-span-3">
+        <%= render Card::Component.new(rounded: :"2xl", padding: :lg, classes: "h-full") do %>
+          <h3 class="text-xl font-bold text-neutral-900 dark:text-white">Route alerts</h3>
+          <p class="mt-3 text-sm leading-relaxed text-neutral-600 dark:text-neutral-400">No matching ride yet? Search your route and ask to be notified. You’ll get a one-time email and in-app alert when a matching, bookable ride becomes available.</p>
+          <%= link_to "Search your route", "#find-a-ride", id: "home_route_alerts", class: "#{text_link_classes} mt-4" %>
+        <% end %>
+      </article>
+      <article class="min-w-0 md:col-span-2">
+        <%= render Card::Component.new(rounded: :"2xl", padding: :lg, classes: "h-full") do %>
+          <h3 class="text-lg font-bold text-neutral-900 dark:text-white">Community Hubs</h3>
+          <p class="mt-3 text-sm leading-relaxed text-neutral-600 dark:text-neutral-400">Join a Hub with your institutional email to find rides shared with its verified members. Verification confirms access to that email address.</p>
+          <%= link_to "Explore Hubs", communities_path, id: "home_community_hubs", class: "#{text_link_classes} mt-4" %>
+        <% end %>
+      </article>
+      <article class="min-w-0 md:col-span-2">
+        <%= render Card::Component.new(rounded: :"2xl", padding: :lg, classes: "h-full") do %>
+          <h3 class="text-lg font-bold text-neutral-900 dark:text-white">Trip updates</h3>
+          <p class="mt-3 text-sm leading-relaxed text-neutral-600 dark:text-neutral-400">See seat request decisions and trip changes in Notifications, and keep track of your offers and bookings in My Trips.</p>
+        <% end %>
+      </article>
+      <article class="min-w-0 md:col-span-2">
+        <%= render Card::Component.new(rounded: :"2xl", padding: :lg, classes: "h-full") do %>
+          <h3 class="text-lg font-bold text-neutral-900 dark:text-white">Trip feedback</h3>
+          <p class="mt-3 text-sm leading-relaxed text-neutral-600 dark:text-neutral-400">After a trip’s departure, eligible participants can record how it went or report a no-show. Reports can be reviewed by a community administrator.</p>
+        <% end %>
+      </article>
+    </div>
+  </section>
+
+  <% if @popular_routes.present? && @popular_routes.any? %>
+    <section id="home-routes" aria-labelledby="home-routes-heading" class="mb-16 rounded-3xl border border-neutral-200 bg-neutral-50 p-6 sm:mb-20 sm:p-8 dark:border-neutral-800 dark:bg-neutral-900/50">
+      <div class="mb-6 flex flex-wrap items-center justify-between gap-3">
+        <h2 id="home-routes-heading" class="text-2xl font-bold tracking-tight text-neutral-900 dark:text-white">Active Carpool Routes</h2>
+        <%= link_to "Browse All Rides", ride_posts_path(origin_id: "", destination_id: ""), id: "home_browse_rides", class: text_link_classes %>
+      </div>
+      <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        <% @popular_routes.each do |route| %>
+          <%= link_to route_rides_path(origin_slug: route[:origin].slug, destination_slug: route[:destination].slug),
+                      id: "home_route_#{route[:origin].id}_#{route[:destination].id}",
+                      class: "group flex min-w-0 items-center justify-between gap-3 rounded-2xl border border-neutral-200 bg-white p-4 transition hover:border-indigo-400 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-indigo-600 dark:border-neutral-800 dark:bg-neutral-900 dark:hover:border-indigo-500 dark:focus-visible:outline-indigo-400" do %>
+            <span class="min-w-0 [overflow-wrap:anywhere]">
+              <span class="block text-sm font-medium text-neutral-700 group-hover:text-indigo-600 dark:text-neutral-300 dark:group-hover:text-indigo-400"><%= route[:origin].name %> → <%= route[:destination].name %></span>
+              <span class="mt-1 block text-xs text-neutral-500 dark:text-neutral-400"><%= pluralize(route[:count], "active listing") %></span>
+            </span>
+            <span aria-hidden="true" class="shrink-0 text-neutral-500 dark:text-neutral-400">→</span>
+          <% end %>
+        <% end %>
       </div>
     </section>
+  <% end %>
 
-    <%# 6. Final Call to Action %>
-    <section class="max-w-xl mx-auto text-center space-y-10 mb-16">
-      <div class="space-y-4">
-        <h3 class="text-3xl font-bold text-neutral-900 dark:text-white">Ready to find a ride?</h3>
-        <p class="text-lg text-neutral-500 dark:text-neutral-400">Join the community and start saving on your commute today.</p>
-      </div>
-      <div class="flex justify-center">
-        <%= render Buttons::Component.new(
-              text: "Browse All Rides", 
-              href: ride_posts_path(post_type: "", origin_id: "", destination_id: ""),
-              variant: :primary, 
-              size: :lg, 
-              style: :fancy,
-              pill: true) %>
-      </div>
-      <p class="text-sm text-neutral-400 dark:text-neutral-500 font-medium italic">
-        * By using this site, you agree that Pasabaya.app is not liable for any incidents arising from external coordination.
-      </p>
-
+  <section id="home-apps" aria-labelledby="home-apps-heading" class="mb-16 overflow-hidden rounded-3xl bg-neutral-900 p-6 text-white sm:mb-20 sm:p-10 dark:border dark:border-neutral-800 dark:bg-neutral-950">
+    <div class="grid items-center gap-8 md:grid-cols-2">
       <div>
-        <%= link_to root_path, class: "inline-block align-middle h-[1.15em] w-[1.15em] ml-[0.2em]
-  object-contain" do %>
-          <%= image_tag "/icon.svg", size: "72x72", alt: "Pasabaya Logo" %>
-        <% end %>
+        <p class="mb-3 text-xs font-bold uppercase tracking-widest text-indigo-300">Coming soon</p>
+        <h2 id="home-apps-heading" class="text-3xl font-bold tracking-tight sm:text-4xl">Pasabaya on iOS and Android</h2>
+        <p class="mt-4 leading-relaxed text-neutral-300">I’m also working on mobile apps for iPhone and Android, so you can bring your community carpool along with you.</p>
+        <p class="mt-3 text-sm leading-relaxed text-neutral-400">While the apps are on the way, you can already search, offer seats, request a ride, and use trip chat in your phone’s browser.</p>
       </div>
+      <div class="grid grid-cols-2 gap-3" aria-label="Upcoming mobile platforms">
+        <div class="rounded-2xl border border-white/15 bg-white/5 px-4 py-6 text-center">
+          <svg class="mx-auto mb-4 size-10 text-indigo-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+            <rect x="6" y="2" width="12" height="20" rx="3" />
+            <path d="M10 5h4M11 19h2" stroke-linecap="round" />
+          </svg>
+          <p class="font-semibold">iOS</p>
+          <p class="mt-1 text-xs text-neutral-400">iPhone</p>
+        </div>
+        <div class="rounded-2xl border border-white/15 bg-white/5 px-4 py-6 text-center">
+          <svg class="mx-auto mb-4 size-10 text-indigo-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+            <rect x="5" y="2" width="14" height="20" rx="2" />
+            <path d="M9 5h6M10 19h4" stroke-linecap="round" />
+          </svg>
+          <p class="font-semibold">Android</p>
+          <p class="mt-1 text-xs text-neutral-400">Android phones</p>
+        </div>
+      </div>
+    </div>
+  </section>
 
-    </section>
-  </div>
+  <section id="home-story" aria-labelledby="home-story-heading" class="mb-16 sm:mb-20">
+    <div class="grid gap-8 lg:grid-cols-2 lg:gap-10">
+      <div class="min-w-0">
+        <h2 id="home-story-heading" class="text-3xl font-bold tracking-tight text-neutral-900 sm:text-4xl dark:text-white">From a Student, For the People</h2>
+        <div class="mt-5 space-y-4 leading-relaxed text-neutral-600 dark:text-neutral-400">
+          <p>Hi, I’m <strong class="font-semibold text-neutral-900 dark:text-white">Artem Blazhievskii</strong>, an MIS student at the University of the Philippines Open University.</p>
+          <p>I’m building <strong class="font-semibold text-neutral-900 dark:text-white">Pasabaya.app</strong> as an open-source volunteer project to help solve a problem we all face. I am not a transport company; I am just a developer who believes that technology should make our daily lives easier and more human.</p>
+          <p>Traffic in the Philippines is a shared struggle. Pasabaya.app is just an organized tool to help you find someone heading your way.</p>
+        </div>
+      </div>
+      <div class="min-w-0 self-center">
+        <div class="aspect-video overflow-hidden rounded-2xl border border-neutral-200 bg-neutral-100 shadow-sm dark:border-neutral-800 dark:bg-neutral-900">
+          <iframe id="home_project_video" class="h-full w-full" src="https://www.youtube.com/embed/zZxOvbtzMhE?si=tmHwyexQ-a-NNaq7" title="Pasabaya community carpooling video" loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+        </div>
+        <p class="mt-5 border-l-2 border-indigo-300 pl-4 text-lg font-medium leading-relaxed text-indigo-700 dark:border-indigo-800 dark:text-indigo-300">We took the "pasabay" culture you already know and gave it a better interface.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="safety" aria-labelledby="home-safety-heading" class="mb-16 rounded-3xl border border-amber-200 bg-amber-50/60 p-6 sm:mb-20 sm:p-8 dark:border-amber-900/40 dark:bg-amber-950/10">
+    <div class="grid gap-6 md:grid-cols-2 md:gap-10">
+      <div>
+        <h2 id="home-safety-heading" class="text-2xl font-bold tracking-tight text-neutral-900 dark:text-white">Look out for each other.</h2>
+        <p class="mt-3 text-sm leading-relaxed text-neutral-700 dark:text-neutral-300">A little care goes a long way when you’re sharing a journey. Take time to get to know who you’re traveling with.</p>
+        <div class="mt-4 flex flex-wrap gap-x-5 gap-y-2">
+          <%= link_to "Safety & Terms", terms_path, id: "home_terms", class: "inline-flex min-h-11 items-center text-sm font-semibold text-amber-900 underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-amber-700 dark:text-amber-200 dark:focus-visible:outline-amber-300" %>
+          <%= link_to "Privacy", privacy_path, id: "home_privacy", class: "inline-flex min-h-11 items-center text-sm font-semibold text-amber-900 underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-amber-700 dark:text-amber-200 dark:focus-visible:outline-amber-300" %>
+        </div>
+      </div>
+      <ul class="list-disc space-y-3 pl-5 text-sm leading-relaxed text-neutral-700 marker:text-amber-600 dark:text-neutral-300 dark:marker:text-amber-400">
+        <li>Read the profile and trip notes before requesting or accepting a seat.</li>
+        <li>Arrange pickup in a well-lit, public place.</li>
+        <li>Share your trip details with someone you trust.</li>
+        <li>If your plans change, cancel your request or seat promptly and let the group know.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section id="home-next-trip" aria-labelledby="home-next-heading" class="text-center">
+    <h2 id="home-next-heading" class="text-3xl font-bold tracking-tight text-neutral-900 dark:text-white">Heading somewhere?</h2>
+    <p class="mx-auto mt-3 max-w-xl leading-relaxed text-neutral-600 dark:text-neutral-400">Find someone going your way, or make room for someone on your next trip.</p>
+    <div class="mt-6 flex flex-wrap items-center justify-center gap-3">
+      <%= link_to "Find a Ride", "#find-a-ride", id: "home_find_next_ride", class: primary_link_classes %>
+      <%= link_to "Offer a Ride", new_ride_post_path, id: "home_offer_next_ride", class: secondary_link_classes %>
+    </div>
+  </section>
 </div>
