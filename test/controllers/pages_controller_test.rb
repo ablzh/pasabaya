@@ -18,6 +18,8 @@ class PagesControllerTest < ActionDispatch::IntegrationTest
     assert_select "a#home_passenger_start[href='#{ride_posts_path}']"
     assert_select "a#home_regular_ride[href='#{new_ride_post_path(ride_type: 'regular')}']"
     assert_select "a#home_community_hubs[href='#{communities_path}']"
+    assert_select "#home_policy_update a[href=?]", terms_path
+    assert_select "#home_policy_update a[href=?]", privacy_path
     assert_select "#home-chat", text: /Once a seat request is accepted.*private chat/m
     assert_select "#home-apps", text: /Coming soon.*iOS and Android/m
   end
@@ -27,6 +29,9 @@ class PagesControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
 
     assert_select "h1", text: "Privacy Policy"
+    assert_select "time[datetime=?]", User::REGISTRATION_POLICY_VERSION
+    assert_select "p", text: /Artem Blazhievskii.*personal information controller/
+    assert_select "a[href='https://github.com/ablzh']"
 
     # Disclosures
     assert_select "li", text: /Public Visitors.*first name, last name, and profile avatar/
@@ -37,6 +42,11 @@ class PagesControllerTest < ActionDispatch::IntegrationTest
     assert_select "li", text: /Queue delays.*physical deletion/
     assert_select "li", text: /canceled while messaging is open.*24 hours after cancellation/
     assert_select "li", text: /GoatCounter \(goatcounter\.com\)/
+    assert_select "li", text: /Recurring Schedules.*weekdays.*end date/
+    assert_select "li", text: /Route Alerts.*origin and destination/
+    assert_select "li", text: /Skylight.*performance/
+    assert_select "li", text: /Cloudflare R2/
+    assert_select "li", text: /YouTube.*cookies/
   end
 
   test "terms page is available with contact and booking restriction disclosures" do
@@ -44,9 +54,15 @@ class PagesControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
 
     assert_select "h1", text: "Terms of Service"
+    assert_select "time[datetime=?]", User::REGISTRATION_POLICY_VERSION
 
     assert_select "li", text: /rolling 60-day window/
     assert_select "li", text: /7-day freeze/
+    assert_select "li", text: /Sending a seat request does not reserve a seat/
+    assert_select "li", text: /Pausing.*preserving accepted bookings/
+    assert_select "li", text: /Messaging closes 24 hours after the booking cutoff.*30 days after messaging closes/
+    assert_select "li", text: /canceled while messaging is open.*24 hours after cancellation/
+    assert_select "li", text: /Background job delays.*physical deletion.*backup copies/
     assert_select "a[href='mailto:legal@pasabaya.app']"
   end
 end
