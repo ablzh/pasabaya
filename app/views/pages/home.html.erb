@@ -3,6 +3,15 @@
 <% secondary_link_classes = "inline-flex min-h-11 items-center justify-center rounded-xl border border-neutral-300 bg-white px-5 py-3 text-sm font-semibold text-neutral-800 transition hover:bg-neutral-50 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-indigo-600 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-200 dark:hover:bg-neutral-800 dark:focus-visible:outline-indigo-400" %>
 
 <div class="mx-auto max-w-6xl pb-12 font-sans sm:px-2 lg:px-8">
+  <aside id="home_policy_update" aria-labelledby="home_policy_update_heading" class="mt-6 rounded-2xl border border-indigo-200 bg-indigo-50 p-5 text-sm text-neutral-700 dark:border-indigo-900 dark:bg-indigo-950/20 dark:text-neutral-300">
+    <h2 id="home_policy_update_heading" class="font-semibold text-neutral-900 dark:text-white">Updated Terms of Service and Privacy Policy</h2>
+    <p class="mt-2">Effective October 23, 2026. The updated policies explain seat requests, recurring offers, private trip chat, route alerts, profile visibility, and data retention. Please review them before using the new features.</p>
+    <div class="mt-2 flex flex-wrap gap-x-6">
+      <%= link_to "Read the Terms of Service", terms_path, id: "home_updated_terms", class: text_link_classes %>
+      <%= link_to "Read the Privacy Policy", privacy_path, id: "home_updated_privacy", class: text_link_classes %>
+    </div>
+  </aside>
+
   <header id="home-introduction" class="mt-8 mb-16 text-center sm:mb-20">
     <span class="inline-block rounded-full bg-indigo-100 px-3 py-1.5 text-xs font-bold uppercase tracking-widest text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300">
       Community Ride Board
