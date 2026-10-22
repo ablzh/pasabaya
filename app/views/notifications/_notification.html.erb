@@ -1,0 +1,58 @@
+<% if notification.route_alert_available? %>
+<div data-route-alert-id="<%= notification.id if notification.event_name == 'route.alert' %>" data-unread-notification="<%= !notification.read? %>" id="<%= dom_id(notification) %>" class="notification relative min-w-0 transition-colors hover:bg-neutral-50 dark:hover:bg-neutral-800/50 <%= 'bg-blue-50/30 dark:bg-blue-950/10' unless notification.read? %>">
+  <%= link_to notification_path(notification), class: "flex min-w-0 items-start gap-3 p-4 rounded-lg focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-blue-600" do %>
+    <% unless notification.read? %>
+      <span class="mt-3 size-2.5 shrink-0 rounded-full bg-blue-600" aria-label="Unread notification"></span>
+    <% end %>
+    <div class="mt-0.5 shrink-0">
+      <% case notification.event_name %>
+      <% when "booking.requested" %>
+        <span class="inline-flex items-center justify-center size-8 rounded-full bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300 text-xs font-bold">REQ</span>
+      <% when "booking.accepted" %>
+        <span class="inline-flex items-center justify-center size-8 rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300 text-xs font-bold">CONF</span>
+      <% when "booking.declined" %>
+        <span class="inline-flex items-center justify-center size-8 rounded-full bg-neutral-200 text-neutral-700 dark:bg-neutral-700 dark:text-neutral-300 text-xs font-bold">DEC</span>
+      <% when "booking.expired" %>
+        <span class="inline-flex items-center justify-center size-8 rounded-full bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300 text-xs font-bold">EXP</span>
+      <% when "route.alert" %>
+        <span class="inline-flex items-center justify-center size-8 rounded-full bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300 text-xs font-bold">RIDE</span>
+      <% when "booking.canceled", "ride.canceled" %>
+        <span class="inline-flex items-center justify-center size-8 rounded-full bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300 text-xs font-bold">CAN</span>
+      <% else %>
+        <span class="inline-flex items-center justify-center size-8 rounded-full bg-neutral-100 text-neutral-700 text-xs font-bold">NOT</span>
+      <% end %>
+    </div>
+    <div class="min-w-0 flex-1 [overflow-wrap:anywhere]">
+      <p class="text-sm text-neutral-900 dark:text-white <%= notification.read? ? "font-medium" : "font-bold" %>">
+        <% case notification.event_name %>
+        <% when "booking.requested" %>
+          <%= notification.actor&.first_name || "A passenger" %> requested a seat on your ride.
+        <% when "booking.accepted" %>
+          Your seat request has been confirmed!
+        <% when "booking.declined" %>
+          Your seat request was declined by the driver.
+        <% when "booking.expired" %>
+          Your seat request expired without confirmation
+        <% when "route.alert" %>
+          <% if notification.notifiable.is_a?(RidePost) %>
+            A driver posted a matching ride from <%= notification_route_label(notification.notifiable) %>.
+          <% else %>
+            A driver posted a ride matching your route alert.
+          <% end %>
+        <% when "booking.canceled" %>
+          <%= notification.actor&.first_name || "A user" %> canceled their seat booking.
+        <% when "ride.canceled" %>
+          A ride you had booked has been canceled by the driver.
+        <% when "incident.resolved" %>
+          <%= notification.summary %>
+        <% else %>
+          <%= notification.event_name.humanize %>
+        <% end %>
+      </p>
+      <p class="text-xs text-neutral-600 dark:text-neutral-400 mt-0.5">
+        <%= time_ago_in_words(notification.created_at || Time.current) %> ago
+      </p>
+    </div>
+  <% end %>
+</div>
+<% end %>

@@ -1,0 +1,13 @@
+Hi <%= @user.first_name %>,
+
+You requested to verify your institutional email address (<%= @membership.institutional_email %>) for the <%= @community.name %> hub on Pasabaya.
+
+To confirm your institutional mailbox and unlock closed-hub carpooling, visit:
+<%= verify_community_membership_url(token: @token) %>
+
+This verification link is valid for 24 hours and can only be used once.
+
+If you didn't request this verification, you can safely ignore this email.
+
+Safe travels,
+Artem, Founder of Pasabaya.app

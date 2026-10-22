@@ -14,8 +14,6 @@ gem "importmap-rails"
 gem "turbo-rails"
 # Hotwire's modest JavaScript framework [https://stimulus.hotwired.dev]
 gem "stimulus-rails"
-# Build JSON APIs with ease [https://github.com/rails/jbuilder]
-gem "jbuilder"
 
 gem "rack-attack", "~> 6.8"
 
@@ -42,10 +40,10 @@ gem "thruster", require: false
 # Use Active Storage variants [https://guides.rubyonrails.org/active_storage_overview.html#transforming-images]
 gem "image_processing", "~> 2.0"
 
-# Add a honeypot field and a "timestamp" check (detecting bots that submit forms faster than a human could).
-gem "invisible_captcha"
-
 gem "cloudflare-rails"
+
+# Honeypot protection for the public registration form.
+gem "invisible_captcha", "~> 2.3"
 
 gem "skylight"
 

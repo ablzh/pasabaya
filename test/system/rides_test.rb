@@ -7,39 +7,29 @@ class RidesTest < ApplicationSystemTestCase
     user = users(:one)
 
     # Sign in
-    visit new_session_path
-    fill_in "Email Address", with: user.email_address
-    fill_in "Password", with: "password"
-    click_button "Sign in"
-    assert_current_path root_path
+    sign_in(user)
 
     # 1. Search for a ride
     click_link "Search"
     assert_current_path ride_posts_path
 
-    select "Offerings", from: "Looking for..."
-    click_button "Search"
+    click_button "Search Rides"
 
-    # Assert search results show the matching ride and not the requesting ride
+    # Assert search results show the matching ride and allow opening a driver offer
     assert_selector "#ride_posts article, #ride_posts [id^='ride_post_']", text: "Manila → Makati"
-    assert_no_text "Looking for a ride back home."
     assert_text "Heading to Manila early morning."
 
     # 2. Open a result
     within "#ride_posts" do
-      click_on "Show", match: :first
+      find("a[aria-label='View ride: Manila to Makati']").click
     end
 
     assert_selector "h1", text: /Manila\s+→\s+Makati/
     assert_text "Heading to Manila early morning."
-    assert_text "3"
-    assert_text "#{user.first_name} #{user.last_name}"
 
     # 3. Create a ride while signed in
     click_on "Add a ride"
     assert_current_path new_ride_post_path
-
-    select "Offering", from: "Ride Intent"
 
     find("#ride_post_origin_id-ts-control").click
     find(".ts-dropdown .option", text: "Makati").click
@@ -47,16 +37,29 @@ class RidesTest < ApplicationSystemTestCase
     find("#ride_post_destination_id-ts-control").click
     find(".ts-dropdown .option", text: "Manila").click
 
-    fill_in "Seats", with: 4
+    fill_in "Available passenger seats", with: 4
     fill_in "Details & Preferences", with: "Carpooling together tomorrow morning, 4 seats open."
 
-    click_button "Publish Post"
+    click_button "Save draft"
 
     # Assert user-visible outcomes of creation
-    assert_text "Ride post was successfully created."
+    assert_text "Ride saved as a private draft."
     assert_selector "h1", text: /Makati\s+→\s+Manila/
-    assert_text "4"
+    draft = user.ride_posts.order(:created_at).last
+    assert draft.draft?
+    assert_equal 4, draft.seats
     assert_text "Carpooling together tomorrow morning, 4 seats open."
     assert_link "Edit"
+    click_link "Edit Post"
+    fill_in "Departure Date", with: 3.days.from_now.to_date
+    choose "Exact Time"
+    fill_in "Departure Time", with: "09:00"
+    click_button "Save draft"
+    assert draft.reload.draft?
+    click_link "Edit Post"
+    assert_no_field "Expected Arrival Time (optional)"
+    click_button "Publish ride"
+    assert_button "Close seat requests"
+    assert draft.reload.active?
   end
 end

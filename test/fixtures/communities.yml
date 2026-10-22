@@ -1,0 +1,11 @@
+one:
+  name: Accenture Philippines
+  slug: accenture-ph
+  domain: accenture.com
+  hub_type: 0
+
+two:
+  name: University of the Philippines
+  slug: university-of-the-philippines
+  domain: up.edu.ph
+  hub_type: 1

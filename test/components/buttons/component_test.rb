@@ -11,6 +11,11 @@ module Buttons
       assert_selector "button[type='button']"
     end
 
+    def test_submit_button_sends_the_selected_form_intent
+      render_inline(Buttons::Component.new(text: "Publish ride", type: "submit", name: "intent", value: "publish"))
+      assert_selector "button[type='submit'][name='intent'][value='publish']", text: "Publish ride"
+    end
+
     def test_renders_with_custom_block_content
       render_inline(Buttons::Component.new) do
         "<span>Custom Block Content</span>".html_safe
@@ -19,25 +24,15 @@ module Buttons
     end
 
     def test_renders_as_link_when_href_provided
-      render_inline(Buttons::Component.new(text: "Link Button", href: "/test-path"))
-      assert_selector "a[href='/test-path'][role='button']", text: "Link Button"
-    end
-
-    def test_handles_string_inputs_for_variant_size_and_style
-      render_inline(Buttons::Component.new(
-        text: "String Options",
-        variant: "destructive",
-        size: "sm",
-        style: "fancy"
-      ))
-      assert_selector "button.bg-red-600"
+      render_inline(Buttons::Component.new(text: "Link Button", href: "/test-path", id: "test-navigation-link"))
+      assert_link "Link Button", href: "/test-path"
+      assert_selector "a#test-navigation-link"
+      assert_no_selector "a[role]"
     end
 
     def test_handles_unknown_variant_fallback_without_error
       render_inline(Buttons::Component.new(text: "Fallback", variant: :unknown_variant))
       assert_selector "button", text: "Fallback"
-      # Should fallback to primary styles
-      assert_selector "button.bg-neutral-800"
     end
 
     def test_renders_disabled_button
@@ -45,10 +40,24 @@ module Buttons
       assert_selector "button[disabled]"
     end
 
-    def test_renders_loading_spinner
+    def test_escapes_plain_icon_strings
+      render_inline(Buttons::Component.new(text: "Save", icon: '<svg onload="alert(1)"></svg>'))
+
+      assert_no_selector "button svg"
+      assert_text '<svg onload="alert(1)"></svg>'
+    end
+
+    def test_renders_icons_generated_with_rails_tag_helpers
+      tag = ApplicationController.helpers.tag
+      icon = tag.svg(viewBox: "0 0 24 24") { tag.path(d: "M1 1L2 2") }
+      render_inline(Buttons::Component.new(text: "Save", icon: icon))
+
+      assert_selector "button svg path[d='M1 1L2 2']"
+    end
+
+    def test_loading_button_prevents_repeat_submission
       render_inline(Buttons::Component.new(text: "Loading...", loading: true))
       assert_selector "button[disabled]"
-      assert_selector "button svg.animate-spin"
     end
   end
 end

@@ -1,0 +1,98 @@
+{
+  "workflow": "performance_baseline",
+  "recorded_at": "2026-10-21T13:02:50Z",
+  "environment": {
+    "ruby": "4.0.5",
+    "rails": "8.1.3.1",
+    "sqlite": "3.53.2",
+    "platform": "arm64-darwin25",
+    "rails_env": "test"
+  },
+  "data": "synthetic only",
+  "measurements": [
+    {
+      "workload": "driver_history",
+      "historical_rides": 200,
+      "bookings": 200,
+      "warmups": 3,
+      "requests": 20,
+      "median_ms": 37.69,
+      "p95_ms": 56.34,
+      "sql_queries": [
+        23,
+        23
+      ],
+      "ride_posts_instantiated": [
+        21,
+        21
+      ],
+      "response_bytes": [
+        46298,
+        46298
+      ]
+    },
+    {
+      "workload": "joined_history",
+      "historical_rides": 200,
+      "bookings": 200,
+      "warmups": 3,
+      "requests": 20,
+      "median_ms": 31.12,
+      "p95_ms": 49.31,
+      "sql_queries": [
+        17,
+        17
+      ],
+      "ride_posts_instantiated": [
+        20,
+        20
+      ],
+      "response_bytes": [
+        111124,
+        111124
+      ]
+    },
+    {
+      "workload": "driver_history",
+      "historical_rides": 2000,
+      "bookings": 2000,
+      "warmups": 3,
+      "requests": 20,
+      "median_ms": 35.85,
+      "p95_ms": 45.62,
+      "sql_queries": [
+        23,
+        23
+      ],
+      "ride_posts_instantiated": [
+        21,
+        21
+      ],
+      "response_bytes": [
+        46359,
+        46359
+      ]
+    },
+    {
+      "workload": "joined_history",
+      "historical_rides": 2000,
+      "bookings": 2000,
+      "warmups": 3,
+      "requests": 20,
+      "median_ms": 32.22,
+      "p95_ms": 52.27,
+      "sql_queries": [
+        17,
+        17
+      ],
+      "ride_posts_instantiated": [
+        20,
+        20
+      ],
+      "response_bytes": [
+        111266,
+        111266
+      ]
+    }
+  ]
+}

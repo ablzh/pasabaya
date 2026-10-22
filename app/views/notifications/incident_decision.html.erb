@@ -1,0 +1,37 @@
+<% turbo_exempts_page_from_cache %>
+<div class="max-w-2xl mx-auto my-8 px-4 sm:px-0 space-y-6">
+  <%= link_to "Back to notifications", notifications_path, class: "text-sm font-semibold text-blue-700 dark:text-blue-300" %>
+
+  <%= render(Card::Component.new(rounded: :"2xl", padding: :lg)) do %>
+    <div class="space-y-4">
+      <h1 class="text-2xl font-bold text-neutral-900 dark:text-white">No-show report decision</h1>
+      <p class="text-neutral-900 dark:text-white"><%= @notification.summary %></p>
+
+      <% if @superseded %>
+        <div role="status">
+          <%= render Alert::Component.new(title: "Decision Update", description: safe_join(["A later decision replaced this update. Current incident outcome: ", tag.strong(@incident.status.humanize), "."]), variant: :warning) %>
+        </div>
+      <% end %>
+
+      <dl class="space-y-3 text-sm">
+        <div>
+          <dt class="font-semibold text-neutral-500">Decision date</dt>
+          <dd class="text-neutral-900 dark:text-white"><%= time_tag @decision.created_at, @decision.created_at.to_fs(:long) %></dd>
+        </div>
+        <div>
+          <dt class="font-semibold text-neutral-500">Trip</dt>
+          <dd class="text-neutral-900 dark:text-white"><%= notification_route_label(@ride) %></dd>
+        </div>
+        <div>
+          <dt class="font-semibold text-neutral-500">Departure</dt>
+          <dd class="text-neutral-900 dark:text-white"><%= (@ride.departure_time || @ride.departure_date)&.to_fs(:long) || "Not recorded" %></dd>
+        </div>
+      </dl>
+
+      <p class="text-sm text-neutral-600 dark:text-neutral-300"><%= @notification.incident_booking_restriction_summary %></p>
+      <% if @superseded %>
+        <p class="text-sm text-neutral-500">This page preserves the outcome at the time of this decision. Check your latest notification for the updated outcome and booking restriction.</p>
+      <% end %>
+    </div>
+  <% end %>
+</div>

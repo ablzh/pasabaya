@@ -65,11 +65,11 @@ module Navbar
     end
 
     def viewport_classes
-      "absolute top-full z-50 mt-2 origin-top transition-all duration-200 ease-out " \
+      "absolute top-full z-50 mt-2 origin-top transition-[opacity,transform] duration-200 ease-out " \
         "data-[state=closed]:pointer-events-none data-[state=closed]:scale-95 data-[state=closed]:opacity-0 " \
         "data-[state=closing]:pointer-events-none data-[state=closing]:scale-95 data-[state=closing]:opacity-0 " \
         "data-[state=open]:pointer-events-auto data-[state=open]:scale-100 data-[state=open]:opacity-100 " \
-        "left-1/2 -translate-x-1/2 sm:left-0 sm:translate-x-0"
+        "left-0"
     end
 
     def indicator_classes

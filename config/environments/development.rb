@@ -2,15 +2,19 @@ require "active_support/core_ext/integer/time"
 
 Rails.application.configure do
   # Settings specified here will take precedence over those in config/application.rb.
-  config.action_mailer.delivery_method = :smtp
-  config.action_mailer.smtp_settings = {
-    user_name: Rails.application.credentials.dig(:mailtrap_sandbox, :user_name),
-    password: Rails.application.credentials.dig(:mailtrap_sandbox, :password),
-    address: "sandbox.smtp.mailtrap.io",
-    host: "sandbox.smtp.mailtrap.io",
-    port: "2525",
-    authentication: :login
-  }
+  config.action_mailer.delivery_method = :file
+  config.action_mailer.file_settings = { location: Rails.root.join("tmp/mails") }
+  if ENV["USE_MAILTRAP_SANDBOX"] == "1"
+    sandbox_credentials = Rails.application.credentials.fetch(:mailtrap_sandbox)
+    config.action_mailer.delivery_method = :smtp
+    config.action_mailer.smtp_settings = {
+      user_name: sandbox_credentials.fetch(:user_name),
+      password: sandbox_credentials.fetch(:password),
+      address: "sandbox.smtp.mailtrap.io",
+      port: 2525,
+      authentication: :login
+    }
+  end
   # Make code changes take effect immediately without server restart.
   config.enable_reloading = true
 
@@ -39,8 +43,8 @@ Rails.application.configure do
   # Store uploaded files on the local file system (see config/storage.yml for options).
   config.active_storage.service = :local
 
-  # Don't care if the mailer can't send.
-  config.action_mailer.raise_delivery_errors = false
+  # Surface local file and opted-in sandbox delivery failures.
+  config.action_mailer.raise_delivery_errors = true
 
   # Make template changes take effect immediately.
   config.action_mailer.perform_caching = false

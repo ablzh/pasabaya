@@ -1,0 +1,10 @@
+<% if notification.route_alert_available? %>
+<div data-route-alert-id="<%= notification.id if notification.event_name == 'route.alert' %>" data-controller="flash-toasts" class="hidden">
+  <div data-flash-toasts-target="item"
+       data-type="<%= notification.toast_type %>"
+       data-message="<%= notification.summary %>"
+       data-action-label="View"
+       data-action-url="<%= Rails.application.routes.url_helpers.notification_path(notification) %>">
+  </div>
+</div>
+<% end %>

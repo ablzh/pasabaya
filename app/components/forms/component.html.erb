@@ -34,8 +34,9 @@
   <% end %>
 
   <% if @error.present? %>
-    <p class="<%= error_classes %>"><%= @error %></p>
-  <% elsif @helper_text.present? %>
-    <p class="<%= helper_text_classes %>"><%= @helper_text %></p>
+    <p id="<%= @id %>_error" class="<%= error_classes %>"><%= @error %></p>
+  <% end %>
+  <% if @helper_text.present? %>
+    <p id="<%= @id %>_hint" class="<%= helper_text_classes %>"><%= @helper_text %></p>
   <% end %>
 </div>

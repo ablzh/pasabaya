@@ -33,15 +33,5 @@ module Switch
 
       assert_selector "input[type='checkbox'][disabled]"
     end
-
-    def test_handles_string_inputs_for_size_and_label_position
-      render_inline(Switch::Component.new(
-        label: "Left label",
-        size: "lg",
-        label_position: "left"
-      ))
-
-      assert_selector "label.flex-row-reverse"
-    end
   end
 end

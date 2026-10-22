@@ -1,0 +1,96 @@
+#!/usr/bin/env ruby
+# Exercise Docker's own ignore rules without sending working-tree secrets to the builder.
+require "fileutils"
+require "open3"
+require "tmpdir"
+
+ROOT = File.expand_path("..", __dir__)
+
+EXCLUDED_FILES = %w[
+  .git/config
+  .bundle/config
+  .env
+  .env.production
+  config/master.key
+  config/operator.key
+  config/credentials/production.key
+  config/secrets/nested/operator.key
+  config/kamal-backup.local.yml
+  config/nested/operator.local.yml
+  .scratch/deployment/notes.md
+  docs/qa/capture.png
+  .agents/settings.json
+  .codex/settings.toml
+  .idea/workspace.xml
+  .vscode/settings.json
+  nested/.vscode/settings.json
+  .ruby-lsp/bundle/Gemfile
+  app/.DS_Store
+  diagnostics/request.log
+  log/production.log
+  tmp/cached-data.json
+  storage/production.sqlite3
+  storage/upload/avatar.png
+  node_modules/dependency/index.js
+  app/assets/builds/tailwind.css
+  public/assets/application.js
+  .github/workflows/ci.yml
+  config/deploy.yml
+  .kamal/secrets
+  .devcontainer/devcontainer.json
+  Dockerfile
+].freeze
+
+REQUIRED_FILES = %w[
+  Gemfile
+  Gemfile.lock
+  app/controllers/application_controller.rb
+  app/javascript/application.js
+  app/assets/tailwind/application.css
+  bin/docker-entrypoint
+  config/application.rb
+  config/database.yml
+  config/credentials.yml.enc
+  config/credentials/production.yml.enc
+  config/litestream.yml
+  db/schema.rb
+  vendor/javascript/turbo.js
+  public/icon.svg
+  docs/operations.md
+  log/.keep
+  tmp/.keep
+  storage/.keep
+  app/assets/builds/.keep
+].freeze
+
+Dir.mktmpdir("pasabaya-docker-context-") do |directory|
+  context = File.join(directory, "context")
+  exported = File.join(directory, "exported")
+  FileUtils.mkdir_p(context)
+  FileUtils.cp(File.join(ROOT, ".dockerignore"), File.join(context, ".dockerignore"))
+
+  (EXCLUDED_FILES + REQUIRED_FILES).each do |path|
+    destination = File.join(context, path)
+    FileUtils.mkdir_p(File.dirname(destination))
+    File.write(destination, "harmless packaging regression sentinel\n")
+  end
+
+  output, error, status = Open3.capture3(
+    { "DOCKER_BUILDKIT" => "1" },
+    "docker", "build", "--network=none", "--file", "-",
+    "--output", "type=local,dest=#{exported}", context,
+    stdin_data: "FROM scratch\nCOPY . /rails/\n"
+  )
+  abort "Docker context regression could not build:\n#{output}#{error}" unless status.success?
+
+  actual = Dir.glob(File.join(exported, "rails", "**", "*"), File::FNM_DOTMATCH)
+    .select { |path| File.file?(path) }
+    .map { |path| path.delete_prefix("#{exported}/rails/") }
+  missing = REQUIRED_FILES - actual
+  unexpected = actual - REQUIRED_FILES
+  unless missing.empty? && unexpected.empty?
+    abort "Docker context regression failed. Missing required files: #{missing.inspect}; unexpected files: #{unexpected.inspect}"
+  end
+
+  puts "Docker context regression passed (#{EXCLUDED_FILES.size} excluded, #{REQUIRED_FILES.size} required files)."
+end

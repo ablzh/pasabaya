@@ -21,6 +21,11 @@ Location:
       enabled: false
 
 RidePost:
+  # The immutable internal occurrence key is protected by the database and
+  # transactional materialization; a per-row validator would repeat lookups.
+  index_ride_posts_on_ride_schedule_id_and_schedule_date:
+    UniqueIndexChecker:
+      enabled: false
   # Location rides associations are retained when locations exist; prevent cascade deletes on shared locations
   destination:
     MissingDependentDestroyChecker:
@@ -29,13 +34,43 @@ RidePost:
     MissingDependentDestroyChecker:
       enabled: false
   # Existing columns without database NOT NULL / CHECK constraints; model validates presence & numericality
-  post_type:
-    ColumnPresenceChecker:
-      enabled: false
   seats:
     ColumnPresenceChecker:
       enabled: false
     NumericalityConstraintChecker:
+      enabled: false
+
+RideSchedule:
+  # Referenced routes, hubs and original drafts are preserved with restrictive
+  # foreign keys rather than cascade deletion of recurring offers and history.
+  origin:
+    MissingDependentDestroyChecker:
+      enabled: false
+  destination:
+    MissingDependentDestroyChecker:
+      enabled: false
+  community:
+    MissingDependentDestroyChecker:
+      enabled: false
+  source_ride_post:
+    MissingDependentDestroyChecker:
+      enabled: false
+
+RouteSubscription:
+  # The checker cannot compare the active-only COALESCE expression index with
+  # the conditional Rails validator. Regression tests enforce nullable filters.
+  index_route_subscriptions_active_uniqueness:
+    UniqueIndexChecker:
+      enabled: false
+  user_id+origin_id+destination_id+departure_date+community_id+ladies_only+status:
+    MissingUniqueIndexChecker:
+      enabled: false
+  # Location subscriptions associations are retained when locations exist; prevent cascade deletes on shared locations
+  destination:
+    MissingDependentDestroyChecker:
+      enabled: false
+  origin:
+    MissingDependentDestroyChecker:
       enabled: false
 
 Subscriber:

@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Administration | Pasabaya</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="robots" content="noindex,nofollow">
+  <%= csrf_meta_tags %>
+  <%= csp_meta_tag %>
+  <%= turbo_exempts_page_from_cache_tag %>
+  <%= turbo_page_requires_reload_tag %>
+  <link rel="icon" href="/icon.svg" type="image/svg+xml">
+  <%= stylesheet_link_tag :app, "data-turbo-track": "reload" %>
+  <%= javascript_importmap_tags %>
+</head>
+<body class="min-h-dvh bg-neutral-50 text-neutral-900 dark:bg-neutral-950 dark:text-neutral-100">
+  <a href="#admin-content" class="sr-only focus:not-sr-only focus:block focus:p-4">Skip to content</a>
+  <header class="border-b border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-900">
+    <div class="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4 px-4 py-4">
+      <%= link_to "Pasabaya administration", admin_root_path, class: "font-semibold no-underline" %>
+      <nav aria-label="Administration" class="flex w-full sm:w-auto min-w-0 items-center gap-3 overflow-x-auto py-1 text-sm">
+        <%= link_to "Incidents", admin_no_show_incidents_path, class: "shrink-0 whitespace-nowrap min-h-11 inline-flex items-center underline underline-offset-4", aria: { current: controller_name == "no_show_incidents" ? "page" : nil } %>
+        <%= link_to "Trip reviews", admin_trip_reviews_path, class: "shrink-0 whitespace-nowrap min-h-11 inline-flex items-center underline underline-offset-4", aria: { current: controller_name == "trip_reviews" ? "page" : nil } %>
+        <%= link_to "Back to Pasabaya", root_path, class: "shrink-0 whitespace-nowrap min-h-11 inline-flex items-center underline underline-offset-4" %>
+        <%= link_to "Sign out", session_path, data: { turbo_method: :delete }, class: "shrink-0 whitespace-nowrap min-h-11 inline-flex items-center underline underline-offset-4" %>
+      </nav>
+    </div>
+  </header>
+  <main id="admin-content" class="mx-auto max-w-6xl px-4 py-8">
+    <% flash.select { |type, _| %w[notice warning info].include?(type.to_s) }.each do |type, message| %>
+      <div role="status" class="mb-6">
+        <%= render Alert::Component.new(title: message, variant: type.to_s == "alert" ? :error : :success) %>
+      </div>
+    <% end %>
+    <div id="request_feedback"></div>
+    <%= render "shared/flash_errors" %>
+    <%= yield %>
+  </main>
+</body>
+</html>

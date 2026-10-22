@@ -1,6 +1,8 @@
 class RegistrationsController < ApplicationController
   allow_unauthenticated_access only: %i[ new create ]
   before_action :redirect_if_authenticated, only: %i[ new create ]
+  before_action :registration_params, only: :create
+  invisible_captcha only: :create, honeypot: :contact_reference, scope: :user
 
   def new
     @user = User.new
@@ -8,11 +10,16 @@ class RegistrationsController < ApplicationController
 
   def create
     @user = User.new(registration_params)
-    if @user.save
+    @user.registration_accepted_at = Time.current
+    @user.registration_policy_version = User::REGISTRATION_POLICY_VERSION
+    if @user.save(context: :registration)
       # Log the user in immediately after creating their account
-      start_new_session_for @user
+      unless start_new_session_for @user
+        redirect_to new_session_path, alert: "This account has been deleted.", status: :see_other
+        return
+      end
       UserMailer.welcome(@user).deliver_later
-      redirect_to root_path, notice: "Welcome to Pasabaya! Your account was successfully created."
+      redirect_to root_path, notice: "Welcome to Pasabaya! Your account was successfully created.", status: :see_other
     else
       render :new, status: :unprocessable_content
     end
@@ -22,11 +29,11 @@ class RegistrationsController < ApplicationController
 
   def redirect_if_authenticated
     if authenticated?
-      redirect_to root_path, alert: "You are already signed in."
+      redirect_to root_path, alert: "You are already signed in.", status: :see_other
     end
   end
 
   def registration_params
-    params.expect(user: [ :first_name, :last_name, :facebook_profile_url, :email_address, :password, :password_confirmation ])
+    params.expect(user: [ :first_name, :last_name, :facebook_profile_url, :email_address, :password, :password_confirmation, :registration_acceptance ])
   end
 end

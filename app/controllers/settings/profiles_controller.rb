@@ -6,8 +6,10 @@ class Settings::ProfilesController < Settings::BaseController
   def update
     @user = Current.user
     if @user.update(profile_params)
-      redirect_to settings_profile_path, notice: "Profile updated successfully."
+      redirect_to settings_profile_path, notice: "Profile updated successfully.", status: :see_other
     else
+      # Discard only the rejected upload so rendering and retrying keep the saved avatar.
+      @user.attachment_changes.delete("avatar") if @user.errors[:avatar].any?
       render :show, status: :unprocessable_content
     end
   end
@@ -15,6 +17,6 @@ class Settings::ProfilesController < Settings::BaseController
   private
 
   def profile_params
-    params.expect(user: [ :first_name, :last_name, :facebook_profile_url, :avatar ])
+    params.expect(user: [ :first_name, :last_name, :facebook_profile_url, :avatar, :gender ])
   end
 end

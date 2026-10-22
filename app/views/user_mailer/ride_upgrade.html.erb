@@ -1,0 +1,51 @@
+<div style="max-width: 600px; margin: 0 auto; font-family: Arial, sans-serif; color: #262626; line-height: 1.6;">
+  <h1 style="font-size: 24px;"><%= @review_heading %></h1>
+  <p>Kumusta, <%= @user.first_name %>!</p>
+  <% if @schedules.any? %>
+  <p>Pasabaya now supports weekly ride schedules and seat requests for individual departures. We have moved your previous ride posts into regular rides so you can keep using them.</p>
+  <p>Please sign in and check the route, days, departure time, passenger seats, and preferences for each ride. We used the schedule in your description where available. Where days were missing, we used Monday–Friday; where a time was missing, we used Flexible. Flexible means any time on a selected day.</p>
+  <% else %>
+    <p>Pasabaya now supports weekly ride schedules and seat requests for individual departures.</p>
+  <% end %>
+
+  <% @schedules.each do |schedule| %>
+    <div style="border: 1px solid #d4d4d4; border-radius: 8px; padding: 16px; margin: 20px 0;">
+      <h2 style="font-size: 18px; margin-top: 0;"><%= schedule.origin&.name %> → <%= schedule.destination&.name %></h2>
+      <p>
+        <%= schedule.schedule_display %> (Philippine time)<br>
+        Passenger seats per departure: <%= schedule.seats %><br>
+        End date: <%= schedule.end_date ? schedule.end_date.to_fs(:long) : "No end date" %><br>
+        Status: <%= schedule.status.humanize %><%= " · Ladies only" if schedule.ladies_only? %>
+      </p>
+      <% if schedule.draft? && schedule.ladies_only? %>
+        <p>This ladies-only ride is a private draft. Ladies-only rides require a female driver profile. If this applies to you, update your gender in <%= link_to "profile settings", settings_profile_url %>, then review and publish your regular ride.</p>
+      <% elsif schedule.draft? %>
+        <p>This ride is a private draft. Review the details and publish it when you are ready.</p>
+      <% end %>
+      <p style="margin-bottom: 0;"><%= link_to "Review this regular ride", edit_ride_schedule_url(schedule) %></p>
+    </div>
+  <% end %>
+
+  <% if @schedules.any? %>
+    <p>We initially set an end date 30 days after the update. Each ride's current end date is shown above. To continue beyond it, extend the date or turn off “Set an end date” and save your schedule. Pause or end any ride you no longer offer.</p>
+  <% end %>
+  <% if @rides.any? %>
+    <p>Your dated ride posts have kept their original dates and times. Upcoming rides are published as one-time offers. Please sign in and check the route, departure, passenger seats, and preferences.</p>
+    <% @rides.each do |ride| %>
+      <div style="border: 1px solid #d4d4d4; border-radius: 8px; padding: 16px; margin: 20px 0;">
+        <h2 style="font-size: 18px; margin-top: 0;"><%= ride.origin&.name %> → <%= ride.destination&.name %></h2>
+        <p>
+          <%= ride.departure_display %> (Philippine time)<br>
+          Passenger seats: <%= ride.seats %><br>
+          Status: <%= ride.status.humanize %><%= " · Ladies only" if ride.ladies_only? %>
+        </p>
+        <% if ride.draft? %>
+          <p>This ride is a private draft. If its departure has passed, choose a new future date. Review the details before publishing.</p>
+        <% end %>
+        <p style="margin-bottom: 0;"><%= link_to "Review this ride", edit_ride_post_url(ride) %></p>
+      </div>
+    <% end %>
+  <% end %>
+  <p>Active rides can receive real seat requests for specific dates. Please review requests promptly and accept only the seats you can offer. If you need to change a departure with requests, review that departure separately: schedule edits preserve its existing conditions.</p>
+  <p>Thank you for sharing the road,<br>Artem, Founder of Pasabaya.app</p>
+</div>
