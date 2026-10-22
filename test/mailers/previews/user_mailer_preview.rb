@@ -11,6 +11,13 @@ class UserMailerPreview < ActionMailer::Preview
     UserMailer.with(user_id: user&.id, schedule_ids: user&.ride_schedules&.ids || []).ride_upgrade
   end
 
+  def dated_ride_upgrade
+    # The reviewed one-time offers share an owner; previews never send mail.
+    rides = RidePost.where(id: [ 18, 19 ])
+    user = rides.first&.user
+    UserMailer.with(user_id: user&.id, ride_ids: rides.where(user_id: user&.id).ids).ride_upgrade
+  end
+
   def welcome
     # Grab the first User from the database, or build a dummy one if your DB is empty
     user = User.first || User.new(

@@ -140,16 +140,22 @@ assume a repository host change applies network restrictions.
 
 ### Legacy ride transition
 
-The October 20, 2026 snapshot has 14 active offers from 11 drivers. The one-off
-`script/legacy_rides_upgrade.rb` imports those reviewed records into 16 ordinary
-regular schedules, including the two return directions explicitly described by
-drivers. It is not invoked by schema migrations, requests, or recurring jobs.
+The October 22, 2026 snapshot has 16 offers from 12 drivers. The one-off
+`script/legacy_rides_upgrade.rb` imports the original 14 reviewed records into 16
+ordinary regular schedules, including two return directions explicitly described
+by drivers. Recent posts 18 and 19 remain one-time rides: Laguna → Batangas on
+October 23 at 05:00, and Muntinlupa → Cavite on October 25 at 12:00, Philippine time.
+Their five passenger seats and full descriptions are retained. Future departures
+are published; if deployment happens after a departure, that offer remains a
+private draft for its driver to reschedule. No recurrence is inferred for these
+dated offers. The import is not invoked by schema migrations, requests, or recurring jobs.
 
 Run the import in the deployment environment after `db:migrate`, before reopening
 the updated app to users. Keep the original database backup. Source IDs, owners,
 routes, seats, creation timestamps and description hashes must still match the
 reviewed snapshot. Changed or already-booked sources stop the entire import for
-inspection. New posts and genuine private drafts outside this manifest stay private.
+inspection. Dates and clock times of the two one-time offers must also match.
+New posts and genuine private drafts outside this manifest stay private.
 
 ```bash
 bin/rails legacy_rides:import
@@ -183,13 +189,15 @@ bin/rails legacy_rides:notify
 EXECUTE=1 bin/rails legacy_rides:notify
 ```
 
-The snapshot has 48 registered users, including 11 owners and 37 members without
+The snapshot has 50 registered users, including 12 owners and 38 members without
 ride posts. The campaign records these account IDs at import and sends each
 eligible account exactly one of two messages:
 
-- The 11 owners receive `UserMailer#ride_upgrade`, listing only their imported
-  schedules, review links, current end dates and the defaults to check.
-- The other 37 members receive `UserMailer#platform_update`, explaining ride
+- The 12 owners receive `UserMailer#ride_upgrade`, listing only their imported
+  schedules or dated rides and review links. Schedule owners also see current end
+  dates and the defaults to check; the dated-offer owner sees the original departures
+  without recurring defaults or a 30-day deadline.
+- The other 38 members receive `UserMailer#platform_update`, explaining ride
   search, seat requests, driver acceptance, private trip chat, and how to publish
   one-time or regular offers. It makes no claim about transferred rides or expiry.
 
@@ -201,18 +209,28 @@ message instead of also receiving the general announcement.
 
 Preview HTML and text at `/rails/mailers/user_mailer/ride_upgrade` and
 `/rails/mailers/user_mailer/platform_update` in development with imported schedules.
+The dated-offer variant is at `/rails/mailers/user_mailer/dated_ride_upgrade`.
 Neither import command sends emails. Notification preview sends nothing. The
 explicit send command delivers synchronously and records each success.
 
 Both commands use `storage/legacy_rides_upgrade.json` on the persistent volume,
 with an exclusive lock. Preserve this receipt with the database. Repeating the
-import retains schedules, return directions, driver edits and original expiry;
-repeating notification skips recorded successful sends. If receipt validation
-fails, stop and inspect the receipt and database together. If a transaction failed
-after writing the receipt but before commit, move that receipt aside only after
-verifying no schedules committed and no reviewed source was converted;
-then retry. If SMTP accepted a message but the process stopped before recording
-success, confirm delivery with the provider before retrying that recipient.
+import retains schedules, return directions, driver edits and original expiry.
+An earlier receipt containing only the original schedules is extended with posts
+18 and 19 and the two additional account IDs; existing notification successes are
+retained. Run import again before notification when upgrading an earlier receipt;
+repeating notification skips recorded successful sends. Deleted one-time offers
+are not recreated and are omitted from personalized messages. If an owner has no
+remaining imported offers, they receive the general update instead.
+
+The import writes its receipt only after the database transaction succeeds. A
+failed transaction leaves an earlier receipt intact, so the import can be retried.
+If the database committed but saving the receipt failed or the process stopped
+before saving it, stop and reconcile the receipt with the committed records before
+retrying; do not clear the receipt or republish sources blindly. Receipt/database
+identity mismatches also require inspection. If SMTP accepted a message but the
+process stopped before recording success, confirm delivery with the provider
+before retrying that recipient.
 
 ## Backups and operational checks
 

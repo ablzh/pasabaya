@@ -100,4 +100,13 @@ bundle exec archspec check
 
 Read [architecture](docs/architecture.md), [operations and moderation](docs/operations.md), [account deletion recovery](docs/account-deletion-recovery.md), [security reporting](SECURITY.md), and [contribution guidelines](CONTRIBUTING.md).
 
+## The Philosophy
+
+As the industry moves toward microservices and division of responsibility, Rails proves that a single developer, with the right monolith at their disposal, can compete on their own with entire product teams.
+
+This project demonstrates that a single developer can build a fully functional SaaS product—from frontend and backend to deployment on a production server and ongoing maintenance—while balancing it with a full-time job and university studies.
+
+In creating Pasabaya.app, I was inspired by **The One Person Framework** philosophy. The source code is open, and the codebase is designed to be as simple as possible, making it easy for others to understand, contribute, and suggest improvements.
+
+
 Licensed under the [MIT License](LICENSE).

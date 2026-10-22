@@ -31,7 +31,8 @@ SQLite transaction. Account deletion and audience eligibility loss stop future
 generation; deletion also scrubs schedule notes. Normal draft conversion requires
 the owner and a source without bookings, preserving any original departure date.
 Schema migrations do not publish drafts. The separately invoked, reviewed legacy
-import uses the October 20 snapshot and explicit rollout defaults; see
+import uses the October 22 snapshot and explicit rollout defaults, preserving
+the two recent dated offers as one-time rides; see
 [the transition procedure](operations.md#legacy-ride-transition).
 
 `Booking` is one passenger's seat request. Pending requests do not consume seats.
