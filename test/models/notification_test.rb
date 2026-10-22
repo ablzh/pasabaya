@@ -10,6 +10,22 @@ class NotificationTest < ActiveSupport::TestCase
     @ride = ride_posts(:one)
   end
 
+  { "raised" => ->(*) { raise IOError, "Queue unavailable" }, "aborted" => false }.each do |failure, result|
+    test "#{failure} enqueue retains a pending notification for recovery" do
+      notification = nil
+      with_stubbed_method(NotificationDeliveryJob, :perform_later, result) do
+        notification = Notification.create!(recipient: @user, notifiable: @ride,
+          event_name: "ride.canceled", delivery_key: "enqueue_failure_#{failure}")
+      end
+
+      assert notification.persisted?
+      assert notification.reload.pending?
+      assert_enqueued_with(job: NotificationDeliveryJob, args: [ notification.id ]) { NotificationRecoveryJob.perform_now }
+      assert_emails(1) { NotificationDeliveryJob.perform_now(notification.id) }
+      assert notification.reload.delivered?
+    end
+  end
+
   test "deliver! sends email and updates status to delivered" do
     notification = Notification.create!(
       recipient: @user,

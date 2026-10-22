@@ -10,13 +10,14 @@
 # Ignore all environment files.
 /.env*
 
-# Ignore all default key files.
-/config/master.key
-/config/credentials/*.key
+# Encrypted credentials belong in the image; decryption keys and local overrides do not.
+/config/**/*.key
+/config/**/*.local.yml
 
 # Ignore all logfiles and tempfiles.
 /log/*
 /tmp/*
+**/*.log
 !/log/.keep
 !/tmp/.keep
 
@@ -43,7 +44,15 @@
 /config/deploy*.yml
 /.kamal
 
-# Ignore development files
+# Ignore local research, QA captures, and development metadata.
+/.scratch
+/docs/qa
+/.agents
+/.codex
+**/.idea
+**/.vscode
+**/.ruby-lsp
+**/.DS_Store
 /.devcontainer
 
 # Ignore Docker-related files

@@ -1,4 +1,16 @@
 module ApplicationHelper
+  def public_analytics_page
+    return if hotwire_native_app?
+
+    case [ controller_path, action_name ]
+    when [ "pages", "home" ] then { path: root_path, title: "Home" }
+    when [ "pages", "privacy" ] then { path: privacy_path, title: "Privacy Policy" }
+    when [ "pages", "terms" ] then { path: terms_path, title: "Terms of Service" }
+    when [ "ride_posts", "index" ] then { path: ride_posts_path, title: "Ride Search" }
+    when [ "communities", "index" ] then { path: communities_path, title: "Hubs" }
+    end
+  end
+
   def current_unread_chats_count
     @current_unread_chats_count ||= Current.user.unread_chats_count
   end

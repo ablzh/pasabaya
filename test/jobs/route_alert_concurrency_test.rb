@@ -11,6 +11,7 @@ class RouteAlertConcurrencyTest < ActiveSupport::TestCase
     fixture_booking_attributes = fixture_booking.attributes
     fixture_booking.destroy!
     subscription = RouteSubscription.create!(user: passenger, origin_id: ride.origin_id, destination_id: ride.destination_id)
+    dispatch = ride.ride_post_dispatches.create!(operation: :route_alert)
     ready = Queue.new
     start = Queue.new
     results = Queue.new
@@ -51,6 +52,7 @@ class RouteAlertConcurrencyTest < ActiveSupport::TestCase
     assert_equal [ :completed, :completed ], outcomes, outcomes.map(&:to_s).join("\n")
     assert subscription.reload.fulfilled?
     assert_equal 1, Notification.where(route_subscription: subscription).count
+    assert_not RidePostDispatch.exists?(dispatch.id)
     assert_no_difference("Notification.count") { RouteAlertJob.perform_now(ride.id) }
   ensure
     2.times { start << true } if start

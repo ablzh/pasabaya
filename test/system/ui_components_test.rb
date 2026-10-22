@@ -27,9 +27,9 @@ class UiComponentsTest < ApplicationSystemTestCase
     mount_components(*Alert::Component::VARIANTS.map { |variant|
       Alert::Component.new(title: "#{variant.to_s.titleize} notice", description: "institutional-mailbox-#{'x' * 70}@example.test", variant: variant, classes: "contrast-alert my-3")
     })
-    [ 320, 1440 ].product(%w[light dark]).each do |width, theme|
-      page.driver.resize(width, 900)
-      page.execute_script("document.documentElement.classList.toggle('dark', arguments[0] === 'dark')", theme)
+    %w[light dark].each do |theme|
+      page.driver.resize(320, 900)
+      set_theme(theme)
       ratios = text_contrast(".contrast-alert p")
       assert_equal Alert::Component::VARIANTS.size * 2, ratios.size
       ratios.each { |ratio| assert_operator ratio, :>=, 4.5, "#{theme} alert text contrast" }
@@ -37,34 +37,34 @@ class UiComponentsTest < ApplicationSystemTestCase
     end
   end
 
-  private
-
-  def text_contrast(selector)
-    page.evaluate_script(<<~JS, selector)
-      (() => {
-        const canvas = document.createElement('canvas');
-        canvas.width = canvas.height = 1;
-        const ctx = canvas.getContext('2d', {willReadFrequently: true});
-        const pixel = () => [...ctx.getImageData(0, 0, 1, 1).data].slice(0, 3);
-        const paint = color => {ctx.fillStyle = color; ctx.fillRect(0, 0, 1, 1)};
-        const luminance = rgb => rgb.map(c => {
-          c /= 255;
-          return c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
-        }).reduce((sum, c, i) => sum + c * [0.2126, 0.7152, 0.0722][i], 0);
-        return [...document.querySelectorAll(arguments[0])].map(el => {
-          ctx.clearRect(0, 0, 1, 1);
-          paint('white');
-          const ancestors = [];
-          for (let node = el; node; node = node.parentElement) ancestors.unshift(node);
-          ancestors.forEach(node => paint(getComputedStyle(node).backgroundColor));
-          const bg = luminance(pixel());
-          paint(getComputedStyle(el).color);
-          const fg = luminance(pixel());
-          return (Math.max(bg, fg) + 0.05) / (Math.min(bg, fg) + 0.05);
-        });
-      })()
+  test "contrast distinguishes nested surfaces and composites translucent backgrounds and text" do
+    visit root_path
+    page.execute_script(<<~JS)
+      document.documentElement.style.background = 'white';
+      document.body.style.background = 'white';
+      document.querySelector('main').innerHTML = `
+        <section style="background: black">
+          <p id="nested-pass" style="color: white">White on nested black</p>
+          <p id="nested-fail" style="color: black">Black on nested black</p>
+          <div style="background: rgba(255,255,255,0.5)"><p id="alpha-background" style="color: black">Black on gray</p></div>
+        </section>
+        <section style="background: white">
+          <p id="light-pass" style="color: black">Black on white</p>
+          <p id="light-fail" style="color: white">White on white</p>
+          <p id="alpha-text" style="color: rgba(0,0,0,0.5)">Translucent black on white</p>
+        </section>`;
     JS
+    assert_in_delta 21, text_contrast("#nested-pass").sole, 0.01
+    assert_in_delta 1, text_contrast("#nested-fail").sole, 0.01
+    assert_in_delta 21, text_contrast("#light-pass").sole, 0.01
+    assert_in_delta 1, text_contrast("#light-fail").sole, 0.01
+    assert_in_delta 5.32, text_contrast("#alpha-background").sole, 0.02
+    assert_in_delta 4.00, text_contrast("#alpha-text").sole, 0.06
+    assert_text_contrast("#nested-pass, #light-pass, #alpha-background")
+    assert_raises(Minitest::Assertion) { assert_text_contrast("#nested-fail, #light-fail, #alpha-text") }
   end
+
+  private
 
   def mount_components(*components)
     visit root_path

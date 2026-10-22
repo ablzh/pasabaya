@@ -18,6 +18,7 @@ module Buttons
     # @param icon_only [Boolean] Whether this is an icon-only button (no text)
     # @param full_width [Boolean] Whether button should take full width
     # @param href [String] If provided, renders as an anchor tag instead of button
+    # @param id [String] Stable DOM identifier for the control
     # @param type [String] Button type attribute: "button" (default), "submit", "reset"
     # @param name [String] Optional field name submitted by the clicked button
     # @param value [String] Optional value submitted by the clicked button
@@ -36,6 +37,7 @@ module Buttons
       icon_only: false,
       full_width: false,
       href: nil,
+      id: nil,
       target: nil,
       type: "button",
       name: nil,
@@ -60,6 +62,7 @@ module Buttons
       @icon_only = icon_only
       @full_width = full_width
       @href = href
+      @id = id
       @target = target
       @type = type
       @name = name
@@ -85,13 +88,13 @@ module Buttons
 
     def tag_attributes
       attrs = {
+        id: @id,
         class: button_classes,
         data: @data
       }
 
       if @href.present?
         attrs[:href] = @href
-        attrs[:role] = "button"
         attrs[:target] = @target if @target.present?
         attrs[:rel] = "noopener noreferrer" if @target == "_blank"
         attrs[:'aria-disabled'] = @disabled if @disabled

@@ -107,6 +107,48 @@ class RidePostsControllerTest < ActionDispatch::IntegrationTest
     assert_select "#ride_post_#{ride.id}", count: 0
   end
 
+  test "search and popular routes exclude restricted drivers and recover after a freeze expires" do
+    travel_to Time.current.change(usec: 0) do
+      sign_out
+      origin = @ride_post.origin
+      destination = @ride_post.destination
+      route_path = route_rides_path(origin_slug: origin.slug, destination_slug: destination.slug)
+
+      get ride_posts_url(origin_id: origin.id)
+      assert_select "#ride_post_#{@ride_post.id}"
+      get root_url
+      assert_select "a[href='#{route_path}']"
+
+      @user.update!(banned_at: Time.current)
+      get ride_posts_url(origin_id: origin.id)
+      assert_select "#ride_post_#{@ride_post.id}", count: 0
+      get root_url
+      assert_select "a[href='#{route_path}']", count: 0
+
+      @user.update!(banned_at: nil, booking_freeze_until: 10.minutes.from_now)
+      get ride_posts_url(origin_id: origin.id)
+      assert_select "#ride_post_#{@ride_post.id}", count: 0
+
+      travel 11.minutes
+      get ride_posts_url(origin_id: origin.id)
+      assert_select "#ride_post_#{@ride_post.id}"
+      get root_url
+      assert_select "a[href='#{route_path}']"
+    end
+  end
+
+  test "restricted drivers cannot accept pending requests but can still decline them" do
+    booking = bookings(:one)
+    @user.update!(booking_freeze_until: 1.hour.from_now)
+
+    get ride_post_url(@ride_post)
+
+    assert_response :success
+    assert_select "form[action='#{accept_booking_path(booking)}'] button[disabled]"
+    assert_select "form[action='#{decline_booking_path(booking)}'] button:not([disabled])"
+    assert booking.reload.pending?
+  end
+
   setup do
     @user = users(:one)
     @ride_post = ride_posts(:one)

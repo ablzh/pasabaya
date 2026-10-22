@@ -132,6 +132,11 @@ class User < ApplicationRecord
     banned_at.blank? && !booking_frozen? && !deleted?
   end
 
+  scope :eligible_for_offering, -> {
+    where(banned_at: nil, deleted_at: nil)
+      .where("users.booking_freeze_until IS NULL OR users.booking_freeze_until <= ?", Time.current)
+  }
+
   def verified_community_memberships
     community_memberships.active_verified
   end

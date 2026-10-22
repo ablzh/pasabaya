@@ -152,6 +152,10 @@ class Notification < ApplicationRecord
   end
 
   def enqueue_delivery
-    NotificationDeliveryJob.perform_later(id)
+    job = NotificationDeliveryJob.perform_later(id)
+    raise ActiveJob::EnqueueError, "Notification was not enqueued" unless job
+  rescue StandardError => error
+    # The committed pending row remains available to NotificationRecoveryJob.
+    Rails.logger.error("Notification enqueue failed id=#{id} error=#{error.class.name}")
   end
 end

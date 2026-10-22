@@ -25,4 +25,28 @@ class CommunitiesControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select "h1", @community.name
   end
+
+  test "hub discovery excludes restricted drivers and expired driver memberships before the sweep" do
+    hub = communities(:one)
+    ride = ride_posts(:one)
+    viewer = users(:two)
+    viewer.community_memberships.create!(community: hub, institutional_email: "viewer@accenture.com",
+      verified_at: Time.current, expires_at: 1.year.from_now)
+    ride.update!(visibility: :hub_only, community: hub)
+    sign_in_as(viewer)
+
+    get community_url(hub)
+    assert_response :success
+    assert_select "#ride_post_#{ride.id}"
+
+    @user.update!(booking_freeze_until: 1.hour.from_now)
+    get community_url(hub)
+    assert_select "#ride_post_#{ride.id}", count: 0
+
+    @user.update!(booking_freeze_until: nil)
+    community_memberships(:one).update!(expires_at: 1.second.ago)
+    get community_url(hub)
+    assert_select "#ride_post_#{ride.id}", count: 0
+    assert ride.reload.active?, "Listing eligibility must not depend on the membership revocation sweep"
+  end
 end

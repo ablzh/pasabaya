@@ -1,0 +1,65 @@
+<div id="trip-chat-pane" data-trip-view-target="chatPane" class="<%= 'hidden' unless chat_active %>" role="tabpanel" aria-labelledby="trip-chat-tab">
+  <div id="<%= dom_id(ride_post, :chat) %>" class="trip-chat bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-3xl shadow-sm overflow-hidden flex flex-col" data-controller="chat-scroll" data-chat-scroll-messaging-closes-at-value="<%= ride_post.chat_messaging_closes_at&.iso8601(6) %>" data-chat-scroll-history-unavailable-at-value="<%= ride_post.chat_history_unavailable_at&.iso8601(6) %>" data-chat-scroll-writable-value="<%= chat_writable %>" data-chat-scroll-current-user-id-value="<%= Current.user.id %>" data-chat-scroll-read-url-value="<%= ride_post_chat_reads_path(ride_post) %>">
+    <%# Chat Header %>
+    <div class="chat-header px-3 py-3 sm:px-5 sm:py-4 border-b border-neutral-100 dark:border-neutral-800 flex items-center justify-between bg-neutral-50/60 dark:bg-neutral-800/40">
+      <div class="flex items-center gap-3 min-w-0 flex-1">
+        <button id="<%= dom_id(ride_post, :back_to_trip) %>" type="button" aria-label="Back to trip" data-action="trip-view#showDetails" class="md:hidden min-h-11 min-w-11 shrink-0 p-2 rounded-xl text-neutral-700 dark:text-neutral-200 focus-visible:outline-2">
+          <span aria-hidden="true">&larr;</span>
+        </button>
+        <div class="min-w-0">
+          <h2 class="truncate text-sm sm:text-base font-bold text-neutral-900 dark:text-white leading-tight">
+            <%= ride_post.origin&.name || "Choose origin" %> &rarr; <%= ride_post.destination&.name || "Choose destination" %>
+          </h2>
+          <p class="truncate text-xs text-neutral-500 mt-0.5">
+            Driver: <%= ride_post.user.first_name %> <%= ride_post.user.last_name %> &bull; <%= pluralize(participant_count, "participant") %>
+          </p>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <% if ride_post.canceled? %>
+          <%= render Badge::Component.new(text: "Canceled", variant: :red, size: :md, pill: true) %>
+        <% end %>
+        <% if chat_writable %>
+          <span data-chat-scroll-target="status" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300">
+            <span class="size-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+            <%= ride_post.canceled? ? "Coordination" : "Live" %>
+          </span>
+        <% else %>
+          <%= render Badge::Component.new(text: "Read-only", variant: :neutral, size: :md, pill: true) %>
+        <% end %>
+      </div>
+    </div>
+
+    <%= render "ride_posts/chat_deadlines", ride_post: ride_post %>
+
+    <%# Messages Stream %>
+    <% if chat_unlocked %>
+      <%= turbo_stream_from [ride_post, :chat], channel: "RideChatChannel" %>
+
+      <div id="chat_messages_list"
+           data-chat-scroll-target="messages"
+           role="log" aria-label="Trip messages" aria-live="polite"
+           class="flex-1 min-h-0 min-w-0 p-4 sm:p-6 overflow-y-auto space-y-3.5 bg-neutral-50/30 dark:bg-neutral-900/40">
+          <%= render partial: "chat_messages/chat_message", collection: chat_messages %>
+          <div id="chat_messages_empty" class="flex flex-col items-center justify-center h-full text-center py-12 text-neutral-400 dark:text-neutral-500 space-y-2">
+            <p class="text-sm font-medium">No messages yet.</p>
+            <p class="text-xs max-w-xs">Coordinate pickup spots, landmarks, or estimated arrival times with your travel companions!</p>
+          </div>
+      </div>
+
+      <%# Sticky Bottom Form %>
+      <%= render "chat_messages/form", ride_post: ride_post, chat_message: chat_message %>
+    <% else %>
+      <div class="flex-1 flex flex-col items-center justify-center p-8 text-center text-neutral-500 space-y-3">
+        <div class="p-3 rounded-full bg-neutral-100 dark:bg-neutral-800 text-neutral-400">
+          <svg class="size-8" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
+          </svg>
+        </div>
+        <p class="text-sm font-semibold text-neutral-900 dark:text-white">Chat is Currently Locked</p>
+        <p class="text-xs text-neutral-500 max-w-sm">Private coordination chat will automatically unlock once the driver accepts the first passenger booking.</p>
+      </div>
+    <% end %>
+  </div>
+</div>

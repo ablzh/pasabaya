@@ -40,6 +40,22 @@ it. A passenger can have only one pending or accepted request for a ride. Accept
 must recheck capacity, departure, participant eligibility, and ride visibility
 inside the database transaction. The driver's own account cannot book its offer.
 
+New admission uses the same availability decision for request creation and
+acceptance. Discovery queries apply the equivalent driver, capacity, closure,
+departure and schedule rules before audience visibility. Driver eligibility
+requires an undeleted, unbanned account without a current booking freeze, plus
+current membership and gender eligibility for the offer's audience. Scheduled
+departures also require their series to remain eligible. Full rides can still
+appear on profiles, and management, accepted participation and history remain
+accessible under their existing authorization rules.
+
+An ordinary offer can admit new requests again when its driver's restriction is
+revoked or expires, provided its other conditions still allow admission.
+Automatically paused regular schedules require explicit resume; expired requests
+are not revived. Bans and booking freezes do not cancel accepted bookings or alter
+their inventory or history. Existing chat rules still apply: a booking freeze permits
+coordination, while a banned account itself cannot use chat.
+
 Booking creation records its notification in the same primary database transaction.
 Save validations reload the account and trip state to reject objects loaded before
 cancellation or account deletion. SQLite's immediate write transactions serialize
@@ -92,12 +108,59 @@ boundaries. Database indexes and constraints complement model validations.
 Concurrency and authorization regression tests establish the important behavior;
 an architecture lint passing does not prove every domain rule.
 
+Shared UI components preserve native control semantics: destinations render as
+links, while actions render as buttons. Card provides page panels and ride-card
+sections; Badge presents status and audience labels. Toast controls have stable
+IDs and retain focus across page-refresh morphing. Keyboard focus expands the
+stack, focus and pointer interaction pause dismissal, and incoming notifications
+preserve the toast being used. Ordinary navigation clears the transient stack.
+
+Trip detail controllers prepare pending and accepted bookings, the viewer's
+current booking, chat state and participant counts before rendering the focused
+driver-request, passenger-action and chat partials. Passenger avatar attachments
+and blobs are preloaded together for the driver's active requests. Other viewers
+fetch only their own current request; guests load no bookings. Chat eligibility
+and counts query the relevant historical participation without loading inactive
+request history. Presentation does not construct booking collections.
+
+Profile and My Trips collections are filtered in SQL and paginated independently
+at 20 records, ordered by creation time and ID descending. Only the selected tab's
+collections are rendered; tab totals use database counts. Converted drafts stay
+excluded even when their schedule is on another page, and regular occurrences
+enter driver history only when they have bookings. The query regression uses 205
+historical rides with tied timestamps: the first page instantiates at most 21 rides
+(20 historical records and one current offer), then verifies all 11 pages without
+missing or repeated records. A separate 45-trip booking history retains canceled
+acceptance records. These bounds describe loaded history records; aggregate counts
+and overdue-request maintenance still perform database work.
+
 ## Persistence and recovery
 
 Production uses separate SQLite databases for application data, jobs, cache, and
 Cable, with local upload storage on a persistent volume. Transactional changes to
 application data cannot assume an atomic commit across these databases; recovery
 jobs repair eligible work that was not delivered.
+
+Route-relevant ride changes record a `RidePostDispatch` in the same primary
+transaction as the ride. Its after-commit enqueue is an optimization; a recurring
+sweep retries every outstanding dispatch. Matching snapshots the work IDs before
+reloading the ride and rechecking subscription eligibility, so completion cannot
+erase work from a concurrent edit. Subscription fulfillment and its uniquely
+keyed notification remain atomic and safe to repeat.
+
+Cancellation records a dispatch with the driver and accepted participant IDs in
+the transaction that cancels the ride and bookings and creates notifications.
+Its worker refreshes the trip conversation and those participants' chat lists
+after the outermost commit, including cancellations nested in schedule changes
+or account deletion. Queue and Cable failures retain the work for retry without
+undoing cancellation. Successful work is removed; outstanding rows retain failure
+counts, error class names and failure times. Refresh publication is at least once,
+so a partial publication can repeat refreshes safely.
+
+Notification enqueue failures leave committed pending rows for the notification
+recovery sweep and do not fail the originating request. A missed chat-retention
+enqueue is logged; the recurring purge and startup scrub still remove expired
+conversations, and access deadlines apply independently of physical cleanup.
 
 Account deletion records intent in a separate persistent journal before primary
 data is anonymized. Restoration reapplies that journal and scrubs expired data

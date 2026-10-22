@@ -13,6 +13,7 @@ export default class extends Controller {
     this.toasts = [];
     this.heights = [];
     this.expanded = false;
+    this.pointerInside = false;
     this.autoDismissTimers = {};
     this.pendingTimers = new Set();
     this.animationFrames = new Set();
@@ -57,28 +58,31 @@ export default class extends Controller {
     event.stopPropagation();
 
     const toast = {
-      id: `toast-${Math.random().toString(16).slice(2)}`,
+      id: `toast-${crypto.randomUUID()}`,
       mounted: false,
       removed: false,
       message: event.detail.message,
       description: event.detail.description,
       type: event.detail.type,
       action: event.detail.action,
+      remainingDuration: this.autoDismissDurationValue,
     };
 
     // Add toast at the beginning of the array (newest first)
     this.toasts.unshift(toast);
+    this.renderToast(toast);
 
     // Enforce toast limit synchronously to prevent race conditions
     const activeToasts = this.toasts.filter((t) => !t.removed);
     if (activeToasts.length > this.limitValue) {
-      const oldestActiveToast = activeToasts[activeToasts.length - 1];
-      if (oldestActiveToast && !oldestActiveToast.removed) {
+      const oldestActiveToast = activeToasts.slice().reverse().find((candidate) => {
+        const element = document.getElementById(candidate.id);
+        return !element.contains(document.activeElement) && !element.matches(":hover");
+      });
+      if (oldestActiveToast) {
         this.removeToast(oldestActiveToast.id, true);
       }
     }
-
-    this.renderToast(toast);
   }
 
   clearAllToasts() {
@@ -90,6 +94,8 @@ export default class extends Controller {
     this.toasts = [];
     this.heights = [];
     this.expanded = false;
+    this.pointerInside = false;
+    this.returnFocusTarget = null;
     this.containerTarget.replaceChildren();
     this.containerTarget.style.height = "0px";
   }
@@ -112,11 +118,45 @@ export default class extends Controller {
   }
 
   handleMouseEnter() {
-    this.setExpandedState(true);
+    this.pointerInside = true;
+    this.updateInteractionState();
   }
 
   handleMouseLeave() {
-    this.setExpandedState(false);
+    this.pointerInside = false;
+    this.updateInteractionState();
+  }
+
+  handleFocusIn(event) {
+    if (!this.element.contains(event.relatedTarget)) {
+      this.returnFocusTarget = event.relatedTarget;
+    }
+    this.updateInteractionState();
+  }
+
+  handleFocusOut(event) {
+    if (!this.element.contains(event.relatedTarget)) {
+      this.nextFrame(() => this.updateInteractionState());
+    }
+  }
+
+  preserve(event) {
+    if (event.target === this.element && this.toasts.some((toast) => !toast.removed)) {
+      event.preventDefault();
+    }
+  }
+
+  interacting() {
+    return this.pointerInside || this.element.contains(document.activeElement);
+  }
+
+  updateInteractionState() {
+    const interacting = this.interacting();
+    this.setExpandedState(interacting);
+    this.toasts.filter((toast) => !toast.removed).forEach((toast) => {
+      if (interacting) this.pauseAutoDismiss(toast);
+      else this.scheduleAutoDismiss(toast.id);
+    });
   }
 
   renderToast(toast) {
@@ -127,7 +167,7 @@ export default class extends Controller {
     // Measure height after a short delay to ensure rendering is complete
     this.nextFrame(() => {
       const toastEl = document.getElementById(toast.id);
-      if (toastEl) {
+      if (toastEl && !toast.removed) {
         const height = toastEl.getBoundingClientRect().height;
 
         // Add height to the beginning of heights array
@@ -158,19 +198,24 @@ export default class extends Controller {
   }
 
   scheduleAutoDismiss(toastId) {
-    if (!this.autoDismissTimers) {
-      this.autoDismissTimers = {};
-    }
+    const toast = this.toasts.find((candidate) => candidate.id === toastId);
+    if (!toast || toast.removed || this.interacting() || this.autoDismissTimers[toastId]) return;
 
-    if (this.autoDismissTimers[toastId]) {
-      clearTimeout(this.autoDismissTimers[toastId]);
-      this.pendingTimers.delete(this.autoDismissTimers[toastId]);
-    }
-
+    toast.dismissStartedAt = performance.now();
     this.autoDismissTimers[toastId] = this.later(() => {
-      this.removeToast(toastId);
       delete this.autoDismissTimers[toastId];
-    }, this.autoDismissDurationValue);
+      this.removeToast(toastId);
+    }, toast.remainingDuration);
+  }
+
+  pauseAutoDismiss(toast) {
+    const timer = this.autoDismissTimers[toast.id];
+    if (!timer) return;
+
+    clearTimeout(timer);
+    this.pendingTimers.delete(timer);
+    delete this.autoDismissTimers[toast.id];
+    toast.remainingDuration = Math.max(0, toast.remainingDuration - (performance.now() - toast.dismissStartedAt));
   }
 
   createToastElement(toast) {
@@ -205,6 +250,7 @@ export default class extends Controller {
     // Add close button
     const closeBtn = document.createElement("button");
     closeBtn.type = "button";
+    closeBtn.id = `${toast.id}-dismiss`;
     closeBtn.setAttribute("aria-label", "Dismiss notification");
     closeBtn.className = `absolute right-0 p-1.5 mr-2.5 text-neutral-400 duration-100 ease-in-out rounded-full cursor-pointer hover:bg-neutral-50 dark:hover:bg-neutral-700 hover:text-neutral-500 dark:hover:text-neutral-300 ${
       !toast.description && !toast.action ? "top-1/2 -translate-y-1/2" : "top-0 mt-2.5"
@@ -256,7 +302,7 @@ export default class extends Controller {
     const actionsHTML = toast.action
       ? `<div></div>
         <div class="flex justify-end items-center gap-2 mt-0.5">
-          <button type="button" data-action-type="primary" class="flex items-center justify-center gap-1.5 rounded-lg border border-neutral-400/30 bg-neutral-800 px-2 py-1.5 text-xs font-medium whitespace-nowrap text-white shadow-sm transition-all duration-100 ease-in-out select-none hover:bg-neutral-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-600 dark:bg-white dark:text-neutral-800 dark:hover:bg-neutral-100 dark:focus-visible:outline-neutral-200">${this.escapeHTML(toast.action.label)}</button>
+          <button id="${toast.id}-action" type="button" data-action-type="primary" class="flex items-center justify-center gap-1.5 rounded-lg border border-neutral-400/30 bg-neutral-800 px-2 py-1.5 text-xs font-medium whitespace-nowrap text-white shadow-sm transition-all duration-100 ease-in-out select-none hover:bg-neutral-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-600 dark:bg-white dark:text-neutral-800 dark:hover:bg-neutral-100 dark:focus-visible:outline-neutral-200">${this.escapeHTML(toast.action.label)}</button>
         </div>`
       : "";
 
@@ -299,11 +345,19 @@ export default class extends Controller {
       toastEl.dataset.overflow = "true";
     }
 
-    // Clear auto-dismiss timer
-    if (this.autoDismissTimers && this.autoDismissTimers[id]) {
-      clearTimeout(this.autoDismissTimers[id]);
-      this.pendingTimers.delete(this.autoDismissTimers[id]);
-      delete this.autoDismissTimers[id];
+    this.pauseAutoDismiss(toast);
+
+    // Explicit dismissal keeps the keyboard in the remaining notifications,
+    // or returns it to the control preceding the stack when it becomes empty.
+    if (toastEl.contains(document.activeElement)) {
+      const nextToast = this.toasts.find((candidate) => !candidate.removed);
+      const nextControl = nextToast && document.getElementById(nextToast.id)?.querySelector("button");
+      if (nextControl) nextControl.focus({ preventScroll: true });
+      else {
+        this.returnFocusTarget?.focus({ preventScroll: true });
+        if (toastEl.contains(document.activeElement)) document.activeElement.blur();
+      }
+      this.updateInteractionState();
     }
 
     // Wait for exit animation to complete
@@ -452,16 +506,18 @@ export default class extends Controller {
   handleGlobalPointerMove(event) {
     if (!this.hasContainerTarget) return;
     if (!this.toasts.some((toast) => !toast.removed)) {
-      this.setExpandedState(false);
+      this.pointerInside = false;
+      this.updateInteractionState();
       return;
     }
 
-    const inHoverZone = this.isInHoverZone(event.clientX, event.clientY);
-    this.setExpandedState(inHoverZone);
+    this.pointerInside = this.isInHoverZone(event.clientX, event.clientY);
+    this.updateInteractionState();
   }
 
   handleGlobalPointerLeave() {
-    this.setExpandedState(false);
+    this.pointerInside = false;
+    this.updateInteractionState();
   }
 
   isInHoverZone(clientX, clientY) {

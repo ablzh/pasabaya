@@ -19,6 +19,7 @@
       <% if Current.user == ride_post.user %>
         <%= render Buttons::Component.new(
                    text: "Edit",
+                   id: dom_id(ride_post, :edit_listing),
                    classes: "relative z-20",
                    href: edit_ride_post_path(ride_post),
                    variant: :secondary,

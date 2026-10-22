@@ -10,6 +10,9 @@
 #     schedule: at 5am every day
 
 production:
+  recover_ride_post_dispatches:
+    class: RidePostDispatchRecoveryJob
+    schedule: every 5 minutes
   refresh_regular_departures:
     class: RideScheduleRefreshJob
     schedule: every hour at minute 5

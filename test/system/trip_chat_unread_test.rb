@@ -3,6 +3,8 @@
 require "application_system_test_case"
 
 class TripChatUnreadTest < ApplicationSystemTestCase
+  include ActiveJob::TestHelper
+
   setup do
     @ride = ride_posts(:one)
     @driver = @ride.user
@@ -141,7 +143,9 @@ class TripChatUnreadTest < ApplicationSystemTestCase
         }));
       }, { once: true });
     JS
-    RidePosts::CancelService.call(@ride, actor: @driver)
+    perform_enqueued_jobs(only: RideCancellationBroadcastJob) do
+      RidePosts::CancelService.call(@ride, actor: @driver)
+    end
     assert_selector "[data-chat-scroll-target='coordinationNotice'][role='status']"
     assert_selector "html[data-chat-refresh-complete='true']", visible: :all
 

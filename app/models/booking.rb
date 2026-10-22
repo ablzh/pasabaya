@@ -49,6 +49,7 @@ class Booking < ApplicationRecord
     # serializes eligibility checks with trip cancellation and account deletion.
     self.passenger = User.lock.find_by(id: passenger_id) if passenger_id
     self.ride_post = RidePost.lock.find_by(id: ride_post_id) if ride_post_id
+    ride_post&.user&.reload
   end
 
   def check_destruction_allowed

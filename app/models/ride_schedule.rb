@@ -1,4 +1,6 @@
 class RideSchedule < ApplicationRecord
+  include DriverEligibility
+
   BOOKING_DAYS = 14
   WEEKDAYS = [ [ "Monday", 1 ], [ "Tuesday", 2 ], [ "Wednesday", 3 ], [ "Thursday", 4 ], [ "Friday", 5 ], [ "Saturday", 6 ], [ "Sunday", 0 ] ].freeze
   OFFER_FIELDS = %w[user_id origin_id destination_id community_id seats notes visibility ladies_only departure_choice].freeze
@@ -50,10 +52,6 @@ class RideSchedule < ApplicationRecord
     return viewer&.id == user_id if draft?
 
     RidePost.new(attributes.slice(*OFFER_FIELDS)).authorized_viewer?(viewer)
-  end
-
-  def driver_eligible?
-    RidePost.new(attributes.slice(*OFFER_FIELDS).merge(user: user)).driver_eligible?
   end
 
   def accepts_requests_for?(date)

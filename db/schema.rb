@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_10_120000) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_21_114953) do
   create_table "account_deletion_tombstones", force: :cascade do |t|
     t.string "anonymized_email", null: false
     t.bigint "avatar_blob_id"
@@ -178,6 +178,18 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_10_120000) do
     t.index ["route_subscription_id"], name: "index_notifications_on_route_subscription_id"
   end
 
+  create_table "ride_post_dispatches", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.datetime "failed_at"
+    t.integer "failure_count", default: 0, null: false
+    t.string "last_error"
+    t.string "operation", null: false
+    t.json "recipient_ids", default: [], null: false
+    t.integer "ride_post_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["ride_post_id"], name: "index_ride_post_dispatches_on_ride_post_id"
+  end
+
   create_table "ride_posts", force: :cascade do |t|
     t.datetime "canceled_at"
     t.integer "community_id"
@@ -331,6 +343,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_10_120000) do
   add_foreign_key "notifications", "route_subscriptions", on_delete: :nullify
   add_foreign_key "notifications", "users", column: "actor_id", on_delete: :nullify
   add_foreign_key "notifications", "users", column: "recipient_id"
+  add_foreign_key "ride_post_dispatches", "ride_posts", on_delete: :cascade
   add_foreign_key "ride_posts", "communities", on_delete: :nullify
   add_foreign_key "ride_posts", "locations", column: "destination_id"
   add_foreign_key "ride_posts", "locations", column: "origin_id"

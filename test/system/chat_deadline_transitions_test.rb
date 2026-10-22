@@ -1,6 +1,8 @@
 require "application_system_test_case"
 
 class ChatDeadlineTransitionsTest < ApplicationSystemTestCase
+  include ActiveJob::TestHelper
+
   setup do
     @ride = ride_posts(:one)
     bookings(:one).update_columns(status: Booking.statuses[:accepted], accepted_at: 1.hour.ago)
@@ -41,7 +43,9 @@ class ChatDeadlineTransitionsTest < ApplicationSystemTestCase
   test "open chat receives revised cancellation state and deadlines" do
     visit ride_post_path(@ride, tab: "chat")
     assert_selector "#chat_message_form input"
-    RidePosts::CancelService.call(@ride, actor: users(:one))
+    perform_enqueued_jobs(only: RideCancellationBroadcastJob) do
+      RidePosts::CancelService.call(@ride, actor: users(:one))
+    end
     assert_selector "[data-chat-scroll-target='coordinationNotice'][role='status']"
     find(".chat-deadlines summary").click
     assert_selector ".chat-deadlines time[datetime='#{@ride.reload.chat_messaging_closes_at.iso8601}']"

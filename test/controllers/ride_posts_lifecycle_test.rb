@@ -1,6 +1,45 @@
 require "test_helper"
 
 class RidePostsLifecycleTest < ActionDispatch::IntegrationTest
+  test "queue outage does not report a committed cancellation as failed" do
+    ride = ride_posts(:one)
+    booking = bookings(:one)
+    Bookings::AcceptService.call(booking, actor: ride.user)
+    message = ride.chat_messages.create!(user: booking.passenger, body: "Retained until the cancellation deadline")
+    remaining = ride.reload.remaining_seats
+    sign_in_as(ride.user)
+    unavailable = ->(*) { raise IOError, "Queue unavailable" }
+    adapter = ActiveJob::Base.queue_adapter
+
+    with_stubbed_method(adapter, :enqueue, unavailable) do
+      with_stubbed_method(adapter, :enqueue_at, unavailable) do
+        assert_difference("Notification.count", 1) { patch cancel_ride_post_url(ride) }
+      end
+    end
+
+    assert_response :see_other
+    assert_redirected_to ride_post_url(ride)
+    assert ride.reload.canceled?
+    assert booking.reload.canceled?
+    assert booking.accepted_at
+    assert_equal remaining, ride.remaining_seats
+    notification = Notification.find_by!(delivery_key: "ride_canceled:#{ride.id}:booking:#{booking.id}")
+    assert notification.pending?
+    dispatch = ride.ride_post_dispatches.cancellation_refresh.sole
+    assert_equal "IOError", dispatch.last_error
+
+    NotificationRecoveryJob.perform_now
+    NotificationDeliveryJob.perform_now(notification.id)
+    RideCancellationBroadcastJob.perform_now(dispatch.id)
+    assert notification.reload.delivered?
+    assert_not RidePostDispatch.exists?(dispatch.id)
+    assert_no_difference("Notification.count") { patch cancel_ride_post_url(ride) }
+    assert_response :see_other
+    assert ChatMessage.exists?(message.id)
+    travel_to(ride.reload.chat_history_unavailable_at + 1.second) { PurgeOldChatMessagesJob.perform_now }
+    assert_not ChatMessage.exists?(message.id)
+  end
+
   test "draft intent cannot reopen a canceled or completed ride" do
     ride = ride_posts(:one)
     sign_in_as(ride.user)

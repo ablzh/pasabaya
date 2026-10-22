@@ -9,6 +9,8 @@ A community carpool board for the Philippines. Drivers publish ride offers, pass
 
 This is a Rails monolith maintained by one developer. Its engineering focus is explicit booking transitions, seat inventory under concurrent requests, authorized realtime delivery, and account deletion that survives database restoration. See [the architecture overview](docs/architecture.md) for the domain rules and implementation boundaries.
 
+For a focused code tour, read the [engineering walkthrough](docs/engineering-walkthrough.md) and [measured local restore and performance evidence](docs/verification-evidence.md).
+
 ## Features
 
 - Search routes and publish dated driver offers, including approximate departure times.
@@ -36,7 +38,7 @@ SQLite and local uploads keep this single-server deployment small. They also req
 
 ## Run locally
 
-Prerequisites: Ruby 4.0.5 (see [.ruby-version](.ruby-version) and [mise.toml](mise.toml)), Git, SQLite, and libvips. Full CI also needs Node/npm for Herb and Chrome/Chromium for Cuprite. macOS, Linux, and Windows through WSL2 are supported development environments.
+Prerequisites: Ruby 4.0.5 (see [.ruby-version](.ruby-version) and [mise.toml](mise.toml)), Git, SQLite, and libvips. Full CI also needs Node/npm for Herb, Chrome/Chromium for Cuprite, and a running Docker daemon with BuildKit for the packaging check. macOS, Linux, and Windows through WSL2 are supported development environments.
 
 ```bash
 git clone https://github.com/ablzh/pasabaya.git
@@ -74,7 +76,7 @@ Run the complete gate before submitting a change:
 bin/ci
 ```
 
-It checks Ruby style, ERB views and components, database consistency, the boundaries in `Archspec.rb`, known dependency vulnerabilities, application tests, browser flows, and seed loading. Seed regression tests cover replay idempotency and production exclusion of demo data. Security audits need network access; report any check that cannot run.
+It checks Ruby style, ERB views and components, database consistency, the boundaries in `Archspec.rb`, Docker context exclusions, known dependency vulnerabilities, application tests, browser flows, and seed loading. The packaging check builds an isolated scratch image from harmless sentinel files without uploading working-tree data. Seed regression tests cover replay idempotency and production exclusion of demo data. Security audits need network access; report any check that cannot run.
 
 GitHub Actions runs this same `bin/ci`; the checks are defined in `config/ci.rb`. Both runs prepare the test database and default to four test workers (`PARALLEL_WORKERS` overrides this). Browser and operating system differences can still expose bugs, and a passing run cannot rule out timing-dependent failures. Reproduce a failure with the test path and `--seed` printed in its output.
 
