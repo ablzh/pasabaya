@@ -128,6 +128,36 @@ class MobileTripChatTest < ApplicationSystemTestCase
     end
   end
 
+  test "reading older messages between disclosure toggles overrides pending scroll restoration" do
+    Prosopite.pause do
+      20.times { |index| @ride.chat_messages.create!(user: @ride.user, body: "History #{index}. " * 10) }
+    end
+    page.driver.resize(390, 420)
+    visit ride_post_path(@ride, tab: "chat")
+    assert_at_bottom
+
+    # Read older history and close the disclosure before the opening toggle's
+    # next animation frame. Neither toggle may later restore the old bottom.
+    page.evaluate_async_script <<~JS
+      const done = arguments[0];
+      const details = document.querySelector('.chat-deadline-policy');
+      const summary = details.querySelector('summary');
+      const messages = document.querySelector('#chat_messages_list');
+      details.addEventListener('toggle', () => {
+        messages.scrollTop = 0;
+        messages.dispatchEvent(new Event('scroll'));
+        details.addEventListener('toggle', () => {
+          requestAnimationFrame(() => requestAnimationFrame(done));
+        }, {once: true});
+        summary.click();
+      }, {once: true});
+      summary.click();
+    JS
+
+    assert_no_selector ".chat-deadline-policy[open]"
+    assert_in_delta 0, page.evaluate_script("document.querySelector('#chat_messages_list').scrollTop"), 1
+  end
+
   private
 
   def assert_readable_message_area
