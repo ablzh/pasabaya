@@ -17,7 +17,8 @@ class LegacyRidesUpgradeTest < ActiveSupport::TestCase
     entries = @sources.map do |source|
       [ source.id, source.user_id, source.origin_id, source.destination_id, source.seats, source.created_at.utc.strftime("%Y-%m-%d %H:%M:%S.%6N"), Digest::SHA256.hexdigest(source.notes) ]
     end
-    @upgrade = LegacyRidesUpgrade.new(receipt_path: @receipt_path, output: StringIO.new, sources: entries, audience_ids: [ @driver.id, users(:two).id ])
+    @entries = entries
+    @upgrade = LegacyRidesUpgrade.new(receipt_path: @receipt_path, output: StringIO.new, sources: entries, single_sources: [], audience_ids: [ @driver.id, users(:two).id ])
   end
 
   teardown do
@@ -133,5 +134,157 @@ class LegacyRidesUpgradeTest < ActiveSupport::TestCase
     assert_no_difference "ActionMailer::Base.deliveries.size" do
       @upgrade.notify(dry_run: false)
     end
+  end
+
+  test "an expanded import publishes dated offers once and preserves the earlier import and campaign receipt" do
+    @upgrade.import(dry_run: false)
+    original_receipt = JSON.parse(File.read(@receipt_path))
+    original_receipt["notified"][@driver.id.to_s] = Time.current.iso8601
+    File.write(@receipt_path, JSON.generate(original_receipt))
+    schedule = RideSchedule.find_by!(source_ride_post_id: 9)
+    schedule.update!(notes: "Driver's updated description", end_date: Date.current + 10)
+    single = users(:two).ride_posts.create!(status: :draft, origin: locations(:two), destination: locations(:one), seats: 5,
+      departure_date: Date.new(2026, 10, 25), departure_choice: :exact_time, exact_departure_time: "12:00", notes: "Pickup and dropoff")
+    entry = [ single.id, single.user_id, single.origin_id, single.destination_id, single.seats,
+      single.created_at.utc.strftime("%Y-%m-%d %H:%M:%S.%6N"), Digest::SHA256.hexdigest(single.notes), "2026-10-25", "12:00" ]
+    expanded = LegacyRidesUpgrade.new(receipt_path: @receipt_path, output: StringIO.new, sources: @entries,
+      single_sources: [ entry ], audience_ids: [ @driver.id, single.user_id ])
+
+    assert_raises(LegacyRidesUpgrade::Error) { expanded.notify }
+    assert_no_difference [ "RideSchedule.count", "RidePost.count", "ActionMailer::Base.deliveries.size" ] do
+      expanded.import
+    end
+    assert single.reload.draft?
+    assert_equal original_receipt, JSON.parse(File.read(@receipt_path))
+
+    assert_no_difference [ "RideSchedule.count", "RidePost.count" ] do
+      expanded.import(dry_run: false)
+      expanded.import(dry_run: false)
+    end
+    assert single.reload.active?
+    assert_nil single.ride_schedule_id
+    assert_equal 5, single.remaining_seats
+    assert_equal Date.new(2026, 10, 25), single.departure_date
+    assert_equal "12:00", single.departure_time.strftime("%H:%M")
+    assert_equal "Driver's updated description", schedule.reload.notes
+    assert_equal Date.current + 10, schedule.end_date
+    receipt = JSON.parse(File.read(@receipt_path))
+    assert_equal original_receipt.fetch("groups"), receipt.fetch("groups")
+    assert_equal original_receipt.fetch("notified"), receipt.fetch("notified")
+    assert_difference "ActionMailer::Base.deliveries.size", 1 do
+      expanded.notify(dry_run: false)
+      expanded.notify(dry_run: false)
+    end
+    mail = ActionMailer::Base.deliveries.last
+    assert_equal [ single.user.email_address ], mail.to
+    assert_includes mail.text_part.body.decoded, "12:00"
+    assert_includes mail.text_part.body.decoded, Rails.application.routes.url_helpers.edit_ride_post_path(single)
+    assert_not_includes mail.text_part.body.decoded, "30 days"
+
+    single.update!(status: :canceled)
+    expanded.import(dry_run: false)
+    assert single.reload.canceled?
+  end
+
+  test "dated offer date and time must still match review" do
+    single = @driver.ride_posts.create!(status: :draft, origin: locations(:one), destination: locations(:two), seats: 5,
+      departure_date: Date.new(2026, 10, 23), departure_choice: :exact_time, exact_departure_time: "05:00")
+    entry = [ single.id, single.user_id, single.origin_id, single.destination_id, single.seats,
+      single.created_at.utc.strftime("%Y-%m-%d %H:%M:%S.%6N"), Digest::SHA256.hexdigest(single.notes.to_s), "2026-10-23", "05:00" ]
+    upgrade = LegacyRidesUpgrade.new(receipt_path: @receipt_path, output: StringIO.new, sources: @entries, single_sources: [ entry ])
+    single.update!(departure_date: Date.new(2026, 10, 24), exact_departure_time: "05:00")
+
+    assert_no_difference [ "RideSchedule.count", "RidePost.count" ] do
+      assert_raises(LegacyRidesUpgrade::Error) { upgrade.import(dry_run: false) }
+    end
+    assert single.reload.draft?
+    assert_not File.exist?(@receipt_path)
+  end
+
+  test "a failed transaction leaves the earlier receipt intact and a retry publishes the dated ride" do
+    @upgrade.import(dry_run: false)
+    original_receipt = File.read(@receipt_path)
+    expanded, single = dated_upgrade
+    transaction = RideSchedule.method(:transaction)
+    RideSchedule.define_singleton_method(:transaction) do |*arguments, &block|
+      transaction.call(*arguments) do
+        block.call
+        raise "Simulated failure before commit"
+      end
+    end
+    begin
+      assert_raises(RuntimeError) { expanded.import(dry_run: false) }
+    ensure
+      RideSchedule.define_singleton_method(:transaction, transaction)
+    end
+
+    assert single.reload.draft?
+    assert_equal original_receipt, File.read(@receipt_path)
+    assert_raises(LegacyRidesUpgrade::Error) { expanded.notify }
+    assert_no_difference [ "RideSchedule.count", "RidePost.count", "ActionMailer::Base.deliveries.size" ] do
+      expanded.import(dry_run: false)
+      expanded.import(dry_run: false)
+    end
+    assert single.reload.active?
+  end
+
+  test "deleting an imported dated ride preserves deletion and falls back to the general campaign" do
+    @upgrade.import(dry_run: false)
+    expanded, single = dated_upgrade
+    expanded.import(dry_run: false)
+    single.destroy!
+
+    assert_no_difference [ "RideSchedule.count", "RidePost.count" ] do
+      expanded.import(dry_run: false)
+    end
+    assert_not RidePost.exists?(single.id)
+    assert_difference "ActionMailer::Base.deliveries.size", 2 do
+      expanded.notify(dry_run: false)
+      expanded.notify(dry_run: false)
+    end
+    mails = ActionMailer::Base.deliveries.last(2).index_by { |mail| mail.to.first }
+    assert_includes mails.fetch(@driver.email_address).subject, "regular rides"
+    assert_includes mails.fetch(single.user.email_address).subject, "updated"
+  end
+
+  test "a receipt write failure after publication stops retries without overwriting driver changes" do
+    @upgrade.import(dry_run: false)
+    original_receipt = File.read(@receipt_path)
+    expanded, single = dated_upgrade
+    with_stubbed_method(expanded, :write_receipt, ->(*) { raise Errno::ENOSPC }) do
+      assert_raises(Errno::ENOSPC) { expanded.import(dry_run: false) }
+    end
+
+    assert single.reload.active?
+    assert_equal original_receipt, File.read(@receipt_path)
+    single.update!(status: :canceled, notes: "Driver canceled after publication")
+    assert_raises(LegacyRidesUpgrade::Error) { expanded.import(dry_run: false) }
+    assert single.reload.canceled?
+    assert_equal "Driver canceled after publication", single.notes
+    assert_no_difference "ActionMailer::Base.deliveries.size" do
+      assert_raises(LegacyRidesUpgrade::Error) { expanded.notify(dry_run: false) }
+    end
+  end
+
+  test "a surviving dated ride from another source is not accepted as an imported ride" do
+    @upgrade.import(dry_run: false)
+    expanded, single = dated_upgrade
+    expanded.import(dry_run: false)
+    single.update_columns(user_id: @driver.id)
+
+    assert_no_difference "ActionMailer::Base.deliveries.size" do
+      assert_raises(LegacyRidesUpgrade::Error) { expanded.notify(dry_run: false) }
+    end
+  end
+
+  private
+
+  def dated_upgrade
+    single = users(:two).ride_posts.create!(status: :draft, origin: locations(:two), destination: locations(:one), seats: 5,
+      departure_date: Date.new(2026, 10, 25), departure_choice: :exact_time, exact_departure_time: "12:00", notes: "Pickup and dropoff")
+    entry = [ single.id, single.user_id, single.origin_id, single.destination_id, single.seats,
+      single.created_at.utc.strftime("%Y-%m-%d %H:%M:%S.%6N"), Digest::SHA256.hexdigest(single.notes), "2026-10-25", "12:00" ]
+    [ LegacyRidesUpgrade.new(receipt_path: @receipt_path, output: StringIO.new, sources: @entries,
+      single_sources: [ entry ], audience_ids: [ @driver.id, single.user_id ]), single ]
   end
 end

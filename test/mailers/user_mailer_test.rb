@@ -59,6 +59,23 @@ class UserMailerTest < ActionMailer::TestCase
     end
   end
 
+  test "dated ride upgrade includes only owned rides and no recurring defaults or expiry" do
+    ride = @driver.ride_posts.create!(origin: @origin, destination: @destination, seats: 5,
+      departure_date: Date.current + 2, departure_choice: :exact_time, exact_departure_time: "12:00")
+    other_ride = ride_posts(:two)
+    mail = UserMailer.with(user_id: @driver.id, ride_ids: [ ride.id, other_ride.id ]).ride_upgrade
+
+    assert_equal [ @driver.email_address ], mail.to
+    [ mail.html_part, mail.text_part ].each do |part|
+      body = part.body.decoded
+      assert_includes body, ride.departure_display
+      assert_includes body, edit_ride_post_url(ride, **UserMailer.default_url_options)
+      assert_not_includes body, edit_ride_post_url(other_ride, **UserMailer.default_url_options)
+      assert_not_includes body, "30 days"
+      assert_not_includes body, "Monday–Friday"
+    end
+  end
+
   test "queued ride upgrade is not sent to a deleted account" do
     UserMailer.with(user_id: @driver.id, schedule_ids: [ @schedule.id ]).ride_upgrade.deliver_later
     @driver.update_column(:deleted_at, Time.current)

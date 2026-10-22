@@ -18,10 +18,12 @@ class UserMailer < ApplicationMailer
     @user = User.find_by(id: params.fetch(:user_id))
     return if @user.nil? || @user.deleted? || @user.banned_at.present?
 
-    @schedules = @user.ride_schedules.where(id: params.fetch(:schedule_ids)).includes(:origin, :destination).order(:id).to_a
-    return if @schedules.empty?
+    @schedules = @user.ride_schedules.where(id: params.fetch(:schedule_ids, [])).includes(:origin, :destination).order(:id).to_a
+    @rides = @user.ride_posts.where(id: params.fetch(:ride_ids, [])).includes(:origin, :destination).order(:id).to_a
+    return if @schedules.empty? && @rides.empty?
 
-    mail(to: @user.email_address, subject: "Pasabaya has new features — please review your regular rides")
+    @review_heading = @schedules.any? ? "Please review your regular rides" : "Please review your rides"
+    mail(to: @user.email_address, subject: "Pasabaya has new features — #{@review_heading.downcase}")
   end
 
   def platform_update

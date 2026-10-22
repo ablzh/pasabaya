@@ -1,5 +1,5 @@
 namespace :legacy_rides do
-  desc "Preview the reviewed October 20 ride import (EXECUTE=1 applies it)"
+  desc "Preview the reviewed October 22 ride import (EXECUTE=1 applies it)"
   task import: :environment do
     require Rails.root.join("script/legacy_rides_upgrade")
     LegacyRidesUpgrade.new.import(dry_run: ENV["EXECUTE"] != "1")

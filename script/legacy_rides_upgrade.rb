@@ -3,7 +3,7 @@ require_relative "../config/environment"
 require "digest"
 require "json"
 
-# Reviewed against the October 20 production snapshot. This is an operational
+# Reviewed against the October 22 production snapshot. This is an operational
 # import, never part of request handling or automatic database migrations.
 class LegacyRidesUpgrade
   class Error < StandardError; end
@@ -32,26 +32,31 @@ class LegacyRidesUpgrade
   TIMES = { 3 => "06:30", 4 => "22:30", 6 => "00:30", 7 => "17:30", 8 => "12:30", 9 => "05:00", 12 => "04:45", 13 => "05:00", 15 => "06:30", 16 => "19:00", 17 => "06:30" }.freeze
   DAYS = { 4 => [ 1, 3, 4 ], 6 => [ 2, 4, 5 ], 13 => [ 5 ], 17 => (0..6).to_a }.freeze
   RETURN_TIMES = { 9 => "17:30", 17 => "17:00" }.freeze
-  AUDIENCE_IDS = (1..48).to_a.freeze
+  # These recent offers have real future dates, rather than recurring intent.
+  # The final two fields pin their Philippine departure date and clock time.
+  SINGLE_SOURCES = [
+    [ 18, 50, 52, 50, 5, "2026-10-21 21:41:40.936218", "4b35ac7fdd64ba37ba153bd1f769bffec08190f2bd0a5f71a8bd0f07e89a5b83", "2026-10-23", "05:00" ],
+    [ 19, 50, 10, 51, 5, "2026-10-21 21:47:41.862418", "8c0d3b670fb837ff70542b4bce008ed61954ad3236cfde98038b22a5da4f7847", "2026-10-25", "12:00" ]
+  ].freeze
+  AUDIENCE_IDS = (1..50).to_a.freeze
 
-  def initialize(receipt_path: Rails.root.join("storage/legacy_rides_upgrade.json"), output: $stdout, sources: SOURCES, audience_ids: AUDIENCE_IDS)
+  def initialize(receipt_path: Rails.root.join("storage/legacy_rides_upgrade.json"), output: $stdout, sources: SOURCES, single_sources: SINGLE_SOURCES, audience_ids: AUDIENCE_IDS)
     @receipt_path = Pathname(receipt_path)
     @output = output
     @sources = sources
+    @single_sources = single_sources
     @audience_ids = audience_ids
   end
 
   def import(dry_run: true)
     with_lock do
-      if @receipt_path.exist?
-        receipt = read_receipt
-        @output.puts "Already imported #{receipt.fetch('groups').values.flatten.size} schedules; dates and driver edits preserved."
-        return receipt
-      end
-
-      receipt = { "groups" => {}, "audience_ids" => @audience_ids, "notified" => {} }
+      receipt = @receipt_path.exist? ? read_receipt(complete: false) : { "groups" => {}, "audience_ids" => [], "notified" => {} }
+      receipt["rides"] ||= []
+      receipt["audience_ids"] |= @audience_ids
       RideSchedule.transaction do
         @sources.each do |entry|
+          next if receipt.fetch("groups").key?(entry.first.to_s)
+
           source = checked_source(entry)
           apply_profile_choice(source) if source.id == 8
           schedules = [ create_schedule(source, end_date: Date.current + 30.days) ]
@@ -61,11 +66,26 @@ class LegacyRidesUpgrade
           receipt["groups"][source.id.to_s] = schedules.map(&:id)
           schedules.each { |schedule| @output.puts "Source ##{source.id}: #{schedule.origin.name} -> #{schedule.destination.name}; #{schedule.schedule_display}; #{schedule.status}; ends #{schedule.end_date}" }
         end
-        raise ActiveRecord::Rollback if dry_run
+        @single_sources.each do |entry|
+          next if receipt.fetch("rides").include?(entry.first)
 
-        write_receipt(receipt)
+          source = checked_source(entry)
+          date, clock = entry.last(2)
+          unless source.departure_date&.iso8601 == date && source.departure_time&.strftime("%H:%M") == clock
+            raise Error, "Source ##{source.id} departure changed since review; inspect it before importing."
+          end
+          departure = Time.zone.parse("#{date} #{clock}")
+          if departure.future?
+            source.update!(status: :active, departure_choice: :exact_time, exact_departure_time: clock, remaining_seats: source.seats)
+          end
+          receipt["rides"] << source.id
+          @output.puts "Source ##{source.id}: #{source.origin.name} -> #{source.destination.name}; #{date} #{clock} Philippine time; #{source.status}#{' (departure has passed; driver must choose a new date)' unless departure.future?}"
+        end
+        raise ActiveRecord::Rollback if dry_run
       end
-      @output.puts dry_run ? "Preview only: no schedules saved or emails sent. Set EXECUTE=1 to import." : "Imported. Review the site, then run legacy_rides:notify after deployment."
+      # Only acknowledge publication once its database transaction succeeds.
+      write_receipt(receipt) unless dry_run
+      @output.puts dry_run ? "Preview only: no rides saved or emails sent. Set EXECUTE=1 to import." : "Imported; previously imported rides and driver edits preserved. Review the site, then run legacy_rides:notify after deployment."
       receipt
     end
   end
@@ -74,6 +94,7 @@ class LegacyRidesUpgrade
     with_lock do
       receipt = read_receipt
       schedules = RideSchedule.where(id: receipt.fetch("groups").values.flatten).group_by(&:user_id)
+      rides = RidePost.where(id: receipt.fetch("rides", [])).group_by(&:user_id)
       receipt.fetch("audience_ids").each do |user_id|
         next if receipt.fetch("notified").key?(user_id.to_s)
 
@@ -81,12 +102,14 @@ class LegacyRidesUpgrade
         next unless user && !user.deleted? && user.banned_at.nil?
 
         offers = schedules.fetch(user_id, [])
-        audience = offers.any? ? "ride owner (#{offers.size} schedules)" : "account update"
+        dated_offers = rides.fetch(user_id, [])
+        owner = offers.any? || dated_offers.any?
+        audience = owner ? "ride owner (#{offers.size} schedules, #{dated_offers.size} dated rides)" : "account update"
         @output.puts "#{dry_run ? 'Would email' : 'Emailing'} user ##{user_id}: #{audience}."
         next if dry_run
 
-        delivery = if offers.any?
-          UserMailer.with(user_id: user_id, schedule_ids: offers.map(&:id)).ride_upgrade
+        delivery = if owner
+          UserMailer.with(user_id: user_id, schedule_ids: offers.map(&:id), ride_ids: dated_offers.map(&:id)).ride_upgrade
         else
           UserMailer.with(user_id: user_id).platform_update
         end
@@ -145,14 +168,27 @@ class LegacyRidesUpgrade
     end
   end
 
-  def read_receipt
+  def read_receipt(complete: true)
     raise Error, "Run legacy_rides:import first; the saved receipt is required." unless @receipt_path.exist?
 
     receipt = JSON.parse(@receipt_path.read)
     groups = receipt.fetch("groups")
     linked = RideSchedule.where(source_ride_post_id: groups.keys).pluck(:source_ride_post_id, :id).to_h
-    valid = groups.keys.sort == @sources.map { |entry| entry.first.to_s }.sort && groups.all? { |id, ids| linked[id.to_i] == ids.first }
+    expected_groups = @sources.map { |entry| entry.first.to_s }
+    valid = (groups.keys - expected_groups).empty? && groups.all? { |id, ids| ids.present? && linked[id.to_i] == ids.first }
+    valid &&= groups.keys.sort == expected_groups.sort if complete
     valid &&= RideSchedule.where(id: groups.values.flatten).count == groups.values.flatten.size
+    rides = receipt.fetch("rides", [])
+    reviewed_rides = @single_sources.index_by(&:first)
+    expected_rides = reviewed_rides.keys
+    valid &&= (rides - expected_rides).empty? && rides.uniq == rides
+    # Ordinary one-time offers can be deleted. Keep their IDs acknowledged so a
+    # replay never restores them, and verify the identity of surviving offers.
+    valid &&= RidePost.where(id: rides).pluck(:id, :user_id, :created_at).all? do |id, user_id, created_at|
+      entry = reviewed_rides.fetch(id)
+      user_id == entry[1] && created_at.utc.strftime("%Y-%m-%d %H:%M:%S.%6N") == entry[5]
+    end
+    valid &&= rides.sort == expected_rides.sort if complete
     raise Error, "Import receipt does not match this database; inspect it before continuing." unless valid
 
     receipt
