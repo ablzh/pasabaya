@@ -147,12 +147,12 @@ export default class extends Controller {
     const state = this.disclosureScrollState
     if (!state || !this.hasMessagesTarget) return
 
-    requestAnimationFrame(() => {
-      this.followLatest = state.followLatest
-      this.messagesTarget.scrollTop = state.followLatest ? this.messagesTarget.scrollHeight : state.top
-      this.disclosureScrollState = null
-      this.checkAndMarkRead()
-    })
+    // The toggle has applied its layout. Restore now so a later user scroll or
+    // toggle cannot be overwritten by an animation frame holding an older state.
+    this.followLatest = state.followLatest
+    this.messagesTarget.scrollTop = state.followLatest ? this.messagesTarget.scrollHeight : state.top
+    this.disclosureScrollState = null
+    this.checkAndMarkRead()
   }
 
   scrollToBottom() {
