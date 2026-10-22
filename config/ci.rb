@@ -11,6 +11,7 @@ CI.run do
 
   step "Consistency: Database", "bin/database_consistency"
   step "Architecture: ArchSpec", "bundle exec archspec check"
+  step "Packaging: Docker context", "bin/check-docker-context"
 
   step "Security: Gem audit", "bin/bundler-audit"
   step "Security: Importmap vulnerability audit", "bin/importmap audit"

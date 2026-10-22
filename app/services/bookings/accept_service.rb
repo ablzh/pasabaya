@@ -51,25 +51,20 @@ module Bookings
           raise InvalidStateError, "This seat request is no longer pending and can’t be accepted"
         end
 
-        if ride.requests_closed_at.present?
-          raise InvalidStateError, "The driver has closed seat requests"
-        end
-
-        unless ride.schedule_accepts_requests?
-          raise InvalidStateError, "This regular schedule is not accepting requests for this date"
-        end
-
-        if ride.booking_cutoff_at.blank? || ride.booking_cutoff_at <= Time.current
-          raise InvalidStateError, "Cannot accept bookings for rides in the past"
-        end
-
-        unless ride.published?
-          raise InvalidStateError, "Ride is not published and accepting bookings"
-        end
-
         ride.user.reload
-        unless ride.driver_eligible?
+        case ride.booking_unavailability_reason
+        when :unpublished
+          raise InvalidStateError, "Ride is not published and accepting bookings"
+        when :full
+          raise CapacityError, "No remaining seats available on this ride"
+        when :requests_closed
+          raise InvalidStateError, "The driver has closed seat requests"
+        when :departed
+          raise InvalidStateError, "Cannot accept bookings for rides in the past"
+        when :driver_ineligible
           raise InvalidStateError, "Driver is no longer eligible to accept bookings for this ride"
+        when :schedule_unavailable
+          raise InvalidStateError, "This regular schedule is not accepting requests for this date"
         end
 
         unless b.passenger.eligible_for_booking?
@@ -78,10 +73,6 @@ module Bookings
 
         unless ride.authorized_for_booking?(b.passenger)
           raise InvalidStateError, "Passenger is no longer eligible for this ride's audience"
-        end
-
-        if ride.remaining_seats.to_i <= 0
-          raise CapacityError, "No remaining seats available on this ride"
         end
 
         now = Time.current

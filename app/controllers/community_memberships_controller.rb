@@ -22,7 +22,7 @@ class CommunityMembershipsController < ApplicationController
       CommunityMailer.verification_email(@membership).deliver_later
       redirect_to @community, notice: "Verification email sent to #{institutional_email}. Please check your inbox within 24 hours to confirm.", status: :see_other
     else
-      @ride_posts = @community.ride_posts.active.upcoming.visible_to(Current.user).includes(:origin, :destination, :user).order(departure_date: :asc, departure_time: :asc)
+      @ride_posts = @community.ride_posts.accepting_requests.visible_to(Current.user).includes(:origin, :destination, :user).order(departure_date: :asc, departure_time: :asc)
       render "communities/show", status: :unprocessable_content
     end
   end

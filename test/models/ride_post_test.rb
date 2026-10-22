@@ -1,6 +1,68 @@
 require "test_helper"
 
 class RidePostTest < ActiveSupport::TestCase
+  [
+    [ "open", {}, true ],
+    [ "closed", { requests_closed_at: Time.utc(2026, 10, 21, 2) }, false ],
+    [ "no seats", { remaining_seats: 0 }, false ],
+    [ "fulfilled", { status: :fulfilled }, false ],
+    [ "at departure", { departure_time: Time.utc(2026, 10, 21, 2) }, false ],
+    [ "departed", { departure_time: Time.utc(2026, 10, 21, 1) }, false ],
+    [ "draft", { status: :draft }, false ]
+  ].each do |name, changes, expected|
+    test "discovery and booking admission agree for an offer that is #{name}" do
+      travel_to Time.zone.local(2026, 10, 21, 10) do
+        ride = ride_posts(:one)
+        baseline = { status: :active, remaining_seats: 3, requests_closed_at: nil,
+          departure_choice: :exact_time, departure_date: Date.current, departure_time: 2.hours.from_now }
+        ride.update_columns(baseline.merge(changes))
+        assert_equal expected, ride.reload.bookable?, name
+        assert_equal expected, RidePost.accepting_requests.exists?(ride.id), name
+      end
+    end
+  end
+
+  test "discovery and booking admission agree at approximate departure cutoff" do
+    ride = ride_posts(:one)
+    ride.update_columns(departure_choice: :morning, departure_date: Date.current, departure_time: nil)
+    cutoff = ride.booking_cutoff_at
+
+    travel_to cutoff - 1.second do
+      assert ride.reload.bookable?
+      assert RidePost.accepting_requests.exists?(ride.id)
+    end
+    travel_to cutoff, with_usec: true do
+      assert_not ride.reload.bookable?
+      assert_not RidePost.accepting_requests.exists?(ride.id)
+    end
+    travel_to cutoff + 1.second do
+      assert_not ride.reload.bookable?
+      assert_not RidePost.accepting_requests.exists?(ride.id)
+    end
+  end
+
+  test "driver audience eligibility agrees between discovery and booking before cleanup" do
+    ride = ride_posts(:one)
+    driver = ride.user
+    membership = community_memberships(:one)
+    ride.update!(visibility: :hub_only, community_id: membership.community_id)
+    assert ride.reload.bookable?
+    assert RidePost.accepting_requests.exists?(ride.id)
+
+    membership.update_columns(expires_at: Time.current)
+    assert_not ride.reload.bookable?
+    assert_not RidePost.accepting_requests.exists?(ride.id)
+
+    ride.update_columns(visibility: :public_ride, ladies_only: true)
+    driver.update_columns(gender: :female)
+    assert ride.reload.bookable?
+    assert RidePost.accepting_requests.exists?(ride.id)
+
+    driver.update_columns(gender: :male)
+    assert_not ride.reload.bookable?
+    assert_not RidePost.accepting_requests.exists?(ride.id)
+  end
+
   test "unchanged historical long notes survive cancellation and automatic completion" do
     original = "Historical trip details " * 30
     canceled = ride_posts(:one)

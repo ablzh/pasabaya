@@ -1,4 +1,6 @@
 class RidePost < ApplicationRecord
+  include DriverEligibility
+
   belongs_to :user
 
   belongs_to :origin, class_name: "Location", optional: true
@@ -14,6 +16,7 @@ class RidePost < ApplicationRecord
   has_many :trip_reviews, dependent: :restrict_with_error
   has_many :no_show_incidents, dependent: :restrict_with_error
   has_many :route_subscriptions, dependent: :nullify
+  has_many :ride_post_dispatches
 
   before_destroy :check_destruction_allowed, prepend: true
 
@@ -67,9 +70,8 @@ class RidePost < ApplicationRecord
 
   after_save_commit :schedule_trip_audit, if: :should_schedule_audit?
   after_save_commit :schedule_booking_cutoff, if: :should_schedule_cutoff?
-  after_save_commit :schedule_route_alert, if: :should_schedule_route_alert?
+  after_save :record_route_alert, if: :should_schedule_route_alert?
   after_save_commit :schedule_chat_retention, if: :should_schedule_chat_retention?
-  after_update_commit :refresh_chat_after_cancellation, if: :saved_change_to_canceled_at?
 
   scope :publicly_visible, -> { public_ride.where(ladies_only: false) }
   scope :filter_by_origin, ->(origin_id) { where(origin_id: origin_id) if origin_id.present? }
@@ -118,10 +120,28 @@ class RidePost < ApplicationRecord
   }
 
   scope :accepting_schedule_requests, -> {
-    left_joins(:ride_schedule).where(
-      "ride_posts.ride_schedule_id IS NULL OR (ride_schedules.status = ? AND ride_posts.requests_closed_at IS NULL AND ride_posts.departure_date BETWEEN ? AND ?)",
-      RideSchedule.statuses[:active], Date.current, Date.current + RideSchedule::BOOKING_DAYS - 1
+    where(ride_schedule_id: nil).or(where(
+      ride_schedule_id: RideSchedule.active.with_eligible_drivers.select(:id),
+      requests_closed_at: nil,
+      departure_date: Date.current..(Date.current + RideSchedule::BOOKING_DAYS - 1)
+    ))
+  }
+
+  scope :before_booking_cutoff, -> {
+    now = Time.current
+    date = now.in_time_zone("Asia/Manila").to_date
+    first_date = now < date.in_time_zone("Asia/Manila").end_of_day ? date : date.tomorrow
+    where(
+      "(ride_posts.departure_choice = :exact AND ride_posts.departure_time > :now) OR " \
+      "((ride_posts.departure_choice IS NULL OR ride_posts.departure_choice != :exact) AND " \
+      "(ride_posts.departure_date >= :first_date OR (ride_posts.departure_date IS NULL AND ride_posts.departure_time > :now)))",
+      exact: departure_choices.fetch("exact_time"), now: now, first_date: first_date
     )
+  }
+
+  scope :accepting_requests, -> {
+    active.where(requests_closed_at: nil).where("ride_posts.remaining_seats > 0")
+      .before_booking_cutoff.with_eligible_drivers.accepting_schedule_requests
   }
 
   scope :one_per_schedule, -> {
@@ -142,7 +162,7 @@ class RidePost < ApplicationRecord
 
   def self.popular_routes(limit = 12)
     listing_key = "CASE WHEN ride_posts.ride_schedule_id IS NULL THEN 'ride:' || ride_posts.id ELSE 'schedule:' || ride_posts.ride_schedule_id END"
-    route_counts = publicly_visible.active.upcoming.accepting_schedule_requests.group(:origin_id, :destination_id)
+    route_counts = publicly_visible.accepting_requests.group(:origin_id, :destination_id)
                          .order(Arel.sql("COUNT(DISTINCT #{listing_key}) DESC"))
                          .limit(limit)
                          .count(Arel.sql("DISTINCT #{listing_key}"))
@@ -176,7 +196,18 @@ class RidePost < ApplicationRecord
   end
 
   def bookable?
-    active? && requests_closed_at.nil? && remaining_seats.to_i > 0 && booking_cutoff_at.present? && booking_cutoff_at > Time.current && schedule_accepts_requests?
+    booking_unavailability_reason.nil?
+  end
+
+  def booking_unavailability_reason
+    return :unpublished unless published?
+    return :full if full?
+    return :requests_closed if requests_closed_at.present?
+    return :departed if booking_cutoff_at.blank? || booking_cutoff_at <= Time.current
+    return :driver_ineligible unless driver_eligible?
+    return :schedule_unavailable unless schedule_accepts_requests?
+
+    nil
   end
 
   def schedule_accepts_requests?
@@ -216,14 +247,6 @@ class RidePost < ApplicationRecord
     return false unless passenger.eligible_for_booking?
 
     authorized_viewer?(passenger)
-  end
-
-  def driver_eligible?
-    return false unless user&.eligible_for_offering?
-    return false if hub_only? && !user.verified_member_of?(community_id)
-    return false if ladies_only? && !user.female?
-
-    true
   end
 
   def previously_accepted_bookings
@@ -381,10 +404,6 @@ class RidePost < ApplicationRecord
     errors.add(:user, :deleted_account, message: "has been deleted") if user&.deleted?
   end
 
-  def refresh_chat_after_cancellation
-    Turbo::StreamsChannel.broadcast_refresh_to([ self, :chat ])
-  end
-
   def departure_cutoff(time, date, choice)
     return time if choice == "exact_time"
     return date.in_time_zone("Asia/Manila").end_of_day if date.present?
@@ -483,11 +502,17 @@ class RidePost < ApplicationRecord
   end
 
   def schedule_chat_retention
-    ChatRetentionJob.set(wait_until: chat_history_unavailable_at).perform_later(id)
+    job = ChatRetentionJob.set(wait_until: chat_history_unavailable_at).perform_later(id)
+    raise ActiveJob::EnqueueError, "Chat retention was not enqueued" unless job
+  rescue StandardError => error
+    # The recurring purge and startup scrub also enforce conversation retention.
+    Rails.logger.error("Chat retention enqueue failed ride_post_id=#{id} error=#{error.class.name}")
   end
 
   def should_schedule_route_alert?
-    return false unless published? && bookable?
+    # Registration uses local state; the worker rechecks admission and audience
+    # without adding membership queries to each occurrence in a schedule batch.
+    return false unless published? && remaining_seats.to_i.positive? && requests_closed_at.nil?
 
     previously_new_record? ||
       saved_change_to_status? ||
@@ -504,8 +529,8 @@ class RidePost < ApplicationRecord
       (saved_change_to_requests_closed_at? && requests_closed_at.nil?)
   end
 
-  def schedule_route_alert
-    RouteAlertJob.perform_later(id)
+  def record_route_alert
+    ride_post_dispatches.create!(operation: :route_alert)
   end
 
   def publishing?

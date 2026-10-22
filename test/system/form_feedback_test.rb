@@ -161,7 +161,131 @@ class FormFeedbackSystemTest < ApplicationSystemTestCase
     (0..6).each { |day| assert_checked_field "ride_post_weekday_#{day}" }
   end
 
+  test "route pickers preserve IDs and reopen through repeated create and edit failures" do
+    sign_in(users(:one))
+    page.driver.resize(390, 844)
+    visit new_ride_post_path
+    choose_city("ride_post_origin_id", "Manila")
+    choose_city("ride_post_destination_id", "Makati")
+    fill_in "Available passenger seats", with: 1
+    fill_in "Departure Date", with: 3.days.from_now.to_date
+    choose "Exact Time"
+    fill_in "Departure Time", with: "09:00"
+    select "Community / Closed Hub Only", from: "Visibility"
+    page.execute_script("window.formRenders = 0; document.addEventListener('turbo:render', () => window.formRenders++)")
+    2.times do
+      submit_and_wait("Publish ride")
+      assert_selector "#ride_post_community_id_error"
+      assert_routes
+      reopen_routes
+    end
+    select "Public (Everyone)", from: "Visibility"
+    click_button "Publish ride"
+    assert_text "Ride post was successfully created."
+    ride = RidePost.order(:created_at).last
+    assert_equal locations(:one).id, ride.origin_id
+    assert_equal locations(:two).id, ride.destination_id
+    assert_equal 1, ride.seats
+
+    click_link "Edit Post"
+    assert_selector "#ride_post_origin_id-ts-control"
+    select "Community / Closed Hub Only", from: "Visibility"
+    2.times do
+      submit_and_wait("Save Changes")
+      assert_routes
+      reopen_routes
+    end
+    select "Public (Everyone)", from: "Visibility"
+    click_button "Save Changes"
+    assert_text "Ride post was successfully updated."
+    assert_equal [ locations(:one).id, locations(:two).id ], [ ride.reload.origin_id, ride.destination_id ]
+  end
+
+  test "settings password labels focus their own inputs" do
+    sign_in(users(:one))
+    visit settings_profile_path
+    %w[email_change password_change].each do |namespace|
+      id = "#{namespace}_user_password_challenge"
+      find("label[for='#{id}']").click
+      assert_equal id, page.evaluate_script("document.activeElement.id")
+    end
+  end
+
+  test "mobile schedule text and settings actions fit with a scrollbar gutter" do
+    sign_in(users(:one))
+    [ new_ride_post_path, edit_ride_post_path(ride_posts(:one)), settings_profile_path ].each do |path|
+      resize_and_visit(320, path)
+      page.execute_script("const style = document.createElement('style'); style.textContent = 'html {overflow-y:scroll;scrollbar-gutter:stable} ::-webkit-scrollbar {width:15px}'; document.head.append(style)")
+      assert_document_contained
+      if path == settings_profile_path
+        assert_contained("form button[type='submit']", "form", parent: true)
+      else
+        assert_contained("[data-controller='departure-choice'] label span", "[data-controller='departure-choice'] label", parent: true)
+        [ "Add one passenger seat", "Remove one passenger seat" ].each do |label|
+          bounds = find("button[aria-label='#{label}']").evaluate_script("this.getBoundingClientRect().toJSON()")
+          %w[width height].each { |dimension| assert_operator bounds[dimension], :>=, 44 }
+        end
+      end
+    end
+  end
+
+  test "avatar preview keeps the last valid image when a replacement is invalid" do
+    sign_in(users(:one))
+    resize_and_visit(390, settings_profile_path)
+    image = Tempfile.new([ "preview", ".png" ])
+    image.binmode
+    image.write(Vips::Image.black(200, 20).pngsave_buffer)
+    image.flush
+    attach_file "Upload Avatar", image.path
+    assert_selector "img[data-avatar-preview-target='preview']"
+    preview_src = find("img[data-avatar-preview-target='preview']")[:src]
+
+    invalid = nil
+    [ ".txt", ".png" ].each do |extension|
+      invalid = Tempfile.new([ "invalid-preview", extension ])
+      invalid.write("Not an image")
+      invalid.flush
+      attach_file "Upload Avatar", invalid.path
+      page.document.synchronize do
+        raise Capybara::ExpectationNotMet if find("input[type='file']").evaluate_script("this.validity.valid")
+      end
+      assert_equal preview_src, find("img[data-avatar-preview-target='preview']")[:src]
+      assert find("img[data-avatar-preview-target='preview']").evaluate_script("this.complete && this.naturalWidth > 0")
+      invalid.close!
+    end
+  ensure
+    image&.close!
+    invalid&.close! unless invalid&.closed?
+  end
+
   private
+
+  def choose_city(id, name)
+    find("##{id}-ts-control").click
+    find(".ts-dropdown .option", text: name, exact_text: true).click
+  end
+
+  def assert_routes
+    assert_equal locations(:one).id.to_s, find("#ride_post_origin_id", visible: false).value
+    assert_equal locations(:two).id.to_s, find("#ride_post_destination_id", visible: false).value
+  end
+
+  def reopen_routes
+    %w[origin destination].each do |route|
+      find("#ride_post_#{route}_id-ts-control").click
+      assert_selector ".ts-dropdown .option", text: route == "origin" ? "Manila" : "Makati"
+      find("#ride_post_#{route}_id-ts-control").send_keys(:escape)
+    end
+  end
+
+  def submit_and_wait(label)
+    renders = page.evaluate_script("window.formRenders")
+    click_button label
+    page.document.synchronize do
+      raise Capybara::ExpectationNotMet unless page.evaluate_script("window.formRenders") > renders
+    end
+    assert_selector "[data-form-errors-summary]"
+  end
 
   def watch_morphs
     page.execute_script("window.observedMorphs = 0; document.addEventListener('turbo:morph', () => window.observedMorphs++)")

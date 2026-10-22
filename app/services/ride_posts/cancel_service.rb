@@ -18,12 +18,8 @@ module RidePosts
         active = locked.flat_map { |ride| ride.bookings.select(&:active?).map { |booking| [ ride, booking ] } }
         keys = active.map { |ride, booking| "ride_canceled:#{ride.id}:booking:#{booking.id}" }
         existing_keys = Notification.where(delivery_key: keys).pluck(:delivery_key).to_set
-        recipients = []
         locked.each do |ride|
-          recipients.concat(cancel_locked_ride(ride, actor, existing_keys))
-        end
-        recipients.uniq(&:id).each do |recipient|
-          Turbo::StreamsChannel.broadcast_refresh_to([ recipient, :chats ])
+          cancel_locked_ride(ride, actor, existing_keys)
         end
         locked
       end
@@ -60,7 +56,7 @@ module RidePosts
       unless ride.user_id == actor.id
         raise UnauthorizedError, "Only the driver can cancel this ride"
       end
-      return [] if ride.canceled?
+      return if ride.canceled?
       raise InvalidStateError, "Completed trips cannot be canceled" if ride.completed?
 
       active_bookings = ride.bookings.select(&:active?)
@@ -79,7 +75,7 @@ module RidePosts
         Notification.create!(delivery_key: key, recipient: booking.passenger, actor: actor,
           notifiable: ride, event_name: "ride.canceled", delivery_status: :pending)
       end
-      recipients
+      ride.ride_post_dispatches.create!(operation: :cancellation_refresh, recipient_ids: recipients.map(&:id).uniq)
     end
 
     private_class_method :cancel_locked_ride

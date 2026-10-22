@@ -246,6 +246,32 @@ module RouteSubscriptions
       end
     end
 
+    test "a route alert enqueue failure retains recoverable work for a committed route edit" do
+      ride = ride_posts(:one)
+      bookings(:one).destroy!
+      destination = Location.create!(name: "Quezon City", location_type: :city)
+      subscription = RouteSubscription.create!(user: @subscriber, origin: ride.origin, destination: destination)
+
+      with_stubbed_method(RouteAlertJob, :perform_later, ->(*) { raise IOError, "Queue unavailable" }) do
+        assert_nothing_raised { ride.update!(destination: destination) }
+      end
+
+      assert_equal destination, ride.reload.destination
+      dispatch = ride.ride_post_dispatches.route_alert.sole
+      assert_equal 1, dispatch.failure_count
+      assert_equal "IOError", dispatch.last_error
+      assert dispatch.failed_at
+
+      perform_enqueued_jobs(only: RouteAlertJob) { RidePostDispatchRecoveryJob.perform_now }
+
+      assert subscription.reload.fulfilled?
+      assert_not RidePostDispatch.exists?(dispatch.id)
+      assert_equal 1, Notification.where(route_subscription: subscription).count
+      assert_no_difference("Notification.count") do
+        perform_enqueued_jobs(only: RouteAlertJob) { RidePostDispatchRecoveryJob.perform_now }
+      end
+    end
+
     test "unbookable rides do not trigger route alerts" do
       draft_ride = RidePost.create!(
         user: @driver,

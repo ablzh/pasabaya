@@ -24,8 +24,10 @@ module Buttons
     end
 
     def test_renders_as_link_when_href_provided
-      render_inline(Buttons::Component.new(text: "Link Button", href: "/test-path"))
-      assert_selector "a[href='/test-path'][role='button']", text: "Link Button"
+      render_inline(Buttons::Component.new(text: "Link Button", href: "/test-path", id: "test-navigation-link"))
+      assert_link "Link Button", href: "/test-path"
+      assert_selector "a#test-navigation-link"
+      assert_no_selector "a[role]"
     end
 
     def test_handles_unknown_variant_fallback_without_error

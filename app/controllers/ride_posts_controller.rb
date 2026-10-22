@@ -15,7 +15,7 @@ class RidePostsController < ApplicationController
   # GET /rides
   def index
     if params.key?(:origin_id) || params.key?(:destination_id) || params.key?(:community_id) || params.key?(:ladies_only) || params.key?(:departure_date) || params[:q].present? || params[:query].present? || params[:origin].present? || params[:destination].present?
-      @ride_posts = RidePost.active.upcoming.accepting_schedule_requests
+      @ride_posts = RidePost.accepting_requests
                             .visible_to(Current.user)
                             .includes(:origin, :destination, :community, :ride_schedule, user: { avatar_attachment: :blob })
                             .order(departure_date: :asc, departure_time: :asc)
@@ -68,7 +68,7 @@ class RidePostsController < ApplicationController
     end
 
     setup_show_meta_tags
-    @chat_messages = @ride_post.chat_messages.includes(user: { avatar_attachment: :blob }).order(created_at: :desc, id: :desc).limit(100).to_a.reverse if @ride_post.user_authorized_for_chat?(Current.user)
+    load_trip_panels
   end
 
   # GET /rides/new
@@ -171,6 +171,32 @@ class RidePostsController < ApplicationController
 
   private
 
+  def load_trip_panels
+    @pending_bookings = []
+    @accepted_bookings = []
+    if Current.user&.id == @ride_post.user_id
+      if @ride_post.published?
+        bookings = @ride_post.bookings.active.includes(passenger: { avatar_attachment: :blob }).to_a
+        @pending_bookings = bookings.select(&:pending?)
+        @accepted_bookings = bookings.select(&:accepted?)
+      end
+    elsif Current.user
+      @existing_booking = @ride_post.bookings.active.find_by(passenger_id: Current.user.id)
+    end
+    @ride_bookable = @ride_post.bookable?
+    @can_request_seat = @ride_post.authorized_for_booking?(Current.user)
+    @can_chat = @ride_post.user_authorized_for_chat?(Current.user)
+    @can_review = @ride_post.reviewable_by?(Current.user)
+    @driver_communities = @ride_post.user.verified_communities.to_a
+    return unless @can_chat
+
+    @chat_unlocked = @ride_post.chat_unlocked?
+    @chat_writable = @ride_post.chat_writable?
+    @chat_participant_count = ([ @ride_post.user_id ] + @ride_post.previously_accepted_bookings.pluck(:passenger_id)).uniq.size
+    @chat_messages = @ride_post.chat_messages.includes(user: { avatar_attachment: :blob }).order(created_at: :desc, id: :desc).limit(100).to_a.reverse
+    @chat_message = @ride_post.chat_messages.build
+  end
+
   def require_html_response
     head :not_acceptable unless request.negotiate_mime([ Mime[:html] ])
   end
@@ -197,7 +223,7 @@ class RidePostsController < ApplicationController
 
   # Use callbacks to share common setup or constraints between actions.
   def set_ride_post
-    @ride_post = RidePost.includes(:origin, :destination, :community, :ride_schedule).find_by(id: params.expect(:id).to_i)
+    @ride_post = RidePost.includes(:origin, :destination, :community, :ride_schedule, user: { avatar_attachment: :blob }).find_by(id: params.expect(:id).to_i)
     redirect_to ride_posts_path, alert: "The trip is no longer available" unless @ride_post
   end
 

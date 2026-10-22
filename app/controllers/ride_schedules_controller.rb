@@ -31,7 +31,7 @@ class RideSchedulesController < ApplicationController
     RideSchedules::MaterializeService.call(@ride_schedule) if @ride_schedule.active?
     states = Current.user&.id == @ride_schedule.user_id ? [ :active, :fulfilled, :canceled ] : [ :active, :fulfilled ]
     @departures = @ride_schedule.ride_posts.where(status: states).upcoming
-                                .visible_to(Current.user).includes(:origin, :destination, ride_schedule: :user, bookings: { passenger: { avatar_attachment: :blob } })
+                                .visible_to(Current.user).includes(:origin, :destination, :user, ride_schedule: :user, bookings: { passenger: { avatar_attachment: :blob } })
                                 .order(:departure_date, :departure_time)
   end
 

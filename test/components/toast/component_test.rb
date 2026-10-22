@@ -9,7 +9,7 @@ module Toast
       render_inline(Toast::Component.new)
 
       assert_selector "div#toast-container[data-controller='toast']", count: 1
-      assert_selector "ol[data-toast-target='container'][aria-live='polite']"
+      assert_selector "ol#toast-list[data-toast-target='container'][aria-live='polite']"
       assert_no_selector "div[data-controller='flash-toasts']"
     end
 

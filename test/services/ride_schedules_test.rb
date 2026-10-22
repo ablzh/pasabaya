@@ -18,6 +18,38 @@ class RideSchedulesTest < ActiveSupport::TestCase
 
   teardown { travel_back }
 
+  test "discovery checks the schedule audience even when a requested departure retains public conditions" do
+    pending = Bookings::CreateService.call(ride_post: @first, passenger: @passenger)
+    membership = community_memberships(:one)
+    RideSchedules::ConfigureService.call(schedule: @schedule, actor: @driver,
+      attributes: { visibility: :hub_only, community_id: membership.community_id })
+    assert @first.reload.public_ride?
+    assert @first.bookable?
+    assert RidePost.accepting_requests.exists?(@first.id)
+
+    membership.update_columns(expires_at: Time.current)
+    assert_not @first.reload.bookable?
+    assert_not RidePost.accepting_requests.exists?(@first.id)
+    assert_raises(Bookings::AcceptService::InvalidStateError) do
+      Bookings::AcceptService.call(pending, actor: @driver)
+    end
+    assert pending.reload.pending?
+  end
+
+  test "discovery and booking admission reject paused and outside-window departures" do
+    assert @first.bookable?
+    assert RidePost.accepting_requests.exists?(@first.id)
+    @schedule.update!(status: :paused)
+    assert_not @first.reload.bookable?
+    assert_not RidePost.accepting_requests.exists?(@first.id)
+
+    @schedule.update!(status: :active)
+    outside_date = Date.current + RideSchedule::BOOKING_DAYS
+    outside = @schedule.ride_posts.create!(@schedule.ride_attributes(outside_date).merge(schedule_date: outside_date))
+    assert_not outside.bookable?
+    assert_not RidePost.accepting_requests.exists?(outside.id)
+  end
+
   test "each Monday owns its seats and historical participation" do
     booking = Bookings::CreateService.call(ride_post: @first, passenger: @passenger)
     Bookings::AcceptService.call(booking, actor: @driver)
@@ -134,6 +166,42 @@ class RideSchedulesTest < ActiveSupport::TestCase
     travel_to Time.zone.local(2026, 10, 20, 10)
     assert_no_difference "RidePost.count" do
       RideScheduleRefreshJob.perform_now
+    end
+  end
+
+  %i[banned_at booking_freeze_until].each do |restriction|
+    test "#{restriction} pauses admission without withdrawing accepted regular participation" do
+      accepted = Bookings::CreateService.call(ride_post: @first, passenger: @passenger)
+      Bookings::AcceptService.call(accepted, actor: @driver)
+      accepted_at = accepted.reload.accepted_at
+      pending = Bookings::CreateService.call(ride_post: @next_week, passenger: @passenger)
+      restriction_time = restriction == :booking_freeze_until ? 1.hour.from_now : Time.current
+
+      @driver.update!(restriction => restriction_time)
+
+      assert @schedule.reload.paused?
+      assert accepted.reload.accepted?
+      assert_equal accepted_at, accepted.accepted_at
+      assert_equal 2, @first.reload.remaining_seats
+      assert pending.reload.expired?
+      assert @first.participant?(@passenger)
+      assert @first.user_authorized_for_chat?(@passenger)
+      assert_raises(ActiveRecord::RecordInvalid) do
+        Bookings::CreateService.call(ride_post: @next_week, passenger: @passenger)
+      end
+      assert_raises(Bookings::AcceptService::InvalidStateError) do
+        Bookings::AcceptService.call(pending, actor: @driver)
+      end
+
+      @driver.update!(restriction => nil)
+      assert @schedule.reload.paused?
+      assert_not @first.reload.bookable?
+      RideSchedules::TransitionService.call(schedule: @schedule, actor: @driver, action: :resume)
+      assert @first.reload.bookable?
+      assert pending.reload.expired?
+      assert accepted.reload.accepted?
+      assert_equal 2, @first.remaining_seats
+      assert Bookings::CreateService.call(ride_post: @next_week, passenger: @passenger).pending?
     end
   end
 

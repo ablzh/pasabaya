@@ -136,6 +136,44 @@ module Bookings
       assert @booking.reload.pending?
     end
 
+    test "a stale driver cannot accept a pending request after being frozen" do
+      stale_driver = User.find(@driver.id)
+      stale_booking = Booking.includes(:ride_post, :passenger).find(@booking.id)
+      @driver.update!(booking_freeze_until: 1.hour.from_now)
+      remaining_seats = @ride.remaining_seats
+
+      assert_no_difference "Notification.count" do
+        assert_raises(AcceptService::InvalidStateError) do
+          AcceptService.call(stale_booking, actor: stale_driver)
+        end
+      end
+      assert @booking.reload.pending?
+      assert_equal remaining_seats, @ride.reload.remaining_seats
+    end
+
+    %i[banned_at booking_freeze_until].each do |restriction|
+      test "#{restriction} preserves accepted ordinary participation and repeated acceptance is a no op" do
+        accepted = AcceptService.call(@booking, actor: @driver)
+        accepted_at = accepted.accepted_at
+        remaining_seats = @ride.reload.remaining_seats
+        restriction_time = restriction == :booking_freeze_until ? 1.hour.from_now : Time.current
+
+        @driver.update!(restriction => restriction_time)
+        assert_no_difference "Notification.count" do
+          assert AcceptService.call(accepted, actor: @driver).accepted?
+        end
+        assert_equal accepted_at, accepted.reload.accepted_at
+        assert_equal remaining_seats, @ride.reload.remaining_seats
+        assert @ride.participant?(@passenger)
+        assert @ride.user_authorized_for_chat?(@passenger)
+
+        travel_to @ride.booking_cutoff_at + 1.minute do
+          assert accepted.reload.historical_reviewable?
+          assert @ride.reload.reviewable_by?(@passenger)
+        end
+      end
+    end
+
     test "allows acceptance on departure date for approximate ride even after morning period" do
       target_date = Date.current
       ride = RidePost.create!(

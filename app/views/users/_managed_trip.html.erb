@@ -6,13 +6,13 @@
   <div class="flex flex-wrap items-center gap-3 text-sm">
     <% if ride.draft? %>
       <% if ride.bookings.empty? %>
-        <%= link_to "Make regular", new_ride_post_path(ride_type: "regular", source_ride_post_id: ride.id), class: "font-semibold text-blue-700 dark:text-blue-300" %>
+        <%= link_to "Make regular", new_ride_post_path(ride_type: "regular", source_ride_post_id: ride.id), id: dom_id(ride, :make_regular), class: "font-semibold text-blue-700 dark:text-blue-300" %>
       <% end %>
-      <%= link_to "Edit", edit_ride_post_path(ride), class: "font-semibold text-blue-700 dark:text-blue-300" %>
-      <%= button_to "Publish", publish_ride_post_path(ride), method: :patch, class: "font-semibold text-blue-700 dark:text-blue-300" %>
-      <%= button_to "Delete", ride_post_path(ride), method: :delete, data: { turbo_confirm: "Delete this private draft?" }, class: "font-semibold text-red-700 dark:text-red-300" %>
+      <%= link_to "Edit", edit_ride_post_path(ride), id: dom_id(ride, :edit_draft), class: "font-semibold text-blue-700 dark:text-blue-300" %>
+      <%= button_to "Publish", publish_ride_post_path(ride), method: :patch, id: dom_id(ride, :publish), form: { id: dom_id(ride, :publish_form) }, class: "font-semibold text-blue-700 dark:text-blue-300" %>
+      <%= button_to "Delete", ride_post_path(ride), method: :delete, id: dom_id(ride, :delete), form: { id: dom_id(ride, :delete_form) }, data: { turbo_confirm: "Delete this private draft?" }, class: "font-semibold text-red-700 dark:text-red-300" %>
     <% else %>
-      <%= link_to "View", ride_post_path(ride), class: "font-semibold text-blue-700 dark:text-blue-300" %>
+      <%= link_to "View", ride_post_path(ride), id: dom_id(ride, :view), class: "font-semibold text-blue-700 dark:text-blue-300" %>
     <% end %>
   </div>
 </div>

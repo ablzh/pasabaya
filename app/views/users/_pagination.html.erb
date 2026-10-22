@@ -1,0 +1,11 @@
+<% if page[:pages] > 1 %>
+  <nav id="<%= parameter %>-pagination" aria-label="<%= label %> pages" class="flex flex-wrap items-center justify-between gap-3 mt-4 text-sm">
+    <% if page[:number] > 1 %>
+      <%= link_to "Previous", url_for(request.query_parameters.merge(request.path_parameters).merge(parameter => page[:number] - 1, anchor: section_id, only_path: true)), id: "#{parameter}-previous", rel: "prev", class: "underline font-semibold text-blue-700 dark:text-blue-300" %>
+    <% end %>
+    <span>Page <%= page[:number] %> of <%= page[:pages] %></span>
+    <% if page[:number] < page[:pages] %>
+      <%= link_to "Next", url_for(request.query_parameters.merge(request.path_parameters).merge(parameter => page[:number] + 1, anchor: section_id, only_path: true)), id: "#{parameter}-next", rel: "next", class: "underline font-semibold text-blue-700 dark:text-blue-300" %>
+    <% end %>
+  </nav>
+<% end %>

@@ -44,6 +44,20 @@ using sandbox SMTP, with `mailtrap_sandbox.user_name` and
 are an error rather than silently discarding mail. Never copy production keys
 into a contributor's setup.
 
+## Public analytics
+
+Production browser pageviews use GoatCounter's documented tracking-pixel endpoint.
+Only the home, ride search, hub directory, privacy and terms pages opt in. Search
+routes share the fixed `/rides` identifier; account, authentication, individual
+trip and chat pages do not opt in, and native clients do not send pageviews.
+
+The application sends only a fixed page identifier, a fixed title and a random
+cache-busting value. It omits URL queries, referrers and screen information, sets
+the pixel's referrer policy to `no-referrer`, and respects the existing `skipgc`
+local-storage opt-out. The third-party `count.js` script is not loaded because it
+collects query parameters independently of the configured page path. Browser
+regressions intercept the requests so tests never send analytics to GoatCounter.
+
 ## Abuse protection
 
 Registration uses an `invisible_captcha` honeypot. The field is hidden from users,
@@ -91,6 +105,13 @@ behind Cloudflare. Honeypots and rate limits do not establish email ownership;
 registration's existing immediate sign-in behavior is unchanged.
 
 ## Deployment and rollback
+
+`bin/check-docker-context` uses a running Docker daemon to build a tiny scratch
+filesystem with the repository's `.dockerignore` and harmless sentinel files.
+It checks that local keys, overrides, research, QA captures and development
+metadata are excluded while application sources, encrypted credentials, assets
+and runtime placeholder directories remain available. It never sends the real
+working tree or credentials to the builder and is part of `bin/ci`.
 
 1. Run `bin/ci` and review migrations for data loss and compatibility with the
    previous application version.
@@ -195,6 +216,32 @@ success, confirm delivery with the provider before retrying that recipient.
 
 ## Backups and operational checks
 
+### Ride matching and cancellation recovery
+
+`RidePostDispatchRecoveryJob` runs every five minutes in production. It retries
+all outstanding route matching and cancellation refresh work, including work that
+committed while the queue was unavailable or whose worker stopped unexpectedly.
+Matching and broadcasts recheck the current ride; duplicate matching jobs share
+the existing subscription and notification deduplication rules. Refreshes may
+repeat after partial publication. Completed work is deleted.
+
+In the production console, inspect backlog age and recorded failures with:
+
+```ruby
+RidePostDispatch.group(:operation).count
+RidePostDispatch.minimum(:created_at)
+RidePostDispatch.where.not(failed_at: nil).order(:failed_at)
+                .pluck(:id, :operation, :failure_count, :last_error, :failed_at)
+```
+
+The error field contains only the exception class, without message contents or
+trip details. Check the queue worker and Cable health when the backlog grows.
+After restoring service, run `RidePostDispatchRecoveryJob.perform_now` to enqueue
+outstanding work immediately. Keep the recurring scheduler running; enqueueing
+alone does not acknowledge work, and a stopped worker leaves rows outstanding.
+
+### Backup checks
+
 `config/litestream.yml` configures primary database replication with a one-minute
 sync interval. `config/kamal-backup.yml` configures daily Restic snapshots of the
 databases, uploads, and deletion registry, with repository checking and retention.
@@ -211,6 +258,11 @@ deleted accounts remain anonymized and expired chat content is unavailable.
 Record the backup date, restore duration, data loss window, and result. Keep the
 application offline if reconciliation fails. See the complete
 [account deletion recovery procedure](account-deletion-recovery.md).
+
+The [local verification record](verification-evidence.md) includes a reproducible
+synthetic SQLite restore drill and history-request baseline. It exercises
+application reconciliation; production backup-provider retrieval and upload
+restoration still require a separate isolated operational drill.
 
 Accessory images currently retain their existing `latest` tags. Pinning them
 requires verifying compatible Litestream/Restic formats and a successful restore;

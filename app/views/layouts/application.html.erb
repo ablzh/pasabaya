@@ -54,22 +54,8 @@
   <%= stylesheet_link_tag :app, "data-turbo-track": "reload" %>
   <%= javascript_importmap_tags %>
 
-  <% if Rails.env.production? %>
-    <!-- GoatCounter -->
-    <script data-goatcounter="https://pasabaya.goatcounter.com/count"
-            async src="//gc.zgo.at/count.js"></script>
-    <script>
-      let initialGoatCounterLoad = true;
-      document.addEventListener("turbo:load", () => {
-        if (document.documentElement.hasAttribute("data-turbo-preview")) return;
-        if (initialGoatCounterLoad) {
-          initialGoatCounterLoad = false;
-          return;
-        }
-        window.goatcounter?.count?.({ path: location.pathname + location.search });
-        window.goatcounter?.bind_events?.();
-      });
-    </script>
+  <% if Rails.env.production? && (analytics_page = public_analytics_page) %>
+    <meta name="analytics-page" content="<%= analytics_page.fetch(:path) %>" data-title="<%= analytics_page.fetch(:title) %>">
   <% end %>
 </head>
 
@@ -119,11 +105,13 @@
       <li class="flex items-center gap-1 ml-1">
         <%= render Buttons::Component.new(
                    text: "Login",
+                   id: "navbar-login",
                    size: :sm,
                    style: :fancy,
                    href: "/session/new") %>
         <%= render Buttons::Component.new(
                    text: "Signup",
+                   id: "navbar-signup",
                    size: :sm,
                    href: sign_up_path) %>
       </li>

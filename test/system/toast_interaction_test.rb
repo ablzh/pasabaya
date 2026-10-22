@@ -67,6 +67,84 @@ class ToastInteractionTest < ApplicationSystemTestCase
     assert notification.reload.read_at.present?
   end
 
+  test "keyboard navigation reaches every toast action and activates an older notification" do
+    page.driver.resize(320, 844)
+    visit root_path
+    page.execute_script <<~JS
+      Stimulus.getControllerForElementAndIdentifier(document.getElementById('toast-container'), 'toast').autoDismissDurationValue = 60000;
+      window.toastActions = [];
+      for (let i = 1; i <= 3; i++) {
+        window.toast(`Request ${i}`, {action: {label: `Open request ${i}`, onClick: () => window.toastActions.push(i)}});
+      }
+      document.querySelector('nav a[href="#{sign_up_path}"]').focus();
+    JS
+    assert_selector '.toast-item[data-mounted="true"]', count: 3
+    assert_button "Open request 3"
+
+    page.driver.browser.keyboard.type(:Tab)
+    assert_selector "button:focus", text: "Open request 3"
+    assert_button "Open request 2"
+    assert_button "Open request 1"
+
+    [ 2, 1 ].each do |number|
+      page.driver.browser.keyboard.type(:Tab, :Tab)
+      assert_selector "button:focus", text: "Open request #{number}"
+    end
+    page.driver.browser.keyboard.type(:Enter)
+    assert_equal [ 1 ], page.evaluate_script("window.toastActions")
+    assert_selector '.toast-item[data-removed="false"]', count: 2
+    assert_selector ".toast-item button:focus"
+  end
+
+  test "a focused toast survives timeout incoming notifications and a Turbo morph" do
+    visit root_path
+    page.execute_script <<~JS
+      Stimulus.getControllerForElementAndIdentifier(document.getElementById('toast-container'), 'toast').autoDismissDurationValue = 1200;
+      window.toast('Focused request', {action: {label: 'Open focused request', onClick: () => {}}});
+      document.querySelector('nav a[href="#{sign_up_path}"]').focus();
+      window.observedMorphs = 0;
+      document.addEventListener('turbo:morph', () => window.observedMorphs++);
+    JS
+    assert_selector '.toast-item[data-mounted="true"]'
+    assert_button "Open focused request"
+    page.driver.browser.keyboard.type(:Tab)
+    assert_selector "button:focus", text: "Open focused request"
+    action_id = page.evaluate_script("document.activeElement.id")
+    assert action_id.present?, "Toast actions need stable IDs"
+    find("footer").hover
+
+    page.execute_script <<~JS
+      for (let i = 1; i <= 3; i++) window.toast(`Later request ${i}`);
+      Turbo.renderStreamMessage('<turbo-stream action="refresh"></turbo-stream>');
+    JS
+    page.document.synchronize do
+      raise Capybara::ExpectationNotMet unless page.evaluate_script("window.observedMorphs") > 0
+    end
+    page.evaluate_async_script("setTimeout(arguments[0], 1400)")
+
+    assert_selector "##{action_id}:focus", text: "Open focused request"
+    assert_selector '.toast-item[data-removed="false"]', count: 3
+    assert page.evaluate_script("(() => { const ids = [...document.querySelectorAll('#toast-container [id]')].map(el => el.id); return ids.length === new Set(ids).size; })()")
+
+    page.execute_script("document.querySelector('nav a[href=\"#{sign_up_path}\"]').focus()")
+    assert_no_selector '.toast-item[data-removed="false"]', wait: 4
+  end
+
+  test "pointer interaction pauses dismissal until the pointer leaves the toast stack" do
+    visit root_path
+    page.execute_script <<~JS
+      Stimulus.getControllerForElementAndIdentifier(document.getElementById('toast-container'), 'toast').autoDismissDurationValue = 1000;
+      window.toast('Review this notification');
+    JS
+    assert_selector '.toast-item[data-mounted="true"]'
+    find(".toast-item > span").hover
+    page.evaluate_async_script("setTimeout(arguments[0], 1200)")
+    assert_selector '.toast-item[data-removed="false"]', text: "Review this notification"
+
+    find("footer").hover
+    assert_no_selector '.toast-item[data-removed="false"]', wait: 4
+  end
+
   private
 
   def assert_surface_bounds
