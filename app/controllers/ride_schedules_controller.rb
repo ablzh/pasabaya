@@ -23,7 +23,7 @@ class RideSchedulesController < ApplicationController
   end
 
   def show
-    @ride_schedule = RideSchedule.includes(:origin, :destination, :community, :user).find(params[:id])
+    @ride_schedule = RideSchedule.includes(:origin, :destination, :community, :user, :source_ride_post).find(params[:id])
     unless @ride_schedule.authorized_viewer?(Current.user)
       head :forbidden
       return

@@ -47,6 +47,9 @@
         <p class="text-sm font-medium text-neutral-600 dark:text-neutral-400">
           Regular ride • <%= @ride_schedule.schedule_display %>
         </p>
+        <p class="text-xs text-neutral-500 dark:text-neutral-400">
+          <%= time_tag @ride_schedule.listing_created_at, "Created #{time_ago_in_words(@ride_schedule.listing_created_at)} ago" %>
+        </p>
       </div>
 
       <%# Driver Controls %>

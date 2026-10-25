@@ -210,6 +210,10 @@ class RidePost < ApplicationRecord
     nil
   end
 
+  def listing_created_at
+    ride_schedule&.listing_created_at || created_at
+  end
+
   def schedule_accepts_requests?
     ride_schedule_id.nil? || ride_schedule&.accepts_requests_for?(departure_date)
   end

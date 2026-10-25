@@ -9,7 +9,7 @@
           <%= ride_post.user.first_name %> <%= ride_post.user.last_name %>
         </p>
         <p class="text-[10px] text-neutral-500 mt-1">
-          Posted <%= time_ago_in_words(ride_post.created_at) %> ago
+          <%= time_tag ride_post.listing_created_at, "Created #{time_ago_in_words(ride_post.listing_created_at)} ago" %>
         </p>
       </div>
     </div>
