@@ -69,8 +69,10 @@ class RegularRidesTest < ApplicationSystemTestCase
   test "a one-time ride can be published after switching back from regular" do
     sign_in(users(:one))
     visit new_ride_post_path
-    page.execute_script("document.querySelector('#ride_post_origin_id').tomselect.setValue(arguments[0])", locations(:one).id.to_s)
-    page.execute_script("document.querySelector('#ride_post_destination_id').tomselect.setValue(arguments[0])", locations(:two).id.to_s)
+    find("#ride_post_origin_id-ts-control").click
+    find(".ts-dropdown .option", text: "Manila").click
+    find("#ride_post_destination_id-ts-control").click
+    find(".ts-dropdown .option", text: "Makati").click
     fill_in "Departure Date", with: Date.tomorrow
     choose "Morning"
     fill_in "Available passenger seats", with: 2

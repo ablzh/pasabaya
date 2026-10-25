@@ -5,6 +5,7 @@ class FormFeedbackSystemTest < ApplicationSystemTestCase
     sign_in(users(:one))
     visit new_ride_post_path
     fill_in "ride_post_notes", with: "Preserve my trip note"
+    fill_in "ride_post_seats", with: ""
     click_button "Publish ride"
     assert_selector "[data-form-errors-summary][data-controller='form-errors']"
     assert_selector "[data-form-errors-summary]:focus"
@@ -19,7 +20,7 @@ class FormFeedbackSystemTest < ApplicationSystemTestCase
     find("[data-form-errors-summary] a[href='#ride_post_seats']").click
     assert_equal "ride_post_seats", page.evaluate_script("document.activeElement.id")
     click_button "Add one passenger seat"
-    assert_field "ride_post_seats", with: "1"
+    assert_field "ride_post_seats", with: "4"
     assert_no_selector "#ride_post_seats_error"
     assert_no_selector "a[href='#ride_post_seats']"
     assert_selector "#ride_post_departure_date_error"
@@ -31,7 +32,7 @@ class FormFeedbackSystemTest < ApplicationSystemTestCase
     assert_field "ride_post_notes", with: "Preserve my trip note"
     click_button "Publish ride"
     assert_text "Ride post was successfully created."
-    assert RidePost.exists?(user: users(:one), notes: "Preserve my trip note", seats: 1, status: :active)
+    assert RidePost.exists?(user: users(:one), notes: "Preserve my trip note", seats: 4, status: :active)
   end
 
   test "error summaries fit phone and desktop with valid focus targets" do
@@ -141,6 +142,7 @@ class FormFeedbackSystemTest < ApplicationSystemTestCase
     sign_in(users(:one))
     visit new_ride_post_path
     watch_morphs
+    fill_in "ride_post_seats", with: ""
     choose "Regular"
     click_button "Weekdays"
     check "Set an end date", allow_label_click: true
@@ -154,6 +156,7 @@ class FormFeedbackSystemTest < ApplicationSystemTestCase
     assert_unchecked_field "ride_post_weekday_6"
     assert_checked_field "ride_post_end_date_enabled"
     assert_field "ride_post_end_date", with: 1.month.from_now.to_date.to_s, disabled: false
+    assert_field "ride_post_seats", with: ""
     assert_no_field "ride_post_departure_date"
 
     click_button "Every day"

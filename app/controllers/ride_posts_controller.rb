@@ -74,14 +74,14 @@ class RidePostsController < ApplicationController
   # GET /rides/new
   def new
     if params[:ride_type] == "regular"
-      @ride_schedule = Current.user.ride_schedules.build
+      @ride_schedule = Current.user.ride_schedules.build(seats: 3)
       if params[:source_ride_post_id].present?
         source = Current.user.ride_posts.find(params[:source_ride_post_id])
         @ride_schedule.assign_attributes(source.attributes.slice(*RideSchedule::OFFER_FIELDS))
         @ride_schedule.source_ride_post = source
       end
     else
-      @ride_post = Current.user.ride_posts.build
+      @ride_post = Current.user.ride_posts.build(seats: 3)
     end
     if params[:community_id].present?
       offer = @ride_schedule || @ride_post
