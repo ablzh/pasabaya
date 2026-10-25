@@ -1,5 +1,5 @@
 class User < ApplicationRecord
-  REGISTRATION_POLICY_VERSION = "2026-10-03".freeze
+  REGISTRATION_POLICY_VERSION = "2026-10-23".freeze
 
   attr_accessor :registration_acceptance
 

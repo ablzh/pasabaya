@@ -17,7 +17,7 @@ class RidePostsController < ApplicationController
     if params.key?(:origin_id) || params.key?(:destination_id) || params.key?(:community_id) || params.key?(:ladies_only) || params.key?(:departure_date) || params[:q].present? || params[:query].present? || params[:origin].present? || params[:destination].present?
       @ride_posts = RidePost.accepting_requests
                             .visible_to(Current.user)
-                            .includes(:origin, :destination, :community, :ride_schedule, user: { avatar_attachment: :blob })
+                            .includes(:origin, :destination, :community, ride_schedule: :source_ride_post, user: { avatar_attachment: :blob })
                             .order(departure_date: :asc, departure_time: :asc)
                             .filter_by_origin(params[:origin_id])
                             .filter_by_destination(params[:destination_id])
@@ -74,14 +74,14 @@ class RidePostsController < ApplicationController
   # GET /rides/new
   def new
     if params[:ride_type] == "regular"
-      @ride_schedule = Current.user.ride_schedules.build
+      @ride_schedule = Current.user.ride_schedules.build(seats: 3)
       if params[:source_ride_post_id].present?
         source = Current.user.ride_posts.find(params[:source_ride_post_id])
         @ride_schedule.assign_attributes(source.attributes.slice(*RideSchedule::OFFER_FIELDS))
         @ride_schedule.source_ride_post = source
       end
     else
-      @ride_post = Current.user.ride_posts.build
+      @ride_post = Current.user.ride_posts.build(seats: 3)
     end
     if params[:community_id].present?
       offer = @ride_schedule || @ride_post
@@ -223,7 +223,7 @@ class RidePostsController < ApplicationController
 
   # Use callbacks to share common setup or constraints between actions.
   def set_ride_post
-    @ride_post = RidePost.includes(:origin, :destination, :community, :ride_schedule, user: { avatar_attachment: :blob }).find_by(id: params.expect(:id).to_i)
+    @ride_post = RidePost.includes(:origin, :destination, :community, ride_schedule: :source_ride_post, user: { avatar_attachment: :blob }).find_by(id: params.expect(:id).to_i)
     redirect_to ride_posts_path, alert: "The trip is no longer available" unless @ride_post
   end
 

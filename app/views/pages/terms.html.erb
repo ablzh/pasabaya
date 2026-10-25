@@ -2,7 +2,7 @@
 
 <div class="min-h-screen py-16 px-4 sm:px-6 lg:px-8 bg-white dark:bg-neutral-900">
   <div class="max-w-3xl mx-auto">
-    <a href="/" class="text-indigo-600 dark:text-indigo-400 hover:underline font-medium flex items-center mb-8">
+    <a id="terms_back_home" href="/" class="text-indigo-600 dark:text-indigo-400 hover:underline font-medium flex items-center mb-8">
       <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
       </svg>
@@ -10,7 +10,7 @@
     </a>
 
     <h1 class="text-4xl font-extrabold text-neutral-900 dark:text-white mb-2">Terms of Service</h1>
-    <p class="text-sm text-neutral-500 dark:text-neutral-400 mb-8 italic">Effective Date: October 3, 2026</p>
+    <p class="text-sm text-neutral-500 dark:text-neutral-400 mb-8 italic">Effective Date: <time datetime="2026-10-23">October 23, 2026</time></p>
 
     <div class="prose prose-neutral dark:prose-invert prose-indigo max-w-none space-y-8">
 
@@ -22,14 +22,20 @@
           CRITICAL NOTICE: PLEASE READ CAREFULLY
         </h2>
         <p class="text-amber-900 dark:text-amber-300 mb-0">
-          Pasabaya.app is a <strong>free, non-commercial digital bulletin board</strong> that allows private individuals to voluntarily match for shared journeys along similar routes. We do not provide transportation, dispatch vehicles, employ drivers, inspect vehicles, or verify user identities. By using this service, you acknowledge that you travel entirely at your own discretion and are <strong>solely responsible</strong> for your personal safety, due diligence, and interactions with other users.
+          Pasabaya.app is a <strong>free, volunteer-run, open-source community carpool matching project</strong> for private individuals already traveling along similar routes. We do not provide transportation, dispatch vehicles, employ drivers, inspect vehicles, or verify user identities. You choose your travel companions and are responsible for checking the arrangements and taking reasonable precautions before traveling. A profile, accepted seat request, community badge, or trip review is not a guarantee of safety.
         </p>
       </div>
 
       <section>
         <h2 class="text-xl font-bold text-neutral-900 dark:text-white">1. Acceptance of Terms</h2>
         <p>
+          Pasabaya is operated by <strong>Artem Blazhievskii</strong> (<a id="terms_operator_github" href="https://github.com/ablzh" class="text-indigo-600 dark:text-indigo-400">ablzh on GitHub</a>). Pasabaya is a volunteer project, not a company. In these Terms, "Pasabaya" or "the Service" means the platform, and "we", "us", or "our" refers to Artem Blazhievskii as its operator.
+        </p>
+        <p>
           By creating an account, browsing ride listings, publishing a ride post, requesting a seat, or otherwise accessing Pasabaya.app ("the Service"), you agree to be bound by these Terms of Service ("Terms"). If you do not agree to all of these Terms, you must not access or use the Service.
+        </p>
+        <p>
+          Our <%= link_to "Privacy Policy", privacy_path, id: "terms_privacy_policy" %> explains how personal data is collected, used, shared, and retained. Accepting these Terms does not waive your data privacy rights or replace any separate consent required by law.
         </p>
       </section>
 
@@ -48,12 +54,13 @@
             </ol>
           </li>
         </ul>
+        <p>These are your declarations. Pasabaya does not independently verify your age, identity, criminal history, license, vehicle registration, or insurance. Keep your account details accurate and your login credentials private.</p>
       </section>
 
       <section>
         <h2 class="text-xl font-bold text-neutral-900 dark:text-white">3. Nature of the Platform</h2>
         <p>
-          Pasabaya.app is an informational matching board. Pasabaya does not provide transportation services, does not own, lease, or inspect vehicles, does not employ, supervise, or direct drivers, and does not schedule or dispatch transport routes.
+          Pasabaya provides tools for publishing one-time or recurring driver offers, requesting and accepting passenger seats, receiving route alerts, and coordinating trips. Drivers choose their routes, travel days, departure times, and available seats. Pasabaya does not operate vehicles or direct drivers' journeys.
         </p>
         <p>
           Drivers and passengers connect as independent private individuals. Any travel arrangement, route selection, meeting point, or schedule agreement is formed solely between the respective users. Pasabaya is not a party to any contract, arrangement, or understanding formed between users.
@@ -66,41 +73,47 @@
           Pasabaya is strictly dedicated to non-commercial carpooling between private individuals traveling toward a shared destination:
         </p>
         <ul class="list-disc pl-5 space-y-2">
-          <li><strong>Voluntary Expense Sharing:</strong> Travelers may voluntarily agree to share actual, out-of-pocket travel expenses (such as gasoline/diesel fuel and expressway toll fees). Any shared expense contribution must be strictly proportionate to the journey and must never be calibrated to generate profit, remuneration, or commercial gain for the driver.</li>
+          <li><strong>Voluntary Expense Sharing:</strong> Where permitted by applicable law, travelers may voluntarily agree to share actual, out-of-pocket travel expenses such as fuel and tolls. Contributions must relate to the shared journey and must not generate profit or remuneration for the driver. Agree any contribution before traveling.</li>
           <li><strong>Prohibition of Commercial Exploitation:</strong> Users are strictly prohibited from using Pasabaya to operate unauthorized public passenger transport ("colorum"), run taxi or shuttle services, offer commercial courier or cargo dispatch, or solicit fares for hire or reward.</li>
-          <li><strong>Direct Peer Settlement:</strong> Any voluntary expense sharing is negotiated and settled entirely offline directly between users. Pasabaya does not recommend contribution amounts, does not enforce payment, and disclaims any responsibility for monetary disagreements between users.</li>
+          <li><strong>Direct Peer Settlement:</strong> Any permitted contribution is agreed and settled directly between users outside Pasabaya. Pasabaya does not set contribution amounts, collect or enforce payment, or adjudicate payment disputes.</li>
         </ul>
+        <p>Use of a free platform or sharing expenses does not establish an exemption from transport laws. Drivers must comply with applicable permit, franchise, licensing, registration, and insurance requirements. Pasabaya does not grant transport authority or insurance coverage.</p>
       </section>
 
       <section>
-        <h2 class="text-xl font-bold text-neutral-900 dark:text-white">5. Absolute Zero Financial Intermediation</h2>
+        <h2 class="text-xl font-bold text-neutral-900 dark:text-white">5. Platform Fees &amp; Payments</h2>
         <p>
           Pasabaya charges <strong>zero commission, zero booking fees, and zero service charges</strong> to drivers or passengers. The platform contains no in-app wallet, payment processing gateway, escrow mechanism, fare calculator, or dynamic rate engine. Pasabaya never receives, processes, collects, or disburses money on behalf of any user.
         </p>
       </section>
 
       <section>
-        <h2 class="text-xl font-bold text-neutral-900 dark:text-white">6. Booking, Driver Discretion &amp; Ladies Only Preference</h2>
+        <h2 class="text-xl font-bold text-neutral-900 dark:text-white">6. Seat Requests, Recurring Rides &amp; Cancellations</h2>
         <p>
           All seat reservations on ride offers require explicit driver review and approval:
         </p>
         <ul class="list-disc pl-5 space-y-2">
-          <li><strong>Driver Discretion:</strong> Drivers maintain 100% discretion to accept or decline any booking request for any lawful reason. A driver is never obligated to accept a seat request.</li>
-          <li><strong>Ladies Only Rides:</strong> The "Ladies Only" filtering option is based on self-declared user profile gender and individual driver discretion. It does <strong>not</strong> constitute an identity verification check, biometric screening, or a guarantee of personal safety. Users must exercise their own judgment and due diligence.</li>
+          <li><strong>Requests &amp; Confirmation:</strong> Sending a seat request does not reserve a seat. A seat is confirmed only when the driver accepts the request while seats remain available and the trip and participants remain eligible. Drivers may accept or decline requests for lawful reasons, subject to the platform's availability and audience rules.</li>
+          <li><strong>Recurring Offers:</strong> Drivers choose the weekdays and departure time in Philippine time. A regular ride makes individual departures available up to 14 days ahead. Without an end date, it repeats until paused or ended. Passengers must request a seat for each departure; acceptance does not reserve seats on other dates.</li>
+          <li><strong>Schedule Changes:</strong> Editing a series does not automatically change departures that already have pending or accepted requests. Review those departures separately. Pausing a series stops new requests and expires pending requests while preserving accepted bookings. Resuming does not revive expired requests or canceled departures. Ending the series cancels its future departures, including accepted bookings.</li>
+          <li><strong>Closing Requests &amp; Canceling:</strong> Closing a trip to new requests does not cancel accepted bookings. Drivers and passengers should use the cancellation controls promptly when they cannot travel and notify their companions. A confirmed booking can still be canceled; Pasabaya does not guarantee that a journey will take place.</li>
+          <li><strong>Ladies Only Rides:</strong> These offers require a driver and passengers whose profiles are set to female. Gender is self-declared. This preference does <strong>not</strong> verify identity or guarantee personal safety.</li>
           <li><strong>Community Hub Rides:</strong> Rides posted within closed institutional hubs require email domain verification. Hub verification indicates that an institutional email address was verified; it does not constitute an endorsement, background investigation, or safety warranty by the institution or by Pasabaya.</li>
+          <li><strong>Route Alerts:</strong> An optional route alert requests a one-time notification about a matching, available offer. It does not book a seat or guarantee that the offer will remain available when you open it.</li>
         </ul>
       </section>
 
       <section>
         <h2 class="text-xl font-bold text-neutral-900 dark:text-white">7. In-App Coordination Chat &amp; Acceptable Use</h2>
         <p>
-          Confirmed ride participants receive access to private trip coordination chat. By using the chat feature, you agree to adhere strictly to the following standards:
+          The driver and accepted passengers receive access to their trip's coordination chat. Pending and declined requesters cannot access it. Eligible previously confirmed participants may retain access for cancellation coordination. Bans, account deletion, and loss of required hub access revoke chat access.
         </p>
         <ul class="list-disc pl-5 space-y-2">
           <li><strong>Permitted Use:</strong> In-app chat must be used exclusively to coordinate trip logistics (such as pickup locations, delays, luggage capacity, and arrival estimates).</li>
           <li><strong>Prohibited Conduct:</strong> You must not send harassment, hate speech, threats, sexually explicit material, stalking messages, fraudulent requests, unauthorized advertising, or off-platform commercial solicitations.</li>
-          <li><strong>Sensitive Financial Data Warning:</strong> Never disclose bank account credentials, credit card details, e-wallet PINs, one-time passwords (OTPs), or government identity cards in chat. Pasabaya disclaims all liability for loss or theft resulting from voluntary data disclosure.</li>
-          <li><strong>Moderation &amp; Chat Logs:</strong> Writes are locked 24 hours after departure; messages are purged from active production databases after 30 days. We reserve the right to review chat transcripts when necessary to investigate reported safety incidents, abuse, or legal violations.</li>
+          <li><strong>Protect Your Information:</strong> Do not disclose bank account credentials, credit card details, e-wallet PINs, one-time passwords (OTPs), or government identity documents in chat. Share only what your companions need to coordinate the trip.</li>
+          <li><strong>Messaging &amp; History Deadlines:</strong> Messaging closes 24 hours after the booking cutoff. If a trip is canceled while messaging is open, messaging closes 24 hours after cancellation. Cancellation does not reopen closed messaging or unavailable history. Authorized participants may read the conversation for another 30 days after messaging closes. At the history deadline, chat becomes inaccessible and deletion from the live database is scheduled. Background job delays can postpone physical deletion; backup copies follow the separate retention schedule in the Privacy Policy.</li>
+          <li><strong>Privacy &amp; Moderation:</strong> Messages are protected in transit but are not end-to-end encrypted. Staff do not routinely monitor trip chat. Access may be necessary to investigate reported abuse, protect lawful rights, or comply with valid legal requirements, subject to applicable law and the retention deadlines. See the <%= link_to "Privacy Policy", privacy_path, id: "terms_chat_privacy" %> for details.</li>
         </ul>
       </section>
 
@@ -111,18 +124,19 @@
         </p>
         <ul class="list-disc pl-5 space-y-2">
           <li><strong>Mutual Reliability:</strong> Both drivers and passengers must arrive punctually at agreed meeting spots or notify companions in advance if unexpected delays arise.</li>
-          <li><strong>Reporting No-Shows:</strong> Following departure, participants may submit trip reviews reporting unexcused driver or passenger no-shows.</li>
-          <li><strong>60-Day Rolling Window &amp; Temporary Freezes:</strong> We evaluate upheld no-show incidents across a <strong>rolling 60-day window</strong>. If a user accumulates three (3) or more upheld no-show incidents within 60 days, their account is automatically placed on a <strong>7-day freeze</strong>, preventing them from creating new ride offers or requesting new bookings. Chronic or malicious no-shows may lead to permanent account termination.</li>
+          <li><strong>Reporting &amp; Review:</strong> After a trip's departure, eligible participants may record trip outcomes and report a no-show. A report is an allegation, not a confirmed strike. An eligible administrator reviews the incident, records a reason for confirming or dismissing it, and notifies the reported account. Decisions can be corrected, with earlier decisions retained in the history. Submit reports honestly and avoid unnecessary personal information.</li>
+          <li><strong>60-Day Rolling Window &amp; Temporary Freezes:</strong> We count upheld no-show incidents in a <strong>rolling 60-day window</strong>. A decision that brings an account to three (3) or more upheld incidents triggers a <strong>7-day freeze</strong> if it is not already frozen. During the freeze, the user cannot publish new offers, request seats, or accept new bookings. Active recurring schedules are paused. Existing accepted bookings are preserved, and a freeze alone does not remove otherwise authorized chat access. A paused schedule requires the driver's explicit action to resume after restrictions end.</li>
+          <li><strong>Questions About a Decision:</strong> Contact <a id="terms_decision_contact" href="mailto:legal@pasabaya.app" class="text-indigo-600 dark:text-indigo-400">legal@pasabaya.app</a> with the relevant trip and decision details if you believe a decision is incorrect. Repeated or serious misconduct may lead to further restrictions or account termination.</li>
         </ul>
       </section>
 
       <section>
         <h2 class="text-xl font-bold text-neutral-900 dark:text-white">9. Assumption of Risk &amp; Safety Due Diligence</h2>
         <p class="font-bold text-neutral-900 dark:text-white">
-          You expressly acknowledge and agree that your participation in any carpool arrangement is undertaken at your own sole and voluntary risk.
+          Traveling with other users involves risks. Consider the arrangements and your own circumstances before accepting or joining a ride.
         </p>
         <p>
-          Because Pasabaya does not conduct criminal background checks, license verification, or vehicle safety inspections, you are solely responsible for conducting your own due diligence before traveling:
+          Pasabaya does not conduct criminal background checks, license verification, or vehicle safety inspections. Take reasonable precautions before traveling:
         </p>
         <ul class="list-disc pl-5 space-y-2">
           <li>Meet in well-lit, public areas with visible foot traffic.</li>
@@ -142,24 +156,24 @@
       <section>
         <h2 class="text-xl font-bold text-neutral-900 dark:text-white">11. Limitation of Liability</h2>
         <p>
-          To the fullest extent permitted by applicable Philippine law, Pasabaya, its developers, operators, contributors, and affiliates shall not be liable for any indirect, incidental, special, consequential, exemplary, or punitive damages, including but not limited to bodily injury, physical harm, emotional distress, illness, death, robbery, theft, vehicular accidents, property damage, travel delays, missed flights, or disputes arising from user arrangements.
+          To the extent permitted by Philippine law, Pasabaya and its operators disclaim liability for indirect, incidental, special, or consequential losses arising from use of the Service. Users remain responsible for their own driving, conduct, travel arrangements, and obligations to one another. Pasabaya does not guarantee another user's performance, the availability of a seat, or the completion of a trip.
         </p>
         <p>
-          Nothing in these Terms limits or excludes liability that cannot be lawfully disclaimed under mandatory provisions of Philippine law (such as liability resulting directly from our own proven gross negligence or intentional misconduct).
+          Nothing in these Terms excludes liability for our fraud, intentional misconduct, gross negligence, or any other liability that cannot lawfully be excluded. These Terms do not waive your statutory rights or excuse Pasabaya from its obligations under applicable data privacy or other mandatory law.
         </p>
       </section>
 
       <section>
         <h2 class="text-xl font-bold text-neutral-900 dark:text-white">12. Indemnification</h2>
         <p>
-          You agree to defend, indemnify, and hold harmless Pasabaya, its developers, and contributors from and against any third-party claims, liabilities, damages, losses, costs, or legal fees arising out of or related to: (a) your use of or access to the Service; (b) any carpool arrangement or travel undertaken with users you connected with through the platform; (c) your breach of these Terms; or (d) your violation of any applicable law or the rights of any third party.
+          To the extent permitted by Philippine law, you agree to indemnify Pasabaya and its operators against third-party claims and reasonable losses or legal costs to the extent caused by your unlawful conduct, infringement of another person's rights, or breach of these Terms. This obligation does not cover losses caused by Pasabaya's own wrongful acts or omissions, or require you to waive rights or assume liabilities that cannot lawfully be transferred to you.
         </p>
       </section>
 
       <section>
         <h2 class="text-xl font-bold text-neutral-900 dark:text-white">13. Administration Rights, Suspension &amp; Termination</h2>
         <p>
-          To safeguard community trust, Pasabaya expressly reserves the right to suspend, freeze, restrict, or permanently terminate any user account, ride listing, or membership, without prior notice or liability, if:
+          To protect the community and enforce these Terms, Pasabaya may restrict, suspend, or terminate an account, listing, or membership where reasonably necessary, including when:
         </p>
         <ul class="list-disc pl-5 space-y-2">
           <li>You breach any provision of these Terms or community safety rules.</li>
@@ -168,24 +182,27 @@
           <li>The platform administration reasonably determines that continued access presents a safety hazard to other community members.</li>
         </ul>
         <p>
-          You may delete your own account at any time via Account Settings. Account deletion anonymizes your profile while preserving de-identified safety records and past trip statistics.
+          Urgent safety or abuse concerns may require action before notice can be given. Restrictions remain subject to applicable law. You may contact <a id="terms_restriction_contact" href="mailto:legal@pasabaya.app" class="text-indigo-600 dark:text-indigo-400">legal@pasabaya.app</a> about an account restriction.
+        </p>
+        <p>
+          You may delete your account through Account Settings at any time. Deletion removes or replaces profile identifiers, stops recurring offers, cancels active commitments, and scrubs personal text. De-identified trip and safety history and separate recovery records may remain as described in the <%= link_to "Privacy Policy", privacy_path, id: "terms_deletion_privacy" %>; deletion does not promise that all historical records or backup copies disappear immediately.
         </p>
       </section>
 
       <section>
         <h2 class="text-xl font-bold text-neutral-900 dark:text-white">14. Modifications to Terms</h2>
         <p>
-          We reserve the right to revise these Terms at any time. When modifications are made, we will update the "Effective Date" at the top of this document. Your continued use of the platform after revised Terms become effective constitutes your legally binding agreement to the amended Terms.
+          We may revise these Terms as the Service develops or legal requirements change. We will publish the revised version and effective date and announce material changes on the platform and by email to registered users. Where required by law, we will give advance notice or request acceptance before a change applies. If you do not agree to revised Terms, stop using the Service and cancel any ongoing arrangements responsibly. Changes to personal-data processing are also subject to the notices and consent requirements described in the Privacy Policy.
         </p>
       </section>
 
       <section class="border-t border-neutral-200 dark:border-neutral-800 pt-8 mt-12">
         <h2 class="text-xl font-bold text-neutral-900 dark:text-white">15. Governing Law &amp; Dispute Resolution</h2>
         <p>
-          These Terms and any dispute arising from your use of the Service shall be governed by and construed in accordance with the laws of the <strong>Republic of the Philippines</strong>. Any legal action arising from these Terms shall be instituted exclusively before the competent courts of Metro Manila, Philippines.
+          These Terms are governed by the laws of the <strong>Republic of the Philippines</strong>. Disputes may be brought before the Philippine courts or authorities with jurisdiction under applicable law. Nothing in these Terms prevents you from raising a data privacy complaint with the National Privacy Commission or using another remedy available by law.
         </p>
         <p class="text-sm text-neutral-500 dark:text-neutral-400 mt-4">
-          For legal inquiries, violations reporting, or notices, contact our legal desk at <a href="mailto:legal@pasabaya.app" class="text-indigo-600 dark:text-indigo-400">legal@pasabaya.app</a>.
+          For legal inquiries, reports, or notices, contact <a id="terms_footer_contact" href="mailto:legal@pasabaya.app" class="text-indigo-600 dark:text-indigo-400">legal@pasabaya.app</a>.
         </p>
       </section>
     </div>

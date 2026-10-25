@@ -34,6 +34,9 @@ export default class extends Controller {
   showChat(e) {
     if (e) e.preventDefault()
     this.switchTab("chat")
+    if (this.hasChatPaneTarget) {
+      this.chatPaneTarget.querySelector('[data-chat-scroll-target="input"]:enabled')?.focus({ preventScroll: true })
+    }
   }
 
   navigateTabs(event) {

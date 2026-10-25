@@ -136,6 +136,7 @@ class TripChatUnreadTest < ApplicationSystemTestCase
     assert_selector "[data-chat-unread-count]", text: "1", visible: :all
     assert_equal 1, @passenger.reload.unread_chats_count
 
+    find(".chat-deadlines summary").execute_script("this.focus()")
     page.execute_script(<<~JS)
       document.addEventListener('turbo:morph', () => {
         requestAnimationFrame(() => requestAnimationFrame(() => {
@@ -148,6 +149,8 @@ class TripChatUnreadTest < ApplicationSystemTestCase
     end
     assert_selector "[data-chat-scroll-target='coordinationNotice'][role='status']"
     assert_selector "html[data-chat-refresh-complete='true']", visible: :all
+    assert_selector ".chat-deadlines summary:focus"
+    assert_no_selector "#chat_message_form input:focus"
 
     assert_in_delta 0, page.evaluate_script("document.querySelector('#chat_messages_list').scrollTop"), 1
     assert_equal 1, @passenger.reload.unread_chats_count

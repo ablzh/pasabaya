@@ -25,6 +25,10 @@ class RideSchedule < ApplicationRecord
   validates :source_ride_post_id, uniqueness: true, allow_nil: true
   validate :valid_schedule
 
+  def listing_created_at
+    source_ride_post&.created_at || created_at
+  end
+
   def weekday_ids
     (0..6).select { |day| weekdays_mask.to_i[day] == 1 }
   end

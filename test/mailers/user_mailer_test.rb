@@ -38,6 +38,10 @@ class UserMailerTest < ActionMailer::TestCase
       assert_includes body, edit_ride_schedule_url(draft, **UserMailer.default_url_options)
       assert_includes body, settings_profile_url(**UserMailer.default_url_options)
       assert_includes body, "private draft"
+      assert_includes body, terms_url(**UserMailer.default_url_options)
+      assert_includes body, privacy_url(**UserMailer.default_url_options)
+      assert_includes body, "October 23, 2026"
+      assert_includes body, "privacy@pasabaya.app"
       assert_not_includes body, edit_ride_schedule_url(other_drivers_schedule, **UserMailer.default_url_options)
     end
   end
@@ -110,6 +114,10 @@ class UserMailerTest < ActionMailer::TestCase
       body = part.body.decoded
       assert_includes body, ride_posts_url(**UserMailer.default_url_options)
       assert_includes body, new_ride_post_url(**UserMailer.default_url_options)
+      assert_includes body, terms_url(**UserMailer.default_url_options)
+      assert_includes body, privacy_url(**UserMailer.default_url_options)
+      assert_includes body, "October 23, 2026"
+      assert_includes body, "privacy@pasabaya.app"
       assert_not_includes body, @schedule.end_date.to_fs(:long)
       assert_not_includes body, "30 days"
     end

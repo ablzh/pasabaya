@@ -34,6 +34,23 @@ class CommunityMembershipsControllerTest < ActionDispatch::IntegrationTest
     assert_not membership.verified?
   end
 
+  test "verification and resend forms disclose email use and profile badge visibility" do
+    sign_in_as(@user)
+    get community_url(@community)
+
+    assert_response :success
+    assert_select "#community_verification_form[aria-describedby='community_verification_privacy_notice']"
+    assert_select "#community_verification_privacy_notice", text: /institutional email.*badge.*logged-in members/
+    assert_select "#community_verification_privacy_notice a[href=?]", privacy_path
+
+    @user.community_memberships.create!(community: @community, institutional_email: "cand@accenture.com")
+    get community_url(@community)
+
+    assert_response :success
+    assert_select "#community_verification_resend_form[aria-describedby='community_verification_privacy_notice']"
+    assert_select "#community_verification_privacy_notice a[href=?]", privacy_path
+  end
+
   test "create rejects mismatched email domain" do
     sign_in_as(@user)
     assert_no_emails do

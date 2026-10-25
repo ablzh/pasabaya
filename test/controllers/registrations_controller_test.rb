@@ -107,7 +107,7 @@ class RegistrationsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "successful registration records server time and policy version despite forged values" do
-    travel_to Time.zone.local(2026, 10, 3, 12, 0) do
+    travel_to Time.zone.local(2026, 10, 23, 12, 0) do
       post sign_up_url, params: { user: {
         first_name: "Liza", last_name: "Soberano", email_address: "recorded@example.com",
         password: "password123", password_confirmation: "password123", registration_acceptance: "1",
@@ -117,7 +117,7 @@ class RegistrationsControllerTest < ActionDispatch::IntegrationTest
       assert_redirected_to root_url
       user = User.find_by!(email_address: "recorded@example.com")
       assert_equal Time.current, user.registration_accepted_at
-      assert_equal "2026-10-03", user.registration_policy_version
+      assert_equal "2026-10-23", user.registration_policy_version
     end
   end
 

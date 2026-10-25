@@ -56,7 +56,7 @@ class UsersController < ApplicationController
   end
 
   def with_listing_data(rides)
-    rides.includes(:origin, :destination, :community, :ride_schedule, user: { avatar_attachment: :blob })
+    rides.includes(:origin, :destination, :community, ride_schedule: :source_ride_post, user: { avatar_attachment: :blob })
   end
 
   def expire_overdue_requests
