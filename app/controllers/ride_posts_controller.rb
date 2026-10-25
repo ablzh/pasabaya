@@ -17,7 +17,7 @@ class RidePostsController < ApplicationController
     if params.key?(:origin_id) || params.key?(:destination_id) || params.key?(:community_id) || params.key?(:ladies_only) || params.key?(:departure_date) || params[:q].present? || params[:query].present? || params[:origin].present? || params[:destination].present?
       @ride_posts = RidePost.accepting_requests
                             .visible_to(Current.user)
-                            .includes(:origin, :destination, :community, :ride_schedule, user: { avatar_attachment: :blob })
+                            .includes(:origin, :destination, :community, ride_schedule: :source_ride_post, user: { avatar_attachment: :blob })
                             .order(departure_date: :asc, departure_time: :asc)
                             .filter_by_origin(params[:origin_id])
                             .filter_by_destination(params[:destination_id])
@@ -223,7 +223,7 @@ class RidePostsController < ApplicationController
 
   # Use callbacks to share common setup or constraints between actions.
   def set_ride_post
-    @ride_post = RidePost.includes(:origin, :destination, :community, :ride_schedule, user: { avatar_attachment: :blob }).find_by(id: params.expect(:id).to_i)
+    @ride_post = RidePost.includes(:origin, :destination, :community, ride_schedule: :source_ride_post, user: { avatar_attachment: :blob }).find_by(id: params.expect(:id).to_i)
     redirect_to ride_posts_path, alert: "The trip is no longer available" unless @ride_post
   end
 

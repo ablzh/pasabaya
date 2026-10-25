@@ -31,7 +31,7 @@
           <% end %>
 
           <span class="text-xs text-neutral-500 dark:text-neutral-400 ml-1">
-            Posted <%= time_ago_in_words(@ride_post.created_at) %> ago
+            <%= time_tag @ride_post.listing_created_at, "Created #{time_ago_in_words(@ride_post.listing_created_at)} ago" %>
           </span>
         </div>
       </div>

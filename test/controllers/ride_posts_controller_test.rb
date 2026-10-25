@@ -56,6 +56,52 @@ class RidePostsControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "Part of regular schedule"
   end
 
+  test "creation age follows the original offer or schedule instead of generated departures" do
+    travel_to Time.current.change(sec: 0) do
+      origin = locations(:one)
+      destination = locations(:two)
+      date = Date.tomorrow
+      source, schedules, rides = Prosopite.pause do
+        source = @user.ride_posts.create!(status: :draft, created_at: 4.months.ago)
+        schedules = [ source, nil ].map do |original|
+          @user.ride_schedules.create!(
+            source_ride_post: original, origin: origin, destination: destination,
+            weekdays_mask: 1 << date.wday, departure_choice: :flexible, seats: 3,
+            status: :active, created_at: 2.weeks.ago
+          )
+        end
+        rides = schedules.map do |schedule|
+          schedule.ride_posts.create!(schedule.ride_attributes(date).merge(schedule_date: date))
+        end
+        rides << @user.ride_posts.create!(origin: origin, destination: destination,
+          departure_date: date, departure_choice: :flexible, seats: 3, created_at: 1.week.ago)
+        [ source, schedules, rides ]
+      end
+      creation_dates = [ source.created_at, schedules.last.created_at, rides.last.created_at ]
+
+      get route_rides_url(origin_slug: origin.slug, destination_slug: destination.slug)
+      assert_response :success
+      rides.zip(creation_dates).each do |ride, created_at|
+        age = Regexp.escape(ApplicationController.helpers.time_ago_in_words(created_at))
+        assert_select "#ride_post_#{ride.id}", text: /Created\s+#{age}\s+ago/
+      end
+
+      rides.zip(creation_dates).each do |ride, created_at|
+        get ride_post_url(ride)
+        assert_response :success
+        age = Regexp.escape(ApplicationController.helpers.time_ago_in_words(created_at))
+        assert_select ".ride-detail-header", text: /Created\s+#{age}\s+ago/
+      end
+
+      schedules.zip(creation_dates).each do |schedule, created_at|
+        get ride_schedule_url(schedule)
+        assert_response :success
+        age = Regexp.escape(ApplicationController.helpers.time_ago_in_words(created_at))
+        assert_select "time[datetime=?]", created_at.iso8601, text: /Created\s+#{age}\s+ago/
+      end
+    end
+  end
+
   test "SEO redirects retain audience filters and departure date" do
     origin = locations(:one)
     destination = locations(:two)

@@ -1,6 +1,34 @@
 require "test_helper"
 
 class TripPresentationQueriesTest < ActionDispatch::IntegrationTest
+  test "search profile and hub cards retain the original creation dates across regular offers" do
+    driver = users(:one)
+    origin = locations(:one)
+    destination = locations(:two)
+    community = communities(:one)
+    date = Date.tomorrow
+    offers = Prosopite.pause do
+      2.times.map do |index|
+        source = driver.ride_posts.create!(status: :draft, created_at: (index + 1).months.ago.change(usec: 0))
+        schedule = driver.ride_schedules.create!(source_ride_post: source, origin: origin,
+          destination: destination, community: community, weekdays_mask: 1 << date.wday,
+          departure_choice: :flexible, seats: 3, status: :active, created_at: 2.weeks.ago)
+        ride = schedule.ride_posts.create!(schedule.ride_attributes(date).merge(schedule_date: date))
+        [ ride, source.created_at ]
+      end
+    end
+    sign_in_as(users(:two))
+
+    [ route_rides_url(origin_slug: origin.slug, destination_slug: destination.slug),
+      user_url(driver), community_url(community) ].each do |url|
+      get url
+      assert_response :success
+      offers.each do |ride, created_at|
+        assert_select "#ride_post_#{ride.id} time[datetime=?]", created_at.iso8601
+      end
+    end
+  end
+
   test "trip details do not load inactive booking history for any viewer" do
     ride = ride_posts(:one)
     booking = bookings(:one)
