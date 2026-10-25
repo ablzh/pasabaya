@@ -7,6 +7,8 @@ require_relative "test_helpers/browser_presentation_helper"
 class ApplicationSystemTestCase < ActionDispatch::SystemTestCase
   include BrowserPresentationHelper
 
+  Capybara.default_max_wait_time = 5
+
   driven_by :cuprite, screen_size: [ 1400, 1400 ], options: {
     process_timeout: 15,
     timeout: 10,

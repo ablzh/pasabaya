@@ -1,4 +1,5 @@
 require "test_helper"
+require "action_cable/subscription_adapter/solid_cable"
 
 class RideCancellationBroadcastJobTest < ActiveJob::TestCase
   setup do
@@ -44,5 +45,24 @@ class RideCancellationBroadcastJobTest < ActiveJob::TestCase
     assert_no_difference([ "RidePostDispatch.count", "Notification.count" ]) do
       RidePosts::CancelService.call(@ride, actor: @ride.user)
     end
+  end
+
+  test "a Solid Cable database failure preserves retryable cancellation publication" do
+    adapter = ActionCable::SubscriptionAdapter::SolidCable.new(ActionCable.server)
+
+    with_stubbed_method(ActionCable.server, :pubsub, adapter) do
+      with_stubbed_method(SolidCable::Message, :with_connection, -> { raise IOError, "Cable database unavailable" }) do
+        assert_raises(IOError) { RideCancellationBroadcastJob.new.perform(@dispatch.id) }
+      ensure
+        # Drain an asynchronous writer before restoring the database boundary.
+        adapter.instance_variable_get(:@broadcaster)&.shutdown
+      end
+    end
+
+    assert @ride.reload.canceled?
+    assert @booking.reload.canceled?
+    assert_equal 1, @dispatch.reload.failure_count
+    assert_equal "IOError", @dispatch.last_error
+    assert @dispatch.failed_at
   end
 end

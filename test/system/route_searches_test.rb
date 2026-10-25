@@ -92,7 +92,7 @@ class RouteSearchesTest < ApplicationSystemTestCase
     assert_no_selector ".ts-dropdown", visible: true
     page.driver.browser.keyboard.type(:Tab)
     assert_selector "#destination_id + .ts-wrapper .ts-dropdown input:focus"
-    find("#destination_id + .ts-wrapper .ts-dropdown input").send_keys(:escape)
+    page.driver.browser.keyboard.type(:Escape)
     assert_no_selector ".ts-dropdown", visible: true
     # Tom Select's dropdown search and the native date segments have internal stops.
     6.times do
