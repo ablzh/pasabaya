@@ -9,12 +9,17 @@ class MobileTripChatTest < ApplicationSystemTestCase
   end
 
   test "mobile discussion fills viewport and restores trip and desktop navigation" do
+    previous_forgery_protection = ApplicationController.allow_forgery_protection
+    ApplicationController.allow_forgery_protection = true
+    page.driver.resize(375, 812)
     visit ride_post_path(@ride, tab: "chat")
+    assert_selector "#chat_message_form input[name='authenticity_token']", visible: :hidden
     assert_selector "#chat_message_form input"
+    assert_no_selector "#chat_message_form input:focus"
     assert_no_selector ".web-navigation"
     assert_no_selector ".web-footer"
     assert_no_selector "#trip-details-tab"
-    assert_chat_fits(844)
+    assert_chat_fits(812)
     within ".trip-chat" do
       assert_text "Manila"
       assert_text "Makati"
@@ -23,7 +28,13 @@ class MobileTripChatTest < ApplicationSystemTestCase
     end
     assert_selector "#trip-details-pane:not(.hidden)"
     assert_selector ".web-navigation"
+    click_button "Open Trip Chat"
+    assert_selector "#chat_message_form input:focus"
+    assert_chat_fits(812)
+    find("button[aria-label='Back to trip']").click
     click_button "Live Chat"
+    assert_selector "#chat_message_form input:focus"
+    assert_chat_fits(812)
     page.driver.resize(1440, 900)
     assert_selector ".web-navigation"
     assert_selector ".web-footer"
@@ -34,13 +45,18 @@ class MobileTripChatTest < ApplicationSystemTestCase
     click_button "Trip Details"
     assert_selector "#trip-details-pane"
     assert_no_selector "#trip-chat-pane"
-    click_button "Live Chat"
+    find("#trip-details-tab").send_keys(:right)
     assert_no_selector "#trip-details-pane"
     assert_selector "#trip-chat-pane"
+    assert_selector "#trip-chat-tab:focus"
+    assert_no_selector "#chat_message_form input:focus"
 
     visit ride_post_path(@ride, tab: "chat")
     assert_selector "#trip-chat-pane"
     assert_no_selector "#trip-details-pane"
+    assert_no_selector "#chat_message_form input:focus"
+  ensure
+    ApplicationController.allow_forgery_protection = previous_forgery_protection
   end
 
   test "composer follows a reduced visual viewport and landscape height" do
@@ -87,6 +103,9 @@ class MobileTripChatTest < ApplicationSystemTestCase
   test "read only deadlines stay available and expired history has no active composer" do
     @ride.update_columns(departure_date: 3.days.ago.to_date, departure_time: 3.days.ago)
     visit ride_post_path(@ride, tab: "chat")
+    assert_no_selector "#chat_message_form input"
+    find("button[aria-label='Back to trip']").click
+    click_button "Live Chat"
     assert_no_selector "#chat_message_form input"
     find(".chat-deadlines summary").click
     assert_selector ".chat-deadlines time", count: 2

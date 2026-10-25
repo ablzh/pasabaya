@@ -4,6 +4,15 @@ class PassengerSeatsSystemTest < ApplicationSystemTestCase
   test "driver adjusts passenger seats or types a larger number without submitting" do
     sign_in(users(:one))
     visit new_ride_post_path
+    assert_field "Available passenger seats", with: "3"
+    click_button "Add one passenger seat"
+    assert_field "Available passenger seats", with: "4"
+    fill_in "Available passenger seats", with: ""
+    click_button "Remove one passenger seat"
+    assert_field "Available passenger seats", with: "2"
+    fill_in "Available passenger seats", with: ""
+    click_button "Add one passenger seat"
+    assert_field "Available passenger seats", with: "4"
     fill_in "Available passenger seats", with: 1
     click_button "Remove one passenger seat"
     assert_field "Available passenger seats", with: "1"
@@ -13,6 +22,38 @@ class PassengerSeatsSystemTest < ApplicationSystemTestCase
     click_button "Add one passenger seat"
     assert_field "Available passenger seats", with: "13"
     assert_current_path new_ride_post_path
+  end
+
+  test "seat defaults apply only to fresh offers and preserve saved or invalid input" do
+    sign_in(users(:one))
+    visit new_ride_post_path(ride_type: "regular")
+    assert_field "Passenger seats per departure", with: "3"
+    fill_in "Passenger seats per departure", with: ""
+    click_button "Publish regular ride"
+    assert_selector "#ride_post_seats_error"
+    assert_field "Passenger seats per departure", with: ""
+    fill_in "Passenger seats per departure", with: 12
+    click_button "Publish regular ride"
+    assert_selector "[data-form-errors-summary]"
+    assert_field "Passenger seats per departure", with: "12"
+
+    draft = users(:one).ride_posts.create!(status: :draft)
+    visit edit_ride_post_path(draft)
+    assert_field "Available passenger seats", with: ""
+    visit new_ride_post_path(ride_type: "regular", source_ride_post_id: draft.id)
+    assert_field "Passenger seats per departure", with: ""
+    draft.update!(seats: 12)
+    visit edit_ride_post_path(draft)
+    assert_field "Available passenger seats", with: "12"
+    visit new_ride_post_path(ride_type: "regular", source_ride_post_id: draft.id)
+    assert_field "Passenger seats per departure", with: "12"
+
+    schedule = users(:one).ride_schedules.create!(status: :draft)
+    visit edit_ride_schedule_path(schedule)
+    assert_field "Passenger seats per departure", with: ""
+    schedule.update!(seats: 12)
+    visit edit_ride_schedule_path(schedule)
+    assert_field "Passenger seats per departure", with: "12"
   end
 
   test "a frozen driver stops new requests while accepted passengers retain coordination" do
