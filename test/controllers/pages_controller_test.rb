@@ -18,8 +18,7 @@ class PagesControllerTest < ActionDispatch::IntegrationTest
     assert_select "a#home_passenger_start[href='#{ride_posts_path}']"
     assert_select "a#home_regular_ride[href='#{new_ride_post_path(ride_type: 'regular')}']"
     assert_select "a#home_community_hubs[href='#{communities_path}']"
-    assert_select "#home_policy_update a[href=?]", terms_path
-    assert_select "#home_policy_update a[href=?]", privacy_path
+    assert_select "#home_policy_update", count: 0
     assert_select "#home-chat", text: /Once a seat request is accepted.*private chat/m
     assert_select "#home-apps", text: /Coming soon.*iOS and Android/m
   end
