@@ -166,6 +166,20 @@
 <%= render Toast::Component.new(flash: flash) %>
 <%= turbo_stream_from [ Current.user, :notifications ], channel: NotificationsChannel if authenticated? %>
 
+<%# Survey Announcement Banner %>
+<%= render Banner::Component.new(
+      id: "survey-banner",
+      title: "Help us make Pasabaya better!",
+      description: "Take our 10-minute survey.",
+      action_text: "Take survey",
+      action_url: "https://docs.google.com/forms/d/e/1FAIpQLScCxjDpIGTzJe6KZ3cFCMwgkqDwWIghUgNAwt1dSiia-7dpGQ/viewform",
+      action_target: "_blank",
+      variant: :info,
+      sticky: false,
+      cookie_days: -1,
+      classes: "web-navigation mt-2"
+    ) %>
+
 <main id="main_content" class="app-content container mx-auto px-4 mt-8 flex-grow" data-controller="morph-draft" data-action="input->morph-draft#record change->morph-draft#record turbo:before-morph-element->morph-draft#preserve turbo:submit-start->morph-draft#submitted submit->morph-draft#submitted reset->morph-draft#reset turbo:morph@document->morph-draft#refresh">
   <div id="request_feedback"></div>
   <%= render "shared/flash_errors" %>

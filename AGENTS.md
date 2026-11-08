@@ -20,6 +20,13 @@ models, services, or authorization logic.
   If rollback is intentionally impossible, raise
   `ActiveRecord::IrreversibleMigration` in `down`.
 
+## UI Components (Rails Blocks)
+
+- Before creating or styling new UI components from scratch, always check the Rails Blocks registry first (`mise exec -- rails-blocks list` or `mise exec -- rails-blocks search <query>`).
+- If a suitable Rails Blocks component exists, install it using the CLI:
+  `mise exec -- rails-blocks install <component> --as view_component` (or `--as erb_template` / `--as partial` depending on the use case).
+- Only build custom UI components or hand-write component styling if no matching Rails Blocks component is available.
+
 ## Rails conventions
 
 - Read `Gemfile.lock` for the resolved Rails and gem versions before using
