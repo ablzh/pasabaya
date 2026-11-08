@@ -1,9 +1,33 @@
 # [Pasabaya.app](https://pasabaya.app/)
 
+```text
+  ____                                  _                           _                      
+ |  _ \  __ _  ___   __ _  |__ \  __ _  _   _   __ _        __ _  _ __  _ __  
+ | |_) |/ _` |/ __| / _` | |  _ \/ _` || | | | / _` |      / _` || '_ \| '_ \ 
+ |  __/| (_| |\__ \| (_| | | |_) | (_| || |_| || (_| |  _ | (_| || |_) || |_) |
+ |_|    \__,_||___/ \__,_| |____/ \__,_| \__, | \__,_| (_) \__,_|| .__/ | .__/ 
+                                         |___/                   |_|    |_|    
+```
+
 [![CI](https://github.com/ablzh/pasabaya/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/ablzh/pasabaya/actions/workflows/ci.yml)
 ![Ruby](https://img.shields.io/badge/Ruby-4.0.9-red.svg)
 ![Rails](https://img.shields.io/badge/Rails-8.1.4-cc0000.svg)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+
+> **Carpooling for the community, not for profit.**  
+> A smarter, social way to find travel companions across the Philippines with zero platform fees, zero commissions, and zero middlemen.
+
+---
+
+## The Philosophy
+
+As the industry moves toward microservices and division of responsibility, Rails proves that a single developer, with the right monolith at their disposal, can compete on their own with entire product teams.
+
+This project demonstrates that a single developer can build a fully functional SaaS product—from frontend and backend to deployment on a production server and ongoing maintenance—while balancing it with a full-time job and university studies.
+
+In creating Pasabaya.app, I was inspired by **The One Person Framework** philosophy. The source code is open, and the codebase is designed to be as simple as possible, making it easy for others to understand, contribute, and suggest improvements.
+
+---
 
 A community carpool board for the Philippines. Drivers publish ride offers, passengers request seats, and accepted participants coordinate through trip chat. The platform takes no payments or commissions.
 
@@ -99,14 +123,5 @@ bundle exec archspec check
 - `test` includes model, request, service, job, channel, migration, and browser regression tests.
 
 Read [architecture](docs/architecture.md), [operations and moderation](docs/operations.md), [account deletion recovery](docs/account-deletion-recovery.md), [security reporting](SECURITY.md), and [contribution guidelines](CONTRIBUTING.md).
-
-## The Philosophy
-
-As the industry moves toward microservices and division of responsibility, Rails proves that a single developer, with the right monolith at their disposal, can compete on their own with entire product teams.
-
-This project demonstrates that a single developer can build a fully functional SaaS product—from frontend and backend to deployment on a production server and ongoing maintenance—while balancing it with a full-time job and university studies.
-
-In creating Pasabaya.app, I was inspired by **The One Person Framework** philosophy. The source code is open, and the codebase is designed to be as simple as possible, making it easy for others to understand, contribute, and suggest improvements.
-
 
 Licensed under the [MIT License](LICENSE).
