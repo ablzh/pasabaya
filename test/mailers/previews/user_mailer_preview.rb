@@ -5,6 +5,20 @@ class UserMailerPreview < ActionMailer::Preview
     UserMailer.with(user_id: user&.id).platform_update
   end
 
+  def community_survey
+    user = User.where(deleted_at: nil, banned_at: nil).first || User.new(
+      first_name: "Juan",
+      last_name: "Dela Cruz",
+      email_address: "juan@example.com"
+    )
+
+    if user.persisted?
+      UserMailer.with(user_id: user.id).community_survey
+    else
+      UserMailer.with(user: user).community_survey
+    end
+  end
+
   def ride_upgrade
     # Preview the transferred rides after running the legacy ride upgrade.
     user = User.joins(:ride_schedules).where(deleted_at: nil, banned_at: nil).first
