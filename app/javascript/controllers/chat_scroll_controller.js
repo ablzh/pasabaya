@@ -7,10 +7,14 @@ export default class extends Controller {
     readUrl: String,
     messagingClosesAt: String,
     historyUnavailableAt: String,
+    serverNow: String,
     writable: Boolean
   }
 
   initialize() {
+    this.clockOffset = 0
+    this.lastServerNow = null
+    this.deadlineMonitoringReady = false
     this.boundCheckAndMarkRead = this.checkAndMarkRead.bind(this)
     this.boundOnScroll = this.onScroll.bind(this)
     this.followLatest = true
@@ -29,6 +33,7 @@ export default class extends Controller {
   }
 
   connect() {
+    this.deadlineMonitoringReady = true
     this.updateViewport()
     this.checkDeadlines()
     this.scrollToBottom()
@@ -58,6 +63,7 @@ export default class extends Controller {
   }
 
   disconnect() {
+    this.deadlineMonitoringReady = false
     if (this.observer) {
       this.observer.disconnect()
     }
@@ -83,16 +89,29 @@ export default class extends Controller {
   }
 
   messagingClosesAtValueChanged() {
-    if (this.element.isConnected) this.checkDeadlines()
+    if (this.deadlineMonitoringReady) this.checkDeadlines()
   }
 
   historyUnavailableAtValueChanged() {
-    if (this.element.isConnected) this.checkDeadlines()
+    if (this.deadlineMonitoringReady) this.checkDeadlines()
+  }
+
+  serverNowValueChanged() {
+    if (this.deadlineMonitoringReady) this.checkDeadlines()
+  }
+
+  syncClockOffset() {
+    if (!this.hasServerNowValue || this.lastServerNow === this.serverNowValue) return
+
+    this.lastServerNow = this.serverNowValue
+    const serverTime = Date.parse(this.serverNowValue)
+    this.clockOffset = Number.isFinite(serverTime) ? serverTime - Date.now() : 0
   }
 
   checkDeadlines() {
     clearTimeout(this.deadlineTimer)
-    const now = Date.now()
+    this.syncClockOffset()
+    const now = Date.now() + this.clockOffset
     const history = Date.parse(this.historyUnavailableAtValue)
     const messaging = Date.parse(this.messagingClosesAtValue)
     if (Number.isFinite(history) && now >= history) {
