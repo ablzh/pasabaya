@@ -10,7 +10,7 @@
 ```
 
 [![CI](https://github.com/ablzh/pasabaya/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/ablzh/pasabaya/actions/workflows/ci.yml)
-![Ruby](https://img.shields.io/badge/Ruby-4.0.9-red.svg)
+![Ruby](https://img.shields.io/badge/Ruby-4.0.10-red.svg)
 ![Rails](https://img.shields.io/badge/Rails-8.1.4-cc0000.svg)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
@@ -50,7 +50,7 @@ Optional Facebook profile links are self-supplied and do not verify identity.
 
 | Concern | Implementation |
 | --- | --- |
-| Application | Ruby 4.0.9, Rails 8.1.4, ViewComponent |
+| Application | Ruby 4.0.10, Rails 8.1.4, ViewComponent |
 | Browser UI | Turbo, Stimulus, import maps, Tailwind CSS 4 |
 | Persistence | SQLite; separate production primary, queue, cache, and cable databases |
 | Background work | Solid Queue supervised by Puma on one server |
@@ -62,7 +62,7 @@ SQLite and local uploads keep this single-server deployment small. They also req
 
 ## Run locally
 
-Prerequisites: Ruby 4.0.9 (see [.ruby-version](.ruby-version) and [mise.toml](mise.toml)), Git, SQLite, and libvips. Full CI also needs Node/npm for Herb, Chrome/Chromium for Cuprite, and a running Docker daemon with BuildKit for the packaging check. macOS, Linux, and Windows through WSL2 are supported development environments.
+Prerequisites: Ruby 4.0.10 (see [.ruby-version](.ruby-version) and [mise.toml](mise.toml)), Git, SQLite, and libvips. Full CI also needs Node/npm for Herb, Chrome/Chromium for Cuprite, and a running Docker daemon with BuildKit for the packaging check. macOS, Linux, and Windows through WSL2 are supported development environments.
 
 ```bash
 git clone https://github.com/ablzh/pasabaya.git
