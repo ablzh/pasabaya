@@ -30,10 +30,7 @@ Both request creation and acceptance enforce schedule admission inside the prima
 SQLite transaction. Account deletion and audience eligibility loss stop future
 generation; deletion also scrubs schedule notes. Normal draft conversion requires
 the owner and a source without bookings, preserving any original departure date.
-Schema migrations do not publish drafts. The separately invoked, reviewed legacy
-import uses the October 22 snapshot and explicit rollout defaults, preserving
-the two recent dated offers as one-time rides; see
-[the transition procedure](operations.md#legacy-ride-transition).
+Schema migrations do not publish drafts.
 
 `Booking` is one passenger's seat request. Pending requests do not consume seats.
 Acceptance consumes one seat, and cancellation of accepted participation restores
